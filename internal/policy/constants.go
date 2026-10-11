@@ -28,3 +28,7 @@ var ownerRegistries = []string{"docker.io", "ghcr.io", "quay.io"}
 var forbiddenTargets = []string{"/var/run/docker.sock", "/run/docker.sock", "/proc", "/sys", "/dev"}
 
 var allowedNoNewPrivileges = []string{"no-new-privileges", "no-new-privileges:true", "no-new-privileges=true"}
+
+// localLogDrivers keep a container's logs on this host, or keep none; any
+// other driver lets the Docker daemon send them elsewhere.
+var localLogDrivers = []string{"", "json-file", "local", "journald", "none"}

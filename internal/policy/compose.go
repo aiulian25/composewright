@@ -70,6 +70,7 @@ func (check *checker) composeService(name string, service types.ServiceConfig) {
 	}
 	check.composeGrants(name, service)
 	check.composeSecurityOptions(name, service)
+	check.composeLogging(name, service)
 	check.composeVolumes(name, service)
 	check.composePorts(name, service)
 	check.composeImage(name, service)
@@ -100,6 +101,15 @@ func (check *checker) composeSecurityOptions(name string, service types.ServiceC
 			check.add("P13", Deny, name, "services."+name+".security_opt", "security_opt %q is not allowed; only %s", option, noNewPrivileges)
 		}
 	}
+}
+
+// composeLogging warns about a logging driver that lets the Docker daemon
+// send logs elsewhere: the sandbox resets it, but the exported file keeps it.
+func (check *checker) composeLogging(name string, service types.ServiceConfig) {
+	if service.Logging == nil || slices.Contains(localLogDrivers, service.Logging.Driver) {
+		return
+	}
+	check.add("P13", Warn, name, "services."+name+".logging", "logging driver %q can send logs off this host, from the Docker daemon", service.Logging.Driver)
 }
 
 func (check *checker) composeVolumes(name string, service types.ServiceConfig) {
