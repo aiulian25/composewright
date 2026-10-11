@@ -10,7 +10,7 @@ import (
 )
 
 // Badges say where a line of compose.yaml came from: a rule reading the
-// repository (R1 to R7), the person's profile (P), the policy gate (G), the
+// repository (R1 to R6), the person's profile (P), the policy gate (G), the
 // person (U) or a model (M).
 const (
 	badgeProfile = "P"
@@ -32,7 +32,7 @@ var (
 	sourceBadges = map[string]string{
 		ir.SourceCompose: "R1", ir.SourceEnvSample: "R1", ir.SourceDockerfile: "R2", ir.SourceOCILabel: "R3",
 		ir.SourceSidecarRule: "R4", ir.SourceHealthchecks: "R5", ir.SourceReadme: "R6", ir.SourceCode: "R6",
-		ir.SourceHelm: "R6", ir.SourceCIWorkflow: "R6", ir.SourceCatalogue: "R7", ir.SourceModel: badgeModel,
+		ir.SourceHelm: "R6", ir.SourceCIWorkflow: "R6", ir.SourceModel: badgeModel,
 		ir.SourceUser: badgeYou, ir.SourceDefault: badgeProfile,
 	}
 	// serviceKeyBadges are compose keys the renderer writes from the
@@ -49,7 +49,7 @@ var (
 // ruleNames are the rules in the order they run.
 var ruleNames = []struct{ Badge, Name string }{
 	{"R1", "Upstream compose"}, {"R2", "Dockerfile"}, {"R3", "Image metadata"}, {"R4", "Sidecars"},
-	{"R5", "Healthchecks"}, {"R6", "README and code"}, {"R7", "Curated catalogue"},
+	{"R5", "Healthchecks"}, {"R6", "README and code"},
 }
 
 // ruleRow is one rule on the Analyse page: how many of the plan's fields it
