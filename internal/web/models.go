@@ -309,6 +309,11 @@ func keepCurrent(llm config.LLM) config.LLM {
 
 // writeModels writes the saved connections and the one in use.
 func (server *Server) writeModels(request *http.Request, current *visit, llm config.LLM) error {
+	return server.update(request, current, modelsValues(llm))
+}
+
+// modelsValues are the keys the Model providers page writes.
+func modelsValues(llm config.LLM) map[string]string {
 	type yamlConnection struct {
 		Name           string `json:"name"`
 		Provider       string `json:"provider"`
@@ -321,14 +326,14 @@ func (server *Server) writeModels(request *http.Request, current *visit, llm con
 	for _, connection := range llm.Connections {
 		saved = append(saved, yamlConnection(connection))
 	}
-	return server.update(request, current, map[string]string{
+	return map[string]string{
 		"llm.connections":      jsonText(saved),
 		"llm.provider":         quote(llm.Provider),
 		"llm.base_url":         quote(llm.BaseURL),
 		"llm.model":            quote(llm.Model),
 		"llm.api_key_ref":      quote(llm.APIKeyRef),
 		"llm.max_input_tokens": fmt.Sprint(llm.MaxInputTokens),
-	})
+	}
 }
 
 // storeKey seals an API key in the database and audits that it was set,

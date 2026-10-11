@@ -30,6 +30,8 @@ const (
 	ActionLogin        = "login"
 	ActionPassword     = "password"
 	ActionSettings     = "settings"
+	ActionBackup       = "backup"
+	ActionRestore      = "restore"
 	genesisAuditHash   = ""
 )
 

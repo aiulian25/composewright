@@ -25,6 +25,8 @@ const (
 	sectionEngine     = "engine"
 	sectionAppearance = "appearance"
 	sectionAccount    = "account"
+	sectionBackup     = "backup"
+	themeKey          = "ui.theme"
 	maxNetworkRows    = 20
 	// newRowIndex stands for the row number in the network row app.js
 	// copies when someone adds a network.
@@ -46,9 +48,9 @@ const (
 var (
 	// settingsSections are the Settings pages in order; each page is one
 	// form, saved in one go.
-	settingsSections = []string{sectionProfile, sectionEngine, sectionModels, sectionAppearance, sectionAccount}
+	settingsSections = []string{sectionProfile, sectionEngine, sectionModels, sectionAppearance, sectionAccount, sectionBackup}
 	settingsTitles   = map[string]string{sectionProfile: "Environment profile", sectionEngine: "Engine",
-		sectionModels: "Model providers", sectionAppearance: "Appearance", sectionAccount: "Account"}
+		sectionModels: "Model providers", sectionAppearance: "Appearance", sectionAccount: "Account", sectionBackup: "Backup and restore"}
 )
 
 type settingsView struct {
@@ -122,6 +124,9 @@ func (server *Server) settingsPage(writer http.ResponseWriter, request *http.Req
 	if request.URL.Query().Has(savedQuery) {
 		state.notice = savedNotice
 	}
+	if request.URL.Query().Has(restoredQuery) {
+		state.notice = restoredNotice(request.URL.Query())
+	}
 	return server.renderSettings(writer, request, current, state)
 }
 
@@ -133,7 +138,11 @@ func preview(configuration config.Config, shown string) (settingsFile, error) {
 		return settingsFile{Name: profileFile, Lines: plainLines(string(rendered), languageYAML), Command: "composewright profile export > " + profileFile}, err
 	}
 	rendered, err := config.Render(configuration)
-	return settingsFile{Name: configFile, Lines: plainLines(string(rendered), languageYAML), Command: "composewright config show"}, err
+	file := settingsFile{Name: configFile, Lines: plainLines(string(rendered), languageYAML), Command: "composewright config show"}
+	if shown == sectionBackup {
+		file.Command = ""
+	}
+	return file, err
 }
 
 func (server *Server) renderSettings(writer http.ResponseWriter, request *http.Request, current *visit, state settingsState) error {
@@ -213,7 +222,7 @@ func hostHint(row *networkRow, owner doctor.FoundNetwork) {
 func (server *Server) saveSettings(writer http.ResponseWriter, request *http.Request, current *visit) error {
 	section := request.PathValue("section")
 	if !slices.Contains(settingsSections, section) {
-		return statusError{status: http.StatusNotFound, message: "There is no such settings section."}
+		return statusError{status: http.StatusNotFound, message: noSuchSection}
 	}
 	submitted, err := server.saveSection(request, current, section)
 	if err != nil {
@@ -243,9 +252,11 @@ func (server *Server) saveSection(request *http.Request, current *visit, section
 		return server.saveModels(request, current, submitted)
 	case sectionAppearance:
 		submitted.UI.Theme = field(request, "theme")
-		return submitted, server.update(request, current, map[string]string{"ui.theme": quote(submitted.UI.Theme)})
+		return submitted, server.update(request, current, map[string]string{themeKey: quote(submitted.UI.Theme)})
+	case sectionAccount:
+		return submitted, server.changePassword(request, current)
 	}
-	return submitted, server.changePassword(request, current)
+	return submitted, statusError{status: http.StatusNotFound, message: noSuchSection}
 }
 
 // update writes values to config.yaml, reloads it and audits the change.
@@ -375,11 +386,16 @@ func engineForm(request *http.Request, configuration config.Config) config.Confi
 }
 
 func (server *Server) saveEngine(request *http.Request, current *visit, configuration config.Config) error {
-	return server.update(request, current, map[string]string{
+	return server.update(request, current, engineValues(configuration))
+}
+
+// engineValues are the keys the Engine page writes.
+func engineValues(configuration config.Config) map[string]string {
+	return map[string]string{
 		"llm.engine":                    quote(configuration.LLM.Engine),
 		"network.allow_private_targets": jsonText(configuration.Network.AllowPrivateTargets),
 		"registries.allow":              jsonText(configuration.Registries.Allow),
-	})
+	}
 }
 
 func field(request *http.Request, name string) string {
@@ -412,27 +428,38 @@ func (reader *numbers) decimal(name, label string, saved float64) float64 {
 	return number
 }
 
-// changePassword throttles wrong current passwords per account, so a
-// browser left signed in cannot be used to guess the password.
-func (server *Server) changePassword(request *http.Request, current *visit) error {
+// confirmPassword checks the signed-in account's password again before a
+// step that needs it, throttling wrong guesses per account, so a browser
+// left signed in cannot be used to guess it. On success the caller holds a
+// hash slot for its own Argon2id work and releases it.
+func (server *Server) confirmPassword(current *visit, password string) (func(), error) {
 	account, now := passwordAttemptPrefix+current.user.ID, server.options.Now()
 	if wait := server.throttle.Wait(account, now); wait > 0 {
-		return fmt.Errorf("too many wrong passwords; try again in %s", wait.Round(time.Second))
+		return nil, fmt.Errorf("too many wrong passwords; try again in %s", wait.Round(time.Second))
 	}
 	release, free := server.hashSlot()
 	if !free {
-		return errors.New(strings.TrimSuffix(tooManyPasswordChecks, "."))
+		return nil, errors.New(strings.TrimSuffix(tooManyPasswordChecks, "."))
 	}
-	defer release()
-	matches, err := auth.VerifyPassword(current.user.PasswordHash, request.PostFormValue("current"))
+	matches, err := auth.VerifyPassword(current.user.PasswordHash, password)
+	if err == nil && matches {
+		server.throttle.Succeed(account)
+		return release, nil
+	}
+	release()
+	if err != nil {
+		return nil, err
+	}
+	server.throttle.Fail(account, now)
+	return nil, errors.New("the current password is wrong")
+}
+
+func (server *Server) changePassword(request *http.Request, current *visit) error {
+	release, err := server.confirmPassword(current, request.PostFormValue(currentPasswordField))
 	if err != nil {
 		return err
 	}
-	if !matches {
-		server.throttle.Fail(account, now)
-		return fmt.Errorf("the current password is wrong")
-	}
-	server.throttle.Succeed(account)
+	defer release()
 	if problem := passwordProblem(request.PostFormValue("password"), request.PostFormValue("confirm")); problem != "" {
 		return fmt.Errorf("%s", strings.TrimSuffix(problem, "."))
 	}

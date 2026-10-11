@@ -63,22 +63,27 @@ func addGeneration(ctx context.Context, transaction *sql.Tx, generation Generati
 	if err != nil {
 		return Generation{}, err
 	}
-	_, err = transaction.ExecContext(ctx, `INSERT INTO generations (`+generationColumns+`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+	return generation, insertGeneration(ctx, transaction, generation, images)
+}
+
+// insertGeneration writes a generation and its images as they are.
+func insertGeneration(ctx context.Context, transaction *sql.Tx, generation Generation, images []Image) error {
+	_, err := transaction.ExecContext(ctx, `INSERT INTO generations (`+generationColumns+`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 		generation.ID, generation.ProjectID, generation.Iteration, generation.Engine, generation.Provider, generation.Model,
 		generation.PromptHash, generation.IRJSON, generation.ComposeYAML, generation.DeployMD, generation.OptionsJSON,
 		generation.PolicyJSON, generation.ValidationJSON, generation.LogsPath, generation.FactsJSON, unix(generation.CreatedAt), generation.Number)
 	if err != nil {
-		return Generation{}, err
+		return err
 	}
 	for _, image := range images {
 		_, err := transaction.ExecContext(ctx, `INSERT INTO images (id, generation_id, service, reference, digest, registry, oci_source, verified_at)
 			VALUES (?,?,?,?,?,?,?,?)`, newID(), generation.ID, image.Service, image.Reference, image.Digest, image.Registry,
 			image.OCISource, unix(image.VerifiedAt))
 		if err != nil {
-			return Generation{}, err
+			return err
 		}
 	}
-	return generation, nil
+	return nil
 }
 
 // RecordGeneration stores a generation with everything that belongs to it

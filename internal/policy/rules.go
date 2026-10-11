@@ -138,6 +138,11 @@ func (check *checker) image(service *ir.Service, field string) {
 	}
 }
 
+// ValidEnvKey reports whether key can name a .env variable.
+func ValidEnvKey(key string) bool {
+	return envKeyPattern.MatchString(key)
+}
+
 // RegistryAllowed applies P1. Official images and the repository owner's own
 // namespace are trusted; host-wide allowlist entries such as ghcr.io/* are
 // narrowed to that owner when the owner is known; --allow-registry entries

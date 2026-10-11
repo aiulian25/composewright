@@ -12,7 +12,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"regexp"
 	"slices"
 	"strings"
 	"time"
@@ -76,10 +75,7 @@ var failureHints = map[string]string{
 		"It may listen on 127.0.0.1 inside its container, or on another port than the plan says; its last lines below often name the address.",
 }
 
-var (
-	projectName      = regexp.MustCompile(`^[a-z0-9][a-z0-9_-]{0,62}$`)
-	archiveExtension = []string{".zip", ".tar", ".gz", ".tgz", ".xz", ".bz2", ".7z", ".rar"}
-)
+var archiveExtension = []string{".zip", ".tar", ".gz", ".tgz", ".xz", ".bz2", ".7z", ".rar"}
 
 type option struct {
 	Value    string
@@ -157,7 +153,7 @@ func (ask generationRequest) problem() string {
 		return "Choose one source: files or a pasted compose file, or a repository link."
 	case !ask.given() && ask.source == "":
 		return "Give a repository link, a folder on this machine, or files."
-	case ask.name != "" && !projectName.MatchString(ask.name):
+	case ask.name != "" && !store.ValidProjectName(ask.name):
 		return "A project name uses lowercase letters, digits, - and _ and starts with a letter or digit."
 	case len(ask.files) > maxUploadFiles:
 		return fmt.Sprintf("At most %d files at a time.", maxUploadFiles)

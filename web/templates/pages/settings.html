@@ -9,6 +9,8 @@
   <h3>Interface</h3>
   <a href="/settings?section=appearance"{{if eq .Data.Page "appearance"}} aria-current="page"{{end}}>{{template "icon-palette"}}<span>Appearance</span></a>
   <a href="/settings?section=account"{{if eq .Data.Page "account"}} aria-current="page"{{end}}>{{template "icon-user"}}<span>Account</span></a>
+  <h3>Data</h3>
+  <a href="/settings?section=backup"{{if eq .Data.Page "backup"}} aria-current="page"{{end}}>{{template "icon-history"}}<span>Backup and restore</span></a>
 </nav>
 <nav class="sidebar-foot" aria-label="More">
   <a href="/projects">{{template "icon-arrow-left"}}<span>Back to projects</span></a>
@@ -30,11 +32,11 @@
 {{with .Data}}
 <div class="page-head">
   <h1 class="page-title">{{.Title}}</h1>
-  <span class="lead">Saved to <span class="mono">{{.ConfigFile}}</span>; each save is checked as a whole and written to the audit log.</span>
-  {{if and (ne .Page "account") (ne .Page "models")}}<span class="row push-right"><span class="muted small" data-unsaved hidden>Unsaved changes</span><button class="button button-primary" type="submit" form="settings-form">Save</button></span>{{end}}
+  {{if eq .Page "backup"}}<span class="lead">Your Settings and every project in one file, encrypted with a passphrase you choose.</span>{{else}}<span class="lead">Saved to <span class="mono">{{.ConfigFile}}</span>; each save is checked as a whole and written to the audit log.</span>{{end}}
+  {{if and (ne .Page "account") (ne .Page "models") (ne .Page "backup")}}<span class="row push-right"><span class="muted small" data-unsaved hidden>Unsaved changes</span><button class="button button-primary" type="submit" form="settings-form">Save</button></span>{{end}}
 </div>
 
-{{if eq .Page "models"}}{{template "models-page" $}}{{else}}
+{{if eq .Page "models"}}{{template "models-page" $}}{{else if eq .Page "backup"}}{{template "backup-page" $}}{{else}}
 <form class="stack" id="settings-form" method="post" action="/settings/{{.Page}}" data-settings-form>
   <input type="hidden" name="csrf" value="{{$csrf}}">
 
@@ -193,6 +195,40 @@
   <li>Any service that speaks the OpenAI Chat Completions API with structured outputs works: LM Studio, vLLM, Groq and others.</li>
   <li>Put its address, usually ending in /v1, and a model it serves below. Add a key if it asks for one.</li>
 </ol>
+{{end}}
+{{end}}
+
+{{define "backup-page"}}
+{{$csrf := .CSRF}}
+{{with .Data}}
+<form class="card" id="backup" method="post" action="/settings/backup/download" aria-labelledby="backup-title">
+  <input type="hidden" name="csrf" value="{{$csrf}}">
+  <div class="card-head"><h2 id="backup-title">{{template "icon-download"}}Download a backup</h2></div>
+  <div class="card-body stack">
+    <p>One file with your Settings (the environment profile, the engine, the model providers with their API keys, the appearance) and every project: its versions with their compose.yaml and DEPLOY.md, and its .env with the secrets in it.</p>
+    <p class="muted small">Not included: your account, the audit log, the logs of past runs, and what belongs to this install, such as its folders and how it reaches Docker. The passphrase cannot be recovered; keep it apart from the file.</p>
+    <div class="field-grid">
+      <label class="field" for="backup-passphrase">Passphrase<input id="backup-passphrase" name="passphrase" type="password" autocomplete="new-password" minlength="{{.Minimum}}" required></label>
+      <label class="field" for="backup-confirm">Passphrase again<input id="backup-confirm" name="confirm" type="password" autocomplete="new-password" minlength="{{.Minimum}}" required></label>
+      <label class="field" for="backup-current">Your account password<input id="backup-current" name="current" type="password" autocomplete="current-password" required></label>
+    </div>
+  </div>
+  <div class="card-foot"><span class="muted small">Written to the audit log.</span><button class="button button-primary push-right" type="submit">{{template "icon-download"}}Download backup</button></div>
+</form>
+<form class="card" id="restore" method="post" action="/settings/backup/restore" enctype="multipart/form-data" aria-labelledby="restore-title">
+  <input type="hidden" name="csrf" value="{{$csrf}}">
+  <div class="card-head"><h2 id="restore-title">{{template "icon-upload"}}Restore a backup</h2></div>
+  <div class="card-body stack">
+    <p>Brings back the backup's Settings, in place of yours, and its projects. Before any of it runs, it is checked again like everything else.</p>
+    <div class="field-grid">
+      <label class="field" for="restore-file">Backup file<input id="restore-file" name="backup" type="file" accept=".cwbackup" required></label>
+      <label class="field" for="restore-passphrase">Its passphrase<input id="restore-passphrase" name="passphrase" type="password" autocomplete="off" required></label>
+      <label class="field" for="restore-current">Your account password<input id="restore-current" name="current" type="password" autocomplete="current-password" required></label>
+    </div>
+    <label class="option"><input type="checkbox" name="replace" value="1"><span class="option-text"><span class="option-name">Replace projects that exist here</span><span class="option-sub">Otherwise a project with the same name stays as it is.</span></span></label>
+  </div>
+  <div class="card-foot"><span class="muted small">Written to the audit log.</span><button class="button button-primary push-right" type="submit">{{template "icon-upload"}}Restore</button></div>
+</form>
 {{end}}
 {{end}}
 

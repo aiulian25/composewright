@@ -315,6 +315,67 @@ func TestMigrationNumbersExistingGenerations(t *testing.T) {
 	}
 }
 
+// TestRestoreProjectKeepsVersions: a project read for a backup restores into
+// another store, with its own key, as it was: version numbers and times, the
+// tested verdict without its log, the images and the secrets, which open with
+// the new key. A project already there is kept unless replacing it was asked
+// for.
+func TestRestoreProjectKeepsVersions(t *testing.T) {
+	ctx := context.Background()
+	source, _, _ := openTestStore(t)
+	project := Project{Name: "miniflux", Slug: "miniflux", SourceKind: "github", Status: StatusGenerated}
+	noEvents := func(Project, Generation) []Event { return nil }
+	images := []Image{{Service: "miniflux", Reference: "docker.io/miniflux/miniflux:2"}}
+	variables := []EnvVar{{Key: "ADMIN_PASSWORD", Value: "s3cret-value", Secret: true}, {Key: "PORT", Value: "8080"}}
+	var tested Generation
+	for range 2 {
+		_, added, err := source.RecordGeneration(ctx, project, Generation{Engine: "rules", IRJSON: "{}"}, images, variables, "cli:test", noEvents)
+		if err != nil {
+			t.Fatal(err)
+		}
+		tested = added
+	}
+	if err := source.RecordValidation(ctx, tested.ID, `{"result":"pass"}`, "/data/projects/miniflux/logs/run.log", ""); err != nil {
+		t.Fatal(err)
+	}
+	records, err := source.ProjectRecords(ctx)
+	if err != nil || len(records) != 1 {
+		t.Fatalf("records %d: %v", len(records), err)
+	}
+	target, _, _ := openTestStore(t)
+	if restored, err := target.RestoreProject(ctx, records[0], false); err != nil || !restored {
+		t.Fatalf("restore: %v %v", restored, err)
+	}
+	stored, err := target.FindProject(ctx, "miniflux")
+	if err != nil {
+		t.Fatal(err)
+	}
+	generations, err := target.Generations(ctx, stored.ID)
+	if err != nil || len(generations) != 2 {
+		t.Fatalf("generations %d: %v", len(generations), err)
+	}
+	newest := generations[0]
+	kept := records[0].Generations[0].Generation
+	if newest.Number != 2 || newest.ValidationJSON == "" || newest.LogsPath != "" || !newest.CreatedAt.Equal(kept.CreatedAt) {
+		t.Fatalf("newest version restored as %+v", newest)
+	}
+	if restoredImages, err := target.Images(ctx, newest.ID); err != nil || len(restoredImages) != 1 {
+		t.Fatalf("images %v: %v", restoredImages, err)
+	}
+	if values, err := target.EnvVars(ctx, stored.ID); err != nil || values[0].Value != "s3cret-value" {
+		t.Fatalf("secrets under the new key: %+v %v", values, err)
+	}
+	if restored, err := target.RestoreProject(ctx, records[0], false); err != nil || restored {
+		t.Fatalf("a project already there was replaced without asking: %v %v", restored, err)
+	}
+	if restored, err := target.RestoreProject(ctx, records[0], true); err != nil || !restored {
+		t.Fatalf("replace: %v %v", restored, err)
+	}
+	if replaced, err := target.FindProject(ctx, "miniflux"); err != nil || replaced.ID == stored.ID {
+		t.Fatalf("the project was not replaced: %v", err)
+	}
+}
+
 func TestSaveProjectKeepsOneProjectPerName(t *testing.T) {
 	ctx := context.Background()
 	store, _, _ := openTestStore(t)

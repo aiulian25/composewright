@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"regexp"
 	"time"
 )
 
@@ -37,6 +38,15 @@ type ProjectSummary struct {
 	Generations int    `json:"generations"`
 	Engine      string `json:"engine"`
 	Images      string `json:"images"`
+}
+
+// projectNamePattern is what a project may be called. The name also names
+// the folder its runs and logs live in, so it holds no path separator.
+var projectNamePattern = regexp.MustCompile(`^[a-z0-9][a-z0-9_-]{0,62}$`)
+
+// ValidProjectName reports whether name can name a project.
+func ValidProjectName(name string) bool {
+	return projectNamePattern.MatchString(name)
 }
 
 const (

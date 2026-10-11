@@ -358,7 +358,7 @@ func (server *Server) locationOptions(current string) []option {
 
 // target is the export destination a Save form names.
 func (server *Server) target(folder, location, custom string) (string, error) {
-	if !projectName.MatchString(folder) {
+	if !store.ValidProjectName(folder) {
 		return "", badRequest("A folder name uses lowercase letters, digits, - and _.")
 	}
 	profile := server.config().Profile

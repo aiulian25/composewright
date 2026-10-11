@@ -975,6 +975,107 @@ func TestTrustOffers(t *testing.T) {
 	}
 }
 
+// restoreFrom posts a backup file to the Restore form.
+func (harness *harness) restoreFrom(content, passphrase, password string, replace bool) (*http.Response, string) {
+	harness.t.Helper()
+	var body bytes.Buffer
+	writer := multipart.NewWriter(&body)
+	fields := map[string]string{csrfField: harness.token, passphraseField: passphrase, currentPasswordField: password}
+	if replace {
+		fields[replaceField] = "1"
+	}
+	for name, value := range fields {
+		_ = writer.WriteField(name, value)
+	}
+	part, _ := writer.CreateFormFile(backupFileField, "composewright.cwbackup")
+	_, _ = part.Write([]byte(content))
+	_ = writer.Close()
+	request, err := http.NewRequest(http.MethodPost, harness.http.URL+"/settings/backup/restore", &body)
+	if err != nil {
+		harness.t.Fatal(err)
+	}
+	request.Header.Set("Content-Type", writer.FormDataContentType())
+	response, err := harness.client.Do(request)
+	if err != nil {
+		harness.t.Fatal(err)
+	}
+	defer response.Body.Close()
+	page, _ := io.ReadAll(response.Body)
+	return response, string(page)
+}
+
+// TestBackupAndRestore: a backup taken with the account password restores
+// on a fresh install: the settings, the model key and the project with its
+// secrets. A wrong password or passphrase changes nothing, and restoring
+// again keeps the project unless asked to replace it.
+func TestBackupAndRestore(t *testing.T) {
+	const passphrase = "a long backup passphrase"
+	ctx := context.Background()
+	source := newHarness(t)
+	source.signUp()
+	response, page := source.post("/new", url.Values{"source": {minifluxPath}, "engine": {pipeline.EngineRules}})
+	status(t, response, http.StatusSeeOther, page)
+	source.waitForJob(response.Header.Get("Location"))
+	response, page = source.post("/settings/appearance", url.Values{"theme": {config.ThemeLight}})
+	status(t, response, http.StatusSeeOther, page)
+	claude := url.Values{"preset": {"anthropic"}, "name": {"claude-work"}, "base_url": {"https://api.anthropic.com"}, "model": {"claude-opus-5-5"},
+		"max_input_tokens": {"100000"}, "api_key": {"test-key-value"}}
+	response, page = source.post("/settings/models", claude)
+	status(t, response, http.StatusSeeOther, page)
+	backupForm := url.Values{passphraseField: {passphrase}, confirmField: {passphrase}, currentPasswordField: {"wrong password!"}}
+	response, page = source.post("/settings/backup/download", backupForm)
+	status(t, response, http.StatusBadRequest, page)
+	if !strings.Contains(page, "The current password is wrong") {
+		t.Fatal("a backup was offered without the account password")
+	}
+	backupForm.Set(currentPasswordField, testPassword)
+	response, content := source.post("/settings/backup/download", backupForm)
+	status(t, response, http.StatusOK, "")
+	if !strings.HasSuffix(response.Header.Get("Content-Disposition"), `.cwbackup"`) || !strings.HasPrefix(content, "composewright backup 1\n") {
+		t.Fatalf("the backup came as %q", response.Header.Get("Content-Disposition"))
+	}
+	original, err := pipeline.Load(ctx, source.server.workspace(), "miniflux")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	target := newHarness(t)
+	target.signUp()
+	response, page = target.restoreFrom(content, passphrase, "wrong password!", false)
+	status(t, response, http.StatusBadRequest, page)
+	if !strings.Contains(page, "The current password is wrong") {
+		t.Fatal("a restore went ahead without the account password")
+	}
+	response, page = target.restoreFrom(content, "another long passphrase", testPassword, false)
+	status(t, response, http.StatusBadRequest, page)
+	if !strings.Contains(page, "The passphrase is wrong") || len(target.server.config().LLM.Connections) != 0 {
+		t.Fatal("a wrong passphrase was not refused, or changed something")
+	}
+	response, page = target.restoreFrom(content, passphrase, testPassword, false)
+	status(t, response, http.StatusSeeOther, page)
+	if location := response.Header.Get("Location"); !strings.Contains(location, "restored=1") {
+		t.Fatalf("the restore led to %q", location)
+	}
+	restored, err := pipeline.Load(ctx, target.server.workspace(), "miniflux")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if restored.Generation.ComposeYAML != original.Generation.ComposeYAML || restored.Values["ADMIN_PASSWORD"] != original.Values["ADMIN_PASSWORD"] {
+		t.Fatal("the project came back different, or without its secret")
+	}
+	keyStored, err := target.server.workspace().Store.HasSecret(ctx, "llm-claude-work")
+	if configured := target.server.config(); configured.UI.Theme != config.ThemeLight || len(configured.LLM.Connections) != 1 || !keyStored || err != nil {
+		t.Fatalf("the settings or the model key did not come back: %+v %v", configured.LLM.Connections, err)
+	}
+	response, page = target.restoreFrom(content, passphrase, testPassword, false)
+	status(t, response, http.StatusSeeOther, page)
+	response, page = target.get(response.Header.Get("Location"))
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, "Kept as they were here: miniflux") {
+		t.Fatal("restoring again did not keep the project that is here")
+	}
+}
+
 // TestRunSteps follows the sandbox's verdict rules: a crash fails its
 // service and skips the log scan; a healthy service passes.
 func TestRunSteps(t *testing.T) {
