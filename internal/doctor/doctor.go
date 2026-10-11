@@ -44,8 +44,8 @@ func Run(ctx context.Context, inputs Inputs) []Check {
 	checks = append(checks, composeCheck(ctx, inputs.Sandbox))
 	environment, err := inputs.Sandbox.Info(ctx)
 	if err != nil {
-		return append(checks, Check{Name: "docker daemon", Status: StatusFail, Detail: err.Error(),
-			Fix: "start Docker, or point docker.host at a reachable daemon (DOCKER_HOST)"})
+		problem := sandbox.Diagnose(sandbox.DockerHost(inputs.Loaded.Config.Docker.Host))
+		return append(checks, Check{Name: "docker daemon", Status: StatusFail, Detail: problem.Status + ": " + err.Error(), Fix: problem.Fix})
 	}
 	checks = append(checks, Check{Name: "docker daemon", Status: StatusOK, Detail: fmt.Sprintf("reachable, cgroup v%s (%s driver)", environment.CgroupVersion, environment.CgroupDriver)})
 	checks = append(checks, tierCheck(environment, sandbox.DockerHost(inputs.Loaded.Config.Docker.Host)), limitsCheck(environment))

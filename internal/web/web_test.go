@@ -859,6 +859,24 @@ func mustURL(raw string) *url.URL {
 	return parsed
 }
 
+// TestDockerProblemSaysWhatToChange: when Docker cannot be used, Home says
+// why and what to change, and the status bar carries the same as its title.
+func TestDockerProblemSaysWhatToChange(t *testing.T) {
+	harness := newHarness(t)
+	harness.signUp()
+	const fix = "There is no Docker socket at /var/run/docker.sock inside the container."
+	harness.server.status = &statusCache{now: harness.clock.Now, check: func(context.Context) dockerState {
+		return dockerState{Text: "Docker socket not mounted", Tone: toneDanger, Fix: fix}
+	}}
+	response, page := harness.get("/")
+	status(t, response, http.StatusOK, page)
+	for _, want := range []string{`<p class="banner banner-danger" role="status">Docker socket not mounted. ` + fix, `title="` + fix + `"`} {
+		if !strings.Contains(page, want) {
+			t.Errorf("Home lacks %q", want)
+		}
+	}
+}
+
 // TestDockerCheckRunsOutsideTheLock: a slow Docker check holds no lock, so
 // Settings can forget the state meanwhile. That check, begun under the old
 // settings, then keeps nothing, and neither does one whose page closed.

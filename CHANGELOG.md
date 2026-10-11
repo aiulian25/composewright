@@ -19,6 +19,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- When Docker cannot be used, the status bar, Home and `doctor` say why (the
+  socket is not mounted, cannot be opened, or nothing answers on it) and
+  what to change, instead of only "Docker unreachable".
 - A data folder Docker created as root for a bind mount, or an empty one you
   made, no longer stops composewright from starting: it becomes the app's,
   with mode 700. A folder that already holds someone else's files is refused

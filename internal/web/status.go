@@ -13,6 +13,8 @@ const (
 	statusRefresh = time.Minute
 	statusTimeout = 3 * time.Second
 	dockerPrefix  = "Docker "
+	dockerMissing = "Docker not found"
+	cliMissingFix = "The docker CLI was not found: install Docker Engine with the compose plugin, or set docker.cli_path."
 )
 
 var providerNames = map[string]string{
@@ -21,10 +23,12 @@ var providerNames = map[string]string{
 	config.ProviderOllama:           "Ollama",
 }
 
-// dockerState is what the status bar says about Docker.
+// dockerState is what the status bar says about Docker, and when Docker
+// cannot be used, what to change.
 type dockerState struct {
 	Text string
 	Tone string
+	Fix  string
 }
 
 // statusCache keeps the Docker check for a minute, so pages stay fast. The
@@ -76,14 +80,15 @@ func (cache *statusCache) docker(ctx context.Context) dockerState {
 func (server *Server) dockerStatus(ctx context.Context) dockerState {
 	runner, err := sandbox.FromConfig(server.config(), server.paths().ProjectsDir())
 	if err != nil {
-		return dockerState{Text: "Docker not found", Tone: toneDanger}
+		return dockerState{Text: dockerMissing, Tone: toneDanger, Fix: cliMissingFix}
 	}
 	checkCtx, cancel := context.WithTimeout(ctx, statusTimeout)
 	defer cancel()
 	environment, err := runner.Info(checkCtx)
 	switch {
 	case err != nil:
-		return dockerState{Text: "Docker unreachable", Tone: toneDanger}
+		problem := sandbox.Diagnose(sandbox.DockerHost(server.config().Docker.Host))
+		return dockerState{Text: problem.Status, Tone: toneDanger, Fix: problem.Fix}
 	case environment.Rootless:
 		return dockerState{Text: dockerPrefix + environment.EngineVersion + ", rootless", Tone: toneOk}
 	}

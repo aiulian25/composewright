@@ -79,7 +79,7 @@
 </aside>
 {{end}}
 <footer class="statusbar" aria-label="Status">
-  <span class="status-item status-{{.Status.DockerTone}}">{{template "icon-docker"}}<span>{{.Status.Docker}}</span></span>
+  <span class="status-item status-{{.Status.DockerTone}}"{{with .Status.DockerFix}} title="{{.}}"{{end}}>{{template "icon-docker"}}<span>{{.Status.Docker}}</span></span>
   <span class="status-item">{{template "icon-box"}}<span>{{.Status.Sandbox}}</span></span>
   <span class="status-item">{{template "icon-engine"}}<span>{{.Status.Engine}}</span></span>
   <span class="status-item status-wide" title="{{.Status.Egress}}">{{template "icon-shield"}}<span>{{.Status.Egress}}</span></span>

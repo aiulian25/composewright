@@ -54,6 +54,7 @@ type EngineMenu struct {
 type StatusBar struct {
 	Docker     string
 	DockerTone string
+	DockerFix  string
 	Sandbox    string
 	Engine     string
 	Egress     string
@@ -137,7 +138,7 @@ func (server *Server) statusBar(ctx context.Context) StatusBar {
 	if project, busy := server.jobs.validating(); busy {
 		sandbox = "Sandbox: " + project + " running"
 	}
-	return StatusBar{Docker: docker.Text, DockerTone: docker.Tone, Sandbox: sandbox, Engine: "Engine: " + engineLabels[configuration.LLM.Engine],
+	return StatusBar{Docker: docker.Text, DockerTone: docker.Tone, DockerFix: docker.Fix, Sandbox: sandbox, Engine: "Engine: " + engineLabels[configuration.LLM.Engine],
 		Egress: "Egress: " + strings.Join(egressHosts(configuration, server.options.Version), hostsJoiner), DataDir: homeRelative(server.paths().DataDir),
 		Version: server.options.Version}
 }

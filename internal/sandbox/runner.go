@@ -22,6 +22,7 @@ const (
 	dockerHostVariable = "DOCKER_HOST"
 	defaultSocket      = "/var/run/docker.sock"
 	unixScheme         = "unix://"
+	unknownGroup       = -1
 )
 
 // passedEnvironment is all the docker CLI sees of ours. Anything else, such

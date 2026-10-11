@@ -1,6 +1,7 @@
 {{define "content"}}
 {{with .Data}}
 <div class="home">
+  {{with $.Status.DockerFix}}<p class="banner banner-danger" role="status">{{$.Status.Docker}}. {{.}}</p>{{end}}
   <div class="home-hero">
     {{template "brand-mark"}}
     <h1 class="home-title">Let’s get you started</h1>
