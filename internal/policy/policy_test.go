@@ -444,6 +444,8 @@ func TestEvaluateYAML(t *testing.T) {
 		{"volume driver_opts bind", service("    volumes: ['data:/data']\n") + "volumes:\n  data:\n    driver_opts: {type: none, o: bind, device: /}\n", policy.Deny, nil, nil},
 		{"secret file inside ./secrets", service("    secrets: [db]\n") + "secrets:\n  db: {file: ./secrets/db}\n", policy.OK, nil, nil},
 		{"secret file elsewhere", service("    secrets: [db]\n") + "secrets:\n  db: {file: /etc/shadow}\n", policy.Deny, nil, nil},
+		{"env_file read on the host", service("    env_file: [/data/exports/other/.env]\n"), policy.Deny, nil, nil},
+		{"label_file read on the host", service("    label_file: [./labels]\n"), policy.Deny, nil, nil},
 		{"low published port", service("    ports: ['80:80']\n"), policy.Need, nil, nil},
 		{"loopback published port", service("    ports: ['127.0.0.1:8080:80']\n"), policy.OK, nil, nil},
 		{"image outside allowlist", "services:\n  app:\n    image: evil.example/miner:1\n", policy.Deny, nil, nil},

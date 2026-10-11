@@ -60,6 +60,10 @@ func (check *checker) composeService(name string, service types.ServiceConfig) {
 		"configs":             len(service.Configs) > 0,
 		"models":              len(service.Models) > 0,
 		"external_links":      len(service.ExternalLinks) > 0 || service.Net != "",
+		// Loading never reads these, but docker compose up reads them on this
+		// host and hands their contents to the container.
+		"env_file":   len(service.EnvFiles) > 0,
+		"label_file": len(service.LabelFiles) > 0,
 	}
 	for _, key := range sortedTrue(forbidden) {
 		deny("%s is not allowed in a generated stack", key)
