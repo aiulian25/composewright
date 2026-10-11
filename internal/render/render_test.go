@@ -252,3 +252,37 @@ func TestDeployFolderOwner(t *testing.T) {
 		}
 	}
 }
+
+// TestGrantedDockerSocketIsMountedWithAComment: the socket appears only once
+// granted, from the host's socket to where the app asked for it, and the
+// YAML gate accepts what the renderer writes.
+func TestGrantedDockerSocketIsMountedWithAComment(t *testing.T) {
+	plan := loadPlan(t, "../../testdata/corpus/uptime-kuma/expected.ir.json")
+	plan.Needs = []ir.Need{{Capability: ir.NeedDockerSocket, Service: "uptime-kuma", Detail: "/var/run/docker.sock", Reason: "watches containers"}}
+	options := testOptions(t, variants[0])
+	ungranted, _ := Compose(plan, options)
+	if strings.Contains(string(ungranted), "docker.sock") {
+		t.Fatal("an ungranted socket was rendered")
+	}
+	options.GrantedNeeds = []string{ir.NeedDockerSocket}
+	granted, err := Compose(plan, options)
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := string(granted)
+	comment, mount := strings.Index(text, "# NEED GRANTED BY USER: docker_socket (watches containers)"), strings.Index(text, `- "/var/run/docker.sock:/var/run/docker.sock"`)
+	if comment < 0 || mount < comment {
+		t.Fatalf("granted socket not rendered under its comment:\n%s", text)
+	}
+	project, err := composefile.Load(context.Background(), "compose.yaml", granted, nil, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	report := policy.EvaluateYAML(context.Background(), project, granted, policy.Input{Plan: plan, Profile: options.Profile, GrantedNeeds: options.GrantedNeeds,
+		AllowRegistries: config.Default().Registries.Allow, RepositoryOwner: "louislam"})
+	for _, finding := range report.Findings {
+		if strings.Contains(finding.Path, "volumes") && finding.Severity == policy.Deny {
+			t.Fatalf("the gate refuses the rendered socket: %+v", finding)
+		}
+	}
+}

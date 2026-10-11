@@ -259,7 +259,7 @@ type needView struct {
 }
 
 var capabilityLabels = map[string]string{ir.NeedHostNetwork: "Host network", ir.NeedDevices: "Devices", ir.NeedPrivileged: "Privileged",
-	ir.NeedBindMount: "Host folder", ir.NeedLowPort: "Port below 1024", ir.NeedCapAdd: "Capabilities"}
+	ir.NeedBindMount: "Host folder", ir.NeedLowPort: "Port below 1024", ir.NeedCapAdd: "Capabilities", ir.NeedDockerSocket: "Docker socket"}
 
 func needViews(plan *ir.IR, granted []string) []needView {
 	requested := map[string]ir.Need{}

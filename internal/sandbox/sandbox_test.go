@@ -337,6 +337,33 @@ volumes:
 	}
 }
 
+// TestOverrideNeverPassesTheDockerSocket: a granted socket is a bind mount,
+// so the sandbox run gets an empty throw-away volume in its place and the app
+// never reaches Docker before the user has seen it pass.
+func TestOverrideNeverPassesTheDockerSocket(t *testing.T) {
+	compose := []byte("services:\n  app:\n    image: example/app:1\n    volumes:\n      - /var/run/docker.sock:/var/run/docker.sock\n")
+	project, err := composefile.Load(context.Background(), composeFile, compose, nil, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	limits, _ := ParseLimits("256m", 1, 128)
+	override, err := Override(project, nil, limits, "cw-app-1234", 0, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	details := types.ConfigDetails{WorkingDir: t.TempDir(), Environment: types.Mapping{},
+		ConfigFiles: []types.ConfigFile{{Filename: composeFile, Content: compose}, {Filename: overrideFile, Content: override}}}
+	merged, err := loader.LoadWithContext(context.Background(), details, func(options *loader.Options) { options.SetProjectName("cw-app-1234", true) })
+	if err != nil {
+		t.Fatalf("Compose refuses the override: %v\n%s", err, override)
+	}
+	for _, volume := range merged.Services["app"].Volumes {
+		if volume.Type == types.VolumeTypeBind || !strings.HasPrefix(volume.Source, sandboxVolume) {
+			t.Fatalf("the sandbox would reach the socket: %+v\n%s", volume, override)
+		}
+	}
+}
+
 // TestPullsPinnedImagesOnlyWhenMissing: a digest names exact content, so a
 // run whose every image is pinned uses a local copy and leaves the registry
 // alone; one image named by tag alone makes the run pull them all.

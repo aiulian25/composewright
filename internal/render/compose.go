@@ -259,9 +259,17 @@ func (options Options) mounts(plan *ir.IR, service *ir.Service, volumes *yaml.No
 		}
 	}
 	for _, need := range plan.Needs {
-		if need.Capability == ir.NeedBindMount && need.Service == service.Name && options.isGranted(ir.NeedBindMount) {
+		if need.Service != service.Name || !options.isGranted(need.Capability) {
+			continue
+		}
+		switch need.Capability {
+		case ir.NeedBindMount:
 			source, target := splitMount(need.Detail)
 			items = append(items, quoted(source+":"+target))
+		case ir.NeedDockerSocket:
+			socket := quoted(ir.DockerSocket + ":" + cmp.Or(need.Detail, ir.DockerSocket))
+			socket.HeadComment = grantedComment(need)
+			items = append(items, socket)
 		}
 	}
 	if len(items) == 0 {
@@ -320,9 +328,13 @@ func (options Options) needs(plan *ir.IR, service *ir.Service, node *yaml.Node) 
 		default:
 			continue
 		}
-		field.HeadComment = fmt.Sprintf("NEED GRANTED BY USER: %s (%s)", need.Capability, singleLine(need.Reason))
+		field.HeadComment = grantedComment(need)
 		node.Content = append(node.Content, field, value)
 	}
+}
+
+func grantedComment(need ir.Need) string {
+	return fmt.Sprintf("NEED GRANTED BY USER: %s (%s)", need.Capability, singleLine(need.Reason))
 }
 
 func (options Options) granted(plan *ir.IR, service *ir.Service, capability string) bool {

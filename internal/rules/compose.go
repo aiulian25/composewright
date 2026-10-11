@@ -12,14 +12,15 @@ import (
 )
 
 const (
-	scoreDepth     = 2
-	scorePreferred = 5
-	scoreMentioned = 8
-	scoreIdentity  = 3
-	scoreAddon     = 5
-	lowPortLimit   = 1024
-	volumeBind     = "bind"
-	volumeTmpfs    = "tmpfs"
+	dockerSocketReason = "upstream mounts the Docker socket, so the app manages containers; granting it gives the app control of this host"
+	scoreDepth         = 2
+	scorePreferred     = 5
+	scoreMentioned     = 8
+	scoreIdentity      = 3
+	scoreAddon         = 5
+	lowPortLimit       = 1024
+	volumeBind         = "bind"
+	volumeTmpfs        = "tmpfs"
 )
 
 var (
@@ -281,6 +282,9 @@ func (builder *builder) composeVolumes(result *ir.Service, service extract.Compo
 		switch {
 		case volume.Type == volumeTmpfs:
 			continue
+		case volume.Type == volumeBind && ir.IsDockerSocket(volume.Source):
+			builder.needDockerSocket(result, volume.Target, at)
+			continue
 		case volume.Type == volumeBind && isHostPath(volume.Source):
 			builder.note(result, "upstream mounts the host path %s; it is left out", volume.Source)
 			continue
@@ -292,6 +296,20 @@ func (builder *builder) composeVolumes(result *ir.Service, service extract.Compo
 		}
 		mountVolume(result, ir.Volume{Name: builder.composeVolumeName(result, volume), ContainerPath: volume.Target, Provenance: at})
 	}
+}
+
+// needDockerSocket asks for the host's Docker socket where upstream mounts
+// it. It is mounted only if the user grants docker_socket, which hands the
+// app control of the host.
+func (builder *builder) needDockerSocket(service *ir.Service, target string, at ir.Provenance) {
+	asked := slices.ContainsFunc(builder.plan.Needs, func(need ir.Need) bool {
+		return need.Capability == ir.NeedDockerSocket && need.Service == service.Name
+	})
+	if asked {
+		return
+	}
+	builder.plan.Needs = append(builder.plan.Needs, ir.Need{Capability: ir.NeedDockerSocket, Service: service.Name,
+		Detail: path.Clean(target), Reason: dockerSocketReason, Provenance: at})
 }
 
 // composeVolumeName names the volume behind an upstream mount. A named

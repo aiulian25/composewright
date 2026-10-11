@@ -224,3 +224,22 @@ func TestRank(t *testing.T) {
 		}
 	}
 }
+
+// TestSchemaListsEveryCapability: the schema's need enum and Capabilities are
+// one list, so a need the gate knows is one a model may ask for.
+func TestSchemaListsEveryCapability(t *testing.T) {
+	need := loadSchema(t)["$defs"].(map[string]any)["need"].(map[string]any)
+	enum := need["properties"].(map[string]any)["capability"].(map[string]any)["enum"].([]any)
+	listed := make([]string, 0, len(enum))
+	for _, value := range enum {
+		listed = append(listed, value.(string))
+	}
+	if !reflect.DeepEqual(listed, Capabilities) {
+		t.Fatalf("schema enum %v, Capabilities %v", listed, Capabilities)
+	}
+	for path, want := range map[string]bool{"/var/run/docker.sock": true, "/run/user/1000/docker.sock": true, "docker.sock": false, "/var/run/docker": false} {
+		if IsDockerSocket(path) != want {
+			t.Errorf("IsDockerSocket(%q) = %v", path, !want)
+		}
+	}
+}

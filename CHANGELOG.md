@@ -6,6 +6,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- A `docker_socket` need. An app whose upstream mounts the Docker socket
+  (Portainer, Dockge, Traefik's Docker provider, composewright itself) asks
+  for it instead of losing the mount, and once you grant it on Review or
+  with `--allow-need docker_socket`, compose.yaml mounts
+  `/var/run/docker.sock` marked NEED GRANTED BY USER. The sandbox test still
+  runs without it.
+
 ### Changed
 
 - The image starts as root only long enough to make its data folder its own

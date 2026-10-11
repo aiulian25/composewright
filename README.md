@@ -82,7 +82,7 @@ Container Manager → Project → paste the compose file above. composewright jo
 
 1. **Source** — drop files (README, compose, `.env`, Dockerfile), paste a repository URL, or paste a compose file and `.env` you already have.
 2. **Analyse** — the repo is fetched as a tarball through the host's API (no `git clone`, no hooks); environment variables, images, ports and volumes are extracted with their file and line; rules turn that into a plan, and a model fills what they leave open only if you choose one.
-3. **Review** — every variable shows where it came from; secrets are generated for you; anything that needs host networking, devices or privileged mode is a request *you* grant, never a default. You can edit compose.yaml yourself before the test; the policy gate checks your version too.
+3. **Review** — every variable shows where it came from; secrets are generated for you; anything that needs host networking, devices, privileged mode or the Docker socket is a request *you* grant, never a default; the test runs without the Docker socket even once you grant it. You can edit compose.yaml yourself before the test; the policy gate checks your version too.
 4. **Validate** — the stack runs in a throw-away Compose project with memory, CPU and pid limits, ports bound to loopback, and `restart: "no"` so crash loops surface. Health checks and logs decide pass or fail; with a model, failures are repaired and retried up to three times.
 5. **Result** — copy the files, download them as a zip, save them to a folder named after the container (rename it if you like), or push them straight into Arcane's templates or projects folder. Delete or start over from the same screen.
 

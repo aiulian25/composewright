@@ -5,6 +5,7 @@
 package ir
 
 import (
+	"path"
 	"slices"
 	"strings"
 )
@@ -151,6 +152,13 @@ func (image Image) String() string {
 		reference += "@" + image.Digest
 	}
 	return reference
+}
+
+// IsDockerSocket reports whether a host path is a Docker daemon's socket,
+// such as /var/run/docker.sock or a rootless daemon's
+// /run/user/1000/docker.sock.
+func IsDockerSocket(hostPath string) bool {
+	return path.IsAbs(hostPath) && path.Base(hostPath) == dockerSocketName
 }
 
 func (healthcheck Healthcheck) Defined() bool {

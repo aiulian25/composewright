@@ -134,6 +134,10 @@ func (check *checker) composeLogging(name string, service types.ServiceConfig) {
 func (check *checker) composeVolumes(name string, service types.ServiceConfig) {
 	for _, volume := range service.Volumes {
 		field := "services." + name + ".volumes"
+		if check.grantedSocket(name, volume) {
+			check.add("P13", OK, name, field, "the Docker socket at %s, granted by the user", volume.Target)
+			continue
+		}
 		if ForbiddenTarget(volume.Target) {
 			check.add("P13", Deny, name, field, "mount target %s is reserved for the host", volume.Target)
 		}
@@ -148,6 +152,13 @@ func (check *checker) composeVolumes(name string, service types.ServiceConfig) {
 			check.add("P13", Deny, name, field, "mount type %q is not allowed", volume.Type)
 		}
 	}
+}
+
+// grantedSocket is a docker_socket the user granted: the host's socket,
+// bind-mounted where the service asked for it.
+func (check *checker) grantedSocket(service string, volume types.ServiceVolumeConfig) bool {
+	socket := volume.Type == volumeTypeBind && ir.IsDockerSocket(volume.Source)
+	return socket && check.granted(ir.NeedDockerSocket) && check.requested(ir.NeedDockerSocket, service, volume.Target)
 }
 
 // bindSource is P9a: bind mounts come only from the profile base path (after

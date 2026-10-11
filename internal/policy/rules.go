@@ -28,6 +28,7 @@ var (
 	urlHost             = regexp.MustCompile(`(?i)\b[a-z][a-z0-9+.-]*://(?:[^@/\s"']*@)?(\[[^\]]*\]|[^/:\s"'?#]*)`)
 	dangerousCommand    = regexp.MustCompile(`(?i)(\b(curl|wget|nc|ncat|netcat|socat)\b|/dev/(tcp|udp)/|docker\.sock|--privileged|\b(ba|da|z)?sh\s+-c\b.*https?://)`)
 	dangerousProbe      = regexp.MustCompile(`(?i)(/dev/(tcp|udp)/|docker\.sock|--privileged)`)
+	dockerSocketMention = regexp.MustCompile(`(?i)docker\.sock`)
 	// shellToken splits a healthcheck into words and the operators that end
 	// a command; quotes are dropped.
 	shellToken = regexp.MustCompile(`[|;&()]+|[^\s"'|;&()]+`)
@@ -308,8 +309,13 @@ func (check *checker) user(service *ir.Service, field string) {
 }
 
 func (check *checker) commands(service *ir.Service, field string) {
+	// A service granted the socket may name it, as in -H unix:///var/run/docker.sock.
+	socketGranted := check.granted(ir.NeedDockerSocket) && check.requested(ir.NeedDockerSocket, service.Name, "")
 	for name, argv := range map[string][]string{"command": service.Command, "entrypoint": service.Entrypoint} {
 		joined := strings.Join(argv, " ")
+		if socketGranted {
+			joined = dockerSocketMention.ReplaceAllString(joined, "")
+		}
 		if match := dangerousCommand.FindString(joined); match != "" {
 			check.add("P6", Deny, service.Name, field+"."+name, "%s contains %q, which can reach the network, a device or the Docker socket", name, match)
 		}

@@ -19,12 +19,17 @@ const (
 	ConditionHealthy   = "service_healthy"
 	ConditionCompleted = "service_completed_successfully"
 
-	NeedHostNetwork = "host_network"
-	NeedDevices     = "devices"
-	NeedPrivileged  = "privileged"
-	NeedBindMount   = "bind_mount"
-	NeedLowPort     = "low_port"
-	NeedCapAdd      = "cap_add"
+	NeedHostNetwork  = "host_network"
+	NeedDevices      = "devices"
+	NeedPrivileged   = "privileged"
+	NeedBindMount    = "bind_mount"
+	NeedLowPort      = "low_port"
+	NeedCapAdd       = "cap_add"
+	NeedDockerSocket = "docker_socket"
+
+	// DockerSocket is where a granted docker_socket comes from on the host.
+	DockerSocket     = "/var/run/docker.sock"
+	dockerSocketName = "docker.sock"
 
 	GeneratePassword24 = secrets.GeneratePassword24
 	GenerateHex32      = secrets.GenerateHex32
@@ -59,7 +64,7 @@ var (
 	Roles        = []string{RoleApp, RoleDB, RoleCache, RoleWorker, RoleProxy, RoleInit}
 	Protocols    = []string{ProtocolTCP, ProtocolUDP}
 	Conditions   = []string{ConditionStarted, ConditionHealthy, ConditionCompleted}
-	Capabilities = []string{NeedHostNetwork, NeedDevices, NeedPrivileged, NeedBindMount, NeedLowPort, NeedCapAdd}
+	Capabilities = []string{NeedHostNetwork, NeedDevices, NeedPrivileged, NeedBindMount, NeedLowPort, NeedCapAdd, NeedDockerSocket}
 	Generators   = []string{"", GeneratePassword24, GenerateHex32, GenerateBase64, GenerateUUID, GenerateLaravelKey}
 	Confidences  = []string{ConfidenceHigh, ConfidenceMedium, ConfidenceLow}
 	Sources      = []string{

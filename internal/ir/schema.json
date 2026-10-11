@@ -197,7 +197,7 @@
         },
         "container_path": {
           "type": "string",
-          "description": "Absolute path inside the container. Must not be /var/run/docker.sock, /proc, /sys or /dev (policy P8)."
+          "description": "Absolute path inside the container. Must not be /var/run/docker.sock, /proc, /sys or /dev (policy P8); an app that manages containers asks for docker_socket under needs."
         },
         "description": {
           "type": "string",
@@ -380,8 +380,8 @@
       "properties": {
         "capability": {
           "type": "string",
-          "enum": ["host_network", "devices", "privileged", "bind_mount", "low_port", "cap_add"],
-          "description": "What is requested. host_network = network_mode host (mDNS, discovery); devices = a /dev node; privileged = full privileges; bind_mount = a host directory; low_port = a published port below 1024; cap_add = one Linux capability."
+          "enum": ["host_network", "devices", "privileged", "bind_mount", "low_port", "cap_add", "docker_socket"],
+          "description": "What is requested. host_network = network_mode host (mDNS, discovery); devices = a /dev node; privileged = full privileges; bind_mount = a host directory; low_port = a published port below 1024; cap_add = one Linux capability; docker_socket = the host's Docker socket, for an app that manages containers."
         },
         "service": {
           "type": "string",
@@ -389,7 +389,7 @@
         },
         "detail": {
           "type": "string",
-          "description": "Specifics: device path (/dev/ttyUSB0), host path, capability name (NET_ADMIN) or port number. Empty when not applicable."
+          "description": "Specifics: device path (/dev/ttyUSB0), host path, capability name (NET_ADMIN), port number, or where the app expects the Docker socket (/var/run/docker.sock). Empty when not applicable."
         },
         "reason": {
           "type": "string",

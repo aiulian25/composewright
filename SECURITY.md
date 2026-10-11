@@ -8,7 +8,7 @@ Include what you found, how to reproduce it, the version (`composewright version
 
 ## What is in scope
 
-- A plan, README, repository or model answer that gets past the policy gate: privileges, host paths, host networking, devices, `build:`, an image outside the allowlist, a granted need without `--allow-need`.
+- A plan, README, repository or model answer that gets past the policy gate: privileges, host paths, host networking, devices, the Docker socket, `build:`, an image outside the allowlist, a granted need without `--allow-need`.
 - Anything that runs before explicit approval, or a sandbox run that escapes its override (restart policy, limits, loopback ports, networks, mounts).
 - A secret, the master key or an API key reaching a log, a prompt, stored output or an export it should not be in.
 - An outbound connection to a host outside the allowlist, or an extracted archive writing outside its folder.

@@ -86,7 +86,14 @@ func (builder *builder) runSettings(service *ir.Service, run extract.DockerRun) 
 	for _, mapping := range run.Volumes {
 		parts := strings.Split(mapping, ":")
 		const sourceAndTarget = 2
-		if len(parts) < sourceAndTarget || isHostPath(parts[0]) {
+		if len(parts) < sourceAndTarget {
+			continue
+		}
+		if ir.IsDockerSocket(parts[0]) {
+			builder.needDockerSocket(service, parts[1], at)
+			continue
+		}
+		if isHostPath(parts[0]) {
 			continue
 		}
 		target := path.Clean(parts[1])

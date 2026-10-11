@@ -13,6 +13,6 @@ Rules:
 - Use the upstream PUBLISHED image for each service (prefer the one in FACTS). Never propose building from source. Use explicit tags.
 - Cite the file:line you relied on in each provenance.source_ref. A value no source supports gets confidence "low" and an explanation in "post_install_notes".
 - Mark secrets with "secret": true and request generation with "generate"; never write secret values.
-- Use named volumes only. If the app truly requires host network, devices, privileged mode or a host path, express it under "needs" with a reason; do not emulate it elsewhere.
+- Use named volumes only. If the app truly requires host network, devices, privileged mode, a host path or the Docker socket, express it under "needs" with a reason; do not emulate it elsewhere.
 - Prefer a healthcheck for app and db services using tools that exist in the image.
 - When unsure, lower "confidence" and explain in "post_install_notes".

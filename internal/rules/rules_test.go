@@ -556,3 +556,29 @@ func TestProbePortIsTCP(t *testing.T) {
 		}
 	}
 }
+
+// TestDockerSocketBecomesANeed: a socket upstream mounts, in compose or in the
+// README's docker run, becomes one docker_socket request per service with
+// where the app expects it, and never a volume.
+func TestDockerSocketBecomesANeed(t *testing.T) {
+	sources := map[string]map[string]string{
+		"compose": {"docker-compose.yml": "services:\n  ui:\n    image: example/ui:1.0\n" +
+			"    volumes: [\"/var/run/docker.sock:/var/run/docker.sock:ro\", \"/run/docker.sock:/var/run/docker.sock\", \"data:/data\"]\nvolumes:\n  data: {}\n"},
+		"readme": {"README.md": "# UI\n\n```sh\ndocker run -d -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock example/ui:1.0\n```\n"},
+	}
+	for name, files := range sources {
+		plan := Build(context.Background(), Input{Facts: testFacts(t, files), Source: &fetch.Source{Owner: "example", Repository: "ui"}})
+		if len(plan.Needs) != 1 {
+			t.Fatalf("%s: needs %+v", name, plan.Needs)
+		}
+		need := plan.Needs[0]
+		if need.Capability != ir.NeedDockerSocket || need.Service != plan.AppService().Name || need.Detail != ir.DockerSocket {
+			t.Fatalf("%s: need %+v", name, need)
+		}
+		for _, volume := range plan.AppService().Volumes {
+			if strings.Contains(volume.ContainerPath, "docker.sock") {
+				t.Fatalf("%s: the socket became a volume: %+v", name, volume)
+			}
+		}
+	}
+}
