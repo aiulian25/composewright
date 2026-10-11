@@ -3,6 +3,7 @@ package sandbox
 import (
 	"cmp"
 	"os"
+	"strings"
 
 	"github.com/aiulian25/composewright/internal/config"
 )
@@ -11,6 +12,20 @@ import (
 // DOCKER_HOST; empty leaves it to the docker context.
 func DockerHost(configured string) string {
 	return cmp.Or(configured, os.Getenv(dockerHostVariable))
+}
+
+// SocketPath is the Unix socket a Docker host names: the path of a unix://
+// host, or Docker's default socket when no host is set. Other hosts, such as
+// tcp://, have none.
+func SocketPath(host string) string {
+	if host == "" {
+		return defaultSocket
+	}
+	path, isUnix := strings.CutPrefix(host, unixScheme)
+	if !isUnix {
+		return ""
+	}
+	return path
 }
 
 // FromConfig builds the sandbox the configuration describes: its docker CLI,

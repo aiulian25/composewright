@@ -20,8 +20,8 @@ docker run -d --name composewright --restart unless-stopped \
   -p 127.0.0.1:8484:8484 \
   -v composewright-data:/data \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  --group-add "$(stat -c '%g' /var/run/docker.sock)" \
-  --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges \
+  --read-only --tmpfs /tmp --cap-drop ALL --cap-add CHOWN --cap-add SETGID --cap-add SETUID \
+  --security-opt no-new-privileges \
   ghcr.io/aiulian25/composewright:0.1.0
 ```
 
@@ -30,11 +30,11 @@ Open **http://127.0.0.1:8484**, set an admin password, and choose a model:
 - **Local (recommended):** Ollama at `http://127.0.0.1:11434` with a coding model such as `qwen2.5-coder:14b`. Nothing leaves your machine.
 - **Cloud:** paste an Anthropic or OpenAI-compatible API key. The key is stored encrypted; README content is sent to that provider, your secrets never are.
 
-That is the whole install. The image contains everything it needs: the app, the web UI, its database, and the `docker compose` tooling it uses to validate stacks. No sidecars, no second container. It runs read-only and without capabilities, writing only to its data volume and a `/tmp` in memory.
+That is the whole install. The image contains everything it needs: the app, the web UI, its database, and the `docker compose` tooling it uses to validate stacks. No sidecars, no second container. It starts as root only to make its data folder its own and join the Docker socket's group, then runs as an unprivileged user with no capabilities, read-only, writing only to its data folder and a `/tmp` in memory. The Docker socket line is required: composewright tests every stack with your Docker.
 
 ### Prefer a compose file?
 
-The same as one service, also in [`deploy/composewright.yaml`](deploy/composewright.yaml). Save it as `compose.yaml` in a folder of its own:
+The same as one service, also in [`deploy/composewright.yaml`](deploy/composewright.yaml). Save it as `compose.yaml` in a folder of its own and start it with `docker compose up -d`:
 
 ```yaml
 services:
@@ -45,42 +45,30 @@ services:
     ports:
       - "127.0.0.1:8484:8484"                     # this machine only; put a reverse proxy in front for LAN or TLS
     volumes:
-      - composewright-data:/data                    # config, database, master key and projects
-      - /var/run/docker.sock:/var/run/docker.sock
-    group_add:
-      - "${DOCKER_GID:?set DOCKER_GID to the group of /var/run/docker.sock: stat -c %g /var/run/docker.sock}"
+      - composewright-data:/data                    # config, database, master key and projects; a host folder works too
+      - /var/run/docker.sock:/var/run/docker.sock   # required: composewright tests stacks with your Docker
     read_only: true                                 # it writes only to /data and the /tmp below
     tmpfs: [/tmp]
     cap_drop: [ALL]
+    cap_add: [CHOWN, SETGID, SETUID]                # used once at start to make /data its own and join the socket's group, then it runs as uid 65532 with none
     security_opt: ["no-new-privileges:true"]
 volumes:
   composewright-data: {}
 ```
 
-Next to it, a `.env` with the group that owns the Docker socket on this host. `stat -c '%g' /var/run/docker.sock` prints it; `999` is only an example:
-
-```dotenv
-DOCKER_GID=999
-```
-
-Then, in that folder:
-
-```sh
-docker compose up -d
-```
+A folder on the host works as well as the volume, for example `- /srv/composewright:/data`: on the first start composewright makes a new or empty folder its own (uid 65532, mode 700). It never takes over a folder that already holds someone else's files.
 
 ### Running on rootless Docker
 
-Run it on your rootless daemon as uid 0 — inside a rootless daemon that *is* your own unprivileged user — with that daemon's socket and a data folder you own. A volume would belong to the image's uid 65532, and composewright refuses a data directory owned by another user than the one it runs as:
+The same command with your rootless daemon's socket. Inside a rootless daemon, root is your own unprivileged user, so composewright stays root there and its data stays yours:
 
 ```sh
-mkdir -p -m 0700 ~/.local/share/composewright
 docker run -d --name composewright --restart unless-stopped \
   -p 127.0.0.1:8484:8484 \
-  -v ~/.local/share/composewright:/data \
+  -v composewright-data:/data \
   -v "$XDG_RUNTIME_DIR/docker.sock:/var/run/docker.sock" \
-  --user 0:0 \
-  --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges \
+  --read-only --tmpfs /tmp --cap-drop ALL --cap-add CHOWN --cap-add SETGID --cap-add SETUID \
+  --security-opt no-new-privileges \
   ghcr.io/aiulian25/composewright:0.1.0
 ```
 
@@ -88,7 +76,7 @@ docker run -d --name composewright --restart unless-stopped \
 
 ### Synology (DSM 7.2+)
 
-Container Manager → Project → paste the compose file above and set `DOCKER_GID` to the gid of `/var/run/docker.sock` (`stat -c '%g' /var/run/docker.sock` over SSH).
+Container Manager → Project → paste the compose file above. composewright joins the group of `/var/run/docker.sock` by itself.
 
 ## Using it
 
@@ -121,10 +109,10 @@ composewright export miniflux --to ./miniflux
 
 | How | Start it with | Notes |
 |---|---|---|
-| `docker run` | the quickstart above | A named volume and the socket's group |
+| `docker run` | the quickstart above | A named volume, or any host folder |
 | Compose | `deploy/composewright.yaml` | The same as one service |
-| Hardened compose | `deploy/composewright.hardened.yaml` | A socket proxy on an internal network, read-only containers, a data folder owned by uid 65532 |
-| Rootless Docker | the command above | Your own daemon; data in a folder you own |
+| Hardened compose | `deploy/composewright.hardened.yaml` | A socket proxy on an internal network, read-only containers |
+| Rootless Docker | the command above | Your own daemon; the data stays yours |
 | Synology DSM 7.2+ | Container Manager → Project | `deploy/composewright.yaml` |
 
 The container image is the only distribution. To work on composewright itself, see `CONTRIBUTING.md`.

@@ -19,6 +19,7 @@ import (
 	"github.com/aiulian25/composewright/internal/config"
 	"github.com/aiulian25/composewright/internal/netguard"
 	"github.com/aiulian25/composewright/internal/redact"
+	"github.com/aiulian25/composewright/internal/runas"
 	"github.com/aiulian25/composewright/internal/workspace"
 )
 
@@ -57,6 +58,10 @@ func (failure codedError) Error() string { return failure.err.Error() }
 func (failure codedError) Unwrap() error { return failure.err }
 
 func Execute(build BuildInfo) int {
+	if err := runas.Prepare(); err != nil {
+		fmt.Fprintln(os.Stderr, "error:", redact.Text(err.Error()))
+		return exitFailure
+	}
 	restrictUmask()
 	application := &app{build: build, stdin: os.Stdin, stdout: os.Stdout, stderr: os.Stderr}
 	return application.run(os.Args[1:])

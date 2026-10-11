@@ -33,8 +33,11 @@ COPY --from=docker /usr/local/libexec/docker/cli-plugins/docker-compose /usr/loc
 # composewright refuses a data directory that is not 0700 and its own, so the
 # volume starts out that way.
 COPY --from=build --chown=65532:65532 --chmod=0700 /out/data /data
-ENV COMPOSEWRIGHT_DATA_DIR=/data COMPOSEWRIGHT_CONFIG=/data/config.yaml DOCKER_CONFIG=/tmp/docker
-USER 65532:65532
+ENV COMPOSEWRIGHT_DATA_DIR=/data COMPOSEWRIGHT_CONFIG=/data/config.yaml DOCKER_CONFIG=/tmp/docker COMPOSEWRIGHT_RUN_AS=65532:65532
+# It starts as root only to make a folder Docker created for /data its own and
+# to join the Docker socket's group, then runs as COMPOSEWRIGHT_RUN_AS with no
+# capabilities.
+USER 0:0
 VOLUME ["/data"]
 EXPOSE 8484
 ENTRYPOINT ["/usr/bin/composewright"]

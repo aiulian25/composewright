@@ -20,6 +20,8 @@ const (
 	stderrLimit        = 256 << 10
 	terminationGrace   = 10 * time.Second
 	dockerHostVariable = "DOCKER_HOST"
+	defaultSocket      = "/var/run/docker.sock"
+	unixScheme         = "unix://"
 )
 
 // passedEnvironment is all the docker CLI sees of ours. Anything else, such

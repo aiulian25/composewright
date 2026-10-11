@@ -1,8 +1,8 @@
 # composewright behind a Docker socket proxy. The
 # app never holds the socket, both containers are read-only and drop every
-# capability, and the proxy passes only the API calls validation makes.
-# The data folder must exist and belong to the image's user first:
-#   sudo install -d -m 0700 -o 65532 -g 65532 /srv/composewright/data
+# capability but the three composewright uses once at start to make its data
+# folder its own, and the proxy passes only the API calls validation makes.
+# The proxy reads the socket through its group:
 #   DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose -f composewright.hardened.yaml up -d
 services:
   socket-proxy:
@@ -33,6 +33,7 @@ services:
     read_only: true
     tmpfs: [/tmp]
     cap_drop: [ALL]
+    cap_add: [CHOWN, SETGID, SETUID]
     security_opt: ["no-new-privileges:true"]
     depends_on: [socket-proxy]
     networks: [internal, default]

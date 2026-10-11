@@ -8,12 +8,21 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The image starts as root only long enough to make its data folder its own
+  and join the Docker socket's group, then runs as uid 65532 with no
+  capabilities. A compose file that drops every capability needs
+  `cap_add: [CHOWN, SETGID, SETUID]`; `group_add` and `DOCKER_GID` are no
+  longer needed. Under rootless Docker it stays root, which is your own user.
 - The web UI answers to every host name, so a reverse proxy or the
   machine's own name works from the first visit. `serve --allow-host` is
   accepted and ignored.
 
 ### Fixed
 
+- A data folder Docker created as root for a bind mount, or an empty one you
+  made, no longer stops composewright from starting: it becomes the app's,
+  with mode 700. A folder that already holds someone else's files is refused
+  with the command that fixes it.
 - `composewright gen` no longer says the images it pulls for the sandbox
   are removed afterwards: the sandbox and its volumes are, and the images
   stay for the real deployment.
