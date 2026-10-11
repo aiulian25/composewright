@@ -294,6 +294,49 @@ func TestStartProbesKeepTheCheckAndItsTolerance(t *testing.T) {
 	}
 }
 
+// TestOverrideKeepsTmpfsAndReadOnlyMounts: once a bind mount makes the
+// override replace a service's volumes, merged the way Compose merges, the
+// bind becomes a throw-away volume, a read-only volume stays read-only, and
+// a tmpfs and an anonymous volume, which have no source, are kept.
+func TestOverrideKeepsTmpfsAndReadOnlyMounts(t *testing.T) {
+	compose := []byte(`services:
+  app:
+    image: example/app:1
+    volumes:
+      - ./data:/data
+      - cache:/cache:ro
+      - type: tmpfs
+        target: /tmp/scratch
+      - /anonymous
+volumes:
+  cache: {}
+`)
+	project, err := composefile.Load(context.Background(), composeFile, compose, nil, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	limits, _ := ParseLimits("256m", 1, 128)
+	override, err := Override(project, nil, limits, "cw-app-1234", 0, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	details := types.ConfigDetails{WorkingDir: t.TempDir(), Environment: types.Mapping{},
+		ConfigFiles: []types.ConfigFile{{Filename: composeFile, Content: compose}, {Filename: overrideFile, Content: override}}}
+	merged, err := loader.LoadWithContext(context.Background(), details, func(options *loader.Options) { options.SetProjectName("cw-app-1234", true) })
+	if err != nil {
+		t.Fatalf("Compose refuses the override: %v\n%s", err, override)
+	}
+	mounts := map[string]types.ServiceVolumeConfig{}
+	for _, volume := range merged.Services["app"].Volumes {
+		mounts[volume.Target] = volume
+	}
+	data, cache, scratch, anonymous := mounts["/data"], mounts["/cache"], mounts["/tmp/scratch"], mounts["/anonymous"]
+	if len(mounts) != 4 || data.Type != types.VolumeTypeVolume || !strings.HasPrefix(data.Source, sandboxVolume) ||
+		!cache.ReadOnly || cache.Source != "cache" || scratch.Type != types.VolumeTypeTmpfs || anonymous.Type != types.VolumeTypeVolume {
+		t.Fatalf("merged mounts %+v\n%s", merged.Services["app"].Volumes, override)
+	}
+}
+
 // TestLastHealthOutput keeps what the latest check printed, without secrets.
 func TestLastHealthOutput(t *testing.T) {
 	inspected := []byte(`{"Status":"unhealthy","FailingStreak":3,"Log":[{"ExitCode":1,"Output":"first try"},` +

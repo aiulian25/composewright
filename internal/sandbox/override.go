@@ -26,6 +26,7 @@ const (
 	defaultNetwork  = "default"
 	loopbackAddress = "127.0.0.1"
 	volumeTypeBind  = "bind"
+	readOnlySuffix  = ":ro"
 	allCapabilities = "ALL"
 	yamlTrue        = "true"
 	yamlIndent      = 2
@@ -162,7 +163,8 @@ func loopbackPorts(published []string) *yaml.Node {
 }
 
 // sandboxMounts replaces bind mounts with throw-away named volumes so a run
-// never writes into the user's folders; named volumes are kept as they are.
+// never writes into the user's folders; named volumes, tmpfs mounts and
+// read-only flags are kept as they are.
 func sandboxMounts(service types.ServiceConfig, volumes *yaml.Node) *yaml.Node {
 	hasBind := false
 	for _, volume := range service.Volumes {
@@ -173,14 +175,31 @@ func sandboxMounts(service types.ServiceConfig, volumes *yaml.Node) *yaml.Node {
 	}
 	mounts := sequence()
 	for index, volume := range service.Volumes {
-		source := volume.Source
-		if volume.Type == volumeTypeBind {
-			source = sandboxVolume + service.Name + "-" + strconv.Itoa(index)
-			volumes.Content = append(volumes.Content, scalar(source), &yaml.Node{Kind: yaml.MappingNode, Style: yaml.FlowStyle})
-		}
-		mounts.Content = append(mounts.Content, quoted(source+":"+volume.Target))
+		mounts.Content = append(mounts.Content, sandboxMount(service.Name, index, volume, volumes))
 	}
 	return mounts
+}
+
+// sandboxMount writes one mount as source:target, read-only when it was.
+// A tmpfs or an anonymous volume has no source, so it takes the long form.
+func sandboxMount(serviceName string, index int, volume types.ServiceVolumeConfig, volumes *yaml.Node) *yaml.Node {
+	source := volume.Source
+	if volume.Type == volumeTypeBind {
+		source = sandboxVolume + serviceName + "-" + strconv.Itoa(index)
+		volumes.Content = append(volumes.Content, scalar(source), &yaml.Node{Kind: yaml.MappingNode, Style: yaml.FlowStyle})
+	}
+	if source == "" {
+		mount := mapping(scalar("type"), scalar(volume.Type), scalar("target"), quoted(volume.Target))
+		if volume.ReadOnly {
+			mount.Content = append(mount.Content, scalar("read_only"), scalar(yamlTrue))
+		}
+		return mount
+	}
+	mount := source + ":" + volume.Target
+	if volume.ReadOnly {
+		mount += readOnlySuffix
+	}
+	return quoted(mount)
 }
 
 // externalNetworks resets every external network so the sandbox never joins
