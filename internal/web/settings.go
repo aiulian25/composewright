@@ -222,6 +222,8 @@ func (server *Server) saveSettings(writer http.ResponseWriter, request *http.Req
 // saveSection reads a page's form into the configuration and writes it. It
 // returns what the form sent, to show again when saving fails.
 func (server *Server) saveSection(request *http.Request, current *visit, section string) (config.Config, error) {
+	server.settingsMutex.Lock()
+	defer server.settingsMutex.Unlock()
 	submitted := server.config()
 	var err error
 	switch section {
@@ -242,6 +244,10 @@ func (server *Server) saveSection(request *http.Request, current *visit, section
 	return submitted, server.changePassword(request, current)
 }
 
+// update writes values to config.yaml, reloads it and audits the change.
+// Callers hold settingsMutex from the moment they read the configuration
+// they change, so two saves cannot undo each other. A CLI config set run at
+// the same moment is not covered and can still overwrite one.
 func (server *Server) update(request *http.Request, current *visit, values map[string]string) error {
 	if err := config.UpdateFile(server.paths().ConfigFile, values); err != nil {
 		return err
@@ -464,6 +470,8 @@ func (server *Server) switchEngine(writer http.ResponseWriter, request *http.Req
 	if !slices.Contains(pipeline.Engines, engine) {
 		return badRequest("Choose rules, assisted or model.")
 	}
+	server.settingsMutex.Lock()
+	defer server.settingsMutex.Unlock()
 	if err := server.update(request, current, map[string]string{"llm.engine": quote(engine)}); err != nil {
 		return badRequest("%s.", capitalised(err.Error()))
 	}

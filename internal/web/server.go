@@ -92,6 +92,9 @@ type Server struct {
 	mutex      sync.RWMutex
 	loaded     *config.Loaded
 	setupToken string
+	// settingsMutex makes Settings saves take turns, from reading the
+	// configuration they change to writing it back.
+	settingsMutex sync.Mutex
 }
 
 func New(options Options) (*Server, error) {

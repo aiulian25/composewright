@@ -20,6 +20,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -1172,6 +1173,46 @@ func TestModelConnections(t *testing.T) {
 	latest, err := server.workspace().Store.AuditEntries(context.Background(), "", 1)
 	if err != nil || len(latest) != 1 || latest[0].Action != store.ActionDeleteSecret || latest[0].Details["name"] != "llm-claude-work" {
 		t.Fatalf("removing the key was not audited: %+v %v", latest, err)
+	}
+}
+
+// TestSettingsSavesTakeTurns: saves that arrive together are applied one
+// after another, each on the configuration the last one wrote, so every
+// connection added at the same moment is kept.
+func TestSettingsSavesTakeTurns(t *testing.T) {
+	harness := newHarness(t)
+	harness.signUp()
+	const saves = 8
+	answers := make(chan int, saves)
+	var group sync.WaitGroup
+	for number := range saves {
+		group.Go(func() {
+			form := url.Values{"preset": {"ollama"}, "name": {"ollama-" + strconv.Itoa(number)}, "base_url": {"http://192.168.1.123:11434"},
+				"model": {"qwen2.5-coder:7b"}, "max_input_tokens": {"8000"}, csrfField: {harness.token}}
+			request, err := http.NewRequest(http.MethodPost, harness.http.URL+"/settings/models", strings.NewReader(form.Encode()))
+			if err != nil {
+				answers <- 0
+				return
+			}
+			request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			response, err := harness.client.Do(request)
+			if err != nil {
+				answers <- 0
+				return
+			}
+			_ = response.Body.Close()
+			answers <- response.StatusCode
+		})
+	}
+	group.Wait()
+	close(answers)
+	for answer := range answers {
+		if answer != http.StatusSeeOther {
+			t.Fatalf("a save answered %d", answer)
+		}
+	}
+	if kept := len(harness.server.config().LLM.Connections); kept != saves {
+		t.Fatalf("%d of %d connections saved at the same moment were kept", kept, saves)
 	}
 }
 
