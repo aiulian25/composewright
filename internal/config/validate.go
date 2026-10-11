@@ -43,7 +43,20 @@ func (config Config) Validate() error {
 		oneOf("ui.theme", config.UI.Theme, themes),
 		sessionTTLProblem(config.UI.SessionTTL),
 		config.Profile.Validate(),
+		backupProblem(config.Backup),
 	)
+}
+
+// backupProblem keeps the backup schedule one composewright can follow.
+func backupProblem(backup Backup) error {
+	problems := []error{oneOf("backup.schedule", backup.Schedule, backupSchedules)}
+	if backup.EveryDays < 1 || backup.EveryDays > MaxBackupDays {
+		problems = append(problems, fmt.Errorf("backup.every_days must be between 1 and %d", MaxBackupDays))
+	}
+	if backup.Keep < 1 || backup.Keep > MaxBackupsKept {
+		problems = append(problems, fmt.Errorf("backup.keep must be between 1 and %d", MaxBackupsKept))
+	}
+	return errors.Join(problems...)
 }
 
 // sessionTTLProblem keeps sign-in usable: 0 would end every session at once

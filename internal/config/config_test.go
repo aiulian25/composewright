@@ -106,18 +106,21 @@ func TestDecodeRejectsUnknownKeys(t *testing.T) {
 
 func TestValidateRejectsBadValues(t *testing.T) {
 	cases := map[string]func(*Config){
-		"tier":           func(c *Config) { c.Docker.SandboxTier = "yolo" },
-		"timeout":        func(c *Config) { c.Docker.Validate.Timeout = time.Second },
-		"iterations":     func(c *Config) { c.Docker.Validate.MaxIterations = 99 },
-		"memory":         func(c *Config) { c.Docker.Validate.MemoryLimit = "lots" },
-		"provider":       func(c *Config) { c.LLM.Provider = "magic" },
-		"base url":       func(c *Config) { c.LLM.BaseURL = "ftp://x" },
-		"api key ref":    func(c *Config) { c.LLM.APIKeyRef = "plaintext-key" },
-		"registry":       func(c *Config) { c.Registries.Allow = []string{"https://evil/*"} },
-		"private target": func(c *Config) { c.Network.AllowPrivateTargets = []string{"192.168.1.10"} },
-		"update check":   func(c *Config) { c.Network.UpdateCheck = true },
-		"theme":          func(c *Config) { c.UI.Theme = "neon" },
-		"network kind":   func(c *Config) { c.Profile.Networks = []ProfileNetwork{{Name: "npm", Kind: "wormhole"}} },
+		"tier":            func(c *Config) { c.Docker.SandboxTier = "yolo" },
+		"timeout":         func(c *Config) { c.Docker.Validate.Timeout = time.Second },
+		"iterations":      func(c *Config) { c.Docker.Validate.MaxIterations = 99 },
+		"memory":          func(c *Config) { c.Docker.Validate.MemoryLimit = "lots" },
+		"provider":        func(c *Config) { c.LLM.Provider = "magic" },
+		"base url":        func(c *Config) { c.LLM.BaseURL = "ftp://x" },
+		"api key ref":     func(c *Config) { c.LLM.APIKeyRef = "plaintext-key" },
+		"registry":        func(c *Config) { c.Registries.Allow = []string{"https://evil/*"} },
+		"private target":  func(c *Config) { c.Network.AllowPrivateTargets = []string{"192.168.1.10"} },
+		"update check":    func(c *Config) { c.Network.UpdateCheck = true },
+		"theme":           func(c *Config) { c.UI.Theme = "neon" },
+		"backup schedule": func(c *Config) { c.Backup.Schedule = "hourly" },
+		"backup days":     func(c *Config) { c.Backup.EveryDays = 0 },
+		"backup keep":     func(c *Config) { c.Backup.Keep = 1000 },
+		"network kind":    func(c *Config) { c.Profile.Networks = []ProfileNetwork{{Name: "npm", Kind: "wormhole"}} },
 		"one name twice": func(c *Config) {
 			c.Profile.Networks = []ProfileNetwork{{Name: "a", Kind: "proxy"}, {Name: "a", Kind: "tunnel"}}
 		},

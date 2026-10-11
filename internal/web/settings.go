@@ -50,7 +50,7 @@ var (
 	// form, saved in one go.
 	settingsSections = []string{sectionProfile, sectionEngine, sectionModels, sectionAppearance, sectionAccount, sectionBackup}
 	settingsTitles   = map[string]string{sectionProfile: "Environment profile", sectionEngine: "Engine",
-		sectionModels: "Model providers", sectionAppearance: "Appearance", sectionAccount: "Account", sectionBackup: "Backup and restore"}
+		sectionModels: "Model providers", sectionAppearance: "Appearance", sectionAccount: "Account", sectionBackup: "Backups"}
 )
 
 type settingsView struct {
@@ -75,6 +75,7 @@ type settingsView struct {
 	Registries  string
 	ConfigFile  string
 	Minimum     int
+	Backups     backupView
 }
 
 // networkRow is one row of the networks table. It carries the kinds and
@@ -124,8 +125,8 @@ func (server *Server) settingsPage(writer http.ResponseWriter, request *http.Req
 	if request.URL.Query().Has(savedQuery) {
 		state.notice = savedNotice
 	}
-	if request.URL.Query().Has(restoredQuery) {
-		state.notice = restoredNotice(request.URL.Query())
+	if notice := backupNotice(request.URL.Query()); notice != "" {
+		state.notice = notice
 	}
 	return server.renderSettings(writer, request, current, state)
 }
@@ -167,6 +168,11 @@ func (server *Server) renderSettings(writer http.ResponseWriter, request *http.R
 	blank := networkRow{Index: strconv.Itoa(len(view.Networks)), Kind: kinds[0], Kinds: kinds, Providers: providers}
 	view.Networks = append(view.Networks, blank)
 	view.NewNetwork, view.NewNetwork.Index = blank, newRowIndex
+	if state.shown == sectionBackup {
+		if view.Backups, err = server.backupView(request.Context(), configuration.Backup); err != nil {
+			return err
+		}
+	}
 	if state.shown == sectionProfile {
 		server.lookAtHost(request.Context(), &view)
 	}
@@ -255,6 +261,11 @@ func (server *Server) saveSection(request *http.Request, current *visit, section
 		return submitted, server.update(request, current, map[string]string{themeKey: quote(submitted.UI.Theme)})
 	case sectionAccount:
 		return submitted, server.changePassword(request, current)
+	case sectionBackup:
+		if submitted.Backup, err = backupForm(request, submitted.Backup); err != nil {
+			return submitted, err
+		}
+		return submitted, server.update(request, current, backupValues(submitted.Backup))
 	}
 	return submitted, statusError{status: http.StatusNotFound, message: noSuchSection}
 }

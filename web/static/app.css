@@ -989,6 +989,12 @@ pre,
   min-width: 0;
 }
 
+/* A form inside a card shrinks with it, so a table in the form scrolls
+   instead of widening the page. */
+.card > form {
+  min-width: 0;
+}
+
 .card-head {
   display: flex;
   align-items: center;
@@ -1217,6 +1223,7 @@ select {
 
 .field {
   display: grid;
+  align-content: start;
   gap: 6px;
   min-width: 0;
 }

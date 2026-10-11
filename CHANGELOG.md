@@ -73,13 +73,16 @@ All notable changes to this project are documented here. The format follows
   users. Actions are recorded in a hash-chained audit log that
   `audit verify` and `doctor` check: editing, reordering or removing an
   entry other than the newest breaks the chain.
-- **Backup and restore.** Settings → Backup and restore downloads one file
-  with the Settings choices, the model API keys they use and every project,
-  with its versions, compose.yaml, DEPLOY.md and `.env` secrets, encrypted
-  with a passphrase you choose (Argon2id and XChaCha20-Poly1305), and
-  restores it on any install. Both ask for the account password again; a
-  restore keeps the projects that exist unless told to replace them, and
-  everything restored is checked again before it runs.
+- **Backups.** Settings → Backups keeps backups of the Settings choices,
+  the model API keys they use and every project, with its versions,
+  compose.yaml, DEPLOY.md and `.env` secrets: made automatically (weekly,
+  monthly or every few days, keeping as many as you choose) or when you
+  ask, and encrypted with a backup passphrase you set once (Argon2id and
+  XChaCha20-Poly1305), so a downloaded copy restores on any install.
+  Downloading and restoring, from a stored backup or an uploaded file, ask
+  for the account password again; a restore keeps the projects that exist
+  unless told to replace them, and everything restored is checked again
+  before it runs.
 - **Egress control.** composewright's own connections all go through
   `internal/netguard`: each purpose has a host allowlist, and internal
   addresses are refused after DNS resolution unless configured as private

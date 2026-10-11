@@ -67,9 +67,13 @@ func TestArchiveProblems(t *testing.T) {
 		"path in a name": func(archive *Archive) {
 			archive.Projects[0].Project.Name, archive.Projects[0].Project.Slug = "../etc", "../etc"
 		},
-		"slug differs":    func(archive *Archive) { archive.Projects[0].Project.Slug = "other" },
-		"twice the same":  func(archive *Archive) { archive.Projects = append(archive.Projects, archive.Projects[0]) },
-		"unused key":      func(archive *Archive) { archive.Keys["github"] = "x" },
+		"slug differs":   func(archive *Archive) { archive.Projects[0].Project.Slug = "other" },
+		"twice the same": func(archive *Archive) { archive.Projects = append(archive.Projects, archive.Projects[0]) },
+		"unused key":     func(archive *Archive) { archive.Keys["github"] = "x" },
+		"the passphrase": func(archive *Archive) {
+			archive.Settings.LLM.APIKeyRef = config.SecretRefKeyring + PassphraseName
+			archive.Keys = map[string]string{PassphraseName: "chosen by someone else"}
+		},
 		"bad .env key":    func(archive *Archive) { archive.Projects[0].Variables[0].Key = "A=B" },
 		"unreadable plan": func(archive *Archive) { archive.Projects[0].Generations[0].Generation.IRJSON = "{" },
 		"newer format":    func(archive *Archive) { archive.Format = formatVersion + 1 },

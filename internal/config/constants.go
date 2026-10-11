@@ -51,6 +51,13 @@ const (
 	StorageVolumes = "volumes"
 	StorageBind    = "bind"
 
+	BackupOff      = "off"
+	BackupWeekly   = "weekly"
+	BackupMonthly  = "monthly"
+	BackupCustom   = "custom"
+	MaxBackupDays  = 365
+	MaxBackupsKept = 100
+
 	SecretRefKeyring = "keyring:"
 	SecretRefEnv     = "env:"
 
@@ -103,6 +110,7 @@ var (
 	networkKinds     = []string{"proxy", "tunnel", "vpn", "other"}
 	networkProviders = []string{"", "npm", "traefik", "caddy", "pangolin", "cloudflare", "tailscale"}
 	restartModes     = []string{"unless-stopped", "always", "on-failure", "no"}
+	backupSchedules  = []string{BackupOff, BackupWeekly, BackupMonthly, BackupCustom}
 )
 
 // The choices Settings offers are the lists validation accepts, in the order
@@ -112,3 +120,4 @@ func NetworkKinds() []string     { return slices.Clone(networkKinds) }
 func NetworkProviders() []string { return slices.Clone(networkProviders) }
 func RestartModes() []string     { return slices.Clone(restartModes) }
 func Themes() []string           { return slices.Clone(themes) }
+func BackupSchedules() []string  { return slices.Clone(backupSchedules) }

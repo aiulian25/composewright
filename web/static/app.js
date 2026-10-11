@@ -1131,6 +1131,18 @@
     warning.hidden = false;
   }
 
+  // Buttons whose action cannot be undone ask first, with the question in
+  // data-confirm; without scripts they submit as they are.
+  function setUpConfirm() {
+    document.querySelectorAll("[data-confirm]").forEach(function (button) {
+      button.addEventListener("click", function (event) {
+        if (!window.confirm(button.getAttribute("data-confirm"))) {
+          event.preventDefault();
+        }
+      });
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     setUpToggle();
     warnInsecureContext();
@@ -1149,6 +1161,7 @@
     setUpAddRow();
     setUpConnectionForm();
     setUpUnsaved();
+    setUpConfirm();
     setUpJob();
     tickElapsed();
     var log = document.querySelector("[data-log]");

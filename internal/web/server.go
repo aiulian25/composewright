@@ -92,6 +92,9 @@ type Server struct {
 	mutex      sync.RWMutex
 	loaded     *config.Loaded
 	setupToken string
+	// stopBackups ends the backup scheduler, which closes backupsDone.
+	stopBackups context.CancelFunc
+	backupsDone chan struct{}
 	// settingsMutex makes Settings saves take turns, from reading the
 	// configuration they change to writing it back.
 	settingsMutex sync.Mutex
@@ -122,12 +125,17 @@ func New(options Options) (*Server, error) {
 	server.status = newStatusCache(server)
 	server.routes()
 	server.sweepUploads()
+	scheduling, stop := context.WithCancel(context.Background())
+	server.stopBackups, server.backupsDone = stop, make(chan struct{})
+	go server.scheduleBackups(scheduling)
 	return server, nil
 }
 
-// Close stops every running job; their sandboxes are torn down before it
-// returns.
+// Close stops the backup scheduler and every running job; their sandboxes
+// are torn down before it returns.
 func (server *Server) Close() {
+	server.stopBackups()
+	<-server.backupsDone
 	server.jobs.shutdown(shutdownGrace)
 }
 
@@ -177,8 +185,11 @@ func (server *Server) routes() {
 	mux.HandleFunc("POST /projects/{name}/delete", server.authed(server.delete))
 	mux.HandleFunc("GET /settings", server.authed(server.settingsPage))
 	mux.HandleFunc("POST /settings/{section}", server.authed(server.saveSettings))
+	mux.HandleFunc("POST /settings/backup/passphrase", server.authed(server.setBackupPassphrase))
+	mux.HandleFunc("POST /settings/backup/now", server.authed(server.backUpNow))
 	mux.HandleFunc("POST /settings/backup/download", server.authed(server.downloadBackup))
 	mux.HandleFunc("POST /settings/backup/restore", server.authed(server.restoreBackup))
+	mux.HandleFunc("POST /settings/backup/delete", server.authed(server.deleteBackup))
 	mux.HandleFunc("POST /engine", server.authed(server.switchEngine))
 }
 

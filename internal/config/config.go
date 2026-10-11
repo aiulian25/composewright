@@ -19,6 +19,15 @@ type Config struct {
 	Network       Network    `yaml:"network"`
 	UI            UI         `yaml:"ui"`
 	Profile       Profile    `yaml:"profile"`
+	Backup        Backup     `yaml:"backup"`
+}
+
+// Backup is how often composewright backs itself up on its own, and how
+// many of those automatic backups it keeps.
+type Backup struct {
+	Schedule  string `yaml:"schedule"`
+	EveryDays int    `yaml:"every_days"`
+	Keep      int    `yaml:"keep"`
 }
 
 type Docker struct {

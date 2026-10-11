@@ -27,6 +27,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aiulian25/composewright/internal/backup"
 	"github.com/aiulian25/composewright/internal/config"
 	"github.com/aiulian25/composewright/internal/doctor"
 	"github.com/aiulian25/composewright/internal/ir"
@@ -1004,10 +1005,31 @@ func (harness *harness) restoreFrom(content, passphrase, password string, replac
 	return response, string(page)
 }
 
-// TestBackupAndRestore: a backup taken with the account password restores
-// on a fresh install: the settings, the model key and the project with its
-// secrets. A wrong password or passphrase changes nothing, and restoring
-// again keeps the project unless asked to replace it.
+// setBackupPassphrase sets the backup passphrase with the account password.
+func (harness *harness) setBackupPassphrase(passphrase string) string {
+	harness.t.Helper()
+	response, page := harness.post("/settings/backup/passphrase", url.Values{passphraseField: {passphrase}, confirmField: {passphrase},
+		currentPasswordField: {testPassword}})
+	status(harness.t, response, http.StatusSeeOther, page)
+	return response.Header.Get("Location")
+}
+
+// storedBackups lists the backups kept on the server.
+func (harness *harness) storedBackups() []backup.Stored {
+	harness.t.Helper()
+	stored, err := harness.server.backupFolder().List()
+	if err != nil {
+		harness.t.Fatal(err)
+	}
+	return stored
+}
+
+// TestBackupAndRestore: with a backup passphrase set, Back up now keeps a
+// backup here; downloading it needs the account password, and the file
+// restores on a fresh install with the passphrase: the settings, the model
+// key and the project with its secrets. A wrong password or passphrase
+// changes nothing, and restoring again keeps the project unless asked to
+// replace it.
 func TestBackupAndRestore(t *testing.T) {
 	const passphrase = "a long backup passphrase"
 	ctx := context.Background()
@@ -1022,16 +1044,28 @@ func TestBackupAndRestore(t *testing.T) {
 		"max_input_tokens": {"100000"}, "api_key": {"test-key-value"}}
 	response, page = source.post("/settings/models", claude)
 	status(t, response, http.StatusSeeOther, page)
-	backupForm := url.Values{passphraseField: {passphrase}, confirmField: {passphrase}, currentPasswordField: {"wrong password!"}}
-	response, page = source.post("/settings/backup/download", backupForm)
+	response, page = source.post("/settings/backup/now", nil)
+	status(t, response, http.StatusBadRequest, page)
+	if !strings.Contains(page, "Set a backup passphrase first") {
+		t.Fatal("a backup was made without a passphrase")
+	}
+	source.setBackupPassphrase(passphrase)
+	response, page = source.post("/settings/backup/now", nil)
+	status(t, response, http.StatusSeeOther, page)
+	stored := source.storedBackups()
+	if len(stored) != 1 || stored[0].Kind != backup.KindManual {
+		t.Fatalf("stored %+v", stored)
+	}
+	download := url.Values{backupNameField: {stored[0].Name}, currentPasswordField: {"wrong password!"}}
+	response, page = source.post("/settings/backup/download", download)
 	status(t, response, http.StatusBadRequest, page)
 	if !strings.Contains(page, "The current password is wrong") {
-		t.Fatal("a backup was offered without the account password")
+		t.Fatal("a backup was handed out without the account password")
 	}
-	backupForm.Set(currentPasswordField, testPassword)
-	response, content := source.post("/settings/backup/download", backupForm)
+	download.Set(currentPasswordField, testPassword)
+	response, content := source.post("/settings/backup/download", download)
 	status(t, response, http.StatusOK, "")
-	if !strings.HasSuffix(response.Header.Get("Content-Disposition"), `.cwbackup"`) || !strings.HasPrefix(content, "composewright backup 1\n") {
+	if !strings.Contains(response.Header.Get("Content-Disposition"), stored[0].Name) || !strings.HasPrefix(content, "composewright backup 1\n") {
 		t.Fatalf("the backup came as %q", response.Header.Get("Content-Disposition"))
 	}
 	original, err := pipeline.Load(ctx, source.server.workspace(), "miniflux")
@@ -1073,6 +1107,89 @@ func TestBackupAndRestore(t *testing.T) {
 	status(t, response, http.StatusOK, page)
 	if !strings.Contains(page, "Kept as they were here: miniflux") {
 		t.Fatal("restoring again did not keep the project that is here")
+	}
+}
+
+// TestAutomaticBackups: none is made without a passphrase; once there is
+// one, the first is due at once and the next a week later, and only as many
+// automatic backups are kept as asked, while a manual one stays.
+func TestAutomaticBackups(t *testing.T) {
+	const day = 24 * time.Hour
+	ctx := context.Background()
+	harness := newHarness(t)
+	harness.signUp()
+	response, page := harness.post("/settings/backup", url.Values{scheduleField: {config.BackupWeekly}, everyDaysField: {"7"}, keepField: {"2"}})
+	status(t, response, http.StatusSeeOther, page)
+	harness.server.backupIfDue(ctx)
+	if len(harness.storedBackups()) != 0 {
+		t.Fatal("a backup was made without a passphrase")
+	}
+	harness.setBackupPassphrase("a long backup passphrase")
+	response, page = harness.get("/settings?section=backup")
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, "The next automatic backup is due and is made within the hour") {
+		t.Fatal("the page does not say the first automatic backup is due")
+	}
+	response, page = harness.post("/settings/backup/now", nil)
+	status(t, response, http.StatusSeeOther, page)
+	harness.server.backupIfDue(ctx)
+	if stored := harness.storedBackups(); len(stored) != 2 {
+		t.Fatalf("after the first look: %+v", stored)
+	}
+	harness.clock.advance(6 * day)
+	harness.server.backupIfDue(ctx)
+	if len(harness.storedBackups()) != 2 {
+		t.Fatal("a weekly backup came after six days")
+	}
+	for range 2 {
+		harness.clock.advance(7 * day)
+		harness.server.backupIfDue(ctx)
+	}
+	stored := harness.storedBackups()
+	automatic := slices.DeleteFunc(slices.Clone(stored), func(item backup.Stored) bool { return item.Kind != backup.KindAutomatic })
+	if len(stored) != 3 || len(automatic) != 2 || !automatic[0].Created.After(automatic[1].Created) {
+		t.Fatalf("kept %+v", stored)
+	}
+}
+
+// TestBackupPassphraseChange: changing the passphrase re-encrypts the stored
+// backups, so one opens with the new passphrase only and still restores
+// here, bringing back the settings it holds; and a stored backup can be
+// deleted.
+func TestBackupPassphraseChange(t *testing.T) {
+	const first, second = "the first long passphrase", "the second long passphrase"
+	harness := newHarness(t)
+	harness.signUp()
+	harness.setBackupPassphrase(first)
+	response, page := harness.post("/settings/backup/now", nil)
+	status(t, response, http.StatusSeeOther, page)
+	response, page = harness.post("/settings/appearance", url.Values{"theme": {config.ThemeLight}})
+	status(t, response, http.StatusSeeOther, page)
+	response, page = harness.get(harness.setBackupPassphrase(second))
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, "1 stored backup was re-encrypted with it") {
+		t.Fatal("the page does not say the stored backup was re-encrypted")
+	}
+	name := harness.storedBackups()[0].Name
+	content, err := harness.server.backupFolder().Read(name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := backup.Open(content, first); err == nil {
+		t.Fatal("the stored backup still opens with the old passphrase")
+	}
+	if _, err := backup.Open(content, second); err != nil {
+		t.Fatalf("the stored backup does not open with the new passphrase: %v", err)
+	}
+	response, page = harness.post("/settings/backup/restore", url.Values{backupNameField: {name}, currentPasswordField: {testPassword}})
+	status(t, response, http.StatusSeeOther, page)
+	if theme := harness.server.config().UI.Theme; theme != config.ThemeDark {
+		t.Fatalf("restoring the stored backup left the theme %s", theme)
+	}
+	response, page = harness.post("/settings/backup/delete", url.Values{backupNameField: {name}})
+	status(t, response, http.StatusSeeOther, page)
+	if len(harness.storedBackups()) != 0 {
+		t.Fatal("the stored backup was not deleted")
 	}
 }
 

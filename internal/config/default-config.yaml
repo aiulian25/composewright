@@ -41,6 +41,10 @@ ui:
   auth_required: true
   session_ttl: 12h0m0s       # 5m to 720h (30 days)
   theme: dark                # dark (default) | light | system
+backup:
+  schedule: "off"            # off | weekly | monthly | custom (every every_days days)
+  every_days: 7
+  keep: 8                    # automatic backups kept; the oldest go first
 profile:
   networks: []               # existing external networks, e.g. {name: npm_default, kind: proxy, provider: npm, default: true, domain: apps.example.com}
   storage:

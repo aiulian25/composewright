@@ -43,6 +43,9 @@ const (
 	maxPayloadBytes = 256 << 20
 	// FileExtension names backup files.
 	FileExtension = ".cwbackup"
+	// PassphraseName is the stored secret every backup is encrypted with. No
+	// backup may carry it as a model key, so a restore cannot replace it.
+	PassphraseName = "backup-passphrase"
 )
 
 var (
@@ -167,6 +170,15 @@ func Open(content []byte, passphrase string) (Archive, error) {
 	return decode(payload)
 }
 
+// Reseal opens a backup with one passphrase and seals it with another.
+func Reseal(content []byte, from, to string) ([]byte, error) {
+	archive, err := Open(content, from)
+	if err != nil {
+		return nil, err
+	}
+	return Seal(archive, to)
+}
+
 // header is the readable start of a backup file, which the encryption
 // authenticates with the content.
 func header(salt, nonce []byte) string {
@@ -197,7 +209,7 @@ func (archive Archive) problem() error {
 	}
 	named := keyNames(archive.Settings.LLM)
 	for name := range archive.Keys {
-		if !slices.Contains(named, name) {
+		if name == PassphraseName || !slices.Contains(named, name) {
 			return fmt.Errorf("the backup holds a key %q that its settings do not use", name)
 		}
 	}

@@ -10,7 +10,7 @@
   <a href="/settings?section=appearance"{{if eq .Data.Page "appearance"}} aria-current="page"{{end}}>{{template "icon-palette"}}<span>Appearance</span></a>
   <a href="/settings?section=account"{{if eq .Data.Page "account"}} aria-current="page"{{end}}>{{template "icon-user"}}<span>Account</span></a>
   <h3>Data</h3>
-  <a href="/settings?section=backup"{{if eq .Data.Page "backup"}} aria-current="page"{{end}}>{{template "icon-history"}}<span>Backup and restore</span></a>
+  <a href="/settings?section=backup"{{if eq .Data.Page "backup"}} aria-current="page"{{end}}>{{template "icon-history"}}<span>Backups</span></a>
 </nav>
 <nav class="sidebar-foot" aria-label="More">
   <a href="/projects">{{template "icon-arrow-left"}}<span>Back to projects</span></a>
@@ -32,7 +32,7 @@
 {{with .Data}}
 <div class="page-head">
   <h1 class="page-title">{{.Title}}</h1>
-  {{if eq .Page "backup"}}<span class="lead">Your Settings and every project in one file, encrypted with a passphrase you choose.</span>{{else}}<span class="lead">Saved to <span class="mono">{{.ConfigFile}}</span>; each save is checked as a whole and written to the audit log.</span>{{end}}
+  {{if eq .Page "backup"}}<span class="lead">Your Settings and every project, backed up on a schedule or when you ask, encrypted with your backup passphrase.</span>{{else}}<span class="lead">Saved to <span class="mono">{{.ConfigFile}}</span>; each save is checked as a whole and written to the audit log.</span>{{end}}
   {{if and (ne .Page "account") (ne .Page "models") (ne .Page "backup")}}<span class="row push-right"><span class="muted small" data-unsaved hidden>Unsaved changes</span><button class="button button-primary" type="submit" form="settings-form">Save</button></span>{{end}}
 </div>
 
@@ -201,25 +201,74 @@
 {{define "backup-page"}}
 {{$csrf := .CSRF}}
 {{with .Data}}
-<form class="card" id="backup" method="post" action="/settings/backup/download" aria-labelledby="backup-title">
+<form class="card" id="passphrase" method="post" action="/settings/backup/passphrase" aria-labelledby="passphrase-title">
   <input type="hidden" name="csrf" value="{{$csrf}}">
-  <div class="card-head"><h2 id="backup-title">{{template "icon-download"}}Download a backup</h2></div>
+  <div class="card-head"><h2 id="passphrase-title">{{template "icon-key"}}Backup passphrase</h2>{{if .Backups.PassphraseSet}}<span class="chip chip-ok">{{template "icon-check"}}set</span>{{else}}<span class="chip chip-warn">not set</span>{{end}}</div>
   <div class="card-body stack">
-    <p>One file with your Settings (the environment profile, the engine, the model providers with their API keys, the appearance) and every project: its versions with their compose.yaml and DEPLOY.md, and its .env with the secrets in it.</p>
-    <p class="muted small">Not included: your account, the audit log, the logs of past runs, and what belongs to this install, such as its folders and how it reaches Docker. The passphrase cannot be recovered; keep it apart from the file.</p>
+    <p>Every backup is encrypted with this passphrase, and it opens a downloaded backup on any install. It is kept encrypted here but can never be shown again, so keep a copy somewhere apart from your backups.{{if .Backups.PassphraseSet}} Changing it re-encrypts the stored backups.{{end}}</p>
     <div class="field-grid">
-      <label class="field" for="backup-passphrase">Passphrase<input id="backup-passphrase" name="passphrase" type="password" autocomplete="new-password" minlength="{{.Minimum}}" required></label>
+      <label class="field" for="backup-passphrase">{{if .Backups.PassphraseSet}}New passphrase{{else}}Passphrase{{end}}<input id="backup-passphrase" name="passphrase" type="password" autocomplete="new-password" minlength="{{.Minimum}}" required></label>
       <label class="field" for="backup-confirm">Passphrase again<input id="backup-confirm" name="confirm" type="password" autocomplete="new-password" minlength="{{.Minimum}}" required></label>
       <label class="field" for="backup-current">Your account password<input id="backup-current" name="current" type="password" autocomplete="current-password" required></label>
     </div>
   </div>
-  <div class="card-foot"><span class="muted small">Written to the audit log.</span><button class="button button-primary push-right" type="submit">{{template "icon-download"}}Download backup</button></div>
+  <div class="card-foot"><span class="muted small">Written to the audit log.</span><button class="button button-primary push-right" type="submit">{{if .Backups.PassphraseSet}}Change passphrase{{else}}Set passphrase{{end}}</button></div>
 </form>
+<form class="card" id="schedule" method="post" action="/settings/backup" aria-labelledby="schedule-title">
+  <input type="hidden" name="csrf" value="{{$csrf}}">
+  <div class="card-head"><h2 id="schedule-title">{{template "icon-history"}}Automatic backups</h2></div>
+  <div class="card-body stack">
+    <div class="field-grid">
+      <label class="field" for="schedule-every">How often<select id="schedule-every" name="schedule">{{$current := .Backups.Schedule.Schedule}}{{range .Backups.Schedules}}<option value="{{.}}"{{if eq . $current}} selected{{end}}>{{.}}</option>{{end}}</select></label>
+      <label class="field" for="every-days">Every how many days<input id="every-days" name="every_days" type="number" min="1" max="{{.Backups.MaxDays}}" value="{{.Backups.Schedule.EveryDays}}" required><span class="muted small">Used when How often is custom.</span></label>
+      <label class="field" for="keep">Automatic backups kept<input id="keep" name="keep" type="number" min="1" max="{{.Backups.MaxKept}}" value="{{.Backups.Schedule.Keep}}" required><span class="muted small">The oldest go first. Manual backups stay until you delete them.</span></label>
+    </div>
+    <p class="muted small">{{.Backups.Next}}</p>
+  </div>
+  <div class="card-foot"><span class="muted small">Kept in <span class="mono">{{.Backups.Folder}}</span>, readable only by composewright.</span><button class="button button-primary push-right" type="submit">Save</button></div>
+</form>
+<section class="card" id="stored" aria-labelledby="stored-title">
+  <div class="card-head"><h2 id="stored-title">{{template "icon-database"}}Stored backups</h2>
+    <form class="push-right" method="post" action="/settings/backup/now"><input type="hidden" name="csrf" value="{{$csrf}}"><button class="button button-small" type="submit"{{if not .Backups.PassphraseSet}} disabled{{end}}>{{template "icon-plus"}}Back up now</button></form>
+  </div>
+  {{if .Backups.Stored}}
+  <form method="post" action="/settings/backup/restore">
+    <input type="hidden" name="csrf" value="{{$csrf}}">
+    <div class="card-body stack">
+      <div class="field-grid">
+        <label class="field" for="stored-current">Your account password, to download or restore<input id="stored-current" name="current" type="password" autocomplete="current-password"></label>
+      </div>
+      <label class="option"><input type="checkbox" name="replace" value="1"><span class="option-text"><span class="option-name">Replace projects that exist here</span><span class="option-sub">When restoring; otherwise a project with the same name stays as it is.</span></span></label>
+    </div>
+    <div class="table-scroll">
+      <table class="table">
+        <thead><tr><th scope="col">Made</th><th scope="col">Kind</th><th scope="col">Size</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+        <tbody>
+          {{range .Backups.Stored}}
+          <tr>
+            <th scope="row">{{.When}}<span class="block muted small mono">{{.Name}}</span></th>
+            <td>{{.Kind}}</td>
+            <td class="mono nowrap">{{.Size}}</td>
+            <td><div class="row">
+              <button class="button button-small" type="submit" formaction="/settings/backup/download" name="name" value="{{.Name}}">{{template "icon-download"}}Download</button>
+              <button class="button button-small" type="submit" formaction="/settings/backup/restore" name="name" value="{{.Name}}" data-confirm="Restore the backup made {{.When}}? Your Settings are replaced by its own.">{{template "icon-restart"}}Restore</button>
+              <button class="button button-small button-ghost" type="submit" formaction="/settings/backup/delete" name="name" value="{{.Name}}" aria-label="Delete the backup made {{.When}}" data-confirm="Delete the backup made {{.When}}? It cannot be brought back.">{{template "icon-trash"}}Delete</button>
+            </div></td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+  </form>
+  {{else}}
+  <p class="card-body muted">No backups yet. {{if .Backups.PassphraseSet}}Back up now, or turn on automatic backups.{{else}}Set a backup passphrase first.{{end}}</p>
+  {{end}}
+</section>
 <form class="card" id="restore" method="post" action="/settings/backup/restore" enctype="multipart/form-data" aria-labelledby="restore-title">
   <input type="hidden" name="csrf" value="{{$csrf}}">
-  <div class="card-head"><h2 id="restore-title">{{template "icon-upload"}}Restore a backup</h2></div>
+  <div class="card-head"><h2 id="restore-title">{{template "icon-upload"}}Restore from a file</h2></div>
   <div class="card-body stack">
-    <p>Brings back the backup's Settings, in place of yours, and its projects. Before any of it runs, it is checked again like everything else.</p>
+    <p>A backup downloaded earlier, from here or another install. It brings back its Settings, in place of yours, and its projects; everything is checked again before any of it runs.</p>
     <div class="field-grid">
       <label class="field" for="restore-file">Backup file<input id="restore-file" name="backup" type="file" accept=".cwbackup" required></label>
       <label class="field" for="restore-passphrase">Its passphrase<input id="restore-passphrase" name="passphrase" type="password" autocomplete="off" required></label>
