@@ -119,7 +119,7 @@ The container image is the only distribution. To work on composewright itself, s
 
 ## Security posture
 
-- **Non-root everywhere.** The container runs as uid 65532 and needs only the Docker socket and its data volume; a rootless Docker daemon is the recommended sandbox and `doctor` tells you how to set one up.
+- **Non-root once started.** The container starts as root only to make its data folder its own and join the Docker socket's group, then runs as uid 65532 with no capabilities, needing only the socket and its data folder; a rootless Docker daemon is the recommended sandbox and `doctor` tells you how to set one up.
 - **The model never writes YAML.** It returns a restricted plan that cannot express `privileged`, host mounts or `build:`; composewright's own code renders the Compose file and enforces a policy gate independent of the model.
 - **Nothing runs without you.** You approve the plan before validation; privilege requests are explicit checkboxes.
 - **Secrets stay encrypted.** `.env` values are stored with authenticated encryption under a key that lives outside the database; they are written to disk only for the seconds a run needs them and only in saved exports you ask for.
