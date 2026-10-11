@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/aiulian25/composewright/internal/auth"
 	"github.com/aiulian25/composewright/internal/store"
@@ -236,9 +237,14 @@ func (server *Server) logout(writer http.ResponseWriter, request *http.Request, 
 }
 
 // localPath keeps redirects on this site: only absolute paths, never
-// "//host" or a scheme.
+// "//host", a backslash or a scheme. Browsers drop TAB and newline
+// characters from a target, which would make "/\t/host" another site, so
+// any control or space character is refused too.
 func localPath(target string) string {
-	if !strings.HasPrefix(target, "/") || strings.HasPrefix(target, "//") || strings.Contains(target, "\\") {
+	hidden := strings.ContainsFunc(target, func(character rune) bool {
+		return unicode.IsControl(character) || unicode.IsSpace(character)
+	})
+	if hidden || !strings.HasPrefix(target, "/") || strings.HasPrefix(target, "//") || strings.Contains(target, "\\") {
 		return ""
 	}
 	return target

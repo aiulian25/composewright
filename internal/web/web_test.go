@@ -294,6 +294,21 @@ func TestSetupSignInAndOut(t *testing.T) {
 	status(t, response, http.StatusSeeOther, page)
 }
 
+// TestLocalPathKeepsRedirectsOnThisSite: browsers drop TAB and newline
+// characters from a redirect target, so "/\t/evil.example" would take them
+// to //evil.example, another site.
+func TestLocalPathKeepsRedirectsOnThisSite(t *testing.T) {
+	for _, target := range []string{"/\t/evil.example", "/\n/evil.example", "//evil.example", "/\\evil.example"} {
+		if kept := localPath(target); kept != "" {
+			t.Errorf("localPath(%q) = %q, want it refused", target, kept)
+		}
+	}
+	const local = "/projects/miniflux/review?pane=env"
+	if kept := localPath(local); kept != local {
+		t.Errorf("localPath(%q) = %q, want it unchanged", local, kept)
+	}
+}
+
 // TestPlainHTTPOnTheLAN: over plain HTTP, the usual case on a home network,
 // the first account is made from the page without a token, the session
 // cookie works without Secure, and an address typed as an IP is accepted.
