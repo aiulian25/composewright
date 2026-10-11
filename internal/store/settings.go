@@ -37,6 +37,16 @@ func (store *Store) Secret(ctx context.Context, name string) (value string, foun
 	return string(plaintext), err == nil, err
 }
 
+// HasSecret reports whether a sealed setting is stored, without opening it.
+func (store *Store) HasSecret(ctx context.Context, name string) (bool, error) {
+	var stored int
+	err := store.database.QueryRowContext(ctx, `SELECT 1 FROM settings WHERE key=? AND value_ct IS NOT NULL`, name).Scan(&stored)
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, nil
+	}
+	return err == nil, err
+}
+
 func (store *Store) DeleteSecret(ctx context.Context, name string) (bool, error) {
 	result, err := store.database.ExecContext(ctx, `DELETE FROM settings WHERE key=?`, name)
 	if err != nil {

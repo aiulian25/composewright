@@ -30,6 +30,7 @@ import (
 	"github.com/aiulian25/composewright/internal/redact"
 	"github.com/aiulian25/composewright/internal/sandbox"
 	"github.com/aiulian25/composewright/internal/store"
+	"github.com/aiulian25/composewright/internal/store/storetest"
 	"github.com/aiulian25/composewright/internal/workspace"
 )
 
@@ -1114,6 +1115,30 @@ func TestModelConnections(t *testing.T) {
 	latest, err := server.workspace().Store.AuditEntries(context.Background(), "", 1)
 	if err != nil || len(latest) != 1 || latest[0].Action != store.ActionDeleteSecret || latest[0].Details["name"] != "llm-claude-work" {
 		t.Fatalf("removing the key was not audited: %+v %v", latest, err)
+	}
+}
+
+// TestKeyIsStoredBeforeTheConfigNamesIt: a connection the config refuses
+// stores no key, and a key that fails to store leaves the config alone, so
+// no saved connection names a key that is not there.
+func TestKeyIsStoredBeforeTheConfigNamesIt(t *testing.T) {
+	harness := newHarness(t)
+	harness.signUp()
+	server := harness.server
+	claude := url.Values{"preset": {"anthropic"}, "name": {"Claude Work"}, "base_url": {"https://api.anthropic.com"}, "model": {"claude-opus-5-5"},
+		"max_input_tokens": {"100000"}, "api_key": {"test-key-value"}}
+	response, page := harness.post("/settings/models", claude)
+	status(t, response, http.StatusBadRequest, page)
+	if stored, err := server.workspace().Store.HasSecret(context.Background(), "llm-Claude Work"); err != nil || stored {
+		t.Fatalf("a refused connection stored its key: %v %v", stored, err)
+	}
+	claude.Set("name", "claude-work")
+	storetest.RefuseSecrets(t, server.paths().Database())
+	response, page = harness.post("/settings/models", claude)
+	status(t, response, http.StatusBadRequest, page)
+	named := func(connection config.Connection) bool { return connection.Name == "claude-work" }
+	if slices.ContainsFunc(server.config().LLM.Connections, named) {
+		t.Fatal("the config names a key that failed to store")
 	}
 }
 

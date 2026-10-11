@@ -167,8 +167,8 @@ func (server *Server) connectionRow(ctx context.Context, llm config.LLM, connect
 	if !inKeyring {
 		return row, nil
 	}
-	_, found, err := server.workspace().Store.Secret(ctx, name)
-	row.KeyStored = found
+	stored, err := server.workspace().Store.HasSecret(ctx, name)
+	row.KeyStored = stored
 	return row, err
 }
 
@@ -225,13 +225,16 @@ func (server *Server) saveConnection(request *http.Request, current *visit, conf
 	if chosen.NeedsKey && connection.APIKeyRef == "" {
 		return configuration, fmt.Errorf("%s needs an API key: the steps above show where to get one", chosen.Title)
 	}
-	if err := server.writeModels(request, current, llm); err != nil {
+	// The key is stored before the config names it, so a failed store leaves
+	// no connection without its key; checking the config first keeps a
+	// refused connection from storing one.
+	if err := configuration.Validate(); err != nil {
 		return configuration, err
 	}
-	if key == "" {
-		return configuration, nil
+	if err := server.storeKey(request, current, keyNamePrefix+connection.Name, key); err != nil {
+		return configuration, err
 	}
-	return configuration, server.storeKey(request, current, keyNamePrefix+connection.Name, key)
+	return configuration, server.writeModels(request, current, llm)
 }
 
 func (server *Server) useConnection(request *http.Request, current *visit, configuration config.Config, name string) (config.Config, error) {
@@ -329,8 +332,11 @@ func (server *Server) writeModels(request *http.Request, current *visit, llm con
 }
 
 // storeKey seals an API key in the database and audits that it was set,
-// never the key itself.
+// never the key itself. An empty key leaves any stored one as it is.
 func (server *Server) storeKey(request *http.Request, current *visit, name, key string) error {
+	if key == "" {
+		return nil
+	}
 	database := server.workspace().Store
 	if err := database.SetSecret(request.Context(), name, key); err != nil {
 		return err

@@ -92,6 +92,29 @@ func TestSecretsAreNeverStoredInPlaintext(t *testing.T) {
 	}
 }
 
+// TestHasSecretOpensNothing: HasSecret tells a stored key from a missing one
+// without decrypting, so it answers even for a key that would not open.
+func TestHasSecretOpensNothing(t *testing.T) {
+	ctx := context.Background()
+	store, _, _ := openTestStore(t)
+	if err := store.SetSecret(ctx, "llm-claude", "sk-test"); err != nil {
+		t.Fatal(err)
+	}
+	otherKey, err := secrets.NewKey()
+	if err != nil {
+		t.Fatal(err)
+	}
+	store.sealer = secrets.NewSealer(otherKey)
+	if _, _, err := store.Secret(ctx, "llm-claude"); err == nil {
+		t.Fatal("a key sealed under another master key opened")
+	}
+	for name, want := range map[string]bool{"llm-claude": true, "llm-missing": false} {
+		if stored, err := store.HasSecret(ctx, name); err != nil || stored != want {
+			t.Fatalf("HasSecret(%q) = %v, %v; want %v", name, stored, err, want)
+		}
+	}
+}
+
 func TestSwappedCiphertextIsRejected(t *testing.T) {
 	ctx := context.Background()
 	store, _, _ := openTestStore(t)
