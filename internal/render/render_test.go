@@ -234,3 +234,21 @@ func golden(t *testing.T, path string, content []byte) {
 		t.Fatalf("%s changed; inspect and rerun with -update\n--- got ---\n%s", path, content)
 	}
 }
+
+// TestDeployFolderOwner: bind-mounted folders go to the user a service runs
+// as when that is fixed, else to the profile's owner.
+func TestDeployFolderOwner(t *testing.T) {
+	options := testOptions(t, variant{storage: config.StorageBind, profile: func(profile *config.Profile) {
+		profile.Storage.BasePath, profile.Storage.Owner = "/srv/docker", "1000:1000"
+	}})
+	plan := &ir.IR{App: ir.App{Name: "demo"}, Services: []ir.Service{
+		{Name: "app", User: "65532:65532", Volumes: []ir.Volume{{Name: "app-data", ContainerPath: "/data"}}},
+		{Name: "cache", Volumes: []ir.Volume{{Name: "cache-data", ContainerPath: "/cache"}}},
+	}}
+	deploy := string(Deploy(plan, options, "not validated yet"))
+	for _, want := range []string{"sudo chown 65532:65532 /srv/docker/demo/app-data", "sudo chown 1000:1000 /srv/docker/demo/cache-data"} {
+		if !strings.Contains(deploy, want) {
+			t.Errorf("DEPLOY.md lacks %q:\n%s", want, deploy)
+		}
+	}
+}

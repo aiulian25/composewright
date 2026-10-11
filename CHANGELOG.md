@@ -19,6 +19,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- Generated deploy notes give bind-mounted folders to the user an image
+  runs as when it declares a fixed one, instead of always the profile's
+  owner, which left such an app unable to write its own data.
 - When Docker cannot be used, the status bar, Home and `doctor` say why (the
   socket is not mounted, cannot be opened, or nothing answers on it) and
   what to change, instead of only "Docker unreachable".

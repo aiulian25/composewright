@@ -10,7 +10,11 @@ import (
 	"github.com/aiulian25/composewright/internal/ir"
 )
 
-const healthcheckNone = "NONE"
+const (
+	healthcheckNone = "NONE"
+	userSeparator   = ":"
+	rootUID         = "0"
+)
 
 // ImageKey identifies an image the way verification results are keyed.
 func ImageKey(image ir.Image) string {
@@ -35,9 +39,22 @@ func ApplyImages(plan *ir.IR, inspected map[string]images.Metadata, upstream str
 		imageHealthcheck(service, metadata, at)
 		imagePorts(service, metadata, at)
 		imageVolumes(plan, service, metadata, at)
+		imageUser(service, metadata)
 		sourceLabel(plan, service, metadata, upstream)
 	}
 	plan.Unfilled = Gaps(plan)
+}
+
+// imageUser makes a fixed non-root user the image declares explicit, so the
+// deploy notes hand bind-mounted folders to the user that writes them.
+// Upstream compose's user still wins, and root stays implicit.
+func imageUser(service *ir.Service, metadata images.Metadata) {
+	user := numericUser(metadata.User)
+	uid, _, _ := strings.Cut(user, userSeparator)
+	if service.User != "" || user == "" || uid == rootUID {
+		return
+	}
+	service.User = user
 }
 
 func imageHealthcheck(service *ir.Service, metadata images.Metadata, at ir.Provenance) {

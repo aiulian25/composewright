@@ -56,3 +56,24 @@ func TestImageVolumesStayPrivate(t *testing.T) {
 		t.Fatalf("volumes: %+v / %+v", plan.Services[0].Volumes, plan.Services[1].Volumes)
 	}
 }
+
+// TestImageUser: a fixed non-root user the image declares becomes explicit;
+// upstream's user wins, and root or a named user stays implicit.
+func TestImageUser(t *testing.T) {
+	cases := []struct {
+		name, upstream, image, want string
+	}{
+		{"fixed uid and gid", "", "65532:65532", "65532:65532"},
+		{"uid only", "", "1000", "1000"},
+		{"root", "", "0:0", ""},
+		{"a name", "", "nonroot", ""},
+		{"upstream wins", "1001", "65532:65532", "1001"},
+	}
+	for _, testCase := range cases {
+		service := ir.Service{User: testCase.upstream}
+		imageUser(&service, images.Metadata{User: testCase.image})
+		if service.User != testCase.want {
+			t.Errorf("%s: user = %q, want %q", testCase.name, service.User, testCase.want)
+		}
+	}
+}

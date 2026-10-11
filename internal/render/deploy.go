@@ -110,15 +110,25 @@ func (options Options) storageSection(plan *ir.IR, write func(string, ...any)) {
 	write("Create the bind-mounted folders before the first start:")
 	write("")
 	for _, service := range plan.Services {
+		owner := folderOwner(service, storage.Owner)
 		for _, volume := range service.Volumes {
 			path := BindSource(storage, plan.App.Name, volume.Name)
 			write("    mkdir -p %s", path)
-			if storage.Owner != "" {
-				write("    sudo chown %s %s", storage.Owner, path)
+			if owner != "" {
+				write("    sudo chown %s %s", owner, path)
 			}
 		}
 	}
 	write("")
+}
+
+// folderOwner is who must own a service's bind-mounted folders: the user it
+// runs as when that is fixed, else the profile's owner.
+func folderOwner(service ir.Service, profileOwner string) string {
+	if service.User != "" {
+		return service.User
+	}
+	return profileOwner
 }
 
 func needsSection(plan *ir.IR, options Options, write func(string, ...any)) {
