@@ -3,9 +3,11 @@ package store
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"errors"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -200,6 +202,116 @@ func TestRecordGenerationIsAllOrNothing(t *testing.T) {
 	}
 	if values, err := store.EnvVars(ctx, saved.ID); err != nil || len(values) != 1 || values[0].Value != "first" {
 		t.Fatalf("stored .env: %+v %v", values, err)
+	}
+}
+
+// TestPruneGenerationsKeepsTestedOnes: a project keeps its newest 20
+// untested generations and every tested one, however old, and numbering
+// goes on from the newest.
+func TestPruneGenerationsKeepsTestedOnes(t *testing.T) {
+	ctx := context.Background()
+	store, _, _ := openTestStore(t)
+	project := Project{Name: "app", Slug: "app", SourceKind: "github", Status: StatusGenerated}
+	noEvents := func(Project, Generation) []Event { return nil }
+	images := []Image{{Service: "app", Reference: "docker.io/library/nginx:1"}}
+	var first, latest Generation
+	for number := 1; number <= 25; number++ {
+		_, added, err := store.RecordGeneration(ctx, project, Generation{Engine: "rules", IRJSON: "{}"}, images, nil, "cli:test", noEvents)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if number == 2 || number == 5 {
+			if err := store.RecordValidation(ctx, added.ID, `{"result":"pass"}`, "", ""); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if number == 1 {
+			first = added
+		}
+		latest = added
+	}
+	generations, err := store.Generations(ctx, latest.ProjectID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var untested, tested []int
+	for _, generation := range generations {
+		if generation.ValidationJSON == "" {
+			untested = append(untested, generation.Number)
+			continue
+		}
+		tested = append(tested, generation.Number)
+	}
+	if len(untested) != keptUntested || untested[len(untested)-1] != 6 || !slices.Equal(tested, []int{5, 2}) || latest.Number != 25 {
+		t.Fatalf("kept untested %v and tested %v; the newest is number %d", untested, tested, latest.Number)
+	}
+	if kept, err := store.Images(ctx, first.ID); err != nil || len(kept) != 0 {
+		t.Fatalf("a pruned generation's images stayed: %v %v", kept, err)
+	}
+}
+
+// TestMigrationNumbersExistingGenerations: a database from before version
+// numbers numbers each project's generations in the order they were made,
+// equal times in the order they were stored, and goes on from there.
+func TestMigrationNumbersExistingGenerations(t *testing.T) {
+	const lastUnnumbered = 2
+	ctx := context.Background()
+	directory := t.TempDir()
+	path := filepath.Join(directory, "composewright.db")
+	if err := createPrivate(path); err != nil {
+		t.Fatal(err)
+	}
+	database, err := sql.Open(driverName, dataSourceName(path))
+	if err != nil {
+		t.Fatal(err)
+	}
+	older := &Store{database: database}
+	if _, err := database.ExecContext(ctx, `CREATE TABLE schema_version (version INTEGER NOT NULL)`); err != nil {
+		t.Fatal(err)
+	}
+	pending, err := pendingMigrations(0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, migration := range pending {
+		if migration.version > lastUnnumbered {
+			continue
+		}
+		if err := older.apply(ctx, migration); err != nil {
+			t.Fatal(err)
+		}
+	}
+	_, err = database.ExecContext(ctx, `INSERT INTO projects (id, name, slug, source_kind, status, created_at, updated_at) VALUES
+		('p1', 'one', 'one', 'local', 'generated', 1, 1), ('p2', 'two', 'two', 'local', 'generated', 1, 1);
+		INSERT INTO generations (id, project_id, iteration, engine, ir_json, created_at) VALUES
+		('third', 'p1', 1, 'rules', '{}', 200), ('first', 'p1', 1, 'rules', '{}', 100), ('second', 'p1', 1, 'rules', '{}', 100),
+		('only', 'p2', 1, 'rules', '{}', 150)`)
+	if err := errors.Join(err, database.Close()); err != nil {
+		t.Fatal(err)
+	}
+	key, err := secrets.NewKey()
+	if err != nil {
+		t.Fatal(err)
+	}
+	store, err := Open(ctx, path, filepath.Join(directory, "backups"), secrets.NewSealer(key))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { store.Close() })
+	want := map[string]int{"first": 1, "second": 2, "third": 3, "only": 1}
+	for _, projectID := range []string{"p1", "p2"} {
+		generations, err := store.Generations(ctx, projectID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, generation := range generations {
+			if generation.Number != want[generation.ID] {
+				t.Errorf("%s is number %d, want %d", generation.ID, generation.Number, want[generation.ID])
+			}
+		}
+	}
+	if added, err := store.AddGeneration(ctx, Generation{ProjectID: "p1", Engine: "rules", IRJSON: "{}"}, nil); err != nil || added.Number != 4 {
+		t.Fatalf("the next generation after the migration is number %d: %v", added.Number, err)
 	}
 }
 

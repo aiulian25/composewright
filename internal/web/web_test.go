@@ -1324,6 +1324,9 @@ func TestSideBySideEditing(t *testing.T) {
 	if !strings.Contains(page, "Edited by you") || !strings.Contains(page, `id="side-editor"`) {
 		t.Fatal("the Result page lacks the version or the editor")
 	}
+	if !strings.Contains(page, "Versions (v1 to v3)") || !strings.Contains(page, "Save as v4") {
+		t.Fatal("the Result page does not number the versions from the stored numbers")
+	}
 	harness.remember(page)
 	response, page = harness.post("/projects/miniflux/reveal", url.Values{"view": {actionFiles}})
 	status(t, response, http.StatusOK, page)

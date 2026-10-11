@@ -9,8 +9,10 @@ import (
 )
 
 type Generation struct {
-	ID             string    `json:"id"`
-	ProjectID      string    `json:"project_id"`
+	ID        string `json:"id"`
+	ProjectID string `json:"project_id"`
+	// Number is the version a person sees, v1 first; pruning never reuses it.
+	Number         int       `json:"number"`
 	Iteration      int       `json:"iteration"`
 	Engine         string    `json:"engine"`
 	Provider       string    `json:"provider"`
@@ -37,7 +39,11 @@ type Image struct {
 }
 
 const generationColumns = `id, project_id, iteration, engine, provider, model, prompt_hash, ir_json, compose_yaml, deploy_md,
-	options_json, policy_verdict_json, validation_verdict_json, logs_path, facts_json, created_at`
+	options_json, policy_verdict_json, validation_verdict_json, logs_path, facts_json, created_at, number`
+
+// keptUntested is how many generations that never ran in the sandbox a
+// project keeps; tested ones keep their verdict and logs for good.
+const keptUntested = 20
 
 // AddGeneration stores a generation and its images.
 func (store *Store) AddGeneration(ctx context.Context, generation Generation, images []Image) (Generation, error) {
@@ -52,10 +58,15 @@ func (store *Store) AddGeneration(ctx context.Context, generation Generation, im
 
 func addGeneration(ctx context.Context, transaction *sql.Tx, generation Generation, images []Image) (Generation, error) {
 	generation.ID, generation.CreatedAt = newID(), time.Now()
-	_, err := transaction.ExecContext(ctx, `INSERT INTO generations (`+generationColumns+`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+	err := transaction.QueryRowContext(ctx, `SELECT COALESCE(MAX(number), 0) + 1 FROM generations WHERE project_id=?`, generation.ProjectID).
+		Scan(&generation.Number)
+	if err != nil {
+		return Generation{}, err
+	}
+	_, err = transaction.ExecContext(ctx, `INSERT INTO generations (`+generationColumns+`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 		generation.ID, generation.ProjectID, generation.Iteration, generation.Engine, generation.Provider, generation.Model,
 		generation.PromptHash, generation.IRJSON, generation.ComposeYAML, generation.DeployMD, generation.OptionsJSON,
-		generation.PolicyJSON, generation.ValidationJSON, generation.LogsPath, generation.FactsJSON, unix(generation.CreatedAt))
+		generation.PolicyJSON, generation.ValidationJSON, generation.LogsPath, generation.FactsJSON, unix(generation.CreatedAt), generation.Number)
 	if err != nil {
 		return Generation{}, err
 	}
@@ -73,7 +84,9 @@ func addGeneration(ctx context.Context, transaction *sql.Tx, generation Generati
 // RecordGeneration stores a generation with everything that belongs to it
 // in one transaction: its project, the generation and its images, the
 // project's .env, and the audit entries events builds once the project and
-// the generation have their ids. A failure in any part leaves none of them.
+// the generation have their ids. It also drops the project's untested
+// generations beyond the newest keptUntested. A failure in any part leaves
+// none of them.
 func (store *Store) RecordGeneration(ctx context.Context, project Project, generation Generation, images []Image, variables []EnvVar,
 	actor string, events func(Project, Generation) []Event) (Project, Generation, error) {
 	var saved Project
@@ -85,6 +98,9 @@ func (store *Store) RecordGeneration(ctx context.Context, project Project, gener
 		}
 		generation.ProjectID = saved.ID
 		if added, err = addGeneration(ctx, transaction, generation, images); err != nil {
+			return err
+		}
+		if err := pruneGenerations(ctx, transaction, saved.ID); err != nil {
 			return err
 		}
 		if err := store.replaceEnvVars(ctx, transaction, saved.ID, variables); err != nil {
@@ -101,6 +117,16 @@ func (store *Store) RecordGeneration(ctx context.Context, project Project, gener
 		return Project{}, Generation{}, err
 	}
 	return saved, added, nil
+}
+
+// pruneGenerations deletes a project's untested generations beyond the
+// newest keptUntested, and their images with them. A generation gets its
+// logs only with its verdict, so no log file is left behind.
+func pruneGenerations(ctx context.Context, transaction *sql.Tx, projectID string) error {
+	_, err := transaction.ExecContext(ctx, `DELETE FROM generations WHERE project_id=? AND validation_verdict_json='' AND id NOT IN
+		(SELECT id FROM generations WHERE project_id=? AND validation_verdict_json='' ORDER BY created_at DESC, rowid DESC LIMIT ?)`,
+		projectID, projectID, keptUntested)
+	return err
 }
 
 // RecordValidation stores a verdict, where its logs are, and the DEPLOY.md
@@ -165,7 +191,8 @@ func scanGeneration(row rowScanner) (Generation, error) {
 	var created int64
 	err := row.Scan(&generation.ID, &generation.ProjectID, &generation.Iteration, &generation.Engine, &generation.Provider,
 		&generation.Model, &generation.PromptHash, &generation.IRJSON, &generation.ComposeYAML, &generation.DeployMD,
-		&generation.OptionsJSON, &generation.PolicyJSON, &generation.ValidationJSON, &generation.LogsPath, &generation.FactsJSON, &created)
+		&generation.OptionsJSON, &generation.PolicyJSON, &generation.ValidationJSON, &generation.LogsPath, &generation.FactsJSON, &created,
+		&generation.Number)
 	generation.CreatedAt = fromUnix(created)
 	return generation, err
 }

@@ -12,7 +12,7 @@
   <button class="rail-button" type="button" data-rail="save-title" data-rail-saves aria-label="Save to folder">{{template "icon-folder"}}</button>
   <button class="rail-button" type="button" data-rail="download-title" data-rail-saves aria-label="Download">{{template "icon-download"}}</button>
   <button class="rail-button" type="button" data-rail="copy-title" data-rail-saves aria-label="Copy">{{template "icon-copy"}}</button>
-  <button class="rail-button" type="button" data-rail="versions-title" aria-label="Versions (v1 to v{{len .Versions}})">{{template "icon-history"}}</button>
+  <button class="rail-button" type="button" data-rail="versions-title" aria-label="Versions (v{{.OldestVersion}} to v{{(index .Versions 0).Number}})">{{template "icon-history"}}</button>
   <button class="rail-button" type="button" data-rail="deploy-title" aria-label="Deploy">{{template "icon-deploy"}}</button>
 </nav>
 <div class="page-head">

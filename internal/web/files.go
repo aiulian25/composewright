@@ -66,6 +66,7 @@ type filesView struct {
 	EnvText           string
 	ComposeProvenance string
 	NextVersion       int
+	OldestVersion     int
 	EditedUntested    bool
 }
 
@@ -154,7 +155,7 @@ func (server *Server) filesView(ctx context.Context, stored *pipeline.Stored, st
 		return view, err
 	}
 	view.Versions = versionRows(generations, stored.Generation.ID)
-	view.EnvText, view.NextVersion = env, len(generations)+1
+	view.EnvText, view.NextVersion, view.OldestVersion = env, stored.Generation.Number+1, generations[len(generations)-1].Number
 	_, tested := storedVerdict(stored.Generation)
 	view.EditedUntested = stored.Options.Edited && !tested
 	marks := make([]provenanceMark, 0, len(view.ComposeLines))
@@ -197,8 +198,8 @@ func failureText(verdict sandbox.Verdict) string {
 // first plan, a Review change, an edit of compose.yaml or a repair.
 func versionRows(generations []store.Generation, current string) []versionRow {
 	rows := make([]versionRow, 0, len(generations))
-	for index, generation := range generations {
-		row := versionRow{ID: generation.ID, Number: len(generations) - index, Engine: generation.Engine, When: generation.CreatedAt,
+	for _, generation := range generations {
+		row := versionRow{ID: generation.ID, Number: generation.Number, Engine: generation.Engine, When: generation.CreatedAt,
 			Current: generation.ID == current, Result: "not tested", Tone: toneNeutral, Change: "Review changes"}
 		var options pipeline.Options
 		_ = json.Unmarshal([]byte(generation.OptionsJSON), &options)
