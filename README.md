@@ -9,7 +9,7 @@
 
 composewright reads a repository (or a README, or a compose file you already have), works out how the app is meant to be deployed, writes a Compose file plus a `.env` with every variable explained and every secret generated, and then **proves the stack boots** by running it in an isolated, resource-capped sandbox before handing it to you. Runs as a normal user, works with a local Ollama, and never phones home.
 
-> Status: pre-alpha. Nothing below is released yet — this README describes the intended first release so the install path is designed before the code.
+> Status: 0.1.0, the first public release. Expect rough edges and breaking changes before 1.0; the [CHANGELOG](CHANGELOG.md) lists what each release changes.
 
 ## Quickstart — one image, one command
 
@@ -20,7 +20,7 @@ docker run -d --name composewright --restart unless-stopped \
   -v /var/run/docker.sock:/var/run/docker.sock \
   --group-add "$(stat -c '%g' /var/run/docker.sock)" \
   --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges \
-  ghcr.io/aiulian25/composewright:latest
+  ghcr.io/aiulian25/composewright:0.1.0
 ```
 
 Open **http://127.0.0.1:8484**, set an admin password, and choose a model:
@@ -50,7 +50,7 @@ docker run -d --name composewright --restart unless-stopped \
   -v "$XDG_RUNTIME_DIR/docker.sock:/var/run/docker.sock" \
   --user 0:0 \
   --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges \
-  ghcr.io/aiulian25/composewright:latest
+  ghcr.io/aiulian25/composewright:0.1.0
 ```
 
 `composewright doctor --setup-rootless` prints the steps for the host.
