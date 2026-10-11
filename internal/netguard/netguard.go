@@ -19,6 +19,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/aiulian25/composewright/internal/config"
 )
 
 type Purpose string
@@ -40,8 +42,6 @@ const (
 	maxRedirects        = 3
 	httpsScheme         = "https"
 	httpScheme          = "http"
-	defaultHTTPSPort    = "443"
-	defaultHTTPPort     = "80"
 	environmentProxy    = "HTTPS_PROXY"
 	environmentNoProxy  = "NO_PROXY"
 	noProxyEverything   = "*"
@@ -158,7 +158,7 @@ func (guard *Guard) allow(purpose Purpose, target *url.URL) error {
 	if target.Scheme == httpsScheme {
 		return nil
 	}
-	if target.Scheme == httpScheme && guard.privateTarget(hostPort(target)) {
+	if target.Scheme == httpScheme && guard.privateTarget(config.HostPort(target)) {
 		return nil
 	}
 	return fmt.Errorf("%s: %w", target.Redacted(), ErrSchemeForbidden)
@@ -182,7 +182,7 @@ func (guard *Guard) bypassed(host string) bool {
 // (so a public name that resolves to 127.0.0.1 is refused too), except for
 // the configured proxy and configured private targets.
 func (guard *Guard) dial(ctx context.Context, network, address string) (net.Conn, error) {
-	trusted := guard.privateTarget(address) || (guard.proxy != nil && address == hostPort(guard.proxy))
+	trusted := guard.privateTarget(address) || (guard.proxy != nil && address == config.HostPort(guard.proxy))
 	dialer := &net.Dialer{Timeout: dialTimeout}
 	if !trusted {
 		dialer.Control = func(_, resolved string, _ syscall.RawConn) error { return checkAddress(resolved) }
@@ -228,17 +228,6 @@ func ReadBody(response *http.Response, limit int64) ([]byte, error) {
 		return nil, ErrTooLarge
 	}
 	return body, nil
-}
-
-func hostPort(target *url.URL) string {
-	port := target.Port()
-	if port == "" && target.Scheme == httpScheme {
-		port = defaultHTTPPort
-	}
-	if port == "" {
-		port = defaultHTTPSPort
-	}
-	return strings.ToLower(net.JoinHostPort(target.Hostname(), port))
 }
 
 func firstEnvironment(name string) string {

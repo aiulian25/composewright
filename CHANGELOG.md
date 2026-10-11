@@ -74,7 +74,10 @@ All notable changes to this project are documented here. The format follows
 - **Egress control.** composewright's own connections all go through
   `internal/netguard`: each purpose has a host allowlist, and internal
   addresses are refused after DNS resolution unless configured as private
-  targets. `gen --offline` keeps composewright itself off the network.
+  targets. A model is reached over plain HTTP only at a local address (a
+  private or Tailscale IP, or a LAN name), so an API key never crosses the
+  internet unencrypted. `gen --offline` keeps composewright itself off the
+  network.
 - **Commands:** `init`, `config`, `keys`, `gen`, `list`, `show`, `rm`,
   `export` (to a folder or Arcane templates), `profile`, `validate`,
   `doctor`, `serve`, `password` and `version`.

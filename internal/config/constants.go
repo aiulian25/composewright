@@ -28,6 +28,11 @@ const (
 	ProviderOllama           = "ollama"
 	ProviderNone             = "none"
 
+	schemeHTTP       = "http"
+	schemeHTTPS      = "https"
+	defaultHTTPPort  = "80"
+	defaultHTTPSPort = "443"
+
 	// The engines decide who writes a plan: the rules alone, the rules with
 	// a model filling what they leave open, or a model drafting it all.
 	EngineRules    = "rules"

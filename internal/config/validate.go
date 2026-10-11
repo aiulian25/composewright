@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"net/netip"
 	"net/url"
 	"path/filepath"
 	"regexp"
@@ -21,13 +22,18 @@ var (
 	hostnamePattern      = regexp.MustCompile(`^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$`)
 	ownerPattern         = regexp.MustCompile(`^[0-9]+:[0-9]+$`)
 	secretRefNamePattern = regexp.MustCompile(`^[A-Za-z0-9_.-]+$`)
+	// localSuffixes are names only a local resolver answers.
+	localSuffixes = []string{".local", ".lan", ".home.arpa", ".internal"}
+	// sharedAddressSpace is 100.64.0.0/10, carrier-grade NAT and the
+	// addresses Tailscale hands out: not reachable from the internet.
+	sharedAddressSpace = netip.MustParsePrefix("100.64.0.0/10")
 )
 
 func (config Config) Validate() error {
 	return errors.Join(
 		oneOf("docker.sandbox_tier", config.Docker.SandboxTier, sandboxTiers),
 		config.Docker.Validate.validate(),
-		config.LLM.validate(),
+		config.LLM.validate(config.Network.AllowPrivateTargets),
 		validateRegistries(config.Registries.Allow),
 		validateHosts("scm.allow_hosts", config.SCM.AllowHosts),
 		validateSecretRef("scm.github_token_ref", config.SCM.GitHubTokenRef),
@@ -56,7 +62,7 @@ func (validate Validate) validate() error {
 	return errors.Join(problems...)
 }
 
-func (llm LLM) validate() error {
+func (llm LLM) validate(privateTargets []string) error {
 	problems := []error{
 		oneOf("llm.engine", llm.Engine, engines),
 		oneOf("llm.provider", llm.Provider, providers),
@@ -70,25 +76,67 @@ func (llm LLM) validate() error {
 		}
 		seen[connection.Name] = true
 		problems = append(problems, oneOf(field+".provider", connection.Provider, modelProviders),
-			validateSecretRef(field+".api_key_ref", connection.APIKeyRef), endpointProblem(field, connection.BaseURL, connection.MaxInputTokens))
+			validateSecretRef(field+".api_key_ref", connection.APIKeyRef), endpointProblem(field, connection.BaseURL, connection.MaxInputTokens, privateTargets))
 	}
 	if llm.Provider == ProviderNone {
 		return errors.Join(problems...)
 	}
-	return errors.Join(append(problems, endpointProblem("llm", llm.BaseURL, llm.MaxInputTokens))...)
+	return errors.Join(append(problems, endpointProblem("llm", llm.BaseURL, llm.MaxInputTokens, privateTargets))...)
 }
 
 // endpointProblem checks where a model lives and how much it may be sent.
-func endpointProblem(field, baseURL string, maxInputTokens int) error {
-	var problems []error
-	parsed, err := url.Parse(baseURL)
-	if err != nil || (parsed.Scheme != "https" && parsed.Scheme != "http") || parsed.Host == "" {
-		problems = append(problems, fmt.Errorf("%s.base_url %q must be an http(s) URL", field, baseURL))
-	}
+func endpointProblem(field, baseURL string, maxInputTokens int, privateTargets []string) error {
+	problems := []error{baseURLProblem(field, baseURL, privateTargets)}
 	if maxInputTokens <= 0 {
 		problems = append(problems, fmt.Errorf("%s.max_input_tokens must be greater than 0", field))
 	}
 	return errors.Join(problems...)
+}
+
+// baseURLProblem refuses anything but an http(s) URL, and plain HTTP to a
+// host that is not local, which would send the API key unencrypted.
+func baseURLProblem(field, baseURL string, privateTargets []string) error {
+	parsed, err := url.Parse(baseURL)
+	if err != nil || (parsed.Scheme != schemeHTTPS && parsed.Scheme != schemeHTTP) || parsed.Host == "" {
+		return fmt.Errorf("%s.base_url %q must be an http(s) URL", field, baseURL)
+	}
+	target := HostPort(parsed)
+	listed := slices.ContainsFunc(privateTargets, func(entry string) bool { return strings.EqualFold(entry, target) })
+	if parsed.Scheme == schemeHTTPS || LocalEndpoint(parsed) || listed {
+		return nil
+	}
+	return fmt.Errorf("%s.base_url %q sends the API key unencrypted to a public host; use https, or list %s in network.allow_private_targets",
+		field, baseURL, target)
+}
+
+// LocalEndpoint reports whether a URL points at this machine or the local
+// network, where plain HTTP does not cross the internet: a loopback,
+// private, link-local or shared (Tailscale) address, a name without a dot
+// such as localhost or nuc, or a name under a suffix only local resolvers
+// answer.
+func LocalEndpoint(parsed *url.URL) bool {
+	host := strings.ToLower(parsed.Hostname())
+	if address, err := netip.ParseAddr(host); err == nil {
+		address = address.Unmap()
+		return address.IsLoopback() || address.IsPrivate() || address.IsLinkLocalUnicast() || sharedAddressSpace.Contains(address)
+	}
+	if host == "" {
+		return false
+	}
+	return !strings.Contains(host, ".") || slices.ContainsFunc(localSuffixes, func(suffix string) bool { return strings.HasSuffix(host, suffix) })
+}
+
+// HostPort is the host:port a URL connects to, with the scheme's default
+// port: the form network.allow_private_targets lists.
+func HostPort(target *url.URL) string {
+	port := target.Port()
+	if port == "" && target.Scheme == schemeHTTP {
+		port = defaultHTTPPort
+	}
+	if port == "" {
+		port = defaultHTTPSPort
+	}
+	return strings.ToLower(net.JoinHostPort(target.Hostname(), port))
 }
 
 func (profile Profile) Validate() error {

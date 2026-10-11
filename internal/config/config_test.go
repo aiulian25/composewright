@@ -141,6 +141,43 @@ func TestValidateRejectsBadValues(t *testing.T) {
 	}
 }
 
+// TestModelEndpointsOverPlainHTTP: plain HTTP reaches a model only on this
+// machine or the local network, where the API key does not cross the
+// internet; a public host needs https or an allow_private_targets entry.
+func TestModelEndpointsOverPlainHTTP(t *testing.T) {
+	cases := []struct {
+		baseURL string
+		targets []string
+		valid   bool
+	}{
+		{"http://api.openai.com/v1", nil, false},
+		{"http://ollama.example.com:11434", nil, false},
+		{"https://api.openai.com/v1", nil, true},
+		{"http://api.openai.com/v1", []string{"api.openai.com:80"}, true},
+		{"http://127.0.0.1:11434", nil, true},
+		{"http://192.168.1.123:11434", nil, true},
+		{"http://100.101.102.103:11434", nil, true},
+		{"http://[fd00::5]:11434", nil, true},
+		{"http://nuc:11434", nil, true},
+		{"http://nuc.lan:11434", nil, true},
+		{"http://host.docker.internal:11434", nil, true},
+	}
+	for _, testCase := range cases {
+		config := Default()
+		config.LLM.BaseURL, config.Network.AllowPrivateTargets = testCase.baseURL, testCase.targets
+		if err := config.Validate(); (err == nil) != testCase.valid {
+			t.Errorf("%s with %v: error %v, want valid %v", testCase.baseURL, testCase.targets, err, testCase.valid)
+		}
+	}
+	config := Default()
+	config.LLM.Connections = []Connection{{Name: "openai", Provider: ProviderOpenAICompatible, BaseURL: "http://api.openai.com/v1",
+		Model: "gpt", APIKeyRef: "keyring:llm-openai", MaxInputTokens: 8000}}
+	err := config.Validate()
+	if err == nil || !strings.Contains(err.Error(), "sends the API key unencrypted") || !strings.Contains(err.Error(), "list api.openai.com:80 in network.allow_private_targets") {
+		t.Fatalf("a saved connection over plain HTTP to a public host: %v", err)
+	}
+}
+
 func TestSetInFileKeepsCommentsAndValidates(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "config.yaml")
 	if err := SetInFile(path, "ui.theme", "light"); err != nil {

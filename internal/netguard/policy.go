@@ -23,8 +23,9 @@ var registryHosts = map[string][]string{
 }
 
 // PolicyFromConfig builds the egress allowlist from the configuration: the
-// LLM base URL host, the SCM hosts, the hosts behind every allowlisted
-// registry, and GitHub for the manual update check.
+// LLM base URL host, a private target only when it is local, the SCM hosts,
+// the hosts behind every allowlisted registry, and GitHub for the manual
+// update check.
 func PolicyFromConfig(configuration config.Config, extraRegistries []string, version string) (Policy, error) {
 	policy := Policy{Hosts: map[Purpose][]string{}, PrivateTargets: lowered(configuration.Network.AllowPrivateTargets), Version: version}
 	policy.Hosts[SCM] = lowered(configuration.SCM.AllowHosts)
@@ -40,7 +41,9 @@ func PolicyFromConfig(configuration config.Config, extraRegistries []string, ver
 		return Policy{}, fmt.Errorf("llm.base_url: %w", err)
 	}
 	policy.Hosts[LLM] = []string{strings.ToLower(base.Hostname())}
-	policy.PrivateTargets = appendUnique(policy.PrivateTargets, hostPort(base))
+	if config.LocalEndpoint(base) {
+		policy.PrivateTargets = appendUnique(policy.PrivateTargets, config.HostPort(base))
+	}
 	return policy, nil
 }
 

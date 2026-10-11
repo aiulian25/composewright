@@ -129,6 +129,11 @@ func TestPolicyFromConfig(t *testing.T) {
 	if !contains(policy.Hosts[SCM], "codeload.github.com") || len(policy.Hosts[Release]) != 1 {
 		t.Fatalf("scm/release hosts: %+v", policy.Hosts)
 	}
+	configuration.LLM.Provider, configuration.LLM.BaseURL = config.ProviderAnthropic, "https://api.anthropic.com"
+	public, err := PolicyFromConfig(configuration, nil, "test")
+	if err != nil || !contains(public.Hosts[LLM], "api.anthropic.com") || contains(public.PrivateTargets, "api.anthropic.com:443") {
+		t.Fatalf("a public model host must be allowed but stay under the internal-address check: %+v %v", public, err)
+	}
 	configuration.LLM.Provider = config.ProviderNone
 	none, _ := PolicyFromConfig(configuration, nil, "test")
 	if len(none.Hosts[LLM]) != 0 || contains(none.PrivateTargets, "127.0.0.1:11434") {
