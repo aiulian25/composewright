@@ -805,6 +805,41 @@ func TestSettings(t *testing.T) {
 
 // sentProfile is the Environment profile page as a browser sends it: two
 // networks new projects join, and the default storage and defaults.
+// TestWrongCurrentPasswordsAreThrottled: a browser left signed in cannot be
+// used to guess the password. After three wrong ones the account waits, even
+// for the right one; the right one after the wait goes through and starts
+// the count over.
+func TestWrongCurrentPasswordsAreThrottled(t *testing.T) {
+	harness := newHarness(t)
+	harness.signUp()
+	change := func(currentPassword string) (*http.Response, string) {
+		return harness.post("/settings/account", url.Values{"current": {currentPassword}, "password": {"another long password"},
+			"confirm": {"another long password"}})
+	}
+	for attempt := range 3 {
+		response, page := change("wrong password!")
+		status(t, response, http.StatusBadRequest, page)
+		if !strings.Contains(page, "The current password is wrong") {
+			t.Fatalf("attempt %d was not refused as wrong", attempt)
+		}
+	}
+	response, page := change(testPassword)
+	status(t, response, http.StatusBadRequest, page)
+	if !strings.Contains(page, "Too many wrong passwords; try again in 1s") {
+		t.Fatal("a fourth guess was checked without waiting")
+	}
+	harness.clock.advance(2 * time.Second)
+	response, page = change(testPassword)
+	status(t, response, http.StatusSeeOther, page)
+	for attempt := range 2 {
+		response, page = change("wrong password!")
+		status(t, response, http.StatusBadRequest, page)
+		if !strings.Contains(page, "The current password is wrong") {
+			t.Fatalf("attempt %d after a right password still counted the old guesses", attempt)
+		}
+	}
+}
+
 func sentProfile() url.Values {
 	return url.Values{"name-0": {"npm_default"}, "kind-0": {"proxy"}, "provider-0": {"npm"}, "default-0": {"1"},
 		"name-1": {"newt"}, "kind-1": {"tunnel"}, "provider-1": {"pangolin"}, "default-1": {"1"},

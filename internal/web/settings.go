@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/aiulian25/composewright/internal/auth"
 	"github.com/aiulian25/composewright/internal/config"
@@ -37,6 +38,9 @@ const (
 	sectionQuery   = "section"
 	profileFile    = "profile.yaml"
 	configFile     = "config.yaml"
+	// passwordAttemptPrefix keys the throttle by account for a password
+	// change, where sign-in keys it by client address.
+	passwordAttemptPrefix = "password:"
 )
 
 var (
@@ -408,7 +412,13 @@ func (reader *numbers) decimal(name, label string, saved float64) float64 {
 	return number
 }
 
+// changePassword throttles wrong current passwords per account, so a
+// browser left signed in cannot be used to guess the password.
 func (server *Server) changePassword(request *http.Request, current *visit) error {
+	account, now := passwordAttemptPrefix+current.user.ID, server.options.Now()
+	if wait := server.throttle.Wait(account, now); wait > 0 {
+		return fmt.Errorf("too many wrong passwords; try again in %s", wait.Round(time.Second))
+	}
 	release, free := server.hashSlot()
 	if !free {
 		return errors.New(strings.TrimSuffix(tooManyPasswordChecks, "."))
@@ -419,8 +429,10 @@ func (server *Server) changePassword(request *http.Request, current *visit) erro
 		return err
 	}
 	if !matches {
+		server.throttle.Fail(account, now)
 		return fmt.Errorf("the current password is wrong")
 	}
+	server.throttle.Succeed(account)
 	if problem := passwordProblem(request.PostFormValue("password"), request.PostFormValue("confirm")); problem != "" {
 		return fmt.Errorf("%s", strings.TrimSuffix(problem, "."))
 	}
