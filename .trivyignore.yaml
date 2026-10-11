@@ -1,0 +1,29 @@
+# Release-gate waivers, each limited to the docker compose plugin that the
+# docker:*-cli stage of the Dockerfile supplies, each checked unreachable in
+# this image, and each expiring so it comes back for review. Once Docker ships
+# a compose built with Go 1.26.9 or later, re-pin that stage and delete these.
+vulnerabilities:
+  - id: CVE-2026-78667
+    paths:
+      - usr/local/libexec/docker/cli-plugins/docker-compose
+    expired_at: 2026-11-10
+    statement: >-
+      Range header parsing in net/http FileServer, ServeContent and ServeFile:
+      server code, and docker compose serves no HTTP. Checked 2026-10-11.
+  - id: CVE-2026-97031
+    paths:
+      - usr/local/libexec/docker/cli-plugins/docker-compose
+    expired_at: 2026-11-10
+    statement: >-
+      ECH outer extension references exhaust a crypto/tls server's memory:
+      docker compose runs no TLS server. Checked 2026-10-11.
+  - id: CVE-2026-78669
+    paths:
+      - usr/local/libexec/docker/cli-plugins/docker-compose
+    expired_at: 2026-11-10
+    statement: >-
+      A malicious HTTP/2 peer's SETTINGS flood, in the standard library and in
+      golang.org/x/net. docker compose here talks only to the Docker daemon,
+      over HTTP/1.1 on its socket: the compose gate refuses include, extends,
+      build and the other keys that would make it fetch from a registry or
+      another host. Checked 2026-10-11.
