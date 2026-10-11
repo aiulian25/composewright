@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -49,6 +50,30 @@ func TestTokens(t *testing.T) {
 	csrf, _ := NewCSRF()
 	if other == token || len(csrf) != 43 || !SameToken(csrf, csrf) || SameToken(csrf, token) || SameToken("", "") {
 		t.Fatal("tokens are not unique or comparison is wrong")
+	}
+}
+
+// TestThrottleForgetsStaleClients: past maxTrackedClients, a new failure
+// first drops clients idle for longer than forgetAfter, but never a fresh
+// one, so a guesser among many clients is still slowed down.
+func TestThrottleForgetsStaleClients(t *testing.T) {
+	throttle := NewThrottle()
+	start := time.Date(2026, 10, 10, 12, 0, 0, 0, time.UTC)
+	for index := range maxTrackedClients {
+		throttle.Fail("client-"+strconv.Itoa(index), start)
+	}
+	for range freeAttempts {
+		throttle.Fail("guesser", start.Add(time.Minute))
+	}
+	if tracked := len(throttle.failures); tracked != maxTrackedClients+1 {
+		t.Fatalf("%d clients tracked, want every fresh one: %d", tracked, maxTrackedClients+1)
+	}
+	if throttle.Wait("guesser", start.Add(time.Minute)) == 0 {
+		t.Fatal("the guesser escaped the throttle")
+	}
+	throttle.Fail("newcomer", start.Add(forgetAfter+2*time.Minute))
+	if tracked := len(throttle.failures); tracked != 1 {
+		t.Fatalf("%d clients tracked an hour later, want only the newcomer", tracked)
 	}
 }
 
