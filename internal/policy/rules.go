@@ -111,8 +111,12 @@ func (check *checker) image(service *ir.Service, field string) {
 		return
 	}
 	if !RegistryAllowed(image.Reference(), check.input.AllowRegistries, check.input.ExtraRegistries, check.input.RepositoryOwner) {
-		check.add("P1", Deny, service.Name, field, "image %s is outside the registry allowlist; allow %s to use it",
+		check.add("P1", Deny, service.Name, field, "image %s is "+OutsideAllowlist+"; allow %s to use it",
 			image.Reference(), namespacePattern(image))
+	}
+	if trustedByNameOnly(image.Reference(), check.input.AllowRegistries, check.input.ExtraRegistries, check.input.RepositoryOwner) {
+		check.add("P1", Warn, service.Name, field, "image %s is trusted only because its namespace matches the GitHub owner %s; %s "+NotGitHubAccounts+
+			", so trust %s if it is the project's own", image.Reference(), check.input.RepositoryOwner, image.Registry, namespacePattern(image))
 	}
 	switch {
 	case image.Tag == "":
@@ -152,12 +156,37 @@ func RegistryAllowed(reference string, allow, extra []string, owner string) bool
 		return true
 	}
 	return slices.ContainsFunc(allow, func(pattern string) bool {
-		host, hostWide := strings.CutSuffix(strings.ToLower(pattern), hostWideSuffix)
-		if hostWide && !strings.Contains(host, "/") && owner != "" {
+		host, hostWide := hostOnly(pattern)
+		if hostWide && owner != "" {
 			return ownNamespace(host)
 		}
 		return patternMatches(reference, pattern)
 	})
+}
+
+// trustedByNameOnly reports an image RegistryAllowed admits only because its
+// namespace on Docker Hub or Quay carries the repository owner's name, which
+// someone else may hold there. An --allow-registry entry, or an allowlist
+// entry narrower than a whole host, is a person's own choice and settles it.
+func trustedByNameOnly(reference string, allow, extra []string, owner string) bool {
+	reference, owner = strings.ToLower(reference), strings.ToLower(owner)
+	byName := owner != "" && slices.ContainsFunc(nameOnlyRegistries, func(host string) bool { return strings.HasPrefix(reference, host+"/"+owner+"/") })
+	if !byName || strings.HasPrefix(reference, officialNamespace) {
+		return false
+	}
+	matches := func(pattern string) bool { return patternMatches(reference, pattern) }
+	chosen := func(pattern string) bool {
+		_, hostWide := hostOnly(pattern)
+		return !hostWide && matches(pattern)
+	}
+	return !slices.ContainsFunc(extra, matches) && !slices.ContainsFunc(allow, chosen)
+}
+
+// hostOnly is the host of a pattern covering a whole host, such as ghcr.io/*,
+// which is narrowed to the repository owner when the owner is known.
+func hostOnly(pattern string) (string, bool) {
+	host, hostWide := strings.CutSuffix(strings.ToLower(pattern), hostWideSuffix)
+	return host, hostWide && !strings.Contains(host, "/")
 }
 
 func patternMatches(reference, pattern string) bool {

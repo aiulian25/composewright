@@ -25,6 +25,19 @@ const (
 // automatically (P1): projects publish under their own name there.
 var ownerRegistries = []string{"docker.io", "ghcr.io", "quay.io"}
 
+// nameOnlyRegistries are the owner registries whose accounts are not
+// GitHub's: the owner's name there may belong to someone else, so an image
+// trusted by that name alone gets a P1 warning. ghcr.io namespaces are the
+// GitHub accounts themselves.
+var nameOnlyRegistries = []string{"docker.io", "quay.io"}
+
+// OutsideAllowlist and NotGitHubAccounts mark the P1 findings a person
+// settles by trusting the image's namespace on the Review page.
+const (
+	OutsideAllowlist  = "outside the registry allowlist"
+	NotGitHubAccounts = "accounts are not GitHub's"
+)
+
 var forbiddenTargets = []string{"/var/run/docker.sock", "/run/docker.sock", "/proc", "/sys", "/dev"}
 
 var allowedNoNewPrivileges = []string{"no-new-privileges", "no-new-privileges:true", "no-new-privileges=true"}

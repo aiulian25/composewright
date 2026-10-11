@@ -309,13 +309,14 @@ func findingViews(report policy.Report, compose string) []findingView {
 	return views
 }
 
-// trustOffers are the image namespaces a person could trust to lift a
-// registry-allowlist block, one per denied image.
+// trustOffers are the image namespaces a person could trust, one per image:
+// to lift a registry-allowlist block, or to vouch for a namespace trusted
+// only by the owner's name.
 func trustOffers(plan *ir.IR, report policy.Report) []string {
 	var offers []string
 	for _, finding := range report.Findings {
-		blockedImage := finding.Rule == "P1" && finding.Severity == policy.Deny && strings.Contains(finding.Message, "outside the registry allowlist")
-		if !blockedImage {
+		settledByTrust := strings.Contains(finding.Message, policy.OutsideAllowlist) || strings.Contains(finding.Message, policy.NotGitHubAccounts)
+		if finding.Rule != "P1" || !settledByTrust {
 			continue
 		}
 		service, found := plan.Service(finding.Service)

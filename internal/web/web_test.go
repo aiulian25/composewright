@@ -29,7 +29,9 @@ import (
 
 	"github.com/aiulian25/composewright/internal/config"
 	"github.com/aiulian25/composewright/internal/doctor"
+	"github.com/aiulian25/composewright/internal/ir"
 	"github.com/aiulian25/composewright/internal/pipeline"
+	"github.com/aiulian25/composewright/internal/policy"
 	"github.com/aiulian25/composewright/internal/redact"
 	"github.com/aiulian25/composewright/internal/sandbox"
 	"github.com/aiulian25/composewright/internal/store"
@@ -955,6 +957,21 @@ func TestStartRemovesLeftUploads(t *testing.T) {
 	}
 	if _, err := os.Stat(other); err != nil {
 		t.Fatalf("a folder that is not an upload was removed: %v", err)
+	}
+}
+
+// TestTrustOffers: an image outside the allowlist, or trusted only by its
+// owner's name on Docker Hub, offers its namespace to trust; the owner's own
+// GitHub namespace on ghcr.io offers nothing.
+func TestTrustOffers(t *testing.T) {
+	plan := &ir.IR{Services: []ir.Service{
+		{Name: "app", Image: ir.Image{Registry: "docker.io", Repository: "miniflux/miniflux", Tag: "2"}},
+		{Name: "cache", Image: ir.Image{Registry: "evil.example", Repository: "someone/cache", Tag: "1"}},
+		{Name: "web", Image: ir.Image{Registry: "ghcr.io", Repository: "miniflux/web", Tag: "1"}},
+	}}
+	report := policy.Evaluate(policy.Input{Plan: plan, AllowRegistries: config.Default().Registries.Allow, RepositoryOwner: "miniflux"})
+	if offers := slices.Sorted(slices.Values(trustOffers(plan, report))); !slices.Equal(offers, []string{"docker.io/miniflux/*", "evil.example/someone/*"}) {
+		t.Fatalf("offers %v", offers)
 	}
 }
 

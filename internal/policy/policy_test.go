@@ -95,14 +95,22 @@ type planCase struct {
 }
 
 var planCases = []planCase{
-	{name: "clean plan passes", mutate: func(*ir.IR) {}},
+	// The plan's own image is on Docker Hub, so the person trusts that
+	// namespace, as the Review page's Trust button does; otherwise P1 warns.
+	{name: "clean plan passes", extra: []string{"docker.io/miniflux/*"}, mutate: func(*ir.IR) {}},
 
 	{name: "P1 unknown registry denied", rule: "P1", want: policy.Deny, blocked: true, scenario: "evil-registry",
 		mutate: func(plan *ir.IR) { plan.Services[0].Image.Registry = "evil.example" }},
 	{name: "P1 foreign docker hub namespace denied", rule: "P1", want: policy.Deny, blocked: true, scenario: "image-swap-miner",
 		mutate: func(plan *ir.IR) { plan.Services[0].Image.Repository = "someone/miner" }},
-	{name: "P1 owner namespace allowed", rule: "P1", want: policy.OK,
+	{name: "P1 owner name on Docker Hub warns", rule: "P1", want: policy.Warn,
 		mutate: func(plan *ir.IR) { plan.Services[0].Image.Repository = "miniflux/miniflux-arm" }},
+	{name: "P1 owner name on Quay warns", rule: "P1", want: policy.Warn,
+		mutate: func(plan *ir.IR) { plan.Services[0].Image.Registry = "quay.io" }},
+	{name: "P1 owner namespace trusted on purpose", rule: "P1", want: policy.OK, extra: []string{"docker.io/miniflux/*"},
+		mutate: func(plan *ir.IR) { plan.Services[0].Image.Repository = "miniflux/miniflux-arm" }},
+	{name: "P1 owner namespace on ghcr is the GitHub account", rule: "P1", want: policy.OK,
+		mutate: func(plan *ir.IR) { plan.Services[0].Image.Registry = "ghcr.io" }},
 	{name: "P1 host-wide ghcr narrowed to owner", rule: "P1", want: policy.Deny, blocked: true, scenario: "ghcr-other-namespace",
 		mutate: func(plan *ir.IR) {
 			plan.Services[0].Image.Registry = "ghcr.io"
