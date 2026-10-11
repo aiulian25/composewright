@@ -412,6 +412,51 @@ func TestSetupIsAuditedAndAnnounced(t *testing.T) {
 	}
 }
 
+// TestRunsOfOneProjectStayApart: a generation is held to its project as soon
+// as its plan names it, so validating, changing on the Review page, editing
+// there and saving on the Files page all wait for it; and a generation whose
+// plan names a project another run holds stops.
+func TestRunsOfOneProjectStayApart(t *testing.T) {
+	harness := newHarness(t)
+	harness.signUp()
+	response, _ := harness.post("/new", url.Values{"source": {minifluxPath}, "engine": {pipeline.EngineRules}})
+	harness.waitForJob(response.Header.Get("Location"))
+	// A local folder names no owner, so miniflux's image must be trusted
+	// before the gate lets it run at all.
+	response, page := harness.post("/projects/miniflux/review", url.Values{"trust": {"docker.io/miniflux/*"}})
+	status(t, response, http.StatusSeeOther, page)
+	release, claimed := make(chan struct{}), make(chan error, 1)
+	holding, err := harness.server.jobs.start(jobGenerate, "Generating", "", func(_ context.Context, running *job) (string, *pipeline.Result, error) {
+		claimed <- running.observer().Project("miniflux")
+		<-release
+		return "", nil, nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := <-claimed; err != nil {
+		t.Fatal(err)
+	}
+	for _, path := range []string{"validate", "review", "compose", "files/save"} {
+		response, page := harness.post("/projects/miniflux/"+path, url.Values{"action": {"apply"}, "compose": {"services: {}"}})
+		status(t, response, http.StatusConflict, page)
+		if !strings.Contains(page, "already running") {
+			t.Fatalf("%s refused for another reason:\n%s", path, page)
+		}
+	}
+	late, err := harness.server.jobs.start(jobGenerate, "Generating", "", func(_ context.Context, running *job) (string, *pipeline.Result, error) {
+		return "", nil, running.observer().Project("miniflux")
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stopped := harness.waitForJob("/jobs/" + late.ID); !strings.Contains(stopped.Failure, "already running") || stopped.Project != "" {
+		t.Fatalf("a generation took a project another run holds: %+v", stopped)
+	}
+	close(release)
+	harness.waitForJob("/jobs/" + holding.ID)
+}
+
 // TestPlainHTTPOnTheLAN: over plain HTTP, the usual case on a home network,
 // the first account is made from the page without a token, the session
 // cookie works without Secure, and an address typed as an IP is accepted.

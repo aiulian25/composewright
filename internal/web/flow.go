@@ -741,11 +741,23 @@ func (server *Server) reviewPageFor(request *http.Request, current *visit, store
 	return page
 }
 
+// busy refuses a change to a project while one of its runs goes on, which
+// would write a version beside it.
+func (server *Server) busy(name string) error {
+	if _, running := server.jobs.running(name); running {
+		return conflict(runningConflict, name)
+	}
+	return nil
+}
+
 // editCompose saves compose.yaml as the person wrote it on the Review page.
 // Both policy gates check it, and the test runs exactly this file.
 func (server *Server) editCompose(writer http.ResponseWriter, request *http.Request, current *visit) error {
 	ctx := request.Context()
 	name := request.PathValue("name")
+	if err := server.busy(name); err != nil {
+		return err
+	}
 	compose := request.PostFormValue("compose")
 	if strings.TrimSpace(compose) == "" {
 		return badRequest("compose.yaml is empty; there is nothing to save.")
@@ -813,6 +825,9 @@ func (server *Server) renderReview(writer http.ResponseWriter, request *http.Req
 func (server *Server) review(writer http.ResponseWriter, request *http.Request, current *visit) error {
 	ctx := request.Context()
 	name := request.PathValue("name")
+	if err := server.busy(name); err != nil {
+		return err
+	}
 	stored, err := pipeline.Load(ctx, server.workspace(), name)
 	if err != nil {
 		return err

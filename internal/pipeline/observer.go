@@ -41,12 +41,22 @@ type Observer struct {
 	Facts func(*extract.Facts, *fetch.Source)
 	// Line receives redacted sandbox output while a stack runs.
 	Line func(sandbox.Line)
+	// Project learns which project a run writes as soon as its plan names
+	// it; an error, such as another run holding that project, stops the run.
+	Project func(name string) error
 }
 
 func (observer Observer) step(name, state, note string) {
 	if observer.Step != nil {
 		observer.Step(Step{Name: name, State: state, Note: note})
 	}
+}
+
+func (observer Observer) project(name string) error {
+	if observer.Project == nil {
+		return nil
+	}
+	return observer.Project(name)
 }
 
 func (observer Observer) failed(name string, err error) error {

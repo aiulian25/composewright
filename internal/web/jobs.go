@@ -21,7 +21,9 @@ import (
 
 const (
 	jobGenerate = "generate"
-	jobValidate = "validate"
+	// runningConflict refuses a second run, or a change, while a project runs.
+	runningConflict = "%s is already running. Wait for it to finish or stop it first."
+	jobValidate     = "validate"
 
 	eventStep   = "step"
 	eventFacts  = "facts"
@@ -67,6 +69,7 @@ type job struct {
 	Title   string
 	Started time.Time
 
+	registry *jobs
 	mutex    sync.Mutex
 	project  string
 	events   []event
@@ -154,6 +157,9 @@ func (current *job) observer() pipeline.Observer {
 			current.facts, current.source = facts, source
 			current.add(event{Kind: eventFacts})
 		},
+		Project: func(name string) error {
+			return current.registry.claim(current, name)
+		},
 		Line: func(line sandbox.Line) {
 			current.mutex.Lock()
 			defer current.mutex.Unlock()
@@ -224,7 +230,7 @@ func (registry *jobs) start(kind, title, project string, run work) (*job, error)
 		}
 		running++
 		if project != "" && existing.projectName() == project {
-			return nil, conflict("%s is already running. Wait for it to finish or stop it first.", project)
+			return nil, conflict(runningConflict, project)
 		}
 	}
 	if running >= maxRunningJobs {
@@ -235,7 +241,7 @@ func (registry *jobs) start(kind, title, project string, run work) (*job, error)
 		return nil, err
 	}
 	ctx, cancel := context.WithCancel(context.Background())
-	current := &job{ID: hex.EncodeToString(identifier), Kind: kind, Title: title, Started: registry.now(), project: project,
+	current := &job{ID: hex.EncodeToString(identifier), Kind: kind, Title: title, Started: registry.now(), project: project, registry: registry,
 		changed: make(chan struct{}), steps: map[string]pipeline.Step{}, timings: map[string]timing{}, cancel: cancel, now: registry.now}
 	registry.byID[current.ID] = current
 	registry.wait.Add(1)
@@ -301,6 +307,22 @@ func (registry *jobs) get(identifier string) (*job, bool) {
 }
 
 // running returns the unfinished job of a project, if any.
+// claim gives a running job its project once its plan names it, unless
+// another run holds that project already.
+func (registry *jobs) claim(current *job, project string) error {
+	registry.mutex.Lock()
+	defer registry.mutex.Unlock()
+	for _, existing := range registry.byID {
+		if existing != current && !existing.isFinished() && existing.projectName() == project {
+			return conflict(runningConflict, project)
+		}
+	}
+	current.mutex.Lock()
+	defer current.mutex.Unlock()
+	current.project = project
+	return nil
+}
+
 func (registry *jobs) running(project string) (*job, bool) {
 	registry.mutex.Lock()
 	defer registry.mutex.Unlock()

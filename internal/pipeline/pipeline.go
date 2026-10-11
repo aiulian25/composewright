@@ -151,6 +151,9 @@ func Generate(ctx context.Context, dependencies Dependencies, options Options) (
 	}
 	result.Notices = append(result.Notices, facts.Problems...)
 	input := plan(ctx, dependencies, options, result)
+	if err := observer.project(result.Plan.App.Name); err != nil {
+		return nil, observer.failed(StepPlan, err)
+	}
 	if options.StopAfter == StageIR {
 		return result, nil
 	}

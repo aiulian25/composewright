@@ -247,6 +247,9 @@ func (server *Server) checkFiles(writer http.ResponseWriter, request *http.Reque
 func (server *Server) saveFiles(writer http.ResponseWriter, request *http.Request, current *visit) error {
 	ctx := request.Context()
 	name := request.PathValue("name")
+	if err := server.busy(name); err != nil {
+		return err
+	}
 	connection, err := server.connect(ctx, current.user.Username, pipeline.EngineRules, false)
 	if err != nil {
 		return err
