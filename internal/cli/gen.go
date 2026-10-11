@@ -140,7 +140,7 @@ func (application *app) generate(ctx context.Context, dependencies pipeline.Depe
 		if err := application.showPlan(result); err != nil {
 			return false, err
 		}
-		return application.confirm(fmt.Sprintf("\nRun %s in an isolated sandbox (pulls %d images, removed afterwards)?", result.Plan.App.Name, len(result.Plan.Services)))
+		return application.confirm(fmt.Sprintf(sandboxQuestion, result.Plan.App.Name))
 	}
 	result, err := pipeline.Generate(ctx, dependencies, flags.options)
 	if err != nil {

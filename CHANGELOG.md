@@ -6,6 +6,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- `composewright gen` no longer says the images it pulls for the sandbox
+  are removed afterwards: the sandbox and its volumes are, and the images
+  stay for the real deployment.
+
 ## [0.1.0] - 2026-10-11
 
 The first public release.

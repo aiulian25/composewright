@@ -20,4 +20,8 @@ const (
 	logLevelError = "error"
 
 	jsonIndent = "  "
+
+	// Asked right under the plan table, which lists the images. Teardown is
+	// down -v without --rmi, so the images stay for the real deployment.
+	sandboxQuestion = "\nRun %s in an isolated sandbox (pulls the images above and keeps them; the sandbox and its volumes are removed afterwards)?"
 )
