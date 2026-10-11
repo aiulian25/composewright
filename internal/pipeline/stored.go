@@ -130,22 +130,29 @@ func (stored *Stored) result() (*Result, error) {
 	result := &Result{Source: stored.source(), Facts: stored.Facts, Plan: stored.Plan.Clone(), Report: stored.Report, Values: stored.Values,
 		Files:   Files{Compose: []byte(stored.Generation.ComposeYAML), Env: env, Deploy: []byte(stored.Generation.DeployMD)},
 		Project: project, Generation: stored.Generation, Engine: stored.Generation.Engine,
-		Call:      llm.Call{Provider: stored.Generation.Provider, Model: stored.Generation.Model, PromptHash: stored.Generation.PromptHash},
-		Inspected: map[string]images.Metadata{}, Checks: map[string]policy.ImageCheck{}}
+		Call: llm.Call{Provider: stored.Generation.Provider, Model: stored.Generation.Model, PromptHash: stored.Generation.PromptHash}}
+	result.Inspected, result.Checks = stored.verifiedImages()
+	return result, nil
+}
+
+// verifiedImages is what image verification found when this version was
+// made, without opening any secret.
+func (stored *Stored) verifiedImages() (map[string]images.Metadata, map[string]policy.ImageCheck) {
+	inspected, checks := map[string]images.Metadata{}, map[string]policy.ImageCheck{}
 	verified := map[string]store.Image{}
 	for _, image := range stored.Images {
 		verified[image.Service] = image
 	}
-	for _, service := range result.Plan.Services {
+	for _, service := range stored.Plan.Services {
 		image, found := verified[service.Name]
 		if !found || image.VerifiedAt.IsZero() {
 			continue
 		}
 		key := rules.ImageKey(service.Image)
-		result.Inspected[key] = images.Metadata{Reference: image.Reference, Digest: image.Digest, Source: image.OCISource, FetchedAt: image.VerifiedAt}
-		result.Checks[key] = policy.ImageCheck{Found: true}
+		inspected[key] = images.Metadata{Reference: image.Reference, Digest: image.Digest, Source: image.OCISource, FetchedAt: image.VerifiedAt}
+		checks[key] = policy.ImageCheck{Found: true}
 	}
-	return result, nil
+	return inspected, checks
 }
 
 // Revealed is the mask that shows every value.

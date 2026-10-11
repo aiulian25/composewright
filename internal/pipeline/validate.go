@@ -13,8 +13,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aiulian25/composewright/internal/composefile"
 	"github.com/aiulian25/composewright/internal/ir"
 	"github.com/aiulian25/composewright/internal/llm"
+	"github.com/aiulian25/composewright/internal/policy"
 	"github.com/aiulian25/composewright/internal/rules"
 	"github.com/aiulian25/composewright/internal/sandbox"
 	"github.com/aiulian25/composewright/internal/store"
@@ -100,13 +102,18 @@ func ApproveAndValidate(ctx context.Context, dependencies Dependencies, name, vi
 	if err != nil {
 		return nil, err
 	}
-	if stored.Report.Blocked() {
-		return nil, fmt.Errorf("%w: %s", ErrBlocked, name)
+	report, err := regate(ctx, dependencies, stored)
+	if err != nil {
+		return nil, err
+	}
+	if report.Blocked() {
+		return nil, blockedError(name, report)
 	}
 	result, err := stored.result()
 	if err != nil {
 		return nil, err
 	}
+	result.Report = report
 	options := stored.Options
 	options.MaxIterations = dependencies.Config.Docker.Validate.MaxIterations
 	details := map[string]any{"generation": stored.Generation.ID, "via": via, "allow_needs": options.AllowNeeds}
@@ -114,6 +121,35 @@ func ApproveAndValidate(ctx context.Context, dependencies Dependencies, name, vi
 		return nil, err
 	}
 	return result, validationLoop(ctx, dependencies, options, result, 1)
+}
+
+// regate runs both policy gates again on a stored version with today's
+// configuration: its stored report reflects the allowlist and the profile
+// as they were when it was made.
+func regate(ctx context.Context, dependencies Dependencies, stored *Stored) (policy.Report, error) {
+	project, err := composefile.Load(ctx, composeFileName, []byte(stored.Generation.ComposeYAML), nil, false)
+	if err != nil {
+		return policy.Report{}, fmt.Errorf("%w: %w", ErrComposeInvalid, err)
+	}
+	profile, err := loadProfile(dependencies.Config.Profile, stored.Options.ProfileFile)
+	if err != nil {
+		return policy.Report{}, err
+	}
+	input := policyInput(dependencies.Config, stored.Plan, stored.source(), stored.Options)
+	_, input.Images = stored.verifiedImages()
+	input.Profile = profile
+	return policy.Evaluate(input).Merge(policy.EvaluateYAML(project, input)), nil
+}
+
+// blockedError names the first finding that blocks, so a refusal is clear
+// even when the stored report, made with older settings, shows none.
+func blockedError(name string, report policy.Report) error {
+	for _, finding := range report.Findings {
+		if finding.Severity >= policy.Need {
+			return fmt.Errorf("%w: %s: %s %s", ErrBlocked, name, finding.Rule, finding.Message)
+		}
+	}
+	return fmt.Errorf("%w: %s", ErrBlocked, name)
 }
 
 // statusAfter is passed for a PASS; failed while another iteration may
@@ -162,8 +198,12 @@ func Revalidate(ctx context.Context, dependencies Dependencies, name string) (*S
 	if err != nil {
 		return nil, sandbox.Verdict{}, err
 	}
-	if stored.Report.Blocked() {
-		return stored, sandbox.Verdict{}, fmt.Errorf("%s is blocked by the policy gate; regenerate it first", name)
+	report, err := regate(ctx, dependencies, stored)
+	if err != nil {
+		return stored, sandbox.Verdict{}, err
+	}
+	if report.Blocked() {
+		return stored, sandbox.Verdict{}, blockedError(name, report)
 	}
 	if err := dependencies.Sandbox.RequireCompose(ctx); err != nil {
 		return stored, sandbox.Verdict{}, err

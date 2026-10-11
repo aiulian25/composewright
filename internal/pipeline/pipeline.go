@@ -336,7 +336,7 @@ func renderAndGate(ctx context.Context, dependencies Dependencies, options Optio
 		return err
 	}
 	result.Files.Deploy = render.Deploy(result.Plan, renderOptions, "not validated yet")
-	project, err := composefile.Load(ctx, "compose.yaml", result.Files.Compose, nil, false)
+	project, err := composefile.Load(ctx, composeFileName, result.Files.Compose, nil, false)
 	if err != nil {
 		return fmt.Errorf("the rendered compose.yaml does not load: %w", err)
 	}

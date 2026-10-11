@@ -105,6 +105,34 @@ func TestAnotherSourceCannotTakeOverAProject(t *testing.T) {
 	}
 }
 
+// TestStoredVersionIsGatedAgain: a version stored while its images were
+// allowed is refused once today's allowlist blocks it, both when approved and
+// when run again, and the refusal names the finding, which the stored report
+// does not show.
+func TestStoredVersionIsGatedAgain(t *testing.T) {
+	ctx := context.Background()
+	dependencies := testDependencies(t, &scriptedDocker{states: []string{healthy}})
+	// The source's owner is not miniflux, so only this entry admits its image.
+	const minifluxImages = "docker.io/miniflux/*"
+	allowed := dependencies.Config.Registries.Allow
+	dependencies.Config.Registries.Allow = append(slices.Clone(allowed), minifluxImages)
+	options := testOptions()
+	options.RunSandbox, options.Upstream = false, "https://github.com/someone/v2"
+	if _, err := Generate(ctx, dependencies, options); err != nil {
+		t.Fatal(err)
+	}
+	if stored, err := Load(ctx, dependencies.Workspace, "miniflux"); err != nil || stored.Report.Blocked() {
+		t.Fatalf("the stored version should pass the gate it was made under: %v", err)
+	}
+	dependencies.Config.Registries.Allow = allowed
+	if _, err := ApproveAndValidate(ctx, dependencies, "miniflux", "test"); !errors.Is(err, ErrBlocked) || !strings.Contains(err.Error(), "P1 ") {
+		t.Fatalf("approved under an allowlist that blocks it: %v", err)
+	}
+	if _, _, err := Revalidate(ctx, dependencies, "miniflux"); !errors.Is(err, ErrBlocked) {
+		t.Fatalf("run again under an allowlist that blocks it: %v", err)
+	}
+}
+
 func testDependencies(t *testing.T, docker *scriptedDocker) Dependencies {
 	t.Helper()
 	root := t.TempDir()

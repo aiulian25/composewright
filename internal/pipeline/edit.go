@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	editedFile = "compose.yaml"
+	composeFileName = "compose.yaml"
 	// FileCompose and FileEnv name the file an EditProblem is in.
 	FileCompose = "compose"
 	FileEnv     = "env"
@@ -144,7 +144,7 @@ func applyEdit(ctx context.Context, dependencies Dependencies, stored *Stored, e
 	check.Problems = append(problems, tabProblems(string(edit.Compose))...)
 	result.Plan, result.Values, result.Engine = plan, values, EngineManual
 	result.Files.Compose = edit.Compose
-	project, err := composefile.Load(ctx, editedFile, edit.Compose, nil, false)
+	project, err := composefile.Load(ctx, composeFileName, edit.Compose, nil, false)
 	if err != nil {
 		check.Problems = append(check.Problems, EditProblem{File: FileCompose, Line: errorLine(err), Severity: SeverityError,
 			Message: fmt.Sprintf("%v: %v", ErrComposeInvalid, err)})
@@ -381,7 +381,7 @@ func EditCompose(ctx context.Context, dependencies Dependencies, name string, co
 	if err != nil {
 		return nil, err
 	}
-	project, err := composefile.Load(ctx, editedFile, compose, nil, false)
+	project, err := composefile.Load(ctx, composeFileName, compose, nil, false)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrComposeInvalid, err)
 	}
