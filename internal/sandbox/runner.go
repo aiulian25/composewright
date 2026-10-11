@@ -14,6 +14,8 @@ import (
 )
 
 const (
+	// stdoutLimit and stderrLimit cap what a docker command's output keeps:
+	// its last bytes, where a failing service explains itself.
 	stdoutLimit        = 1 << 20
 	stderrLimit        = 256 << 10
 	terminationGrace   = 10 * time.Second
@@ -76,17 +78,23 @@ func FindDocker(configured string) (string, error) {
 	return path, nil
 }
 
-// limitedBuffer keeps the first limit bytes and silently drops the rest, so
-// a chatty container cannot exhaust memory.
+// limitedBuffer keeps the last limit bytes and drops what came before, so a
+// chatty container cannot exhaust memory and the end of a log, which
+// explains a failure, is what remains.
 type limitedBuffer struct {
 	bytes.Buffer
 	limit int
 }
 
 func (buffer *limitedBuffer) Write(data []byte) (int, error) {
-	room := buffer.limit - buffer.Len()
-	if room > 0 {
-		buffer.Buffer.Write(data[:min(room, len(data))])
+	if len(data) >= buffer.limit {
+		buffer.Reset()
+		buffer.Buffer.Write(data[len(data)-buffer.limit:])
+		return len(data), nil
 	}
+	if overflow := buffer.Len() + len(data) - buffer.limit; overflow > 0 {
+		buffer.Next(overflow)
+	}
+	buffer.Buffer.Write(data)
 	return len(data), nil
 }

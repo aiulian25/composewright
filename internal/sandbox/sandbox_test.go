@@ -1,6 +1,7 @@
 package sandbox
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"io"
@@ -408,5 +409,35 @@ func TestValidateCancelledDuringProbe(t *testing.T) {
 	_, err := sandbox.Validate(ctx, Input{Project: "app", Compose: []byte(testCompose), Env: []byte(""), Probe: ir.Probe{Service: "app", Port: 80}})
 	if !errors.Is(err, context.Canceled) || !fake.called("down -v --remove-orphans") {
 		t.Fatalf("err %v, taken down %v", err, fake.called("down -v --remove-orphans"))
+	}
+}
+
+// TestLimitedBufferKeepsTheEnd: past its limit the buffer keeps the newest
+// bytes, where a failing service's last lines are, whether they arrive in
+// small writes or in one write larger than the limit.
+func TestLimitedBufferKeepsTheEnd(t *testing.T) {
+	const limit, chunk, total, period = 1 << 20, 64 << 10, 3 << 20, 251
+	written := make([]byte, 0, total)
+	chunked := &limitedBuffer{limit: limit}
+	for len(written) < total {
+		data := make([]byte, chunk)
+		for index := range data {
+			data[index] = byte((len(written) + index) % period)
+		}
+		if _, err := chunked.Write(data); err != nil {
+			t.Fatal(err)
+		}
+		written = append(written, data...)
+	}
+	newest := written[len(written)-limit:]
+	if !bytes.Equal(chunked.Bytes(), newest) {
+		t.Fatalf("kept %d bytes that are not the last %d written", chunked.Len(), limit)
+	}
+	whole := &limitedBuffer{limit: limit}
+	if _, err := whole.Write(written); err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(whole.Bytes(), newest) {
+		t.Fatalf("one large write kept %d bytes that are not its last %d", whole.Len(), limit)
 	}
 }
