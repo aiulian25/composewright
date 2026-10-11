@@ -27,16 +27,22 @@ type dockerState struct {
 	Tone string
 }
 
-// statusCache keeps the Docker check for a minute, so pages stay fast.
+// statusCache keeps the Docker check for a minute, so pages stay fast. The
+// check runs outside the lock: a slow daemon holds up only the pages that
+// check, never the ones behind them, at the cost of an occasional duplicate.
 type statusCache struct {
-	server  *Server
+	now     func() time.Time
+	check   func(context.Context) dockerState
 	mutex   sync.Mutex
 	checked time.Time
 	state   dockerState
+	// forgets counts forget calls, so a check that began before one does
+	// not store a state from the old settings.
+	forgets uint64
 }
 
 func newStatusCache(server *Server) *statusCache {
-	return &statusCache{server: server}
+	return &statusCache{now: server.options.Now, check: server.dockerStatus}
 }
 
 // forget makes the next page check Docker again, after Settings changed.
@@ -44,17 +50,27 @@ func (cache *statusCache) forget() {
 	cache.mutex.Lock()
 	defer cache.mutex.Unlock()
 	cache.checked = time.Time{}
+	cache.forgets++
 }
 
 func (cache *statusCache) docker(ctx context.Context) dockerState {
 	cache.mutex.Lock()
-	defer cache.mutex.Unlock()
-	now := cache.server.options.Now()
-	if !cache.checked.IsZero() && now.Sub(cache.checked) < statusRefresh {
-		return cache.state
+	now, checked, state, forgets := cache.now(), cache.checked, cache.state, cache.forgets
+	cache.mutex.Unlock()
+	fresh := !checked.IsZero() && now.Sub(checked) < statusRefresh
+	if fresh {
+		return state
 	}
-	cache.checked, cache.state = now, cache.server.dockerStatus(ctx)
-	return cache.state
+	state = cache.check(ctx)
+	cache.mutex.Lock()
+	defer cache.mutex.Unlock()
+	// A page closed before Docker answered says nothing about Docker.
+	forgotten, pageClosed := cache.forgets != forgets, ctx.Err() != nil
+	if forgotten || pageClosed {
+		return state
+	}
+	cache.checked, cache.state = now, state
+	return state
 }
 
 func (server *Server) dockerStatus(ctx context.Context) dockerState {

@@ -20,6 +20,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -600,6 +601,11 @@ func TestTheWholeFlow(t *testing.T) {
 	if !strings.Contains(page, "PASS") || !strings.Contains(page, "web:admin") {
 		t.Fatal("the project page lacks the verdict or the web actor")
 	}
+	response, page = harness.get("/projects")
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, `href="/projects/miniflux"`) || !strings.Contains(page, "docker.io/miniflux/miniflux") {
+		t.Fatal("the projects table does not list the project with its image")
+	}
 	response, page = harness.post("/projects/miniflux/delete", nil)
 	status(t, response, http.StatusSeeOther, page)
 	response, page = harness.get("/projects/miniflux")
@@ -804,6 +810,58 @@ func mustURL(raw string) *url.URL {
 		panic(err)
 	}
 	return parsed
+}
+
+// TestDockerCheckRunsOutsideTheLock: a slow Docker check holds no lock, so
+// Settings can forget the state meanwhile. That check, begun under the old
+// settings, then keeps nothing, and neither does one whose page closed.
+func TestDockerCheckRunsOutsideTheLock(t *testing.T) {
+	const patience = time.Second
+	fake := &clock{now: time.Date(2026, 10, 10, 9, 0, 0, 0, time.UTC)}
+	started, release := make(chan struct{}), make(chan struct{})
+	var checks atomic.Int32
+	cache := &statusCache{now: fake.Now, check: func(context.Context) dockerState {
+		if checks.Add(1) == 1 {
+			close(started)
+			<-release
+		}
+		return dockerState{Text: "Docker 29.0.0, rootful", Tone: toneWarn}
+	}}
+	checked, forgotten := make(chan struct{}), make(chan struct{})
+	go func() {
+		cache.docker(context.Background())
+		close(checked)
+	}()
+	<-started
+	go func() {
+		cache.forget()
+		close(forgotten)
+	}()
+	waited := false
+	select {
+	case <-forgotten:
+	case <-time.After(patience):
+		waited = true
+	}
+	close(release)
+	<-checked
+	<-forgotten
+	if waited {
+		t.Fatal("forget waited for the Docker check")
+	}
+	cache.docker(context.Background())
+	cache.docker(context.Background())
+	if got := checks.Load(); got != 2 {
+		t.Fatalf("%d checks, want 2: the one begun before forget was kept, or a fresh state was not", got)
+	}
+	closed, cancel := context.WithCancel(context.Background())
+	cancel()
+	fake.advance(statusRefresh)
+	cache.docker(closed)
+	cache.docker(context.Background())
+	if got := checks.Load(); got != 4 {
+		t.Fatalf("%d checks, want 4: a check whose page closed was kept", got)
+	}
 }
 
 // TestRunSteps follows the sandbox's verdict rules: a crash fails its

@@ -74,16 +74,15 @@ var (
 )
 
 // projectLinks lists every project for the sidebar, most recent first.
-func (server *Server) projectLinks(ctx context.Context, current string) []ProjectLink {
-	summaries, err := server.workspace().Store.ListProjects(ctx)
-	if err != nil {
-		server.options.Logger.Warn("listing projects for the sidebar", "error", err)
+func (server *Server) projectLinks(summaries []store.ProjectSummary, listingError error) []ProjectLink {
+	if listingError != nil {
+		server.options.Logger.Warn("listing projects for the sidebar", "error", listingError)
 		return nil
 	}
 	links := make([]ProjectLink, 0, len(summaries))
 	for _, summary := range summaries {
 		links = append(links, ProjectLink{Name: summary.Name, Subtitle: projectSubtitle(summary), Icon: projectIcons[summary.Status],
-			Href: projectURL(summary.Name, projectSteps[summary.Status]), Badge: projectBadges[summary.Status], Current: summary.Name == current})
+			Href: projectURL(summary.Name, projectSteps[summary.Status]), Badge: projectBadges[summary.Status]})
 	}
 	return links
 }

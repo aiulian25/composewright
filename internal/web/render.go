@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/aiulian25/composewright/internal/config"
+	"github.com/aiulian25/composewright/internal/store"
 )
 
 const (
@@ -74,6 +75,10 @@ type Page struct {
 	CLI     string
 	Draft   bool
 	Data    any
+	// summaries are the projects the sidebar was built from, kept for a page
+	// that lists them too; listingError is why they could not be read.
+	summaries    []store.ProjectSummary
+	listingError error
 }
 
 type StepLink struct {
@@ -91,7 +96,8 @@ func (server *Server) page(request *http.Request, current *visit, title string) 
 	}
 	page.User, page.CSRF = current.user.Username, current.session.CSRF
 	page.Crumbs = []Crumb{{Text: "Projects", Href: "/projects"}, {Text: title}}
-	page.Projects = server.projectLinks(request.Context(), "")
+	page.summaries, page.listingError = server.workspace().Store.ListProjects(request.Context())
+	page.Projects = server.projectLinks(page.summaries, page.listingError)
 	page.Engine, page.Status = server.engineMenu(), server.statusBar(request.Context())
 	return page
 }

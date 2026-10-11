@@ -44,12 +44,12 @@ type projectRow struct {
 }
 
 func (server *Server) projects(writer http.ResponseWriter, request *http.Request, current *visit) error {
-	summaries, err := server.workspace().Store.ListProjects(request.Context())
-	if err != nil {
-		return err
+	page := server.page(request, current, "Projects")
+	if page.listingError != nil {
+		return page.listingError
 	}
-	rows := make([]projectRow, 0, len(summaries))
-	for _, summary := range summaries {
+	rows := make([]projectRow, 0, len(page.summaries))
+	for _, summary := range page.summaries {
 		row := projectRow{Name: summary.Name, Status: summary.Status, Tone: statusTones[summary.Status], Engine: summary.Engine,
 			Source: sourceText(&fetch.Source{URL: summary.SourceURL, Commit: summary.SourceCommit}), Updated: summary.UpdatedAt.Local().Format(timeLayout),
 			Images: strings.Fields(summary.Images)}
@@ -58,7 +58,6 @@ func (server *Server) projects(writer http.ResponseWriter, request *http.Request
 		}
 		rows = append(rows, row)
 	}
-	page := server.page(request, current, "Projects")
 	page.Nav, page.Data, page.Crumbs = navProjects, rows, []Crumb{{Text: "Projects"}}
 	return server.render(writer, http.StatusOK, "projects", page)
 }
