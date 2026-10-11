@@ -6,6 +6,10 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-10-12
+
+Generated stacks now list every setting an app documents, ready to switch on.
+
 ### Added
 
 - Generated stacks list the settings an app's upstream documents, in a `.env`

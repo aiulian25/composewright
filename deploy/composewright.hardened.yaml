@@ -23,7 +23,7 @@ services:
     security_opt: ["no-new-privileges:true"]
     networks: [internal]
   composewright:
-    image: ghcr.io/aiulian25/composewright:0.1.1    # add @sha256:… from the release notes to pin these exact bytes
+    image: ghcr.io/aiulian25/composewright:0.1.2    # add @sha256:… from the release notes to pin these exact bytes
     container_name: composewright
     restart: unless-stopped
     environment:
