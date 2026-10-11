@@ -46,7 +46,6 @@ const (
 
 // SaveProject creates the project, or updates the source and status of the
 // project with the same name so regenerating keeps history in one place.
-// SaveProject creates the project, or updates the one with its name.
 func (store *Store) SaveProject(ctx context.Context, project Project) (Project, error) {
 	var saved Project
 	err := store.transaction(ctx, func(transaction *sql.Tx) error {
