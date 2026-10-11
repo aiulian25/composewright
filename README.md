@@ -19,6 +19,7 @@ docker run -d --name composewright --restart unless-stopped \
   -v composewright-data:/data \
   -v /var/run/docker.sock:/var/run/docker.sock \
   --group-add "$(stat -c '%g' /var/run/docker.sock)" \
+  --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges \
   ghcr.io/aiulian25/composewright:latest
 ```
 
@@ -27,7 +28,7 @@ Open **http://127.0.0.1:8484**, set an admin password, and choose a model:
 - **Local (recommended):** Ollama at `http://127.0.0.1:11434` with a coding model such as `qwen2.5-coder:14b`. Nothing leaves your machine.
 - **Cloud:** paste an Anthropic or OpenAI-compatible API key. The key is stored encrypted; README content is sent to that provider, your secrets never are.
 
-That is the whole install. The image contains everything it needs: the app, the web UI, its database, and the `docker compose` tooling it uses to validate stacks. No sidecars, no second container.
+That is the whole install. The image contains everything it needs: the app, the web UI, its database, and the `docker compose` tooling it uses to validate stacks. No sidecars, no second container. It runs read-only and without capabilities, writing only to its data volume and a `/tmp` in memory.
 
 ### Prefer a compose file?
 
@@ -48,6 +49,7 @@ docker run -d --name composewright --restart unless-stopped \
   -v ~/.local/share/composewright:/data \
   -v "$XDG_RUNTIME_DIR/docker.sock:/var/run/docker.sock" \
   --user 0:0 \
+  --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges \
   ghcr.io/aiulian25/composewright:latest
 ```
 

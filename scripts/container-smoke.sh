@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Runs the container image the way the README does, as its non-root user
-# with a named data volume and the Docker socket: the UI starts on an empty
-# volume, then init, doctor, gen, show and export work inside it.
+# Runs the container image the way the README does, as its non-root user,
+# read-only and without capabilities, with a named data volume and the
+# Docker socket: the UI starts on an empty volume, then init, doctor, gen,
+# show and export work inside it.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 image="${1:?usage: scripts/container-smoke.sh IMAGE}"
@@ -15,6 +16,7 @@ cleanup() {
 }
 trap cleanup EXIT
 socket_group="$(stat -c '%g' /var/run/docker.sock)"
+hardening=(--read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges)
 
 user="$(docker image inspect --format '{{.Config.User}}' "$image")"
 if [ "$user" != "65532:65532" ]; then
@@ -24,7 +26,7 @@ fi
 docker run --rm "$image" version
 
 # The image's own command initialises an empty volume, then serves.
-docker run -d --name "$server" -p 127.0.0.1::8484 -v "$volume:/data" "$image" >/dev/null
+docker run -d --name "$server" "${hardening[@]}" -p 127.0.0.1::8484 -v "$volume:/data" "$image" >/dev/null
 address="$(docker port "$server" 8484/tcp | head -n 1)"
 for _ in $(seq 100); do
 	if curl -s -o /dev/null "http://$address/login"; then break; fi
@@ -39,7 +41,7 @@ echo "container: serve --init started the UI on an empty volume"
 cp -r testdata/corpus/miniflux/files/. "$source"
 chmod -R a+rX "$source"
 run() {
-	docker run --rm -v "$volume:/data" -v /var/run/docker.sock:/var/run/docker.sock --group-add "$socket_group" \
+	docker run --rm "${hardening[@]}" -v "$volume:/data" -v /var/run/docker.sock:/var/run/docker.sock --group-add "$socket_group" \
 		-v "$source:/source:ro" "$image" "$@"
 }
 run init >/dev/null
