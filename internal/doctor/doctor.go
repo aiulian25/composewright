@@ -34,7 +34,7 @@ type Inputs struct {
 
 // Run performs every check and returns them in a fixed order.
 func Run(ctx context.Context, inputs Inputs) []Check {
-	checks := []Check{workspaceCheck(ctx, inputs.Loaded), modelCheck(ctx, inputs.Loaded)}
+	checks := []Check{workspaceCheck(ctx, inputs.Loaded), auditCheck(ctx, inputs.Loaded), modelCheck(ctx, inputs.Loaded)}
 	if inputs.Docker != nil {
 		return append(checks, Check{Name: "docker cli", Status: StatusFail, Detail: inputs.Docker.Error(),
 			Fix: "install Docker Engine with the compose plugin, or set docker.cli_path"})
@@ -58,6 +58,25 @@ func workspaceCheck(ctx context.Context, loaded *config.Loaded) Check {
 	defer opened.Close()
 	return Check{Name: "data and key", Status: StatusOK,
 		Detail: fmt.Sprintf("%s is private, master key %s (0600)", loaded.Paths.DataDir, opened.Key.ID)}
+}
+
+// auditCheck recomputes the audit log's hash chain, as audit verify does.
+func auditCheck(ctx context.Context, loaded *config.Loaded) Check {
+	opened, err := workspace.Open(ctx, loaded)
+	if err != nil {
+		return Check{Name: "audit log", Status: StatusWarn, Detail: "not checked: the data directory or key does not open"}
+	}
+	defer opened.Close()
+	count, err := opened.Store.VerifyAudit(ctx)
+	if err != nil {
+		return Check{Name: "audit log", Status: StatusFail, Detail: err.Error(),
+			Fix: "the database was changed outside composewright; keep a copy of it for inspection"}
+	}
+	noun := "entries"
+	if count == 1 {
+		noun = "entry"
+	}
+	return Check{Name: "audit log", Status: StatusOK, Detail: fmt.Sprintf("hash chain intact, %d %s", count, noun)}
 }
 
 // modelCheck reads the model settings and whether its API key is stored;

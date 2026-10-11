@@ -15,6 +15,7 @@ import (
 	"github.com/aiulian25/composewright/internal/auth"
 	"github.com/aiulian25/composewright/internal/config"
 	"github.com/aiulian25/composewright/internal/store"
+	"github.com/aiulian25/composewright/internal/store/storetest"
 	"github.com/aiulian25/composewright/internal/workspace"
 )
 
@@ -269,6 +270,25 @@ func TestTrustedProxyValues(t *testing.T) {
 	result := run(t, isolate(t), "serve", "--trusted-proxy", "proxy.home.arpa")
 	if result.code == 0 || !strings.Contains(result.stderr, `--trusted-proxy "proxy.home.arpa"`) {
 		t.Fatalf("serve took a host name as a trusted proxy: code %d, stderr %q", result.code, result.stderr)
+	}
+}
+
+// TestAuditVerify: audit verify confirms an untouched log, and once a row is
+// edited behind composewright's back it names the entry and exits non-zero.
+func TestAuditVerify(t *testing.T) {
+	environment := isolate(t)
+	if result := run(t, environment, "init"); result.code != 0 {
+		t.Fatalf("init: %d %s", result.code, result.stderr)
+	}
+	if result := run(t, environment, "audit", "verify"); result.code != 0 || !strings.Contains(result.stdout, "audit log intact: 1 entry") {
+		t.Fatalf("untouched log: %d %q %q", result.code, result.stdout, result.stderr)
+	}
+	opened := openTestWorkspace(t, environment)
+	path := opened.Paths.Database()
+	opened.Close()
+	storetest.EditAuditActor(t, path, 1)
+	if result := run(t, environment, "audit", "verify"); result.code == 0 || !strings.Contains(result.stderr, "audit log entry 1 does not match the chain") {
+		t.Fatalf("edited log passed: %d %q %q", result.code, result.stdout, result.stderr)
 	}
 }
 

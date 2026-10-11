@@ -69,8 +69,10 @@ All notable changes to this project are documented here. The format follows
   and `composewright password` sets a new password.
 - **Secrets and state.** Secret values and API keys are sealed with
   XChaCha20-Poly1305 in a SQLite database, `keys rotate` re-seals them under
-  a new master key, actions are recorded in a hash-chained audit log, and
-  nothing composewright writes is readable by other users.
+  a new master key, and nothing composewright writes is readable by other
+  users. Actions are recorded in a hash-chained audit log that
+  `audit verify` and `doctor` check: editing, reordering or removing an
+  entry other than the newest breaks the chain.
 - **Egress control.** composewright's own connections all go through
   `internal/netguard`: each purpose has a host allowlist, and internal
   addresses are refused after DNS resolution unless configured as private
@@ -78,8 +80,8 @@ All notable changes to this project are documented here. The format follows
   private or Tailscale IP, or a LAN name), so an API key never crosses the
   internet unencrypted. `gen --offline` keeps composewright itself off the
   network.
-- **Commands:** `init`, `config`, `keys`, `gen`, `list`, `show`, `rm`,
-  `export` (to a folder or Arcane templates), `profile`, `validate`,
+- **Commands:** `init`, `config`, `keys`, `audit`, `gen`, `list`, `show`,
+  `rm`, `export` (to a folder or Arcane templates), `profile`, `validate`,
   `doctor`, `serve`, `password` and `version`.
 - **The container image**, the way to run composewright: distroless, uid
   65532, with the docker CLI and compose plugin, `/data` as the only volume
