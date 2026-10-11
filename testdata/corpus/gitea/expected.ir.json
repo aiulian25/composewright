@@ -55,6 +55,52 @@
     }
   ],
   "env_file": [],
+  "optional_env": [
+    {
+      "service": "gitea",
+      "key": "ENABLE_SOURCEMAP",
+      "default": "",
+      "description": "true generates all source maps, the default for development builds",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/build-source.md:90",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "gitea",
+      "key": "GITEA_TEST_E2E_DEBUG",
+      "default": "",
+      "description": "When set, show the Gitea server output.",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/testing.md:139",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "gitea",
+      "key": "GITEA_TEST_E2E_FLAGS",
+      "default": "",
+      "description": "Additional flags passed to Playwright, e.g. --ui.",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/testing.md:140",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "gitea",
+      "key": "GITEA_TEST_E2E_TIMEOUT_FACTOR",
+      "default": "",
+      "description": "Timeout multiplier (default: 4 on CI, 1 locally).",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/testing.md:141",
+        "confidence": "medium"
+      }
+    }
+  ],
   "needs": [],
   "probe": {
     "service": "",

@@ -89,6 +89,26 @@
         </tbody>
       </table>
     </div>
+    {{with .Optional}}
+    <details class="optional-settings">
+      <summary>{{plural (len .) "optional setting" "optional settings"}} the upstream documents, left unset</summary>
+      <p class="muted small">They are in .env, commented out, and compose.yaml passes them on. To use one, add it below with its value, or remove the "# " before it in .env after you save the files.</p>
+      <div class="table-scroll">
+        <table class="table">
+          <thead><tr><th scope="col">Key</th><th scope="col">Default</th><th scope="col">Source</th></tr></thead>
+          <tbody>
+            {{range .}}
+            <tr>
+              <th scope="row" class="mono">{{.Key}}{{if .Description}}<span class="block muted small">{{.Description}}</span>{{end}}</th>
+              <td class="mono">{{.Default}}</td>
+              <td class="mono small">{{.Provenance.SourceRef}}</td>
+            </tr>
+            {{end}}
+          </tbody>
+        </table>
+      </div>
+    </details>
+    {{end}}
     <div class="card-foot">
       <label class="visually-hidden" for="add-key">New variable name</label>
       <input class="mono" id="add-key" name="add-key" type="text" placeholder="NEW_VARIABLE" pattern="[A-Za-z_][A-Za-z0-9_]*" autocomplete="off" spellcheck="false">

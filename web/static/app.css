@@ -1023,6 +1023,21 @@ pre,
   padding: 14px;
 }
 
+/* Review: the settings an upstream documents and the plan leaves unset. */
+.optional-settings {
+  border-top: 1px solid var(--border);
+}
+
+.optional-settings > summary {
+  padding: 12px 14px;
+  font-weight: 600;
+}
+
+.optional-settings > p {
+  margin: 0;
+  padding: 0 14px 10px;
+}
+
 .card-foot {
   display: flex;
   flex-wrap: wrap;

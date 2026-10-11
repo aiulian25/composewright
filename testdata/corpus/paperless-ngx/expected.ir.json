@@ -270,6 +270,272 @@
       }
     }
   ],
+  "optional_env": [
+    {
+      "service": "webserver",
+      "key": "COMPOSE_PROJECT_NAME",
+      "default": "paperless",
+      "description": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env:1",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "webserver",
+      "key": "DOCUMENT_ADDED",
+      "default": "",
+      "description": "Date \u0026 time when document was added",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/advanced_usage.md:275",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "webserver",
+      "key": "DOCUMENT_ARCHIVE_PATH",
+      "default": "",
+      "description": "Path to the generate archive file (if any)",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/advanced_usage.md:277",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "webserver",
+      "key": "DOCUMENT_CORRESPONDENT",
+      "default": "",
+      "description": "Assigned correspondent (if any)",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/advanced_usage.md:282",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "webserver",
+      "key": "DOCUMENT_CREATED",
+      "default": "",
+      "description": "Date \u0026 time when document created",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/advanced_usage.md:273",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "webserver",
+      "key": "DOCUMENT_DOWNLOAD_URL",
+      "default": "",
+      "description": "URL for document download",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/advanced_usage.md:279",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "webserver",
+      "key": "DOCUMENT_FILE_NAME",
+      "default": "",
+      "description": "Formatted filename, not including paths",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/advanced_usage.md:271",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "webserver",
+      "key": "DOCUMENT_ID",
+      "default": "",
+      "description": "Database primary key of the document",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/advanced_usage.md:270",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "webserver",
+      "key": "DOCUMENT_MODIFIED",
+      "default": "",
+      "description": "Date \u0026 time when document was last modified",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/advanced_usage.md:274",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "webserver",
+      "key": "DOCUMENT_ORIGINAL_FILENAME",
+      "default": "",
+      "description": "Filename of original document",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/advanced_usage.md:284",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "webserver",
+      "key": "DOCUMENT_OWNER",
+      "default": "",
+      "description": "Username of the document owner (if any)",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/advanced_usage.md:281",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "webserver",
+      "key": "DOCUMENT_SOURCE_PATH",
+      "default": "",
+      "description": "Original path of the consumed document",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/advanced_usage.md:218",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "webserver",
+      "key": "DOCUMENT_TAGS",
+      "default": "",
+      "description": "Comma separated list of tags applied (if any)",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/advanced_usage.md:283",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "webserver",
+      "key": "DOCUMENT_THUMBNAIL_PATH",
+      "default": "",
+      "description": "Path to the generated thumbnail",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/advanced_usage.md:278",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "webserver",
+      "key": "DOCUMENT_THUMBNAIL_URL",
+      "default": "",
+      "description": "URL for the document thumbnail",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/advanced_usage.md:280",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "webserver",
+      "key": "DOCUMENT_TYPE",
+      "default": "",
+      "description": "The document type (if any)",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/advanced_usage.md:272",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "webserver",
+      "key": "DOCUMENT_WORKING_PATH",
+      "default": "",
+      "description": "Path to a copy of the original that consumption will work on",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/advanced_usage.md:219",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "webserver",
+      "key": "PAPERLESS_OCR_LANGUAGE",
+      "default": "eng",
+      "description": "The default language to use for OCR. Set this to the language most of your documents are written in.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "docker/compose/docker-compose.env:29",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "webserver",
+      "key": "PAPERLESS_OCR_LANGUAGES",
+      "default": "",
+      "description": "Additional languages to install for text recognition, separated by a whitespace. Note that this is different from PAPERLESS_OCR_LANGUAGE (default=eng), which defines the language used for OCR. The container installs English, German, Italian, Spanish and French by default. See https://packages.debia…",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "docker/compose/docker-compose.env:37",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "webserver",
+      "key": "PAPERLESS_TIME_ZONE",
+      "default": "America/Los_Angeles",
+      "description": "Use this variable to set a timezone for the Paperless Docker containers. Defaults to UTC.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "docker/compose/docker-compose.env:25",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "webserver",
+      "key": "PAPERLESS_URL",
+      "default": "https://paperless.example.com",
+      "description": "This is required if you will be exposing Paperless-ngx on a public domain (if doing so please consider security measures such as reverse proxy)",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "docker/compose/docker-compose.env:18",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "webserver",
+      "key": "TASK_ID",
+      "default": "",
+      "description": "UUID of the task used to process the new document (if any)",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/advanced_usage.md:220",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "webserver",
+      "key": "USERMAP_GID",
+      "default": "1000",
+      "description": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "docker/compose/docker-compose.env:11",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "webserver",
+      "key": "USERMAP_UID",
+      "default": "1000",
+      "description": "The UID and GID of the user used to run paperless in the container. Set this to your UID and GID on the host so that you have write access to the consumption directory.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "docker/compose/docker-compose.env:10",
+        "confidence": "medium"
+      }
+    }
+  ],
   "needs": [],
   "probe": {
     "service": "webserver",

@@ -143,7 +143,7 @@ func (options Options) service(plan *ir.IR, service *ir.Service, volumes *yaml.N
 	if dependencies := dependsOn(service); dependencies != nil {
 		node.Content = append(node.Content, key("depends_on"), dependencies)
 	}
-	if environment := environment(service); environment != nil {
+	if environment := environment(plan, service); environment != nil {
 		node.Content = append(node.Content, key("environment"), environment)
 	}
 	isApp := service.Role == ir.RoleApp
@@ -358,8 +358,9 @@ func dependsOn(service *ir.Service) *yaml.Node {
 	return node
 }
 
-func environment(service *ir.Service) *yaml.Node {
-	if len(service.Env) == 0 {
+func environment(plan *ir.IR, service *ir.Service) *yaml.Node {
+	optional := optionalFor(plan, service.Name)
+	if len(service.Env) == 0 && len(optional) == 0 {
 		return nil
 	}
 	node := mapping()
@@ -369,6 +370,13 @@ func environment(service *ir.Service) *yaml.Node {
 			value = "${" + variable.Ref + "}"
 		}
 		node.Content = append(node.Content, key(variable.Key), quoted(value))
+	}
+	for index, setting := range optional {
+		name := key(setting.Key)
+		if index == 0 {
+			name.HeadComment = optionalComposeComment
+		}
+		node.Content = append(node.Content, name, unset())
 	}
 	return node
 }

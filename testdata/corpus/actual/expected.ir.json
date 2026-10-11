@@ -84,6 +84,107 @@
     }
   ],
   "env_file": [],
+  "optional_env": [
+    {
+      "service": "actual_server",
+      "key": "ACTUAL_CACHE_TTL",
+      "default": "",
+      "description": "Cache TTL in seconds (default: 60)",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "packages/cli/README.md:51",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "actual_server",
+      "key": "ACTUAL_DATA_DIR",
+      "default": "",
+      "description": "Local directory for cached budget data",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "packages/cli/README.md:50",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "actual_server",
+      "key": "ACTUAL_ENCRYPTION_PASSWORD",
+      "default": "",
+      "description": "Password for end-to-end encrypted budget files",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "packages/cli/README.md:54",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "actual_server",
+      "key": "ACTUAL_LOCK_TIMEOUT",
+      "default": "",
+      "description": "Budget-dir lock wait timeout in seconds (default: 10)",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "packages/cli/README.md:52",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "actual_server",
+      "key": "ACTUAL_NO_LOCK",
+      "default": "",
+      "description": "Set to 1 to disable budget-dir locking",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "packages/cli/README.md:53",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "actual_server",
+      "key": "ACTUAL_PASSWORD",
+      "default": "",
+      "description": "Server password (required unless using token)",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "packages/cli/README.md:47",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "actual_server",
+      "key": "ACTUAL_SERVER_URL",
+      "default": "",
+      "description": "URL of the Actual sync server (required)",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "packages/cli/README.md:46",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "actual_server",
+      "key": "ACTUAL_SESSION_TOKEN",
+      "default": "",
+      "description": "Session token (alternative to password)",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "packages/cli/README.md:48",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "actual_server",
+      "key": "ACTUAL_SYNC_ID",
+      "default": "",
+      "description": "Budget Sync ID (required for most commands)",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "packages/cli/README.md:49",
+        "confidence": "medium"
+      }
+    }
+  ],
   "needs": [],
   "probe": {
     "service": "actual_server",

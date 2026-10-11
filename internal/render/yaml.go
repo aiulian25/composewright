@@ -42,6 +42,12 @@ func flowSequence(values ...string) *yaml.Node {
 	return &yaml.Node{Kind: yaml.SequenceNode, Style: yaml.FlowStyle, Content: items}
 }
 
+// unset is a value left empty: Compose takes it from .env when it is set
+// there, and leaves the variable out of the container when it is not.
+func unset() *yaml.Node {
+	return &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!null"}
+}
+
 func emptyMapping() *yaml.Node {
 	return &yaml.Node{Kind: yaml.MappingNode, Style: yaml.FlowStyle}
 }

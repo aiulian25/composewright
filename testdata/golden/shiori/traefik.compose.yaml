@@ -4,6 +4,27 @@ services:
   shiori:
     image: ghcr.io/go-shiori/shiori:latest
     restart: unless-stopped
+    environment:
+      # optional settings the upstream documents: set them in .env
+      SHIORI_DATABASE_URL:
+      SHIORI_DEVELOPMENT:
+      SHIORI_DIR:
+      SHIORI_HTTP_ACCESS_LOG:
+      SHIORI_HTTP_ADDRESS:
+      SHIORI_HTTP_BODY_LIMIT:
+      SHIORI_HTTP_DISABLE_KEEP_ALIVE:
+      SHIORI_HTTP_DISABLE_PARSE_MULTIPART_FORM:
+      SHIORI_HTTP_ENABLED:
+      SHIORI_HTTP_IDLE_TIMEOUT:
+      SHIORI_HTTP_PORT:
+      SHIORI_HTTP_READ_TIMEOUT:
+      SHIORI_HTTP_ROOT_PATH:
+      SHIORI_HTTP_SECRET_KEY:
+      SHIORI_HTTP_SERVE_WEB_UI:
+      SHIORI_HTTP_WRITE_TIMEOUT:
+      SHIORI_SSO_PROXY_AUTH_ENABLED:
+      SHIORI_SSO_PROXY_AUTH_HEADER_NAME:
+      SHIORI_SSO_PROXY_AUTH_TRUSTED:
     networks:
       - default
       - traefik

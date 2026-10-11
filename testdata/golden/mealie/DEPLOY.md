@@ -20,6 +20,10 @@ Published on this machine only: http://localhost:9091
 
 Data lives in named Docker volumes (`docker volume ls | grep mealie`); `docker compose down -v` deletes them.
 
+## Optional settings
+
+.env lists 66 settings the upstream documents, commented out, such as ALLOWED_IFRAME_HOSTS, ALLOW_PASSWORD_LOGIN, API_DOCS, API_PORT, BASE_URL. To use one, remove the "# " before it in .env and run `docker compose up -d` again.
+
 ## After the first start
 
 - !!! warning "Default Username" (docs/docs/documentation/getting-started/installation/installation-checklist.md:80)

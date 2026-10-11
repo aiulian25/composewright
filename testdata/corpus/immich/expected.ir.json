@@ -460,6 +460,602 @@
       }
     }
   ],
+  "optional_env": [
+    {
+      "service": "immich-server",
+      "key": "CLOUDFLARE_ACCOUNT_ID",
+      "default": "op://tf/cloudflare/account_id",
+      "description": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "deployment/.env:1",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "CLOUDFLARE_API_TOKEN",
+      "default": "",
+      "description": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "deployment/.env:2",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "CPU_CORES",
+      "default": "",
+      "description": "Number of cores available to the Immich server Default: auto-detected CPU core count",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:42",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "DB_DATA_LOCATION",
+      "default": "./postgres",
+      "description": "The location where your database files are stored. Network shares are not supported for the database",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "docker/example.env:7",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "DB_HOSTNAME",
+      "default": "database",
+      "description": "Database host",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:80",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "DB_PORT",
+      "default": "5432",
+      "description": "Database port",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:81",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "DB_SKIP_MIGRATIONS",
+      "default": "false",
+      "description": "Whether to skip running migrations on startup (one of [true, false])",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:87",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "DB_SSL_MODE",
+      "default": "",
+      "description": "Database SSL mode",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:85",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "DB_STORAGE_TYPE",
+      "default": "SSD",
+      "description": "Optimize concurrent IO on SSDs or sequential IO on HDDs ([SSD, HDD])\u003csup\u003e\\*3\u003c/sup\u003e",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:88",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "DB_URL",
+      "default": "",
+      "description": "Database URL",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:79",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "IMMICH_ALLOW_SETUP",
+      "default": "true",
+      "description": "When false disables the /auth/admin-sign-up and /admin/database-backups/start-restore endpoints",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:48",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "IMMICH_API_METRICS_PORT",
+      "default": "8081",
+      "description": "Port for the OTEL metrics",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:43",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "IMMICH_CONFIG_FILE",
+      "default": "",
+      "description": "Path to config file",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:39",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "IMMICH_ENV",
+      "default": "production",
+      "description": "Environment (production, development)",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:35",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "IMMICH_HELMET_FILE",
+      "default": "false",
+      "description": "Path to a json file with [helmet](https://www.npmjs.com/package/helmet) options. Set to false to disable. Set to true to use server/helmet.json\u003csup\u003e\\*3\u003c/sup\u003e.",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:40",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "IMMICH_HOST",
+      "default": "0.0.0.0",
+      "description": "Listening host",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:72",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "IMMICH_IGNORE_MOUNT_CHECK_ERRORS",
+      "default": "",
+      "description": "See [System Integrity](/administration/system-integrity)",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:47",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "IMMICH_LOG_FORMAT",
+      "default": "console",
+      "description": "Log output format (console, json)",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:37",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "IMMICH_LOG_LEVEL",
+      "default": "log",
+      "description": "Log level (verbose, debug, log, warn, error)",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:36",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "IMMICH_MEDIA_LOCATION",
+      "default": "/data",
+      "description": "Media location inside the container ⚠️You probably shouldn't set this\u003csup\u003e\\*2\u003c/sup\u003e⚠️",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:38",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "IMMICH_MICROSERVICES_METRICS_PORT",
+      "default": "8082",
+      "description": "Port for the OTEL metrics",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:44",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "IMMICH_PORT",
+      "default": "",
+      "description": "Listening port Default: 2283 (server), 3003 (machine learning)",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:73",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "IMMICH_PROCESS_INVALID_IMAGES",
+      "default": "",
+      "description": "When true, generate thumbnails for invalid images",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:45",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "IMMICH_TELEMETRY_EXCLUDE",
+      "default": "",
+      "description": "Do not collect these telemetries. List of host, api, io, repo, job",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:209",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "IMMICH_TELEMETRY_INCLUDE",
+      "default": "",
+      "description": "Collect these telemetries. List of host, api, io, repo, job. Note: You can also specify all to enable all",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:208",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "IMMICH_TRUSTED_PROXIES",
+      "default": "",
+      "description": "List of comma-separated IPs set as trusted proxies",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:46",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "IMMICH_VERSION",
+      "default": "v3",
+      "description": "The Immich version to use. You can pin this to a specific version like \"v2.1.0\"",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "docker/example.env:13",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "IMMICH_WORKERS_EXCLUDE",
+      "default": "",
+      "description": "Do not run these workers. Matches against default workers, or IMMICH_WORKERS_INCLUDE if specified.",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:62",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "IMMICH_WORKERS_INCLUDE",
+      "default": "",
+      "description": "Only run these workers.",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:61",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "MACHINE_LEARNING_ANN",
+      "default": "True",
+      "description": "Enable ARM-NN hardware acceleration if supported",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:175",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "MACHINE_LEARNING_ANN_FP16_TURBO",
+      "default": "False",
+      "description": "Execute operations in FP16 precision: increasing speed, reducing precision (applies only to ARM-NN)",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:176",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "MACHINE_LEARNING_ANN_TUNING_LEVEL",
+      "default": "2",
+      "description": "ARM-NN GPU tuning level (1: rapid, 2: normal, 3: exhaustive)",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:177",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "MACHINE_LEARNING_CACHE_FOLDER",
+      "default": "/cache",
+      "description": "Directory where models are downloaded",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:161",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "MACHINE_LEARNING_MODEL_ARENA",
+      "default": "true",
+      "description": "Pre-allocates CPU memory to avoid memory fragmentation",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:183",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "MACHINE_LEARNING_MODEL_INTER_OP_THREADS",
+      "default": "1",
+      "description": "Number of parallel model operations",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:163",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "MACHINE_LEARNING_MODEL_INTRA_OP_THREADS",
+      "default": "2",
+      "description": "Number of threads for each model operation",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:164",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "MACHINE_LEARNING_MODEL_REVISION",
+      "default": "main",
+      "description": "Model revision to download; main selects the original exports and v2 selects the newer exports",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:184",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "MACHINE_LEARNING_MODEL_TTL",
+      "default": "300",
+      "description": "Inactivity time (s) before a model is unloaded (disabled if \\\u003c= 0)",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:159",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "MACHINE_LEARNING_MODEL_TTL_POLL_S",
+      "default": "10",
+      "description": "Interval (s) between checks for the model TTL (disabled if \\\u003c= 0)",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:160",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "MACHINE_LEARNING_RKNN",
+      "default": "True",
+      "description": "Enable RKNN hardware acceleration if supported",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:181",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "MACHINE_LEARNING_RKNN_THREADS",
+      "default": "1",
+      "description": "How many threads of RKNN runtime should be spun up while inferencing.",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:182",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "MACHINE_LEARNING_WORKER_TIMEOUT",
+      "default": "",
+      "description": "Maximum time (s) of unresponsiveness before a worker is killed Default: 300 (900 if using ROCm)",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:167",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "NO_COLOR",
+      "default": "false",
+      "description": "Set to true to disable color-coded log output",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:41",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "REDIS_DBINDEX",
+      "default": "0",
+      "description": "Redis DB index",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:117",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "REDIS_HOSTNAME",
+      "default": "redis",
+      "description": "Redis host",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:113",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "REDIS_PASSWORD",
+      "default": "",
+      "description": "Redis password",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:116",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "REDIS_PORT",
+      "default": "6379",
+      "description": "Redis port",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:114",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "REDIS_SOCKET",
+      "default": "",
+      "description": "Redis socket",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:112",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "REDIS_URL",
+      "default": "",
+      "description": "Redis URL",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:111",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "REDIS_USERNAME",
+      "default": "",
+      "description": "Redis username",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/install/environment-variables.md:115",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "TF_STATE_POSTGRES_CONN_STR",
+      "default": "op://tf/tf_state/postgres_conn_str",
+      "description": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "deployment/.env:3",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "TF_VAR_env",
+      "default": "$ENVIRONMENT",
+      "description": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "deployment/.env:4",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "TZ",
+      "default": "Etc/UTC",
+      "description": "To set a timezone, uncomment the next line and change Etc/UTC to a TZ identifier from this list: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "docker/example.env:10",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "immich-server",
+      "key": "UPLOAD_LOCATION",
+      "default": "./library",
+      "description": "The location where your uploaded files are stored",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "docker/example.env:4",
+        "confidence": "medium"
+      }
+    }
+  ],
   "needs": [],
   "probe": {
     "service": "immich-server",

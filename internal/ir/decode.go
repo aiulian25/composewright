@@ -58,12 +58,19 @@ func Decode(data []byte) (*IR, error) {
 
 // DecodeModelOutput validates untrusted model output against the JSON schema
 // before decoding, so a missing field is rejected instead of zero-filled.
+// optional_env is the exception: composewright fills it from the repository
+// and never from a model, so an answer that leaves it out loses nothing.
 func DecodeModelOutput(data []byte) (*IR, error) {
 	instance, err := jsonschema.UnmarshalJSON(bytes.NewReader(data))
 	if err != nil {
 		return nil, fmt.Errorf("model output is not JSON: %w", err)
 	}
 	lowercaseEnums(instance)
+	if object, isObject := instance.(map[string]any); isObject {
+		if _, present := object[optionalEnvField]; !present {
+			object[optionalEnvField] = []any{}
+		}
+	}
 	schema, err := compiledSchema()
 	if err != nil {
 		return nil, err
@@ -123,6 +130,7 @@ func lowercaseEnums(node any) {
 func (plan *IR) Normalize() {
 	plan.Services = nonNil(plan.Services)
 	plan.EnvFile = nonNil(plan.EnvFile)
+	plan.OptionalEnv = nonNil(plan.OptionalEnv)
 	plan.Needs = nonNil(plan.Needs)
 	plan.PostInstallNotes = nonNil(plan.PostInstallNotes)
 	plan.Evidence = nonNil(plan.Evidence)
@@ -133,6 +141,9 @@ func (plan *IR) Normalize() {
 	plan.Confidence = strings.ToLower(plan.Confidence)
 	for index := range plan.Services {
 		plan.Services[index].normalize()
+	}
+	for index := range plan.OptionalEnv {
+		plan.OptionalEnv[index].Service = strings.ToLower(plan.OptionalEnv[index].Service)
 	}
 	for index := range plan.EnvFile {
 		entry := &plan.EnvFile[index]

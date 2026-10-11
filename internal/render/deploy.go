@@ -35,6 +35,7 @@ func Deploy(plan *ir.IR, options Options, status string) []byte {
 	options.reachSection(plan, write)
 	options.storageSection(plan, write)
 	needsSection(plan, options, write)
+	optionalSection(plan, write)
 	notesSection(plan, write)
 	write("## Secrets")
 	write("")

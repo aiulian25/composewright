@@ -582,3 +582,35 @@ func TestDockerSocketBecomesANeed(t *testing.T) {
 		}
 	}
 }
+
+// TestOptionalSettingsComeFromSamplesAndDocs: what a .env sample or a README
+// or docs table documents and the plan leaves unset becomes an optional
+// setting of the app, with the documented default, never an example secret,
+// and never a variable for tests or one the plan already sets.
+func TestOptionalSettingsComeFromSamplesAndDocs(t *testing.T) {
+	facts := testFacts(t, map[string]string{
+		"docker-compose.yml": "services:\n  app:\n    image: example/app:1.0\n    environment:\n      APP_URL: ${APP_URL}\n",
+		".env.example":       "APP_URL=http://localhost:8080\n# Log level, one of debug, info, warn\n# APP_LOG_LEVEL=info\n# APP_ADMIN_TOKEN=changeme-example\n",
+		"README.md": "# App\n\n| Variable | Default | Description |\n|---|---|---|\n| `APP_CACHE_TTL` | `5m` | How long pages are cached |\n" +
+			"| `APP_PROXY` | not set | An outbound proxy |\n| `APP_SOCKET` | the mounted socket | Where Docker answers |\n| `AVI` | | A video format |\n| `APP_SILENT` | | |\n",
+		"tests/README.md": "| Variable | Description |\n|---|---|\n| `APP_TEST_SEED` | Seed for the tests |\n",
+	})
+	plan := Build(context.Background(), Input{Facts: facts, Source: &fetch.Source{Owner: "example", Repository: "app"}})
+	settings := map[string]ir.OptionalSetting{}
+	for _, setting := range plan.OptionalEnv {
+		settings[setting.Key] = setting
+	}
+	want := map[string]string{"APP_LOG_LEVEL": "info", "APP_ADMIN_TOKEN": "", "APP_CACHE_TTL": "5m", "APP_PROXY": "", "APP_SOCKET": ""}
+	if len(settings) != len(want) {
+		t.Fatalf("optional settings %v, want %v", settings, want)
+	}
+	for key, value := range want {
+		setting, found := settings[key]
+		if !found || setting.Default != value || setting.Service != plan.AppService().Name {
+			t.Errorf("%s: %+v, want default %q for the app", key, setting, value)
+		}
+	}
+	if !strings.Contains(settings["APP_SOCKET"].Description, "Default: the mounted socket") || settings["APP_LOG_LEVEL"].Description == "" {
+		t.Errorf("descriptions: %q, %q", settings["APP_SOCKET"].Description, settings["APP_LOG_LEVEL"].Description)
+	}
+}

@@ -11,17 +11,18 @@ import (
 )
 
 type IR struct {
-	IRVersion              string         `json:"ir_version"`
-	App                    App            `json:"app"`
-	Services               []Service      `json:"services"`
-	EnvFile                []EnvFileEntry `json:"env_file"`
-	Needs                  []Need         `json:"needs"`
-	Probe                  Probe          `json:"probe"`
-	PostInstallNotes       []string       `json:"post_install_notes"`
-	Confidence             string         `json:"confidence"`
-	Evidence               []Evidence     `json:"evidence"`
-	SuspiciousInstructions []string       `json:"suspicious_instructions"`
-	Unfilled               []string       `json:"unfilled"`
+	IRVersion              string            `json:"ir_version"`
+	App                    App               `json:"app"`
+	Services               []Service         `json:"services"`
+	EnvFile                []EnvFileEntry    `json:"env_file"`
+	OptionalEnv            []OptionalSetting `json:"optional_env"`
+	Needs                  []Need            `json:"needs"`
+	Probe                  Probe             `json:"probe"`
+	PostInstallNotes       []string          `json:"post_install_notes"`
+	Confidence             string            `json:"confidence"`
+	Evidence               []Evidence        `json:"evidence"`
+	SuspiciousInstructions []string          `json:"suspicious_instructions"`
+	Unfilled               []string          `json:"unfilled"`
 }
 
 type App struct {
@@ -117,6 +118,17 @@ type EnvFileEntry struct {
 	Required    bool       `json:"required"`
 	Description string     `json:"description"`
 	FileEnvKey  string     `json:"file_env_key"`
+	Provenance  Provenance `json:"provenance"`
+}
+
+// OptionalSetting is a variable the upstream documents and the plan leaves
+// unset: .env lists it commented out, and compose.yaml passes it to the
+// service by name, so setting it in .env is the only edit.
+type OptionalSetting struct {
+	Service     string     `json:"service"`
+	Key         string     `json:"key"`
+	Default     string     `json:"default"`
+	Description string     `json:"description"`
 	Provenance  Provenance `json:"provenance"`
 }
 

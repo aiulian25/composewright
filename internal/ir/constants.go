@@ -30,6 +30,7 @@ const (
 	// DockerSocket is where a granted docker_socket comes from on the host.
 	DockerSocket     = "/var/run/docker.sock"
 	dockerSocketName = "docker.sock"
+	optionalEnvField = "optional_env"
 
 	GeneratePassword24 = secrets.GeneratePassword24
 	GenerateHex32      = secrets.GenerateHex32

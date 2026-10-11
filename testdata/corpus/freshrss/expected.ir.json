@@ -172,6 +172,338 @@
       }
     }
   ],
+  "optional_env": [
+    {
+      "service": "freshrss",
+      "key": "ADMIN_API_PASSWORD",
+      "default": "",
+      "description": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "Docker/freshrss/example.env:18",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "freshrss",
+      "key": "ADMIN_EMAIL",
+      "default": "admin@example.net",
+      "description": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "Docker/freshrss/example.env:8",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "freshrss",
+      "key": "ADMIN_PASSWORD",
+      "default": "",
+      "description": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "Docker/freshrss/example.env:17",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "freshrss",
+      "key": "BASE_URL",
+      "default": "https://freshrss.example.net",
+      "description": "Address at which the FreshRSS instance will be reachable:",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "Docker/freshrss/example.env:21",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "freshrss",
+      "key": "COPY_LOG_TO_SYSLOG",
+      "default": "",
+      "description": "(default is On) Copy all the logs to syslog",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "Docker/README.md:99",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "freshrss",
+      "key": "COPY_SYSLOG_TO_STDERR",
+      "default": "",
+      "description": "(default is On) Copy syslog to Standard Error so that it is visible in docker logs",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "Docker/README.md:100",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "freshrss",
+      "key": "DATA_PATH",
+      "default": "",
+      "description": "(default is empty, defined by ./constants.local.php or ./constants.php) Defines the path for writable data.",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "Docker/README.md:96",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "freshrss",
+      "key": "DB_BASE",
+      "default": "freshrss",
+      "description": "Database to use",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "Docker/freshrss/example.env:33",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "freshrss",
+      "key": "DB_HOST",
+      "default": "freshrss-db",
+      "description": "Database server (not relevant if using default SQLite) Use the name of the Docker container if running on the same machine",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "Docker/freshrss/example.env:26",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "freshrss",
+      "key": "DB_PASSWORD",
+      "default": "",
+      "description": "Password for the defined user",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "Docker/freshrss/example.env:39",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "freshrss",
+      "key": "DB_USER",
+      "default": "freshrss",
+      "description": "User in the freshrss database",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "Docker/freshrss/example.env:36",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "freshrss",
+      "key": "ENABLE_ACCESS_LOG",
+      "default": "",
+      "description": "(default is 1) Set to 0 to disable the Apache access log.",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "Docker/README.md:97",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "freshrss",
+      "key": "FRESHRSS_ENV",
+      "default": "",
+      "description": "(default is production) Enables additional development information if set to development (increases the level of logging and ensures that errors are displayed) (see below for more development options)",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "Docker/README.md:98",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "freshrss",
+      "key": "FRESHRSS_INSTALL",
+      "default": "",
+      "description": "automatically pass arguments to command line cli/do-install.php (for advanced users; see example in Docker Compose section). Only executed at the very first run (so far), so if you make any change, you need to delete your freshrss service, freshrss_data volume, before running again.",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "Docker/README.md:103",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "freshrss",
+      "key": "FRESHRSS_USER",
+      "default": "",
+      "description": "automatically pass arguments to command line cli/create-user.php (for advanced users; see example in Docker Compose section). Only executed at the very first run (so far), so if you make any change, you need to delete your freshrss service, freshrss_data volume, before running again.",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "Docker/README.md:104",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "freshrss",
+      "key": "INTERNAL_HOST_ALLOWLIST",
+      "default": "",
+      "description": "(default is empty, can also be set in data/config.php or under *System configuration* in Web UI) Requests to internal hosts such as 127.0.0.1 are blocked by default; here you can add overrides for which internal hosts to allow, separated by whitespace. Each host should be described either as a host…",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "Docker/README.md:102",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "freshrss",
+      "key": "OIDC_CLIENT_CRYPTO_KEY",
+      "default": "",
+      "description": "An opaque key used for internal encryption.",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/en/admins/16_OpenID-Connect.md:42",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "freshrss",
+      "key": "OIDC_CLIENT_ID",
+      "default": "",
+      "description": "The OIDC client id from your issuer.",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/en/admins/16_OpenID-Connect.md:40",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "freshrss",
+      "key": "OIDC_CLIENT_SECRET",
+      "default": "",
+      "description": "The OIDC client secret issuer.",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/en/admins/16_OpenID-Connect.md:41",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "freshrss",
+      "key": "OIDC_DEFAULT_URL",
+      "default": "",
+      "description": "Optional. URL the user is redirected to when the OIDC module receives a callback whose anti-CSRF state has expired or cannot be matched, for example when an interactive login (external identity provider, MFA/step-up, or the user stepping away) takes longer than the state timeout. When not defined, …",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/en/admins/16_OpenID-Connect.md:49",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "freshrss",
+      "key": "OIDC_ENABLED",
+      "default": "",
+      "description": "Activates OIDC support.",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/en/admins/16_OpenID-Connect.md:38",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "freshrss",
+      "key": "OIDC_PROVIDER_METADATA_URL",
+      "default": "",
+      "description": "The config URL. Usually looks like: \u003cissuer\u003e/.well-known/openid-configuration",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/en/admins/16_OpenID-Connect.md:39",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "freshrss",
+      "key": "OIDC_REMOTE_USER_CLAIM",
+      "default": "",
+      "description": "The claim to use as the username within FreshRSS. Defaults to preferred_username. Depending on what you choose here, and your identity provider, you’ll need to adjust the scopes you request so that this claim will be accessible. Refer to your identity provider’s documentation.",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/en/admins/16_OpenID-Connect.md:43",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "freshrss",
+      "key": "OIDC_SCOPES",
+      "default": "",
+      "description": "The OIDC scopes to request separated by an empty space. Defaults to openid. As mentioned previously, make sure the scopes you pick contain whatever OIDC_REMOTE_USER_CLAIM you chose. For example, Authelia would require setting this value to openid profile to make preferred_username accessible.",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/en/admins/16_OpenID-Connect.md:44",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "freshrss",
+      "key": "OIDC_SESSION_INACTIVITY_TIMEOUT",
+      "default": "",
+      "description": "Optional. Interval in seconds after which the session will be invalidated when no interaction has occurred. When not defined, the default is 300 seconds.",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/en/admins/16_OpenID-Connect.md:46",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "freshrss",
+      "key": "OIDC_SESSION_MAX_DURATION",
+      "default": "",
+      "description": "Optional. Maximum duration of the application session. When not defined the default is 8 hours (3600 * 8 seconds). When set to 0, the session duration will be set equal to the expiry time of the ID token.",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/en/admins/16_OpenID-Connect.md:47",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "freshrss",
+      "key": "OIDC_SESSION_TYPE",
+      "default": "",
+      "description": "Optional. OpenID Connect session storage type. See [mod_auth_openidc’s documentation for details](https://github.com/OpenIDC/mod_auth_openidc/blob/72c9f479c2d228477ff0a9518964f61879c83fb6/auth_openidc.conf#L587-L596).",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/en/admins/16_OpenID-Connect.md:48",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "freshrss",
+      "key": "OIDC_X_FORWARDED_HEADERS",
+      "default": "",
+      "description": "Optional, but required when running FreshRSS behind a reverse proxy so that the OIDC module can determine what hostname, port and protocol were used to access FreshRSS, in order to generate a return URL for the OIDC authorization flow. Must be one or more of Forwarded, X-Forwarded-Host, X-Forwarded…",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/en/admins/16_OpenID-Connect.md:45",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "freshrss",
+      "key": "PUBLISHED_PORT",
+      "default": "8080",
+      "description": "Published port for development or local use (optional)",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "Docker/freshrss/example.env:11",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "freshrss",
+      "key": "SERVER_DNS",
+      "default": "freshrss.example.net",
+      "description": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "Docker/freshrss/example.env:22",
+        "confidence": "medium"
+      }
+    }
+  ],
   "needs": [],
   "probe": {
     "service": "freshrss",

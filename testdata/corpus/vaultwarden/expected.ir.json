@@ -111,6 +111,1603 @@
       }
     }
   ],
+  "optional_env": [
+    {
+      "service": "vaultwarden",
+      "key": "ADMIN_RATELIMIT_MAX_BURST",
+      "default": "3",
+      "description": "Allow a burst of requests of up to this size, while maintaining the average indicated by `ADMIN_RATELIMIT_SECONDS`.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:452",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "ADMIN_RATELIMIT_SECONDS",
+      "default": "300",
+      "description": "Number of seconds, on average, between admin login requests from the same IP address before rate limiting kicks in.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:450",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "ADMIN_SESSION_LIFETIME",
+      "default": "20",
+      "description": "Set the lifetime of admin sessions to this value (in minutes).",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:455",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "ADMIN_TOKEN",
+      "default": "",
+      "description": "Token for the admin interface, preferably an Argon2 PCH string Vaultwarden has a built-in generator by calling `vaultwarden hash` For details see: https://github.com/dani-garcia/vaultwarden/wiki/Enabling-admin-page#secure-the-admin_token If not set, the admin panel is disabled New Argon2 PHC string…",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:441",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "ALLOWED_CONNECT_SRC",
+      "default": "",
+      "description": "Allowed connect-src (Know the risks!) https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/connect-src Allows other domains to URLs which can be loaded using script interfaces like the Forwarded email alias feature This adds the configured value to the 'Content-Security…",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:470",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "ALLOWED_IFRAME_ANCESTORS",
+      "default": "",
+      "description": "Allowed iframe ancestors (Know the risks!) https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/frame-ancestors Allows other domains to embed the web vault into an iframe, useful for embedding into secure intranets This adds the configured value to the 'Content-Security…",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:462",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "ATTACHMENTS_FOLDER",
+      "default": "data/attachments",
+      "description": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:31",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "AUTHENTICATOR_DISABLE_TIME_DRIFT",
+      "default": "false",
+      "description": "Authenticator Settings Disable authenticator time drifted codes to be valid. TOTP codes of the previous and next 30 seconds will be invalid According to the RFC6238 (https://tools.ietf.org/html/rfc6238), we allow by default the TOTP code which was valid one step back and one in the future. This can…",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:619",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "AUTH_REQUEST_PURGE_SCHEDULE",
+      "default": "",
+      "description": "Cron schedule of the job that cleans old auth requests from the auth request. Defaults to every minute. Set blank to disable this job. Default: 30 * * * * *",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:181",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "BASE_TAGS",
+      "default": "testing",
+      "description": "Tags to be used. Can be a comma separated value like \"latest,1.29.2\"",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docker/README.md:186",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "CARGO_PROFILE",
+      "default": "",
+      "description": "Which cargo profile to use. null means what is defined in the Dockerfile",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docker/README.md:181",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "CLIENT_SUPPRESS_ONBOARDING",
+      "default": "false",
+      "description": "Control whether clients onboarding interstitials are suppressed (post-login welcome dialogs, extension install prompts, setup extension redirects, and premium upsell modals)",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:325",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "CONTAINER_REGISTRIES",
+      "default": "vaultwarden/server",
+      "description": "Comma separated value of container registries. Like ghcr.io/dani-garcia/vaultwarden,docker.io/vaultwarden/server",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docker/README.md:187",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "DATABASE_CONN_INIT",
+      "default": "",
+      "description": "Database connection initialization Allows SQL statements to be run whenever a new database connection is created. This is mainly useful for connection-scoped pragmas. If empty, a database-specific default is used: - SQLite: \"PRAGMA busy_timeout = 5000; PRAGMA synchronous = NORMAL;\" - MySQL: \"\" - Po…",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:103",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "DATABASE_IDLE_TIMEOUT",
+      "default": "600",
+      "description": "Database idle timeout Timeout in seconds before idle connections to the database are closed.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:86",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "DATABASE_MAX_CONNS",
+      "default": "10",
+      "description": "Database max connections Define the maximum size of the connection pool used for connecting to the database.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:94",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "DATABASE_MIN_CONNS",
+      "default": "2",
+      "description": "Database min connections Define the minimum size of the connection pool used for connecting to the database.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:90",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "DATABASE_TIMEOUT",
+      "default": "30",
+      "description": "Database timeout Timeout when acquiring database connection",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:82",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "DATABASE_URL",
+      "default": "sqlite://data/db.sqlite3",
+      "description": "Database URL When using SQLite, this should use the sqlite:// scheme followed by the path to the DB file. It defaults to sqlite://%DATA_FOLDER%/db.sqlite3. Bare paths without the sqlite:// scheme are supported for backwards compatibility, but only if the database file already exists.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:57",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "DATA_FOLDER",
+      "default": "data",
+      "description": "Main data folder This can be a path to local folder or a path to an external location depending on features enabled at build time. Possible external locations: - AWS S3 Bucket (via `s3` feature): s3://bucket-name/path/to/folder When using an external location, make sure to set TMP_FOLDER, TEMPLATES…",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:26",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "DB_CONNECTION_RETRIES",
+      "default": "15",
+      "description": "Database connection retries Number of times to retry the database connection during startup, with 1 second delay between each retry, set to 0 to retry indefinitely",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:78",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "DISABLE_2FA_REMEMBER",
+      "default": "false",
+      "description": "Other MFA/2FA settings Disable 2FA remember Enabling this would force the users to use a second factor to login every time. Note that the checkbox would still be present, but ignored.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:607",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "DISABLE_ADMIN_TOKEN",
+      "default": "",
+      "description": "Enable this to bypass the admin panel security. This option is only meant to be used with the use of a separate auth layer in front",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:447",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "DISABLE_ICON_DOWNLOAD",
+      "default": "false",
+      "description": "Disable icon downloading Set to true to disable icon downloading in the internal icon service. This still serves existing icons from $ICON_CACHE_FOLDER, without generating any external network requests. $ICON_CACHE_TTL must also be set to 0; otherwise, the existing icons will be deleted eventually,…",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:252",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "DNS_PREFER_IPV6",
+      "default": "false",
+      "description": "Prefer IPv6 (AAAA) resolving This settings configures the DNS resolver to resolve IPv6 first, and if not available try IPv4 This could be useful in IPv6 only environments.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:507",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "DUO_CONTEXT_PURGE_SCHEDULE",
+      "default": "",
+      "description": "Cron schedule of the job that cleans expired Duo contexts from the database. Does nothing if Duo MFA is disabled. Defaults to every minute. Set blank to disable this job. Default: 30 * * * * *",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:185",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "DUO_HOST",
+      "default": "",
+      "description": "Default: \u003cAPI Hostname\u003e",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:581",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "DUO_IKEY",
+      "default": "",
+      "description": "Duo Settings You need to configure the DUO_IKEY, DUO_SKEY, and DUO_HOST options to enable global Duo support. Otherwise users will need to configure it themselves. Create an account and protect an application as mentioned in this link (only the first step, not the rest): https://help.bitwarden.com/…",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:579",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "DUO_SKEY",
+      "default": "",
+      "description": "Default: \u003cClient Secret\u003e",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:580",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "EMAIL_2FA_AUTO_FALLBACK",
+      "default": "false",
+      "description": "Automatically setup email 2FA as fallback provider when needed",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:601",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "EMAIL_2FA_ENFORCE_ON_VERIFIED_INVITE",
+      "default": "false",
+      "description": "Setup email 2FA on registration regardless of any organization policy",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:599",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "EMAIL_ATTEMPTS_LIMIT",
+      "default": "3",
+      "description": "Maximum attempts before an email token is reset and a new email will need to be sent.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:596",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "EMAIL_CHANGE_ALLOWED",
+      "default": "true",
+      "description": "Controls whether users can change their email. This setting applies globally to all users",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:304",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "EMAIL_EXPIRATION_TIME",
+      "default": "600",
+      "description": "Token expiration time Maximum time in seconds a token is valid. The time the user has to open email client and copy token.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:593",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "EMAIL_TOKEN_SIZE",
+      "default": "",
+      "description": "Email 2FA settings Email token size Number of digits in an email 2FA token (min: 6, max: 255). Note that the Bitwarden clients are hardcoded to mention 6 digit codes regardless of this setting!",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:589",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "EMERGENCY_ACCESS_ALLOWED",
+      "default": "true",
+      "description": "Controls whether users can enable emergency access to their accounts. This setting applies globally to all users.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:300",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "EMERGENCY_NOTIFICATION_REMINDER_SCHEDULE",
+      "default": "",
+      "description": "Cron schedule of the job that sends expiration reminders to emergency access grantors. Defaults to hourly (3 minutes after the hour). Set blank to disable this job. Default: 0 3 * * * *",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:166",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "EMERGENCY_REQUEST_TIMEOUT_SCHEDULE",
+      "default": "",
+      "description": "Cron schedule of the job that grants emergency access requests that have met the required wait time. Defaults to hourly (7 minutes after the hour). Set blank to disable this job. Default: 0 7 * * * *",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:170",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "ENABLE_DB_WAL",
+      "default": "true",
+      "description": "Enable WAL for the DB Set to false to avoid enabling WAL during startup. Note that if the DB already has WAL enabled, you will also need to disable WAL in the DB, this setting only prevents Vaultwarden from automatically enabling it on start. Please read project wiki page about this setting first b…",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:74",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "ENABLE_WEBSOCKET",
+      "default": "true",
+      "description": "Enable websocket notifications",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:110",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "ENFORCE_SINGLE_ORG_WITH_RESET_PW_POLICY",
+      "default": "false",
+      "description": "Enforce Single Org with Reset Password Policy Enforce that the Single Org policy is enabled before setting the Reset Password policy Bitwarden enforces this by default. In Vaultwarden we encouraged to use multiple organizations because groups were not available. Setting this to true will enforce th…",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:502",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "EVENTS_DAYS_RETAIN",
+      "default": "",
+      "description": "Number of days to retain events stored in the database. If unset (the default), events are kept indefinitely and the scheduled job is disabled!",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:177",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "EVENT_CLEANUP_SCHEDULE",
+      "default": "",
+      "description": "Cron schedule of the job that cleans old events from the event table. Defaults to daily. Set blank to disable this job. Also without EVENTS_DAYS_RETAIN set, this job will not start. Default: 0 10 0 * * *",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:174",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "EXPERIMENTAL_CLIENT_FEATURE_FLAGS",
+      "default": "",
+      "description": "Client Settings Enable experimental feature flags for clients. This is a comma-separated list of flags, e.g. \"flag1,flag2,flag3\". Note that clients cache the /api/config endpoint for about 1 hour and it could take some time before they are enabled or disabled! The following flags are available: - \"…",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:406",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "EXTENDED_LOGGING",
+      "default": "true",
+      "description": "Enable extended logging, which shows timestamps and targets in the logs",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:413",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "HELO_NAME",
+      "default": "",
+      "description": "Server name sent during the SMTP HELO By default this value should be the machine's hostname, but might need to be changed in case it trips some anti-spam filters",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:657",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "HIBP_API_KEY",
+      "default": "",
+      "description": "HIBP Api Key HaveIBeenPwned API Key, request it here: https://haveibeenpwned.com/API/Key",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:220",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "HTTP_REQUEST_BLOCK_NON_GLOBAL_IPS",
+      "default": "true",
+      "description": "Enabling this will cause the internal HTTP client to refuse to connect to any non-global IP address. Useful to secure your internal environment: See https://en.wikipedia.org/wiki/Reserved_IP_addresses for a list of IPs which it will block",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:386",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "HTTP_REQUEST_BLOCK_REGEX",
+      "default": "^(192\\.168\\.0\\.[0-9]+|192\\.168\\.1\\.[0-9]+)$",
+      "description": "Block HTTP domains/IPs by Regex Any domains or IPs that match this regex won't be fetched by the internal HTTP client. Useful to hide other servers in the local network. Check the WIKI for more details NOTE: Always enclose this regex within single quotes!",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:382",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "ICON_CACHE_FOLDER",
+      "default": "data/icon_cache",
+      "description": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:30",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "ICON_CACHE_NEGTTL",
+      "default": "259200",
+      "description": "Cache time-to-live for icons which weren't available, in seconds (0 is \"forever\") Default: 259200 (3 days)",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:371",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "ICON_CACHE_TTL",
+      "default": "2592000",
+      "description": "Cache time-to-live for successfully obtained icons, in seconds (0 is \"forever\") Default: 2592000 (30 days)",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:368",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "ICON_DOWNLOAD_TIMEOUT",
+      "default": "10",
+      "description": "Icon download timeout Configure the timeout value when downloading the favicons. The default is 10 seconds, but this could be too low on slower network connections",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:376",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "ICON_REDIRECT_CODE",
+      "default": "302",
+      "description": "Icon redirect code The HTTP status code to use for redirects to an external icon service. The supported codes are 301 (legacy permanent), 302 (legacy temporary), 307 (temporary), and 308 (permanent). Temporary redirects are useful while testing different icon services, but once a service has been d…",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:364",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "ICON_SERVICE",
+      "default": "internal",
+      "description": "Icon service The predefined icon services are: internal, bitwarden, duckduckgo, google. To specify a custom icon service, set a URL template with exactly one instance of `{}`, which is replaced with the domain. For example: `https://icon.example.com/domain/{}`. `internal` refers to Vaultwarden's bu…",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:356",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "INCOMPLETE_2FA_SCHEDULE",
+      "default": "",
+      "description": "Cron schedule of the job that checks for incomplete 2FA logins. Defaults to once every minute. Set blank to disable this job. Default: 30 * * * * *",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:162",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "INCOMPLETE_2FA_TIME_LIMIT",
+      "default": "3",
+      "description": "Number of minutes to wait before a 2FA-enabled login is considered incomplete, resulting in an email notification. An incomplete 2FA login is one where the correct master password was provided but the required 2FA step was not completed, which potentially indicates a master password compromise. Set…",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:245",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "INCREASE_NOTE_SIZE_LIMIT",
+      "default": "false",
+      "description": "Increase secure note size limit (Know the risks!) Sets the secure note size limit to 100_000 instead of the default 10_000. WARNING: This could cause issues with clients. Also exports will not work on Bitwarden servers! KNOW WHAT YOU ARE DOING!",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:496",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "INVITATIONS_ALLOWED",
+      "default": "true",
+      "description": "Allows org admins to invite users, even when signups are disabled",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:290",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "INVITATION_EXPIRATION_HOURS",
+      "default": "120",
+      "description": "The number of hours after which an organization invite token, emergency access invite token, email verification token and deletion request token will expire (must be at least 1)",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:296",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "INVITATION_ORG_NAME",
+      "default": "Vaultwarden",
+      "description": "Name shown in the invitation emails that don't come from a specific organization",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:292",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "IP_HEADER",
+      "default": "X-Real-IP",
+      "description": "Client IP Header, used to identify the IP of the client, defaults to \"X-Real-IP\" Set to the string \"none\" (without quotes), to disable any headers and just use the remote IP",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:333",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "IP_HEADER_TRUSTED_PROXIES",
+      "default": "local",
+      "description": "Which addresses the header above is accepted from, defaults to \"local\". Anyone able to reach Vaultwarden can set the header, and the client IP is used for the login and admin rate limits, so it is only trusted when the request comes from a proxy listed here. \"local\" accepts it from any non global a…",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:343",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "JOB_POLL_INTERVAL_MS",
+      "default": "30000",
+      "description": "Job scheduler settings Job schedules use a cron-like syntax (as parsed by https://crates.io/crates/cron), and are always in terms of UTC time (regardless of your local time zone settings). The schedule format is a bit different from crontab as crontab does not contains seconds. You can test the for…",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:150",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "LOGIN_RATELIMIT_MAX_BURST",
+      "default": "10",
+      "description": "Allow a burst of requests of up to this size, while maintaining the average indicated by `LOGIN_RATELIMIT_SECONDS`. Note that this applies to both the login and the 2FA, so it's recommended to allow a burst size of at least 2.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:476",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "LOGIN_RATELIMIT_SECONDS",
+      "default": "60",
+      "description": "Number of seconds, on average, between login requests from the same IP address before rate limiting kicks in.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:473",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "LOG_FILE",
+      "default": "/path/to/log",
+      "description": "Logging to file",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:424",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "LOG_LEVEL",
+      "default": "info",
+      "description": "Log level Change the verbosity of the log output Valid values are \"trace\", \"debug\", \"info\", \"warn\", \"error\" and \"off\" Setting it to \"trace\" or \"debug\" would also show logs for mounted routes and static file, websocket and alive requests For a specific module append a comma separated `path::to::modu…",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:432",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "LOG_TIMESTAMP_FORMAT",
+      "default": "",
+      "description": "Timestamp format used in extended logging. Format specifiers: https://docs.rs/chrono/latest/chrono/format/strftime Default: %Y-%m-%d %H:%M:%S.%3f",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:417",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "ORG_ATTACHMENT_LIMIT",
+      "default": "",
+      "description": "Per-organization attachment storage limit (KB) Max kilobytes of attachment storage allowed per organization. When this limit is reached, organization members will not be allowed to upload further attachments for ciphers owned by that organization.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:225",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "ORG_CREATION_USERS",
+      "default": "",
+      "description": "Controls which users can create new orgs. Blank or 'all' means all users can create orgs (this is the default):",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:283",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "ORG_EVENTS_ENABLED",
+      "default": "false",
+      "description": "Controls whether event logging is enabled for organizations This setting applies to organizations. Disabled by default. Also check the EVENT_CLEANUP_SCHEDULE and EVENTS_DAYS_RETAIN settings.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:279",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "ORG_GROUPS_ENABLED",
+      "default": "false",
+      "description": "BETA FEATURE: Groups Controls whether group support is enabled for organizations This setting applies to organizations. Disabled by default because this is a beta feature, it contains known issues! KNOW WHAT YOU ARE DOING!",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:490",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "PASSWORD_HINTS_ALLOWED",
+      "default": "",
+      "description": "Controls whether users can set or show password hints. This setting applies globally to all users.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:311",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "PASSWORD_ITERATIONS",
+      "default": "",
+      "description": "Number of server-side passwords hashing iterations for the password hash. The default for new users. If changed, it will be updated during login for existing users.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:308",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "PURGE_INCOMPLETE_SSO_AUTH",
+      "default": "",
+      "description": "Cron schedule of the job that cleans sso auth from incomplete flow Defaults to daily (20 minutes after midnight). Set blank to disable this job. Default: 0 20 0 * * *",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:189",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "PUSH_ENABLED",
+      "default": "false",
+      "description": "Enables push notifications (requires key and id from https://bitwarden.com/host) Details about mobile client push notification: - https://github.com/dani-garcia/vaultwarden/wiki/Enabling-Mobile-Client-push-notification",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:119",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "PUSH_IDENTITY_URI",
+      "default": "https://identity.bitwarden.com",
+      "description": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:126",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "PUSH_INSTALLATION_ID",
+      "default": "CHANGEME",
+      "description": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:120",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "PUSH_INSTALLATION_KEY",
+      "default": "",
+      "description": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:121",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "PUSH_RELAY_URI",
+      "default": "https://push.bitwarden.com",
+      "description": "WARNING: Do not modify the following settings unless you fully understand their implications! Default Push Relay and Identity URIs",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:125",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "RELOAD_TEMPLATES",
+      "default": "false",
+      "description": "Automatically reload the templates for every request, slow, use only for development",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:42",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "REQUIRE_DEVICE_EMAIL",
+      "default": "false",
+      "description": "Require new device emails. When a user logs in an email is required to be sent. If sending the email fails the login attempt will fail!!",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:410",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "ROCKET_ADDRESS",
+      "default": "0.0.0.0",
+      "description": "Rocket specific settings See https://rocket.rs/v0.5/guide/configuration/ for more details.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:684",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "ROCKET_PORT",
+      "default": "8000",
+      "description": "The default port is 8000, unless running in a Docker container, in which case it is 80.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:686",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "ROCKET_TLS",
+      "default": "{certs=\"/path/to/certs.pem\",key=\"/path/to/key.pem\"}",
+      "description": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:687",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "RSA_KEY_FILENAME",
+      "default": "",
+      "description": "Individual folders, these override %DATA_FOLDER%",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:29",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SENDMAIL_COMMAND",
+      "default": "/path/to/sendmail",
+      "description": "Which sendmail command to use. The one found in the $PATH is used if not specified.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:647",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SENDS_ALLOWED",
+      "default": "true",
+      "description": "Controls whether users are allowed to create Bitwarden Sends. This setting applies globally to all users. To control this on a per-org basis instead, use the \"Disable Send\" org policy.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:216",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SENDS_FOLDER",
+      "default": "data/sends",
+      "description": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:32",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SEND_PURGE_SCHEDULE",
+      "default": "",
+      "description": "Cron schedule of the job that checks for Sends past their deletion date. Defaults to hourly (5 minutes after the hour). Set blank to disable this job. Default: 0 5 * * * *",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:154",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SHOW_PASSWORD_HINT",
+      "default": "",
+      "description": "Controls whether a password hint should be shown directly in the web page if SMTP service is not configured and password hints are allowed. Not recommended for publicly-accessible instances because this provides unauthenticated access to potentially sensitive data.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:317",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SIGNUPS_ALLOWED",
+      "default": "true",
+      "description": "Controls if new users can register",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:255",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SIGNUPS_DOMAINS_WHITELIST",
+      "default": "example.com,example.net,example.org",
+      "description": "Controls if new users from a list of comma-separated domains can register even if SIGNUPS_ALLOWED is set to false",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:274",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SIGNUPS_VERIFY",
+      "default": "false",
+      "description": "Controls if new users need to verify their email address upon registration On new client versions, this will require the user to verify their email at signup time. On older clients, it will require the user to verify their email before they can log in. The welcome email will include a verification …",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:262",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SIGNUPS_VERIFY_RESEND_LIMIT",
+      "default": "6",
+      "description": "If SIGNUPS_VERIFY is set to true, this limits how many times an email verification email will be re-sent upon an attempted login.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:270",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SIGNUPS_VERIFY_RESEND_TIME",
+      "default": "3600",
+      "description": "If SIGNUPS_VERIFY is set to true, this limits how many seconds after the last time an email verification link has been sent another verification email will be sent",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:266",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SMTP_ACCEPT_INVALID_CERTS",
+      "default": "false",
+      "description": "Accept Invalid Certificates DANGEROUS: This option introduces significant vulnerabilities to man-in-the-middle attacks! Only use this as a last resort if you are not able to use a valid certificate. If the Certificate is valid but the hostname doesn't match, please use SMTP_ACCEPT_INVALID_HOSTNAMES…",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:671",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SMTP_ACCEPT_INVALID_HOSTNAMES",
+      "default": "false",
+      "description": "Accept Invalid Hostnames DANGEROUS: This option introduces significant vulnerabilities to man-in-the-middle attacks! Only use this as a last resort if you are not able to use a valid certificate.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:676",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SMTP_AUTH_MECHANISM",
+      "default": "",
+      "description": "Defaults for SSL is \"Plain\" and \"Login\" and nothing for Non-SSL connections. Possible values: [\"Plain\", \"Login\", \"Xoauth2\"]. Multiple options need to be separated by a comma ','.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:652",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SMTP_DEBUG",
+      "default": "false",
+      "description": "SMTP debugging When set to true this will output very detailed SMTP messages. WARNING: This could contain sensitive information like passwords and usernames! Only enable this during troubleshooting!",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:665",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SMTP_EMBED_IMAGES",
+      "default": "true",
+      "description": "Embed images as email attachments",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:660",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SMTP_FROM",
+      "default": "vaultwarden@domain.tld",
+      "description": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:629",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SMTP_FROM_NAME",
+      "default": "Vaultwarden",
+      "description": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:630",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SMTP_HOST",
+      "default": "smtp.domain.tld",
+      "description": "Mail specific settings, set SMTP_FROM and either SMTP_HOST or USE_SENDMAIL to enable the mail service. To make sure the email links are pointing to the correct host, set the DOMAIN variable. Note: if SMTP_USERNAME is specified, SMTP_PASSWORD is mandatory",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:628",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SMTP_PASSWORD",
+      "default": "",
+      "description": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:632",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SMTP_PORT",
+      "default": "587",
+      "description": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:642",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SMTP_SECURITY",
+      "default": "starttls",
+      "description": "Choose the type of secure connection for SMTP. The default is \"starttls\". The available options are: - \"starttls\": The default port is 587. - \"force_tls\": The default port is 465. - \"off\": The default port is 25. Ports 587 (submission) and 25 (smtp) are standard without encryption and with encrypti…",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:641",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SMTP_TIMEOUT",
+      "default": "15",
+      "description": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:633",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SMTP_USERNAME",
+      "default": "username",
+      "description": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:631",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SOURCE_COMMIT",
+      "default": "",
+      "description": "The commit hash of the current commit for this build",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docker/README.md:184",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SOURCE_REPOSITORY_URL",
+      "default": "",
+      "description": "The source repository form where this build is triggered",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docker/README.md:183",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SOURCE_VERSION",
+      "default": "",
+      "description": "The current exact tag of this commit, else the last tag and the first 8 chars of the source commit",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docker/README.md:185",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SSO_ALLOW_UNKNOWN_EMAIL_VERIFICATION",
+      "default": "false",
+      "description": "Allow unknown email verification status. Allowing this with `SSO_SIGNUPS_MATCH_EMAIL=true` open potential account takeover.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:526",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SSO_AUDIENCE_TRUSTED",
+      "default": "^$",
+      "description": "Regex for additional trusted Id token audience (by default only the client_id is trusted).",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:543",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SSO_AUTHORITY",
+      "default": "https://auth.example.com",
+      "description": "Base URL of the OIDC server (auto-discovery is used) - Should not include the `/.well-known/openid-configuration` part and no trailing `/` - ${SSO_AUTHORITY}/.well-known/openid-configuration should return a json document: https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfigurat…",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:531",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SSO_AUTHORIZE_EXTRA_PARAMS",
+      "default": "access_type=offline\u0026prompt=consent",
+      "description": "Additional authorization url parameters (ex: to obtain a `refresh_token` with Google Auth).",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:537",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SSO_AUTH_ONLY_NOT_SESSION",
+      "default": "false",
+      "description": "Use sso only for authentication not the session lifecycle",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:553",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SSO_CLIENT_CACHE_EXPIRATION",
+      "default": "0",
+      "description": "Client cache for discovery endpoint. Duration in seconds (0 to disable).",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:556",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SSO_CLIENT_ID",
+      "default": "11111",
+      "description": "Set your Client ID and Client Key",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:546",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SSO_CLIENT_SECRET",
+      "default": "",
+      "description": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:547",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SSO_DEBUG_TOKENS",
+      "default": "",
+      "description": "Log all the tokens, LOG_LEVEL=debug is required",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:559",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SSO_ENABLED",
+      "default": "false",
+      "description": "Controls whether users can login using an OpenID Connect identity provider",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:514",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SSO_MASTER_PASSWORD_POLICY",
+      "default": "",
+      "description": "Optional Master password policy (minComplexity=[0-4]), `enforceOnLogin` is not supported at the moment.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:550",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SSO_ONLY",
+      "default": "false",
+      "description": "Prevent users from logging in directly without going through SSO",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:517",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SSO_PKCE",
+      "default": "true",
+      "description": "Activate PKCE for the Auth Code flow.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:540",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SSO_SCOPES",
+      "default": "",
+      "description": "Authorization request scopes. Optional SSO scopes, override if email and profile are not enough (`openid` is implicit). Default: email profile",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:534",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SSO_SIGNUPS_ALLOWED",
+      "default": "true",
+      "description": "Allow SSO flow to create account. You probably want to disable it when using a public provider.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:520",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "SSO_SIGNUPS_MATCH_EMAIL",
+      "default": "true",
+      "description": "On SSO Signup if a user with a matching email already exists make the association",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:523",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "TEMPLATES_FOLDER",
+      "default": "data/templates",
+      "description": "HTML template overrides data folder Must be a local path.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:40",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "TMP_FOLDER",
+      "default": "data/tmp",
+      "description": "Temporary folder used for storing temporary file uploads Must be a local path.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:36",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "TRASH_AUTO_DELETE_DAYS",
+      "default": "",
+      "description": "Number of days to wait before auto-deleting a trashed item. If unset (the default), trashed items are not auto-deleted. This setting applies globally, so make sure to inform all users of any changes to this setting.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:238",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "TRASH_PURGE_SCHEDULE",
+      "default": "",
+      "description": "Cron schedule of the job that checks for trashed items to delete permanently. Defaults to daily (5 minutes after midnight). Set blank to disable this job. Default: 0 5 0 * * *",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:158",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "UNAUTHENTICATED_RATELIMIT_MAX_BURST",
+      "default": "50",
+      "description": "Allow a burst of requests of up to this size, while maintaining the average indicated by `UNAUTHENTICATED_RATELIMIT_SECONDS`. This budget is shared between all of those endpoints, so it is more lenient than the login one.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:483",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "UNAUTHENTICATED_RATELIMIT_SECONDS",
+      "default": "60",
+      "description": "Number of seconds, on average, between requests from the same IP address to one of the rate limited unauthenticated endpoints, like the password hint, the account recovery mails or accessing a Send.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:480",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "USER_ATTACHMENT_LIMIT",
+      "default": "",
+      "description": "Per-user attachment storage limit (KB) Max kilobytes of attachment storage allowed per user. When this limit is reached, the user will not be allowed to upload further attachments.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:229",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "USER_SEND_LIMIT",
+      "default": "",
+      "description": "Per-user send storage limit (KB) Max kilobytes of send storage allowed per user. When this limit is reached, the user will not be allowed to upload further sends.",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:233",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "USE_SENDMAIL",
+      "default": "false",
+      "description": "Whether to send mail via the `sendmail` command",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:645",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "USE_SYSLOG",
+      "default": "false",
+      "description": "Logging to Syslog This requires extended logging",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:421",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "VW_VERSION",
+      "default": "",
+      "description": "To override the SOURCE_VERSION value. This is also used by the build.rs code for example",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docker/README.md:188",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "WEB_VAULT_ENABLED",
+      "default": "true",
+      "description": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:46",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "WEB_VAULT_FOLDER",
+      "default": "web-vault/",
+      "description": "Web vault settings",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:45",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "YUBICO_CLIENT_ID",
+      "default": "11111",
+      "description": "Yubico (Yubikey) Settings Set your Client ID and Secret Key for Yubikey OTP You can generate it here: https://upgrade.yubico.com/getapikey/ You can optionally specify a custom OTP server",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:569",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "YUBICO_SECRET_KEY",
+      "default": "",
+      "description": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:570",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "vaultwarden",
+      "key": "YUBICO_SERVER",
+      "default": "http://yourdomain.com/wsapi/2.0/verify",
+      "description": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.template:571",
+        "confidence": "medium"
+      }
+    }
+  ],
   "needs": [],
   "probe": {
     "service": "vaultwarden",

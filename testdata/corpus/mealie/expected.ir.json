@@ -300,6 +300,734 @@
       }
     }
   ],
+  "optional_env": [
+    {
+      "service": "mealie",
+      "key": "ALLOWED_IFRAME_HOSTS",
+      "default": "",
+      "description": "Comma-separated extra hostnames allowed as \u003ciframe\u003e sources in recipe content. Extends the built-in list of trusted video providers (YouTube, Vimeo). Subdomains are included automatically. Only https sources are permitted. Adding hosts here opts into rendering embeds from those origins to all viewe…",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:32",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "ALLOW_PASSWORD_LOGIN",
+      "default": "",
+      "description": "Whether or not to display the username+password input fields. Keep set to true unless you use OIDC authentication",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:19",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "API_DOCS",
+      "default": "True",
+      "description": "Turns on/off access to the API documentation locally",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:16",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "API_PORT",
+      "default": "9000",
+      "description": "The port exposed by backend API. Do not change this if you're running in Docker",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:15",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "BASE_URL",
+      "default": "",
+      "description": "Used for notifications and the OIDC callback url",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "frontend/template.env:2",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "DAILY_SCHEDULE_TIME",
+      "default": "23:45",
+      "description": "The time of day to run daily server tasks, in HH:MM format. Use the server's local time, *not* UTC",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:22",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "DEFAULT_GROUP",
+      "default": "Home",
+      "description": "The default group for users",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:11",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "DEFAULT_HOUSEHOLD",
+      "default": "Family",
+      "description": "The default household for users in each group",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:12",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "GLOBAL_MIDDLEWARE",
+      "default": "",
+      "description": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "frontend/template.env:1",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "HTTP_ALLOW_LIST",
+      "default": "",
+      "description": "Comma-separated hosts or CIDRs that server-initiated requests (recipe scraping, webhooks, recipe actions, OIDC profile images) may reach even when they resolve to an otherwise-blocked private/internal address. Use to allow a known internal server.",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:33",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "HTTP_DISALLOW_LIST",
+      "default": "",
+      "description": "Comma-separated hosts or CIDRs that server-initiated requests may never reach, even if public. Takes precedence over HTTP_ALLOW_LIST.",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:34",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "LDAP_ADMIN_FILTER",
+      "default": "",
+      "description": "Optional LDAP filter, which tells Mealie the LDAP user is an admin (e.g. (memberOf=cn=admins,dc=example,dc=com))",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:91",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "LDAP_AUTH_ENABLED",
+      "default": "False",
+      "description": "Authenticate via an external LDAP server in addidion to built-in Mealie auth",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:82",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "LDAP_BASE_DN",
+      "default": "",
+      "description": "Starting point when searching for users authentication (e.g. CN=Users,DC=xx,DC=yy,DC=de)",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:87",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "LDAP_ENABLE_STARTTLS",
+      "default": "False",
+      "description": "Optional. Use STARTTLS to connect to the server",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:86",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "LDAP_ID_ATTRIBUTE",
+      "default": "uid",
+      "description": "The LDAP attribute that maps to the user's id",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:92",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "LDAP_MAIL_ATTRIBUTE",
+      "default": "mail",
+      "description": "The LDAP attribute that maps to the user's email",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:94",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "LDAP_NAME_ATTRIBUTE",
+      "default": "name",
+      "description": "The LDAP attribute that maps to the user's name",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:93",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "LDAP_QUERY_BIND",
+      "default": "",
+      "description": "Optional bind user for LDAP search queries (e.g. cn=admin,cn=users,dc=example,dc=com). If None then anonymous bind will be used",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:88",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "LDAP_TLS_CACERTFILE",
+      "default": "",
+      "description": "File path to Certificate Authority used to verify server certificate (e.g. /path/to/ca.crt)",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:85",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "LDAP_TLS_INSECURE",
+      "default": "False",
+      "description": "Do not verify server certificate when using secure LDAP",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:84",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "LDAP_USER_FILTER",
+      "default": "",
+      "description": "Optional LDAP filter to narrow down eligible users (e.g. (memberOf=cn=mealie_user,dc=example,dc=com))",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:90",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "LOG_CONFIG_OVERRIDE",
+      "default": "",
+      "description": "Override the config for logging with a custom path",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:20",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "OIDC_ADMIN_GROUP",
+      "default": "",
+      "description": "If specified, users belonging to this group will be made an admin. For more information see [this page](../authentication/oidc.md#groups)",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:111",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "OIDC_AUTH_ENABLED",
+      "default": "False",
+      "description": "Enables authentication via OpenID Connect",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:104",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "OIDC_AUTO_REDIRECT",
+      "default": "False",
+      "description": "If True, then the login page will be bypassed an you will be sent directly to your Identity Provider. You can still get to the login page by adding ?direct=1 to the login URL",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:112",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "OIDC_CLIENT_TIMEOUT",
+      "default": "default",
+      "description": "Configures the timeout value of the httpx client used for OIDC communications. If set to the string default, does not configure the value (uses the library's default of 5.0s). If set to the string None, disables the timeout entirely. If set to a numeric value, uses that as the timeout.",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:121",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "OIDC_GROUPS_CLAIM",
+      "default": "groups",
+      "description": "Optional if not using OIDC_USER_GROUP or OIDC_ADMIN_GROUP. This is the claim Mealie will request from your IdP and will use to compare to OIDC_USER_GROUP or OIDC_ADMIN_GROUP to allow the user to log in to Mealie or is set as an admin. Your IdP must be configured to grant this claim",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:118",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "OIDC_NAME_CLAIM",
+      "default": "name",
+      "description": "This is the claim which Mealie will use for the users Full Name",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:117",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "OIDC_PROVIDER_NAME",
+      "default": "OAuth",
+      "description": "The provider name is shown in SSO login button. \"Login with \u003cOIDC_PROVIDER_NAME\\\u003e\"",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:113",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "OIDC_REMEMBER_ME",
+      "default": "False",
+      "description": "Because redirects bypass the login screen, you can't tick the \"Remember Me\" checkbox. Setting this to true treats an OIDC login as if it had been checked, so the session survives closing the browser",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:114",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "OIDC_SCOPES_OVERRIDE",
+      "default": "",
+      "description": "Advanced configuration used to override the scopes requested from the IdP. Most users won't need to change this. At a minimum, 'openid profile email' are required.",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:119",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "OIDC_SIGNING_ALGORITHM",
+      "default": "RS256",
+      "description": "The algorithm used to sign the id token (examples: RS256, HS256)",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:115",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "OIDC_SIGNUP_ENABLED",
+      "default": "True",
+      "description": "Enables new users to be created when signing in for the first time with OIDC",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:105",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "OIDC_TLS_CACERTFILE",
+      "default": "",
+      "description": "File path to Certificate Authority used to verify server certificate (e.g. /path/to/ca.crt)",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:120",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "OIDC_USER_CLAIM",
+      "default": "email",
+      "description": "This is the claim which Mealie will use to look up an existing user by (e.g. \"email\", \"preferred_username\")",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:116",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "OIDC_USER_GROUP",
+      "default": "",
+      "description": "If specified, only users belonging to this group will be able to successfully authenticate, regardless of the OIDC_ADMIN_GROUP. For more information see [this page](../authentication/oidc.md#groups)",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:110",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "SCRAPER_FLARESOLVERR_TIMEOUT",
+      "default": "60",
+      "description": "Maximum seconds FlareSolverr may spend solving a single challenge before giving up.",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:152",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "SCRAPER_FLARESOLVERR_URL",
+      "default": "",
+      "description": "Optional base URL of a self-hosted [FlareSolverr](https://github.com/FlareSolverr/FlareSolverr) instance (e.g. http://flaresolverr:8191). Used only as a last resort to solve JS/Cloudflare challenges. Unset disables it.",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:151",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "SCRAPER_PROXY_MODE",
+      "default": "always",
+      "description": "How the proxy is used (when SCRAPER_PROXY_URL is set): always routes every request through it; fallback tries a direct request first and only retries through the proxy when a block is detected. Any unrecognized value falls back to always.",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:150",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "SCRAPER_PROXY_URL",
+      "default": "",
+      "description": "Optional proxy for all outbound scraping and image requests (e.g. http://user:pass@host:port). Routing through an IP with a better reputation helps bypass IP-based blocks. Unset disables it.",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:149",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "SECURITY_MAX_LOGIN_ATTEMPTS",
+      "default": "5",
+      "description": "Maximum times a user can provide an invalid password before their account is locked",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:30",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "SECURITY_USER_LOCKOUT_TIME",
+      "default": "24",
+      "description": "Time in hours for how long a users account is locked",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:31",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "SMTP_AUTH_STRATEGY",
+      "default": "TLS",
+      "description": "Required For email, Options: 'TLS', 'SSL', 'NONE'",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:56",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "SMTP_FROM_EMAIL",
+      "default": "",
+      "description": "Required For email",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:57",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "SMTP_FROM_NAME",
+      "default": "Mealie",
+      "description": "Required For email",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:55",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "SQLITE_MIGRATE_JOURNAL_WAL",
+      "default": "False",
+      "description": "If set to true, switches SQLite's journal mode to WAL, which allows for multiple concurrent accesses. This can be useful when you have a decent amount of concurrency or when using certain remote storage systems such as Ceph.",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:41",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "THEME_DARK_ACCENT",
+      "default": "#007A99",
+      "description": "Buttons and interactive elements",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "frontend/template.env:17",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "THEME_DARK_ERROR",
+      "default": "#EF5350",
+      "description": "Error messages and alerts",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "frontend/template.env:22",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "THEME_DARK_INFO",
+      "default": "#1976D2",
+      "description": "Information alerts and tooltips",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "frontend/template.env:20",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "THEME_DARK_PRIMARY",
+      "default": "#E58325",
+      "description": "Light Mode Config",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "frontend/template.env:16",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "THEME_DARK_SECONDARY",
+      "default": "#973542",
+      "description": "Secondary UI elements and interactive accents",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "frontend/template.env:18",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "THEME_DARK_SUCCESS",
+      "default": "#43A047",
+      "description": "Success messages and confirmations",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "frontend/template.env:19",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "THEME_DARK_WARNING",
+      "default": "#FF6D00",
+      "description": "Warning notifications",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "frontend/template.env:21",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "THEME_LIGHT_ACCENT",
+      "default": "#007A99",
+      "description": "Buttons and interactive elements",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "frontend/template.env:8",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "THEME_LIGHT_ERROR",
+      "default": "#EF5350",
+      "description": "Error messages and alerts",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "frontend/template.env:13",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "THEME_LIGHT_INFO",
+      "default": "#1976D2",
+      "description": "Information alerts and tooltips",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "frontend/template.env:11",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "THEME_LIGHT_PRIMARY",
+      "default": "#E58325",
+      "description": "Light Mode Config",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "frontend/template.env:7",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "THEME_LIGHT_SECONDARY",
+      "default": "#973542",
+      "description": "Secondary UI elements and interactive accents",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "frontend/template.env:9",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "THEME_LIGHT_SUCCESS",
+      "default": "#43A047",
+      "description": "Success messages and confirmations",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "frontend/template.env:10",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "THEME_LIGHT_WARNING",
+      "default": "#FF6D00",
+      "description": "Warning notifications",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "frontend/template.env:12",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "TLS_CERTIFICATE_PATH",
+      "default": "",
+      "description": "File path to Certificate",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:75",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "TLS_PRIVATE_KEY_PATH",
+      "default": "",
+      "description": "File path to private key",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:76",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "TOKEN_TIME",
+      "default": "",
+      "description": "The time in hours a login session lasts. Must be \u003c= 9600 (400 days, in hours).",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:14",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "UVICORN_WORKERS",
+      "default": "1",
+      "description": "Sets the number of workers for the web server. [More info here][unicorn_workers]",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:67",
+        "confidence": "medium"
+      }
+    },
+    {
+      "service": "mealie",
+      "key": "YTDLP_COOKIEFILE",
+      "default": "",
+      "description": "Cookiefile for yt-dlp to use when downloading a video, needed for content that requires sign-in",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docs/docs/documentation/getting-started/installation/backend-config.md:137",
+        "confidence": "medium"
+      }
+    }
+  ],
   "needs": [],
   "probe": {
     "service": "mealie",

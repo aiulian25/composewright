@@ -4,6 +4,17 @@ services:
   actual_server:
     image: docker.io/actualbudget/actual-server:latest
     restart: unless-stopped
+    environment:
+      # optional settings the upstream documents: set them in .env
+      ACTUAL_CACHE_TTL:
+      ACTUAL_DATA_DIR:
+      ACTUAL_ENCRYPTION_PASSWORD:
+      ACTUAL_LOCK_TIMEOUT:
+      ACTUAL_NO_LOCK:
+      ACTUAL_PASSWORD:
+      ACTUAL_SERVER_URL:
+      ACTUAL_SESSION_TOKEN:
+      ACTUAL_SYNC_ID:
     networks:
       - default
       - npm_default

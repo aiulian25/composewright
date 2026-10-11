@@ -41,6 +41,11 @@
       "items": { "$ref": "#/$defs/env_file_entry" },
       "description": "Entries of the generated .env file. Keys are unique UPPER_SNAKE_CASE. Every service env `ref` must name an entry in this list."
     },
+    "optional_env": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/optional_setting" },
+      "description": "Variables the upstream documents that the plan leaves unset. composewright fills this from the repository itself; a model returns an empty array."
+    },
     "needs": {
       "type": "array",
       "items": { "$ref": "#/$defs/need" },
@@ -74,7 +79,7 @@
     }
   },
   "required": [
-    "ir_version", "app", "services", "env_file", "needs", "probe",
+    "ir_version", "app", "services", "env_file", "optional_env", "needs", "probe",
     "post_install_notes", "confidence", "evidence", "suspicious_instructions", "unfilled"
   ],
   "additionalProperties": false,
@@ -373,6 +378,30 @@
         "provenance": { "$ref": "#/$defs/provenance" }
       },
       "required": ["key", "value", "generate", "secret", "required", "description", "file_env_key", "provenance"],
+      "additionalProperties": false
+    },
+    "optional_setting": {
+      "type": "object",
+      "properties": {
+        "service": {
+          "type": "string",
+          "description": "Service the variable is passed to."
+        },
+        "key": {
+          "type": "string",
+          "description": "Variable name as the upstream documents it."
+        },
+        "default": {
+          "type": "string",
+          "description": "The documented default, written commented out in .env. Empty for secrets and when none is documented."
+        },
+        "description": {
+          "type": "string",
+          "description": "The upstream's description, written as the comment above the variable in .env."
+        },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      },
+      "required": ["service", "key", "default", "description", "provenance"],
       "additionalProperties": false
     },
     "need": {

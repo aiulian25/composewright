@@ -71,6 +71,7 @@ func Build(ctx context.Context, input Input) *ir.IR {
 	}
 	builder.enrich()
 	builder.generateStackSecrets()
+	builder.optionalSettings()
 	builder.finish()
 	builder.plan.Normalize()
 	return builder.plan

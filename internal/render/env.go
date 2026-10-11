@@ -32,6 +32,7 @@ func Env(plan *ir.IR, values map[string]string, header string) ([]byte, error) {
 		value := values[entry.Key]
 		builder.WriteString(entry.Key + "=" + FormatValue(value, referenceValue.MatchString(value)) + "\n")
 	}
+	builder.WriteString(optionalEnv(plan))
 	return []byte(builder.String()), nil
 }
 

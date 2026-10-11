@@ -20,6 +20,10 @@ Published on this machine only: http://localhost:8080
 
 Data lives in named Docker volumes (`docker volume ls | grep docker`); `docker compose down -v` deletes them.
 
+## Optional settings
+
+.env lists 16 settings the upstream documents, commented out, such as MYSQL_DATABASE, MYSQL_PASSWORD, MYSQL_USER, OBJECTSTORE_S3_BUCKET, OBJECTSTORE_S3_HOST. To use one, remove the "# " before it in .env and run `docker compose up -d` again.
+
 ## After the first start
 
 - The default user within a container is root (uid = 0). By default, processes inside the container will expect to have root privileges. Network services will drop privileges and use www-data to serve requests. (README.md:186)

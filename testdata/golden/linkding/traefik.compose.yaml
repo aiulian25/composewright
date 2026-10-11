@@ -22,6 +22,21 @@ services:
       LD_DB_HOST: "${LD_DB_HOST}"
       LD_DB_PORT: "${LD_DB_PORT}"
       LD_DB_OPTIONS: "${LD_DB_OPTIONS}"
+      # optional settings the upstream documents: set them in .env
+      LD_CONTAINER_NAME:
+      LD_HOST_DATA_DIR:
+      LD_HOST_PORT:
+      OIDC_OP_AUTHORIZATION_ENDPOINT:
+      OIDC_OP_JWKS_ENDPOINT:
+      OIDC_OP_TOKEN_ENDPOINT:
+      OIDC_OP_USER_ENDPOINT:
+      OIDC_RP_CLIENT_ID:
+      OIDC_RP_CLIENT_SECRET:
+      OIDC_RP_SCOPES:
+      OIDC_RP_SIGN_ALGO:
+      OIDC_USERNAME_CLAIM:
+      OIDC_USE_PKCE:
+      OIDC_VERIFY_SSL:
     networks:
       - default
       - traefik

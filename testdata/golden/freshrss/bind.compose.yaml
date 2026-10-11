@@ -8,6 +8,37 @@ services:
       TZ: "${TZ}"
       CRON_MIN: "${CRON_MIN}"
       TRUSTED_PROXY: "${TRUSTED_PROXY}"
+      # optional settings the upstream documents: set them in .env
+      ADMIN_API_PASSWORD:
+      ADMIN_EMAIL:
+      ADMIN_PASSWORD:
+      BASE_URL:
+      COPY_LOG_TO_SYSLOG:
+      COPY_SYSLOG_TO_STDERR:
+      DATA_PATH:
+      DB_BASE:
+      DB_HOST:
+      DB_PASSWORD:
+      DB_USER:
+      ENABLE_ACCESS_LOG:
+      FRESHRSS_ENV:
+      FRESHRSS_INSTALL:
+      FRESHRSS_USER:
+      INTERNAL_HOST_ALLOWLIST:
+      OIDC_CLIENT_CRYPTO_KEY:
+      OIDC_CLIENT_ID:
+      OIDC_CLIENT_SECRET:
+      OIDC_DEFAULT_URL:
+      OIDC_ENABLED:
+      OIDC_PROVIDER_METADATA_URL:
+      OIDC_REMOTE_USER_CLAIM:
+      OIDC_SCOPES:
+      OIDC_SESSION_INACTIVITY_TIMEOUT:
+      OIDC_SESSION_MAX_DURATION:
+      OIDC_SESSION_TYPE:
+      OIDC_X_FORWARDED_HEADERS:
+      PUBLISHED_PORT:
+      SERVER_DNS:
     ports:
       - "127.0.0.1:8080:80/tcp"
     volumes:

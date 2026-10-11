@@ -388,6 +388,7 @@
       }
     }
   ],
+  "optional_env": [],
   "needs": [],
   "probe": {
     "service": "miniflux",

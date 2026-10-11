@@ -6,6 +6,16 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Generated stacks list the settings an app's upstream documents, in a `.env`
+  sample or a README or docs table, and the plan leaves unset: `.env` shows
+  each one commented out with its description, default and source, and
+  compose.yaml passes it to the app by name, so removing the `# ` in `.env` is
+  all it takes. While commented out, the image's own default applies. Example
+  secrets from upstream are never copied, and variables for tests, CI or a
+  development setup are left out. Review lists them under the environment.
+
 ## [0.1.1] - 2026-10-11
 
 Fixes from the first install on a server: composewright prepares its own

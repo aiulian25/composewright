@@ -373,6 +373,25 @@ func (check *checker) envFile(plan *ir.IR) {
 	}
 }
 
+// optionalEnv is P7 for settings the upstream documents and the plan leaves
+// unset: compose.yaml names each one, and .env shows its default commented
+// out, so a default never carries a newline or a command.
+func (check *checker) optionalEnv(plan *ir.IR) {
+	for index, setting := range plan.OptionalEnv {
+		field := fmt.Sprintf("optional_env.%d", index)
+		if !envKeyPattern.MatchString(setting.Key) {
+			check.add("P7", Deny, setting.Service, field, "variable name %q is not valid", setting.Key)
+		}
+		if _, found := plan.Service(setting.Service); !found {
+			check.add("P7", Deny, setting.Service, field, "%s is documented for %q, which is not a service", setting.Key, setting.Service)
+		}
+		unsafe := strings.ContainsAny(setting.Default, "\n\r`") || strings.Contains(setting.Default, "$(")
+		if unsafe {
+			check.add("P7", Deny, setting.Service, field, "the documented default of %s has a newline or a shell command", setting.Key)
+		}
+	}
+}
+
 func (check *checker) secretEntry(entry ir.EnvFileEntry, field string) {
 	generated := entry.Generate != ""
 	switch {

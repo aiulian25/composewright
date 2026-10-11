@@ -20,6 +20,10 @@ Published on this machine only: http://localhost:8080
 
 Data lives in named Docker volumes (`docker volume ls | grep freshrss`); `docker compose down -v` deletes them.
 
+## Optional settings
+
+.env lists 30 settings the upstream documents, commented out, such as ADMIN_API_PASSWORD, ADMIN_EMAIL, ADMIN_PASSWORD, BASE_URL, COPY_LOG_TO_SYSLOG. To use one, remove the "# " before it in .env and run `docker compose up -d` again.
+
 ## After the first start
 
 - The [default user](13_Default_user.md) is marked with italic letters. (docs/en/admins/12_User_management.md:7)

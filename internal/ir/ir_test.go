@@ -52,7 +52,7 @@ func TestGoTypesMatchSchema(t *testing.T) {
 		"port": reflect.TypeFor[Port](), "volume": reflect.TypeFor[Volume](), "dependency": reflect.TypeFor[Dependency](),
 		"healthcheck": reflect.TypeFor[Healthcheck](), "resources": reflect.TypeFor[Resources](), "service": reflect.TypeFor[Service](),
 		"env_file_entry": reflect.TypeFor[EnvFileEntry](), "need": reflect.TypeFor[Need](), "probe": reflect.TypeFor[Probe](),
-		"evidence": reflect.TypeFor[Evidence](),
+		"evidence": reflect.TypeFor[Evidence](), "optional_setting": reflect.TypeFor[OptionalSetting](),
 	} {
 		pairs[name] = struct {
 			goType reflect.Type

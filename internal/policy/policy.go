@@ -152,6 +152,7 @@ func Evaluate(input Input) Report {
 		check.resources(service, path)
 	}
 	check.envFile(plan)
+	check.optionalEnv(plan)
 	check.needs(plan)
 	check.dependencies(plan)
 	return Report{Findings: check.findings}

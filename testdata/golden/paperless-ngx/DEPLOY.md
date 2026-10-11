@@ -20,6 +20,10 @@ Published on this machine only: http://localhost:8000
 
 Data lives in named Docker volumes (`docker volume ls | grep paperless-ngx`); `docker compose down -v` deletes them.
 
+## Optional settings
+
+.env lists 24 settings the upstream documents, commented out, such as COMPOSE_PROJECT_NAME, DOCUMENT_ADDED, DOCUMENT_ARCHIVE_PATH, DOCUMENT_CORRESPONDENT, DOCUMENT_CREATED. To use one, remove the "# " before it in .env and run `docker compose up -d` again.
+
 ## After the first start
 
 - PAPERLESS_SECRET_KEY was generated for you; it is in .env

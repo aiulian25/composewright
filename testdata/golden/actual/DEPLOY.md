@@ -20,6 +20,10 @@ Published on this machine only: http://localhost:5006
 
 Data lives in named Docker volumes (`docker volume ls | grep actual-server`); `docker compose down -v` deletes them.
 
+## Optional settings
+
+.env lists 9 settings the upstream documents, commented out, such as ACTUAL_CACHE_TTL, ACTUAL_DATA_DIR, ACTUAL_ENCRYPTION_PASSWORD, ACTUAL_LOCK_TIMEOUT, ACTUAL_NO_LOCK. To use one, remove the "# " before it in .env and run `docker compose up -d` again.
+
 ## After the first start
 
 - actual_server: upstream bind mount ./actual-data:/data is a named volume here (use --storage bind for a host folder)

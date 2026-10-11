@@ -514,6 +514,7 @@
       }
     }
   ],
+  "optional_env": [],
   "needs": [],
   "probe": {
     "service": "docker-bookstack",

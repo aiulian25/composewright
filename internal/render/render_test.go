@@ -286,3 +286,44 @@ func TestGrantedDockerSocketIsMountedWithAComment(t *testing.T) {
 		}
 	}
 }
+
+// TestOptionalSettingsArePassedThroughAndCommented: compose.yaml names each
+// optional setting with no value, .env lists it commented out with its
+// default, and one the plan sets as well is neither, so nothing is doubled.
+func TestOptionalSettingsArePassedThroughAndCommented(t *testing.T) {
+	plan := loadPlan(t, "../../testdata/corpus/uptime-kuma/expected.ir.json")
+	plan.EnvFile = append(plan.EnvFile, ir.EnvFileEntry{Key: "ALREADY_SET", Value: "1"})
+	plan.OptionalEnv = []ir.OptionalSetting{
+		{Service: "uptime-kuma", Key: "UPTIME_KUMA_PORT", Default: "3001", Description: "Port to listen on", Provenance: ir.Provenance{SourceRef: "README.md:10"}},
+		{Service: "uptime-kuma", Key: "ALREADY_SET", Default: "2"},
+	}
+	options := testOptions(t, variants[0])
+	compose, err := Compose(plan, options)
+	if err != nil {
+		t.Fatal(err)
+	}
+	env, err := Env(plan, map[string]string{"ALREADY_SET": "1"}, "# test\n")
+	if err != nil {
+		t.Fatal(err)
+	}
+	deploy := string(Deploy(plan, options, "not validated yet"))
+	checks := map[string]bool{
+		"compose names the setting with no value":  strings.Contains(string(compose), "# "+optionalComposeComment+"\n      UPTIME_KUMA_PORT:\n"),
+		"compose does not pass a set one twice":    strings.Count(string(compose), "ALREADY_SET") == 0,
+		".env lists it commented out with default": strings.Contains(string(env), "# Port to listen on\n# for uptime-kuma · from README.md:10\n# UPTIME_KUMA_PORT=3001\n"),
+		".env keeps the set one once":              strings.Count(string(env), "ALREADY_SET") == 1,
+		"DEPLOY.md says how to use them":           strings.Contains(deploy, ".env lists 1 settings the upstream documents"),
+	}
+	for check, passed := range checks {
+		if !passed {
+			t.Errorf("%s:\n%s\n%s", check, compose, env)
+		}
+	}
+	project, err := composefile.Load(context.Background(), "compose.yaml", compose, nil, false)
+	if err != nil {
+		t.Fatalf("compose-go rejects the pass-through: %v", err)
+	}
+	if value, set := project.Services["uptime-kuma"].Environment["UPTIME_KUMA_PORT"]; !set || value != nil {
+		t.Fatalf("UPTIME_KUMA_PORT = %v (set %v), want no value", value, set)
+	}
+}

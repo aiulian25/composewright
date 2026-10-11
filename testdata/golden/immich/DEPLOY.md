@@ -20,6 +20,10 @@ Published on this machine only: http://localhost:2283
 
 Data lives in named Docker volumes (`docker volume ls | grep immich-server`); `docker compose down -v` deletes them.
 
+## Optional settings
+
+.env lists 54 settings the upstream documents, commented out, such as CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN, CPU_CORES, DB_DATA_LOCATION, DB_HOSTNAME. To use one, remove the "# " before it in .env and run `docker compose up -d` again.
+
 ## After the first start
 
 - Open [localhost:8888](http://localhost:8888) and login with the default credentials from above. (docs/docs/guides/database-gui.md:35)

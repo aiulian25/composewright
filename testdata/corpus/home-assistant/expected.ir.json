@@ -55,6 +55,7 @@
     }
   ],
   "env_file": [],
+  "optional_env": [],
   "needs": [],
   "probe": {
     "service": "",

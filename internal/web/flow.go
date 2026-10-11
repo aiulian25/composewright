@@ -572,6 +572,7 @@ type reviewView struct {
 	Networks    []option
 	Storage     []option
 	Env         []envRow
+	Optional    []ir.OptionalSetting
 	Generated   int
 	Needs       []needView
 	Findings    []findingView
@@ -594,7 +595,7 @@ func (server *Server) reviewView(ctx context.Context, stored *pipeline.Stored, r
 	view := reviewView{Project: stored.Project, Source: sourceText(storedSource(stored)), Confidence: plan.Confidence,
 		Engine: engineText(stored.Generation), Blocked: report.Blocked(), Denied: report.Count(policy.Deny), Needed: report.Count(policy.Need),
 		Warnings: report.Count(policy.Warn), Expose: portOptions(mode), Networks: networkOptions(profile, networks),
-		Storage: server.storageOptions(stored.Options.Storage), Env: envRows(plan, stored.Values, revealed),
+		Storage: server.storageOptions(stored.Options.Storage), Env: envRows(plan, stored.Values, revealed), Optional: render.OptionalSettings(plan),
 		Needs: needViews(plan, stored.Options.AllowNeeds), Findings: findingViews(report, stored.Generation.ComposeYAML), Registries: stored.Options.AllowRegistries,
 		TrustOffers: trustOffers(plan, report), Revealed: revealed, Notes: plan.PostInstallNotes}
 	for _, entry := range plan.EnvFile {
