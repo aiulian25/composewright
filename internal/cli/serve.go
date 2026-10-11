@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/netip"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -32,6 +33,7 @@ const (
 func (application *app) serveCommand() *cobra.Command {
 	var listen string
 	var allowHosts []string
+	var trustedProxies []string
 	var initialise bool
 	command := &cobra.Command{
 		Use:   "serve",
@@ -53,15 +55,21 @@ machine's own name just work; any other host name, such as a reverse proxy's,
 needs --allow-host. Over plain HTTP the password crosses the network
 unencrypted, which is fine on a network you trust. The UI controls Docker,
 which is root-equivalent on this host: beyond a trusted network, put HTTPS
-in front, and the session cookie becomes Secure by itself.`, int(web.SetupWindow.Minutes())),
-		Example: "  composewright serve\n  composewright serve --listen 0.0.0.0:8484\n  composewright serve --listen 0.0.0.0:8484 --allow-host composewright.home.arpa",
+in front, and the session cookie becomes Secure by itself.
+
+Behind a reverse proxy, also pass its address with --trusted-proxy, so failed
+sign-ins count against each visitor named in X-Forwarded-For rather than
+against the proxy, which would lock everyone out. Anything at a trusted
+address can name any visitor, so trust the proxy itself, not a whole network.`, int(web.SetupWindow.Minutes())),
+		Example: "  composewright serve\n  composewright serve --listen 0.0.0.0:8484\n  composewright serve --listen 0.0.0.0:8484 --allow-host composewright.home.arpa\n  composewright serve --listen 0.0.0.0:8484 --allow-host composewright.home.arpa --trusted-proxy 172.18.0.5",
 		Args:    cobra.NoArgs,
 		RunE: func(command *cobra.Command, _ []string) error {
-			return application.runServe(command.Context(), listen, allowHosts, initialise)
+			return application.runServe(command.Context(), listen, allowHosts, trustedProxies, initialise)
 		},
 	}
 	command.Flags().StringVar(&listen, "listen", "", "address to listen on (default: listen in config.yaml)")
 	command.Flags().StringSliceVar(&allowHosts, "allow-host", nil, "another host name the UI answers to, such as a reverse proxy's (repeatable)")
+	command.Flags().StringSliceVar(&trustedProxies, "trusted-proxy", nil, "a reverse proxy's address or range, such as 172.18.0.5 or 172.18.0.0/24, whose X-Forwarded-For names the visitor (repeatable)")
 	command.Flags().BoolVar(&initialise, "init", false, "first create the data directory, master key and config that are missing, like init")
 	return command
 }
@@ -138,7 +146,37 @@ func (application *app) readNewPassword(username string) (string, error) {
 	return password, nil
 }
 
-func (application *app) runServe(ctx context.Context, listen string, allowHosts []string, initialise bool) error {
+// proxyPrefixes reads --trusted-proxy: an address range, or one address
+// standing for itself.
+func proxyPrefixes(values []string) ([]netip.Prefix, error) {
+	prefixes := make([]netip.Prefix, 0, len(values))
+	for _, value := range values {
+		prefix, err := proxyPrefix(value)
+		if err != nil {
+			return nil, err
+		}
+		prefixes = append(prefixes, prefix)
+	}
+	return prefixes, nil
+}
+
+func proxyPrefix(value string) (netip.Prefix, error) {
+	if prefix, err := netip.ParsePrefix(value); err == nil {
+		return prefix, nil
+	}
+	address, err := netip.ParseAddr(value)
+	if err != nil {
+		return netip.Prefix{}, fmt.Errorf("--trusted-proxy %q is not an address or range such as 172.18.0.5 or 172.18.0.0/24", value)
+	}
+	address = address.Unmap()
+	return netip.PrefixFrom(address, address.BitLen()), nil
+}
+
+func (application *app) runServe(ctx context.Context, listen string, allowHosts, trustedProxies []string, initialise bool) error {
+	proxies, err := proxyPrefixes(trustedProxies)
+	if err != nil {
+		return err
+	}
 	loaded, err := application.loadConfig()
 	if err != nil {
 		return err
@@ -166,7 +204,7 @@ func (application *app) runServe(ctx context.Context, listen string, allowHosts 
 		return err
 	}
 	server, err := web.New(web.Options{Loaded: loaded, Flags: config.Flags{ConfigFile: application.global.configFile, DataDir: application.global.dataDir},
-		Workspace: opened, Version: application.build.Version, Listen: listen, AllowedHosts: allowHosts, SetupToken: token,
+		Workspace: opened, Version: application.build.Version, Listen: listen, AllowedHosts: allowHosts, TrustedProxies: proxies, SetupToken: token,
 		Connect: pipeline.Connect, Logger: application.logger})
 	if err != nil {
 		return err

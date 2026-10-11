@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/netip"
+	"slices"
 	"strings"
 	"time"
 	"unicode"
@@ -155,7 +157,7 @@ func (server *Server) forgotPage(writer http.ResponseWriter, request *http.Reque
 // for unknown names, so the answer time does not reveal which names exist.
 func (server *Server) login(writer http.ResponseWriter, request *http.Request, _ *visit) error {
 	ctx := request.Context()
-	client := clientAddress(request)
+	client := server.clientAddress(request)
 	now := server.options.Now()
 	username := strings.TrimSpace(request.PostFormValue("username"))
 	page := server.page(request, nil, "Sign in")
@@ -218,7 +220,7 @@ func (server *Server) startSession(writer http.ResponseWriter, request *http.Req
 	if err := database.CreateSession(ctx, session); err != nil {
 		return err
 	}
-	if err := database.Audit(ctx, user.Username, store.ActionLogin, "", map[string]any{"client": clientAddress(request)}); err != nil {
+	if err := database.Audit(ctx, user.Username, store.ActionLogin, "", map[string]any{"client": server.clientAddress(request)}); err != nil {
 		return err
 	}
 	name, secure := sessionCookieFor(request)
@@ -263,10 +265,49 @@ func localPath(target string) string {
 	return target
 }
 
-func clientAddress(request *http.Request) string {
-	host, _, err := net.SplitHostPort(request.RemoteAddr)
+// clientAddress is who is signing in, for the throttle and the audit log:
+// the connection's address, or, when that is a trusted reverse proxy, the
+// nearest X-Forwarded-For address that is not one. The walk goes from the
+// right, so what a visitor writes into the header is never reached; an entry
+// that is not an address stops at the proxy, as if nothing were forwarded.
+func (server *Server) clientAddress(request *http.Request) string {
+	remote := remoteHost(request.RemoteAddr)
+	address, err := netip.ParseAddr(remote)
+	if err != nil || !server.trustedProxy(address) {
+		return remote
+	}
+	hops := strings.Split(strings.Join(request.Header.Values(forwardedFor), ","), ",")
+	for index := len(hops) - 1; index >= 0; index-- {
+		hop, readable := forwardedAddress(hops[index])
+		if !readable {
+			return remote
+		}
+		if !server.trustedProxy(hop) {
+			return hop.String()
+		}
+	}
+	return remote
+}
+
+func (server *Server) trustedProxy(address netip.Addr) bool {
+	address = address.Unmap()
+	return slices.ContainsFunc(server.options.TrustedProxies, func(prefix netip.Prefix) bool { return prefix.Contains(address) })
+}
+
+// forwardedAddress reads one X-Forwarded-For entry, with or without a port.
+func forwardedAddress(entry string) (netip.Addr, bool) {
+	entry = strings.TrimSpace(entry)
+	if address, err := netip.ParseAddr(entry); err == nil {
+		return address.Unmap(), true
+	}
+	withPort, err := netip.ParseAddrPort(entry)
+	return withPort.Addr().Unmap(), err == nil
+}
+
+func remoteHost(remote string) string {
+	host, _, err := net.SplitHostPort(remote)
 	if err != nil {
-		return request.RemoteAddr
+		return remote
 	}
 	return host
 }

@@ -62,9 +62,10 @@ All notable changes to this project are documented here. The format follows
   themes; nothing loads from the internet.
 - **Sign-in.** Argon2id password hashing, hashed sessions, CSRF tokens,
   Origin and Host checks, a strict Content-Security-Policy and a login
-  throttle. Plain HTTP on a home network works, the first account is created
-  from the page within 15 minutes of a start, and `composewright password`
-  sets a new password.
+  throttle, which counts each visitor behind a reverse proxy once
+  `serve --trusted-proxy` names the proxy. Plain HTTP on a home network
+  works, the first account is created from the page within 15 minutes of a
+  start, and `composewright password` sets a new password.
 - **Secrets and state.** Secret values and API keys are sealed with
   XChaCha20-Poly1305 in a SQLite database, `keys rotate` re-seals them under
   a new master key, actions are recorded in a hash-chained audit log, and

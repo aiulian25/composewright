@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
+	"net/netip"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -346,6 +347,42 @@ func TestPasswordHashingIsCapped(t *testing.T) {
 	vacate()
 	response, page = harness.do(http.MethodPost, "/login", signIn, nil)
 	status(t, response, http.StatusSeeOther, page)
+}
+
+// TestClientAddressBehindATrustedProxy: X-Forwarded-For names the visitor
+// only when the connection comes from a trusted proxy, read from the right
+// up to the first address that is not a trusted proxy, so entries a visitor
+// wrote further left are never used.
+func TestClientAddressBehindATrustedProxy(t *testing.T) {
+	server := &Server{options: Options{TrustedProxies: []netip.Prefix{netip.MustParsePrefix("172.18.0.5/32"), netip.MustParsePrefix("10.0.0.0/24")}}}
+	cases := []struct {
+		name      string
+		remote    string
+		forwarded []string
+		want      string
+	}{
+		{"direct visitor naming someone else", "198.51.100.4:50000", []string{"203.0.113.7"}, "198.51.100.4"},
+		{"proxy without the header", "172.18.0.5:41000", nil, "172.18.0.5"},
+		{"proxy forwarding a visitor", "172.18.0.5:41000", []string{"203.0.113.7"}, "203.0.113.7"},
+		{"visitor's own entries ignored", "172.18.0.5:41000", []string{"192.0.2.1, 10.0.0.9, 203.0.113.7"}, "203.0.113.7"},
+		{"chain of trusted proxies", "172.18.0.5:41000", []string{"203.0.113.7, 10.0.0.2"}, "203.0.113.7"},
+		{"header over two lines", "172.18.0.5:41000", []string{"203.0.113.7", "10.0.0.2"}, "203.0.113.7"},
+		{"entry with a port", "172.18.0.5:41000", []string{"203.0.113.7:4711"}, "203.0.113.7"},
+		{"entry that is not an address", "172.18.0.5:41000", []string{"unknown"}, "172.18.0.5"},
+		{"IPv4-mapped proxy address", "[::ffff:172.18.0.5]:41000", []string{"203.0.113.7"}, "203.0.113.7"},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			request := httptest.NewRequest(http.MethodPost, "/login", nil)
+			request.RemoteAddr = testCase.remote
+			for _, value := range testCase.forwarded {
+				request.Header.Add(forwardedFor, value)
+			}
+			if got := server.clientAddress(request); got != testCase.want {
+				t.Fatalf("clientAddress = %q, want %q", got, testCase.want)
+			}
+		})
+	}
 }
 
 // TestPlainHTTPOnTheLAN: over plain HTTP, the usual case on a home network,

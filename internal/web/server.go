@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/netip"
 	"os"
 	"strings"
 	"sync"
@@ -29,6 +30,7 @@ const (
 	secureSessionCookie = "__Host-cw-session"
 	plainSessionCookie  = "cw-session"
 	forwardedProto      = "X-Forwarded-Proto"
+	forwardedFor        = "X-Forwarded-For"
 	httpsScheme         = "https"
 	mdnsSuffix          = ".local"
 	// SetupWindow is how long after start the first account can be created
@@ -64,10 +66,13 @@ type Options struct {
 	Version      string
 	Listen       string
 	AllowedHosts []string
-	SetupToken   string
-	Connect      Connector
-	Logger       *slog.Logger
-	Now          func() time.Time
+	// TrustedProxies are reverse proxies whose X-Forwarded-For names the
+	// visitor; nothing is trusted by default.
+	TrustedProxies []netip.Prefix
+	SetupToken     string
+	Connect        Connector
+	Logger         *slog.Logger
+	Now            func() time.Time
 }
 
 type Server struct {

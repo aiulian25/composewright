@@ -259,6 +259,19 @@ func TestKeysLifecycleAndSecrets(t *testing.T) {
 	}
 }
 
+// TestTrustedProxyValues: --trusted-proxy takes a range, or one address
+// standing for itself, and serve refuses anything else before it starts.
+func TestTrustedProxyValues(t *testing.T) {
+	prefixes, err := proxyPrefixes([]string{"172.18.0.5", "10.0.0.0/24"})
+	if err != nil || len(prefixes) != 2 || prefixes[0].String() != "172.18.0.5/32" || prefixes[1].String() != "10.0.0.0/24" {
+		t.Fatalf("prefixes %v, error %v", prefixes, err)
+	}
+	result := run(t, isolate(t), "serve", "--trusted-proxy", "proxy.home.arpa")
+	if result.code == 0 || !strings.Contains(result.stderr, `--trusted-proxy "proxy.home.arpa"`) {
+		t.Fatalf("serve took a host name as a trusted proxy: code %d, stderr %q", result.code, result.stderr)
+	}
+}
+
 func TestListWithoutProjects(t *testing.T) {
 	environment := isolate(t)
 	if result := run(t, environment, "list"); result.code == exitOK {
