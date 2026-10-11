@@ -1,13 +1,13 @@
 name: release
 
-# A version tag first runs CI's checks on the tagged commit: lint, tests,
-# build, known vulnerabilities and the image smoke test. Only then does it
-# build the image for amd64 and arm64 with buildx, push it to GHCR with its
-# SBOM and provenance, sign it with cosign (keyless), and create the GitHub
-# release that `composewright version --check` reads.
+# Releases are published from a local build that was scanned before it was
+# pushed, so a version tag publishes nothing here. Started by hand on a tag,
+# this runs CI's checks, builds the image for amd64 and arm64 with buildx,
+# pushes it to GHCR with its SBOM and provenance, signs it with cosign
+# (keyless) and creates the GitHub release; it refuses a version GHCR has
+# already, since a published version is never overwritten.
 on:
-  push:
-    tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -53,6 +53,13 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Refuse a version that is published already
+        run: |
+          image="ghcr.io/${{ github.repository }}:${{ steps.meta.outputs.version }}"
+          if docker buildx imagetools inspect "$image" >/dev/null 2>&1; then
+            echo "$image exists already; a published version is never overwritten" >&2
+            exit 1
+          fi
       - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
       - id: build
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
