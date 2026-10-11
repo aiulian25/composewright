@@ -178,6 +178,20 @@ func TestModelEndpointsOverPlainHTTP(t *testing.T) {
 	}
 }
 
+// TestSandboxTierRunscIsRefused: runsc would read as gVisor isolation that
+// nothing applies, so it is refused with a hint; proxy stays a label.
+func TestSandboxTierRunscIsRefused(t *testing.T) {
+	config := Default()
+	config.Docker.SandboxTier = "runsc"
+	if err := config.Validate(); err == nil || !strings.Contains(err.Error(), "runsc is not implemented yet") {
+		t.Fatalf("runsc: %v", err)
+	}
+	config.Docker.SandboxTier = SandboxTierProxy
+	if err := config.Validate(); err != nil {
+		t.Fatalf("proxy: %v", err)
+	}
+}
+
 func TestSetInFileKeepsCommentsAndValidates(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "config.yaml")
 	if err := SetInFile(path, "ui.theme", "light"); err != nil {

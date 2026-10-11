@@ -21,7 +21,9 @@ const (
 	SandboxTierPolicy   = "policy"
 	SandboxTierRootless = "rootless"
 	SandboxTierProxy    = "proxy"
-	SandboxTierRunsc    = "runsc"
+	// sandboxTierRunsc is refused with a hint: it reads as gVisor isolation,
+	// but no runtime applies it yet.
+	sandboxTierRunsc = "runsc"
 
 	ProviderAnthropic        = "anthropic"
 	ProviderOpenAICompatible = "openai_compatible"
@@ -87,7 +89,7 @@ var Presets = []Preset{
 }
 
 var (
-	sandboxTiers   = []string{SandboxTierPolicy, SandboxTierRootless, SandboxTierProxy, SandboxTierRunsc}
+	sandboxTiers   = []string{SandboxTierPolicy, SandboxTierRootless, SandboxTierProxy}
 	providers      = []string{ProviderAnthropic, ProviderOpenAICompatible, ProviderOllama, ProviderNone}
 	modelProviders = []string{ProviderAnthropic, ProviderOpenAICompatible, ProviderOllama}
 	engines        = []string{EngineRules, EngineAssisted, EngineModel}

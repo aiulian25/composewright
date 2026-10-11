@@ -31,7 +31,7 @@ var (
 
 func (config Config) Validate() error {
 	return errors.Join(
-		oneOf("docker.sandbox_tier", config.Docker.SandboxTier, sandboxTiers),
+		sandboxTierProblem(config.Docker.SandboxTier),
 		config.Docker.Validate.validate(),
 		config.LLM.validate(config.Network.AllowPrivateTargets),
 		validateRegistries(config.Registries.Allow),
@@ -42,6 +42,16 @@ func (config Config) Validate() error {
 		oneOf("ui.theme", config.UI.Theme, themes),
 		config.Profile.Validate(),
 	)
+}
+
+// sandboxTierProblem accepts only the tiers composewright can stand behind;
+// runsc gets a hint, since nothing would run under gVisor.
+func sandboxTierProblem(tier string) error {
+	err := oneOf("docker.sandbox_tier", tier, sandboxTiers)
+	if err == nil || tier != sandboxTierRunsc {
+		return err
+	}
+	return fmt.Errorf("%w (runsc is not implemented yet)", err)
 }
 
 func (validate Validate) validate() error {

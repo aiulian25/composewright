@@ -7,7 +7,7 @@ master_key_file: ""          # empty: <data_dir>/keys/master.key (COMPOSEWRIGHT_
 docker:
   host: ""                   # empty: DOCKER_HOST, then the active docker context
   cli_path: ""               # empty: `docker` found on PATH
-  sandbox_tier: policy       # policy | rootless | proxy | runsc (see `composewright doctor`)
+  sandbox_tier: policy       # policy | rootless | proxy (see `composewright doctor`)
   validate:
     timeout: 5m0s
     memory_limit: 2g         # upper bound per sandboxed service

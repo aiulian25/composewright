@@ -3,6 +3,7 @@
 package doctor
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"slices"
@@ -17,6 +18,7 @@ const (
 	StatusOK   = "ok"
 	StatusWarn = "warn"
 	StatusFail = "fail"
+	tcpPrefix  = "tcp://"
 )
 
 type Check struct {
@@ -46,7 +48,7 @@ func Run(ctx context.Context, inputs Inputs) []Check {
 			Fix: "start Docker, or point docker.host at a reachable daemon (DOCKER_HOST)"})
 	}
 	checks = append(checks, Check{Name: "docker daemon", Status: StatusOK, Detail: fmt.Sprintf("reachable, cgroup v%s (%s driver)", environment.CgroupVersion, environment.CgroupDriver)})
-	checks = append(checks, tierCheck(environment), limitsCheck(environment))
+	checks = append(checks, tierCheck(environment, sandbox.DockerHost(inputs.Loaded.Config.Docker.Host)), limitsCheck(environment))
 	return append(checks, networkChecks(ctx, inputs)...)
 }
 
@@ -123,7 +125,14 @@ func composeCheck(ctx context.Context, runner *sandbox.Sandbox) Check {
 	return Check{Name: "docker compose", Status: StatusOK, Detail: "version " + version}
 }
 
-func tierCheck(environment sandbox.Environment) Check {
+// tierCheck reports how contained the daemon is. The proxy tier is only a
+// label, so it is checked against where Docker is really reached.
+func tierCheck(environment sandbox.Environment, dockerHost string) Check {
+	if environment.Tier == config.SandboxTierProxy && !strings.HasPrefix(dockerHost, tcpPrefix) {
+		return Check{Name: "sandbox tier", Status: StatusWarn,
+			Detail: fmt.Sprintf("tier proxy, but Docker is reached at %s, not through a socket proxy", cmp.Or(dockerHost, "the default socket")),
+			Fix:    "point docker.host or DOCKER_HOST at the socket proxy, such as tcp://socket-proxy:2375"}
+	}
 	if environment.Rootless {
 		return Check{Name: "sandbox tier", Status: StatusOK, Detail: "rootless daemon: containers run as an unprivileged user (tier " + environment.Tier + ")"}
 	}

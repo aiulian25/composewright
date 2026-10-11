@@ -1,6 +1,17 @@
 package sandbox
 
-import "github.com/aiulian25/composewright/internal/config"
+import (
+	"cmp"
+	"os"
+
+	"github.com/aiulian25/composewright/internal/config"
+)
+
+// DockerHost is where the docker CLI connects: docker.host, else
+// DOCKER_HOST; empty leaves it to the docker context.
+func DockerHost(configured string) string {
+	return cmp.Or(configured, os.Getenv(dockerHostVariable))
+}
 
 // FromConfig builds the sandbox the configuration describes: its docker CLI,
 // daemon, limits, timeout and tier. Runs live under projectsDir.
