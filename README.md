@@ -25,7 +25,7 @@ docker run -d --name composewright --restart unless-stopped \
   ghcr.io/aiulian25/composewright:0.1.0
 ```
 
-Open **http://127.0.0.1:8484**, set an admin password, and choose a model:
+Open **http://127.0.0.1:8484**, enter the setup key from the container's log (`docker logs composewright`, the line starting `setup key:`), set an admin password, and choose a model:
 
 - **Local (recommended):** Ollama at `http://127.0.0.1:11434` with a coding model such as `qwen2.5-coder:14b`. Nothing leaves your machine.
 - **Cloud:** paste an Anthropic or OpenAI-compatible API key. The key is stored encrypted; README content is sent to that provider, your secrets never are.

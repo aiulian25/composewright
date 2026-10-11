@@ -1,14 +1,17 @@
 {{define "content"}}
 <section class="auth-card" aria-labelledby="setup-title">
   <h1 id="setup-title">Create the administrator</h1>
-  <p class="auth-intro">The password is hashed with Argon2id and never leaves this machine. Use at least {{.Data.Minimum}} characters; a few unrelated words are easy to remember and hard to guess.</p>
+  <p class="auth-intro">First show that you run this server with the setup key composewright printed when it started. The password is hashed with Argon2id and never leaves this machine. Use at least {{.Data.Minimum}} characters; a few unrelated words are easy to remember and hard to guess.</p>
   <p class="muted small" data-insecure-context hidden>This connection is plain HTTP, so your password crosses the network unencrypted. That is fine on a network you trust; put HTTPS in front before exposing composewright further.</p>
-  {{if not .Data.Closed}}
   <form class="auth-form" method="post" action="/setup">
-    {{if .Data.Token}}<input type="hidden" name="token" value="{{.Data.Token}}">{{end}}
+    <div class="auth-field">
+      <label for="token">Setup key</label>
+      <span class="input-icon">{{template "icon-lock"}}<input id="token" name="token" type="text" autocomplete="off" spellcheck="false" required value="{{.Data.Token}}"{{if not .Data.Token}} autofocus{{end}}></span>
+      <p class="muted small">It is on the line that starts with <code>setup key:</code> in composewright's log, for example <code>docker logs composewright</code> on the server.</p>
+    </div>
     <div class="auth-field">
       <label for="username">Username</label>
-      <span class="input-icon">{{template "icon-user"}}<input id="username" name="username" type="text" autocomplete="username" required value="{{.Data.Username}}" autofocus></span>
+      <span class="input-icon">{{template "icon-user"}}<input id="username" name="username" type="text" autocomplete="username" required value="{{.Data.Username}}"{{if .Data.Token}} autofocus{{end}}></span>
     </div>
     <div class="auth-field">
       <label for="password">Password</label>
@@ -20,6 +23,5 @@
     </div>
     <button class="button button-primary button-large" type="submit">Create and sign in{{template "icon-arrow"}}</button>
   </form>
-  {{end}}
 </section>
 {{end}}

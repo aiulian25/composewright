@@ -42,6 +42,13 @@ All notable changes to this project are documented here. The format follows
   are removed afterwards: the sandbox and its volumes are, and the images
   stay for the real deployment.
 
+### Security
+
+- Creating the first account needs the setup key composewright prints in its
+  log at every start until an administrator exists. Reaching the setup page
+  in the first 15 minutes is no longer enough, which left an install behind a
+  public domain open to anyone during that time.
+
 ## [0.1.0] - 2026-10-11
 
 The first public release.

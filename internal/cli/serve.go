@@ -37,16 +37,15 @@ func (application *app) serveCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "serve",
 		Short: "Run the web UI (on 127.0.0.1:8484 by default)",
-		Long: fmt.Sprintf(`Serve the web UI: a guided flow from a repository to a validated compose.yaml
+		Long: `Serve the web UI: a guided flow from a repository to a validated compose.yaml
 and .env, the projects, and the settings. It listens on 127.0.0.1 only unless
 you say otherwise, always asks for a login, and contacts nothing beyond what
 the configuration allows.
 
-On first start no administrator exists: open the UI within %d minutes and
-create the account there. Later, restart serve, or use the setup link it
-prints, which only someone who can read its output has. Creating the account
-prints a warning with the address it came from, so a stranger's claim shows
-up where the link does. With --init it first creates the data directory,
+On first start no administrator exists: serve prints a setup key, and the
+account is created at /setup with it, so only someone who can read its
+output can claim it, whatever address the page is reached by. Creating the
+account prints a warning with the address it came from. With --init it first creates the data directory,
 master key and config that are missing and keeps those that exist, as the
 container image does on every start.
 
@@ -60,7 +59,7 @@ in front, and the session cookie becomes Secure by itself.
 Behind a reverse proxy, also pass its address with --trusted-proxy, so failed
 sign-ins count against each visitor named in X-Forwarded-For rather than
 against the proxy, which would lock everyone out. Anything at a trusted
-address can name any visitor, so trust the proxy itself, not a whole network.`, int(web.SetupWindow.Minutes())),
+address can name any visitor, so trust the proxy itself, not a whole network.`,
 		Example: "  composewright serve\n  composewright serve --listen 0.0.0.0:8484\n  composewright serve --listen 0.0.0.0:8484 --trusted-proxy 172.18.0.5",
 		Args:    cobra.NoArgs,
 		RunE: func(command *cobra.Command, _ []string) error {
@@ -100,7 +99,7 @@ func (application *app) runPassword(ctx context.Context) error {
 	defer workspace.Close()
 	administrator, err := workspace.Store.Administrator(ctx)
 	if errors.Is(err, store.ErrNotFound) {
-		return errors.New("there is no administrator yet: open the web UI and create one")
+		return errors.New("there is no administrator yet: open the web UI and create one with the setup key serve prints")
 	}
 	if err != nil {
 		return err
@@ -256,8 +255,8 @@ func (application *app) announce(host, port, token string) {
 		fmt.Fprintln(application.stderr, application.colours.warn("note:"), "anyone on this network can open the sign-in page of a UI that controls Docker; put HTTPS in front beyond a network you trust.")
 	}
 	if token != "" {
-		fmt.Fprintf(application.stdout, "no administrator yet: open it within %d minutes to create one; after that, restart, or add /setup?token=%s to the address\n",
-			int(web.SetupWindow.Minutes()), token)
+		fmt.Fprintf(application.stdout, "no administrator yet: create one at /setup with this setup key, or open /setup?token=%s\n", token)
+		fmt.Fprintf(application.stdout, "setup key: %s\n", token)
 	}
 }
 

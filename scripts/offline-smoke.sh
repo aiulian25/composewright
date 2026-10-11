@@ -37,9 +37,10 @@ for _ in $(seq 100); do
 	if curl -s -o /dev/null "$base/login"; then break; fi
 	sleep 0.1
 done
-# Right after start the first account is made from the page, no token.
+# The first account needs the setup key serve printed.
+key="$(sed -n 's/^setup key: //p' "$workdir/serve.out")"
 password="$(head -c 24 /dev/urandom | base64)"
-curl -sS --fail -o /dev/null -D "$workdir/headers" --data-urlencode "username=admin" \
+curl -sS --fail -o /dev/null -D "$workdir/headers" --data-urlencode "token=$key" --data-urlencode "username=admin" \
 	--data-urlencode "password=$password" --data-urlencode "confirm=$password" "$base/setup"
 cookie="$(sed -n 's/^[Ss]et-[Cc]ookie: \(cw-session=[^;]*\).*/\1/p' "$workdir/headers")"
 if [ -z "$cookie" ]; then

@@ -18,6 +18,7 @@ import (
 
 const (
 	wrongCredential       = "Wrong username or password."
+	wrongSetupKey         = "That is not the setup key composewright printed when it started. Copy it from the line that starts with \"setup key:\" in its log, for example with docker logs composewright."
 	tooManyPasswordChecks = "Too many passwords are being checked at once. Try again in a moment."
 	firstPage             = "/"
 )
@@ -29,7 +30,6 @@ type signInView struct {
 	Next     string
 	Token    string
 	Minimum  int
-	Closed   bool
 }
 
 func (server *Server) hasUsers(ctx context.Context) (bool, error) {
@@ -48,27 +48,9 @@ func (server *Server) setupPage(writer http.ResponseWriter, request *http.Reques
 	if exists {
 		return redirect(writer, request, "/login")
 	}
-	token := request.URL.Query().Get("token")
 	page := server.page(request, nil, "Set up")
-	page.Data = signInView{Token: token, Minimum: auth.MinimumPasswordLength}
-	if !server.setupOpen(token) {
-		page.Error = setupClosed()
-		page.Data = signInView{Closed: true, Minimum: auth.MinimumPasswordLength}
-		return server.render(writer, http.StatusForbidden, "setup", page)
-	}
+	page.Data = signInView{Token: request.URL.Query().Get("token"), Minimum: auth.MinimumPasswordLength}
 	return server.render(writer, http.StatusOK, "setup", page)
-}
-
-// setupOpen lets the first account be made in the setup window, or later
-// with the token from the log; an existing administrator closes it.
-func (server *Server) setupOpen(token string) bool {
-	early := server.options.Now().Sub(server.started) < SetupWindow
-	return early || server.validSetupToken(token)
-}
-
-func setupClosed() string {
-	return fmt.Sprintf("The first account can be created in the first %d minutes after composewright starts, so nobody else on the network can claim it later. Restart composewright and open this page again.",
-		int(SetupWindow.Minutes()))
 }
 
 func (server *Server) setup(writer http.ResponseWriter, request *http.Request, _ *visit) error {
@@ -81,13 +63,15 @@ func (server *Server) setup(writer http.ResponseWriter, request *http.Request, _
 	if exists {
 		return errAdministratorExists
 	}
-	if !server.setupOpen(token) {
-		return statusError{status: http.StatusForbidden, message: setupClosed()}
-	}
 	username := strings.TrimSpace(request.PostFormValue("username"))
 	password := request.PostFormValue("password")
 	page := server.page(request, nil, "Set up")
 	page.Data = signInView{Username: username, Token: token, Minimum: auth.MinimumPasswordLength}
+	if !server.validSetupToken(token) {
+		page.Data = signInView{Username: username, Minimum: auth.MinimumPasswordLength}
+		page.Error = wrongSetupKey
+		return server.render(writer, http.StatusForbidden, "setup", page)
+	}
 	problem := passwordProblem(password, request.PostFormValue("confirm"))
 	if username == "" {
 		problem = "Choose a username."

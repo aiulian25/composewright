@@ -247,12 +247,17 @@ func TestSetupSignInAndOut(t *testing.T) {
 	if strings.Contains(page, `value="admin"`) {
 		t.Fatal("the setup page fills in a username")
 	}
-	harness.clock.advance(SetupWindow)
-	response, page = harness.get("/setup")
-	status(t, response, http.StatusForbidden, page)
-	late := url.Values{"username": {"intruder"}, "password": {testPassword}, "confirm": {testPassword}}
-	response, page = harness.do(http.MethodPost, "/setup", late, nil)
-	status(t, response, http.StatusForbidden, page)
+	if !strings.Contains(page, `name="token"`) {
+		t.Fatal("the setup page does not ask for the setup key")
+	}
+	for _, key := range []string{"", "not-the-setup-key"} {
+		attempt := url.Values{"token": {key}, "username": {"intruder"}, "password": {testPassword}, "confirm": {testPassword}}
+		response, page = harness.do(http.MethodPost, "/setup", attempt, nil)
+		status(t, response, http.StatusForbidden, page)
+		if strings.Contains(page, key+`"`) && key != "" {
+			t.Fatal("a wrong setup key is echoed back")
+		}
+	}
 	response, page = harness.get("/new")
 	status(t, response, http.StatusSeeOther, page)
 	if location := response.Header.Get("Location"); location != "/login?next=%2Fnew" {
@@ -260,6 +265,9 @@ func TestSetupSignInAndOut(t *testing.T) {
 	}
 	response, page = harness.get("/setup?token=setup-token")
 	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, `value="setup-token"`) {
+		t.Fatal("the setup link does not fill in its key")
+	}
 	weak := url.Values{"token": {"setup-token"}, "username": {"admin"}, "password": {"short"}, "confirm": {"short"}}
 	response, page = harness.do(http.MethodPost, "/setup", weak, nil)
 	status(t, response, http.StatusBadRequest, page)
@@ -466,11 +474,11 @@ func TestRunsOfOneProjectStayApart(t *testing.T) {
 }
 
 // TestPlainHTTPOnTheLAN: over plain HTTP, the usual case on a home network,
-// the first account is made from the page without a token, the session
+// the first account is made from the page with the setup key, the session
 // cookie works without Secure, and an address typed as an IP is accepted.
 func TestPlainHTTPOnTheLAN(t *testing.T) {
 	harness := newPlainHarness(t)
-	form := url.Values{"username": {"admin"}, "password": {testPassword}, "confirm": {testPassword}}
+	form := url.Values{"token": {"setup-token"}, "username": {"admin"}, "password": {testPassword}, "confirm": {testPassword}}
 	response, page := harness.do(http.MethodPost, "/setup", form, nil)
 	status(t, response, http.StatusSeeOther, page)
 	cookies := response.Cookies()

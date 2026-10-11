@@ -29,21 +29,17 @@ const (
 	forwardedProto      = "X-Forwarded-Proto"
 	forwardedFor        = "X-Forwarded-For"
 	httpsScheme         = "https"
-	// SetupWindow is how long after start the first account can be created
-	// by opening the page: enough to set it up, too short for a stranger to
-	// find it later. A restart opens it again.
-	SetupWindow     = 15 * time.Minute
-	sessionIdle     = 2 * time.Hour
-	touchEvery      = time.Minute
-	formLimit       = 1 << 20
-	uploadLimit     = 50 << 20
-	uploadMemory    = 8 << 20
-	shutdownGrace   = 2 * time.Minute
-	staticMaxAge    = "public, max-age=86400"
-	pageCache       = "no-store"
-	csrfField       = "csrf"
-	csrfHeader      = "X-CSRF-Token"
-	contentSecurity = "default-src 'self'; connect-src 'self'; img-src 'self' data:; font-src 'self'; style-src 'self'; script-src 'self'; " +
+	sessionIdle         = 2 * time.Hour
+	touchEvery          = time.Minute
+	formLimit           = 1 << 20
+	uploadLimit         = 50 << 20
+	uploadMemory        = 8 << 20
+	shutdownGrace       = 2 * time.Minute
+	staticMaxAge        = "public, max-age=86400"
+	pageCache           = "no-store"
+	csrfField           = "csrf"
+	csrfHeader          = "X-CSRF-Token"
+	contentSecurity     = "default-src 'self'; connect-src 'self'; img-src 'self' data:; font-src 'self'; style-src 'self'; script-src 'self'; " +
 		"form-action 'self'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'"
 	permissionsPolicy = "camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), hid=(), midi=(), display-capture=()"
 	// maxConcurrentHashes caps Argon2id work: each hash holds 19 MiB while
@@ -81,8 +77,6 @@ type Server struct {
 	dummy    string
 	status   *statusCache
 
-	started time.Time
-
 	mutex      sync.RWMutex
 	loaded     *config.Loaded
 	setupToken string
@@ -115,7 +109,7 @@ func New(options Options) (*Server, error) {
 	}
 	server := &Server{options: options, assets: assets, pages: pages, mux: http.NewServeMux(), jobs: newJobs(options.Now, options.Logger), throttle: auth.NewThrottle(),
 		dummy: dummy, loaded: options.Loaded, setupToken: options.SetupToken,
-		started: options.Now(), hashing: make(chan struct{}, maxConcurrentHashes)}
+		hashing: make(chan struct{}, maxConcurrentHashes)}
 	server.status = newStatusCache(server)
 	server.routes()
 	server.sweepUploads()
