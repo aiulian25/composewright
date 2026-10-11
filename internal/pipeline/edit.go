@@ -367,9 +367,10 @@ func errorLine(err error) int {
 
 // EditCompose stores compose.yaml as a person wrote it on the Review page,
 // as a new version. The plan stays as it was. The file must load with
-// compose-go and is checked by the plan's gate and by the YAML gate, the
-// same check every rendered file gets, so an edit can add no privilege,
-// host path or network the gate would refuse. The test runs this file and
+// compose-go, have no tabs and use only variables the stored .env defines,
+// as on the Files page, and is checked by the plan's gate and by the YAML
+// gate, the same check every rendered file gets, so an edit can add no
+// privilege, host path or network the gate would refuse. The test runs this file and
 // it is what is saved; changing the Review's options afterwards renders a
 // new one from the plan, and this version stays in the history.
 func EditCompose(ctx context.Context, dependencies Dependencies, name string, compose []byte) (*Result, error) {
@@ -384,6 +385,10 @@ func EditCompose(ctx context.Context, dependencies Dependencies, name string, co
 	project, err := composefile.Load(ctx, composeFileName, compose, nil, false)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrComposeInvalid, err)
+	}
+	problems := append(tabProblems(string(compose)), variableProblems(string(compose), string(result.Files.Env))...)
+	if index := slices.IndexFunc(problems, func(problem EditProblem) bool { return problem.Severity == SeverityError }); index >= 0 {
+		return nil, fmt.Errorf("%w: line %d: %s", ErrComposeInvalid, problems[index].Line, problems[index].Message)
 	}
 	options := stored.Options
 	options.Edited = true

@@ -302,6 +302,36 @@ func TestSaveEdit(t *testing.T) {
 	}
 }
 
+// TestEditComposeChecksLikeTheFilesPage: the Review page's editor refuses
+// what the Files page's editor refuses, so one file is never saved on one
+// page and refused on the other: a variable the .env does not define, and a
+// tab, which YAML takes inside quotes but the editors do not.
+func TestEditComposeChecksLikeTheFilesPage(t *testing.T) {
+	dependencies := testDependencies(t, &scriptedDocker{})
+	first := generated(t, dependencies)
+	ctx := context.Background()
+	stored, err := Load(ctx, dependencies.Workspace, "miniflux")
+	if err != nil {
+		t.Fatal(err)
+	}
+	env, err := stored.EnvFile(Revealed)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, added := range []string{"hostname: ${UNDEFINED}", "hostname: \"a\tb\""} {
+		edited := strings.Replace(string(first.Files.Compose), "restart: unless-stopped", "restart: unless-stopped\n    "+added, 1)
+		if _, err := EditCompose(ctx, dependencies, "miniflux", []byte(edited)); !errors.Is(err, ErrComposeInvalid) {
+			t.Errorf("the Review page saved %q: %v", added, err)
+		}
+		if _, _, err := SaveEdit(ctx, dependencies, "miniflux", Edit{Compose: []byte(edited), Env: string(env)}); !errors.Is(err, ErrEditRefused) {
+			t.Errorf("the Files page saved %q: %v", added, err)
+		}
+	}
+	if latest, err := Load(ctx, dependencies.Workspace, "miniflux"); err != nil || latest.Generation.ID != stored.Generation.ID {
+		t.Fatalf("a refused edit became a version: %v", err)
+	}
+}
+
 // TestEditCompose: a person's compose.yaml becomes the version the test
 // runs; an edit that adds a privilege is blocked by the gate, YAML Compose
 // cannot load is refused, and a Review change renders from the plan again.
