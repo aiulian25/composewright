@@ -1,0 +1,11 @@
+# Keeps the SHA-pinned actions current: one pull request a month with every
+# update, each pin keeping its version comment.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]
