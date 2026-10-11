@@ -2,13 +2,13 @@ package web
 
 import (
 	"context"
-	"net/url"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
 
 	"github.com/aiulian25/composewright/internal/config"
+	"github.com/aiulian25/composewright/internal/netguard"
 	"github.com/aiulian25/composewright/internal/store"
 )
 
@@ -138,22 +138,21 @@ func (server *Server) statusBar(ctx context.Context) StatusBar {
 		sandbox = "Sandbox: " + project + " running"
 	}
 	return StatusBar{Docker: docker.Text, DockerTone: docker.Tone, Sandbox: sandbox, Engine: "Engine: " + engineLabels[configuration.LLM.Engine],
-		Egress: "Egress: " + strings.Join(egressHosts(configuration), hostsJoiner), DataDir: homeRelative(server.paths().DataDir),
+		Egress: "Egress: " + strings.Join(egressHosts(configuration, server.options.Version), hostsJoiner), DataDir: homeRelative(server.paths().DataDir),
 		Version: server.options.Version}
 }
 
-// egressHosts are the hosts composewright may contact: the code hosts, the
-// registries of trusted images and, when a model is used, its server.
-func egressHosts(configuration config.Config) []string {
-	hosts := slices.Clone(configuration.SCM.AllowHosts)
-	for _, pattern := range configuration.Registries.Allow {
-		registry, _, _ := strings.Cut(pattern, "/")
-		hosts = append(hosts, registry)
+// egressHosts are the hosts the guard lets a web run contact: the code
+// hosts, every host behind a trusted registry and, when a model is set up,
+// its server, even if the default engine is rules only, since a run may pick
+// a model. The update check's host is the CLI's alone.
+func egressHosts(configuration config.Config, version string) []string {
+	policy, err := netguard.PolicyFromConfig(configuration, nil, version)
+	if err != nil {
+		// No run can build its guard either, so none contacts anything.
+		return nil
 	}
-	usesModel := configuration.LLM.Engine != config.EngineRules && configuration.LLM.Provider != config.ProviderNone
-	if parsed, err := url.Parse(configuration.LLM.BaseURL); err == nil && usesModel {
-		hosts = append(hosts, parsed.Host)
-	}
+	hosts := slices.Concat(policy.Hosts[netguard.SCM], policy.Hosts[netguard.Registry], policy.Hosts[netguard.LLM])
 	slices.Sort(hosts)
 	return slices.Compact(hosts)
 }

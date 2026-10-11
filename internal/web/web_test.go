@@ -870,6 +870,29 @@ func TestDockerCheckRunsOutsideTheLock(t *testing.T) {
 	}
 }
 
+// TestEgressIsWhatTheGuardAllows: the status bar names the hosts the guard
+// allows, every one behind a trusted registry rather than its pattern, and a
+// model's server whenever one is set up, even with rules only by default.
+func TestEgressIsWhatTheGuardAllows(t *testing.T) {
+	harness := newHarness(t)
+	harness.signUp()
+	response, page := harness.get("/projects")
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, "registry-1.docker.io") {
+		t.Fatal("the status bar does not name the registry hosts the guard allows")
+	}
+	configuration := config.Default()
+	configuration.LLM.Engine, configuration.LLM.BaseURL = config.EngineRules, "http://192.168.1.123:11434"
+	hosts := egressHosts(configuration, "test")
+	if !slices.Contains(hosts, "192.168.1.123") || slices.Contains(hosts, "docker.io") {
+		t.Fatalf("egress %v: no model server, or a registry pattern the guard never allows", hosts)
+	}
+	configuration.LLM.Provider = config.ProviderNone
+	if slices.Contains(egressHosts(configuration, "test"), "192.168.1.123") {
+		t.Fatal("the status bar names a model server with no model set up")
+	}
+}
+
 // TestRunSteps follows the sandbox's verdict rules: a crash fails its
 // service and skips the log scan; a healthy service passes.
 func TestRunSteps(t *testing.T) {
