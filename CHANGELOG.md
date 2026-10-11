@@ -65,7 +65,8 @@ All notable changes to this project are documented here. The format follows
   throttle, which counts each visitor behind a reverse proxy once
   `serve --trusted-proxy` names the proxy. Plain HTTP on a home network
   works, the first account is created from the page within 15 minutes of a
-  start, and `composewright password` sets a new password.
+  start, with a warning in serve's output naming the address it came from,
+  and `composewright password` sets a new password.
 - **Secrets and state.** Secret values and API keys are sealed with
   XChaCha20-Poly1305 in a SQLite database, `keys rotate` re-seals them under
   a new master key, actions are recorded in a hash-chained audit log, and

@@ -45,9 +45,11 @@ the configuration allows.
 
 On first start no administrator exists: open the UI within %d minutes and
 create the account there. Later, restart serve, or use the setup link it
-prints, which only someone who can read its output has. With --init it first
-creates the data directory, master key and config that are missing and keeps
-those that exist, as the container image does on every start.
+prints, which only someone who can read its output has. Creating the account
+prints a warning with the address it came from, so a stranger's claim shows
+up where the link does. With --init it first creates the data directory,
+master key and config that are missing and keeps those that exist, as the
+container image does on every start.
 
 To reach it from other machines, listen on 0.0.0.0 and open
 http://<this machine's address>:8484. Addresses typed as an IP and this

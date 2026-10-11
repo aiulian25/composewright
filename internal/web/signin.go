@@ -114,6 +114,11 @@ func (server *Server) setup(writer http.ResponseWriter, request *http.Request, _
 		return err
 	}
 	server.closeSetup()
+	client := server.clientAddress(request)
+	if err := server.workspace().Store.Audit(ctx, user.Username, store.ActionSetup, "", map[string]any{"client": client}); err != nil {
+		return err
+	}
+	server.options.Logger.Warn("administrator created from the setup page; if that was not you, run composewright password", "username", user.Username, "client", client)
 	return server.startSession(writer, request, user, firstPage)
 }
 

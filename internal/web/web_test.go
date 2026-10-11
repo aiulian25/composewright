@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"log/slog"
 	"mime/multipart"
 	"net/http"
 	"net/http/cookiejar"
@@ -25,6 +26,7 @@ import (
 	"github.com/aiulian25/composewright/internal/config"
 	"github.com/aiulian25/composewright/internal/doctor"
 	"github.com/aiulian25/composewright/internal/pipeline"
+	"github.com/aiulian25/composewright/internal/redact"
 	"github.com/aiulian25/composewright/internal/sandbox"
 	"github.com/aiulian25/composewright/internal/store"
 	"github.com/aiulian25/composewright/internal/workspace"
@@ -382,6 +384,31 @@ func TestClientAddressBehindATrustedProxy(t *testing.T) {
 				t.Fatalf("clientAddress = %q, want %q", got, testCase.want)
 			}
 		})
+	}
+}
+
+// TestSetupIsAuditedAndAnnounced: creating the first account leaves an
+// audit entry with the visitor's address and a warning in serve's output,
+// where the owner reads the setup link, so a stranger's claim is noticed.
+func TestSetupIsAuditedAndAnnounced(t *testing.T) {
+	harness := newHarness(t)
+	var output bytes.Buffer
+	harness.server.options.Logger = slog.New(redact.NewHandler(slog.NewTextHandler(&output, nil)))
+	harness.signUp()
+	entries, err := harness.server.workspace().Store.AuditEntries(context.Background(), "", 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	audited := slices.ContainsFunc(entries, func(entry store.AuditEntry) bool {
+		return entry.Action == store.ActionSetup && entry.Actor == "admin" && entry.Details["client"] == "127.0.0.1"
+	})
+	if !audited {
+		t.Fatalf("no setup entry in the audit log: %+v", entries)
+	}
+	for _, want := range []string{"level=WARN", "administrator created from the setup page", "run composewright password", "username=admin", "client=127.0.0.1"} {
+		if !strings.Contains(output.String(), want) {
+			t.Fatalf("serve's output lacks %q:\n%s", want, output.String())
+		}
 	}
 }
 

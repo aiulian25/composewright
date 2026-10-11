@@ -26,6 +26,7 @@ const (
 	ActionGrantNeed    = "grant_need"
 	ActionRevise       = "revise"
 	ActionEdit         = "edit"
+	ActionSetup        = "setup"
 	ActionLogin        = "login"
 	ActionPassword     = "password"
 	ActionSettings     = "settings"
