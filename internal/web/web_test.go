@@ -6,7 +6,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
+	"io/fs"
 	"log/slog"
 	"mime/multipart"
 	"net/http"
@@ -890,6 +892,33 @@ func TestEgressIsWhatTheGuardAllows(t *testing.T) {
 	configuration.LLM.Provider = config.ProviderNone
 	if slices.Contains(egressHosts(configuration, "test"), "192.168.1.123") {
 		t.Fatal("the status bar names a model server with no model set up")
+	}
+}
+
+// TestStartRemovesLeftUploads: an upload folder a crash left behind, with
+// its .env, is gone once a server starts; anything else there stays.
+func TestStartRemovesLeftUploads(t *testing.T) {
+	harness := newHarness(t)
+	root := filepath.Join(harness.server.paths().DataDir, uploadsDir)
+	stale, other := filepath.Join(root, uploadPrefix+"old"), filepath.Join(root, "other")
+	for _, directory := range []string{stale, other} {
+		if err := os.MkdirAll(directory, uploadDirMode); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.WriteFile(filepath.Join(stale, pastedEnv), []byte("ADMIN_PASSWORD=left-behind\n"), uploadFileMode); err != nil {
+		t.Fatal(err)
+	}
+	restarted, err := New(harness.server.options)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(restarted.Close)
+	if _, err := os.Stat(stale); !errors.Is(err, fs.ErrNotExist) {
+		t.Fatalf("the upload a crash left is still there: %v", err)
+	}
+	if _, err := os.Stat(other); err != nil {
+		t.Fatalf("a folder that is not an upload was removed: %v", err)
 	}
 }
 

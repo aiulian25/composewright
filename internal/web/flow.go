@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"mime/multipart"
 	"net/http"
 	"net/url"
@@ -302,6 +303,21 @@ func saveUpload(directory string, header *multipart.FileHeader) error {
 func (server *Server) removeUploads(directory string) {
 	if err := os.RemoveAll(directory); err != nil {
 		server.options.Logger.Warn("uploaded files were not removed", "directory", directory, "error", err)
+	}
+}
+
+// sweepUploads removes the upload folders a crash left behind, which may
+// hold a .env. No job runs before the server starts, so each one is stale.
+func (server *Server) sweepUploads() {
+	root := filepath.Join(server.paths().DataDir, uploadsDir)
+	entries, err := os.ReadDir(root)
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
+		server.options.Logger.Warn("uploads left by a crash were not looked for", "directory", root, "error", err)
+	}
+	for _, entry := range entries {
+		if strings.HasPrefix(entry.Name(), uploadPrefix) {
+			server.removeUploads(filepath.Join(root, entry.Name()))
+		}
 	}
 }
 

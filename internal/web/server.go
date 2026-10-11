@@ -118,6 +118,7 @@ func New(options Options) (*Server, error) {
 		started: options.Now(), hashing: make(chan struct{}, maxConcurrentHashes)}
 	server.status = newStatusCache(server)
 	server.routes()
+	server.sweepUploads()
 	return server, nil
 }
 
