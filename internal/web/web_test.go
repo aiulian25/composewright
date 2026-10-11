@@ -309,6 +309,45 @@ func TestLocalPathKeepsRedirectsOnThisSite(t *testing.T) {
 	}
 }
 
+// TestPasswordHashingIsCapped: each Argon2id hash holds 19 MiB, so while
+// maxConcurrentHashes are running, setup, a password change and a sign-in
+// are answered at once instead of hashing too; the next free slot serves them.
+func TestPasswordHashingIsCapped(t *testing.T) {
+	harness := newHarness(t)
+	occupy := func() {
+		for range maxConcurrentHashes {
+			harness.server.hashing <- struct{}{}
+		}
+	}
+	vacate := func() {
+		for range maxConcurrentHashes {
+			<-harness.server.hashing
+		}
+	}
+	busy := func(response *http.Response, page string, want int) {
+		t.Helper()
+		status(t, response, want, page)
+		if !strings.Contains(page, tooManyPasswordChecks) {
+			t.Fatal("the busy answer does not say so")
+		}
+	}
+	occupy()
+	setup := url.Values{"token": {"setup-token"}, "username": {"admin"}, "password": {testPassword}, "confirm": {testPassword}}
+	response, page := harness.do(http.MethodPost, "/setup", setup, nil)
+	busy(response, page, http.StatusTooManyRequests)
+	vacate()
+	harness.signUp()
+	occupy()
+	response, page = harness.post("/settings/account", url.Values{"current": {testPassword}, "password": {"another long password"}, "confirm": {"another long password"}})
+	busy(response, page, http.StatusBadRequest)
+	signIn := url.Values{"username": {"admin"}, "password": {testPassword}}
+	response, page = harness.do(http.MethodPost, "/login", signIn, nil)
+	busy(response, page, http.StatusTooManyRequests)
+	vacate()
+	response, page = harness.do(http.MethodPost, "/login", signIn, nil)
+	status(t, response, http.StatusSeeOther, page)
+}
+
 // TestPlainHTTPOnTheLAN: over plain HTTP, the usual case on a home network,
 // the first account is made from the page without a token, the session
 // cookie works without Secure, and an address typed as an IP is accepted.

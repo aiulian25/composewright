@@ -406,6 +406,11 @@ func (reader *numbers) decimal(name, label string, saved float64) float64 {
 }
 
 func (server *Server) changePassword(request *http.Request, current *visit) error {
+	release, free := server.hashSlot()
+	if !free {
+		return errors.New(strings.TrimSuffix(tooManyPasswordChecks, "."))
+	}
+	defer release()
 	matches, err := auth.VerifyPassword(current.user.PasswordHash, request.PostFormValue("current"))
 	if err != nil {
 		return err

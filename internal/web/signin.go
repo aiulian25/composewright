@@ -15,8 +15,9 @@ import (
 )
 
 const (
-	wrongCredential = "Wrong username or password."
-	firstPage       = "/"
+	wrongCredential       = "Wrong username or password."
+	tooManyPasswordChecks = "Too many passwords are being checked at once. Try again in a moment."
+	firstPage             = "/"
 )
 
 type signInView struct {
@@ -91,6 +92,12 @@ func (server *Server) setup(writer http.ResponseWriter, request *http.Request, _
 		page.Error = problem
 		return server.render(writer, http.StatusBadRequest, "setup", page)
 	}
+	release, free := server.hashSlot()
+	if !free {
+		page.Error = tooManyPasswordChecks
+		return server.render(writer, http.StatusTooManyRequests, "setup", page)
+	}
+	defer release()
 	hash, err := auth.HashPassword(password)
 	if err != nil {
 		return err
@@ -166,6 +173,12 @@ func (server *Server) login(writer http.ResponseWriter, request *http.Request, _
 	if known {
 		hash = user.PasswordHash
 	}
+	release, free := server.hashSlot()
+	if !free {
+		page.Error = tooManyPasswordChecks
+		return server.render(writer, http.StatusTooManyRequests, "login", page)
+	}
+	defer release()
 	matches, err := auth.VerifyPassword(hash, request.PostFormValue("password"))
 	if err != nil {
 		return err

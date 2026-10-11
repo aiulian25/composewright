@@ -48,6 +48,9 @@ const (
 	contentSecurity = "default-src 'self'; connect-src 'self'; img-src 'self' data:; font-src 'self'; style-src 'self'; script-src 'self'; " +
 		"form-action 'self'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'"
 	permissionsPolicy = "camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), hid=(), midi=(), display-capture=()"
+	// maxConcurrentHashes caps Argon2id work: each hash holds 19 MiB while
+	// it runs, so a request beyond the cap is answered at once instead.
+	maxConcurrentHashes = 4
 )
 
 // Connector builds a run's dependencies; pipeline.Connect in production,
@@ -74,6 +77,7 @@ type Server struct {
 	mux      *http.ServeMux
 	jobs     *jobs
 	throttle *auth.Throttle
+	hashing  chan struct{}
 	hosts    map[string]bool
 	dummy    string
 	status   *statusCache
@@ -106,7 +110,7 @@ func New(options Options) (*Server, error) {
 	}
 	server := &Server{options: options, assets: assets, pages: pages, mux: http.NewServeMux(), jobs: newJobs(options.Now, options.Logger), throttle: auth.NewThrottle(),
 		hosts: allowedHosts(options.Listen, options.AllowedHosts), dummy: dummy, loaded: options.Loaded, setupToken: options.SetupToken,
-		started: options.Now()}
+		started: options.Now(), hashing: make(chan struct{}, maxConcurrentHashes)}
 	server.status = newStatusCache(server)
 	server.routes()
 	return server, nil
@@ -116,6 +120,16 @@ func New(options Options) (*Server, error) {
 // returns.
 func (server *Server) Close() {
 	server.jobs.shutdown(shutdownGrace)
+}
+
+// hashSlot takes one of the few Argon2id slots; false when all are busy.
+func (server *Server) hashSlot() (func(), bool) {
+	select {
+	case server.hashing <- struct{}{}:
+		return func() { <-server.hashing }, true
+	default:
+		return nil, false
+	}
 }
 
 func (server *Server) routes() {
