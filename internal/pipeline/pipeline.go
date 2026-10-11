@@ -158,6 +158,9 @@ func Generate(ctx context.Context, dependencies Dependencies, options Options) (
 		return nil, fmt.Errorf("%w: rendering needs `composewright init` first", workspace.ErrNotInitialised)
 	}
 	observer.step(StepRender, StateRunning, "")
+	if err := sameSource(ctx, dependencies.Workspace.Store, options, result); err != nil {
+		return nil, observer.failed(StepRender, err)
+	}
 	own := rules.OwnSecrets(result.Facts, result.Source)
 	if err := renderAndGate(ctx, dependencies, options, result, input, own); err != nil {
 		return nil, observer.failed(StepRender, err)
@@ -170,6 +173,34 @@ func Generate(ctx context.Context, dependencies Dependencies, options Options) (
 		return result, nil
 	}
 	return result, approveAndValidate(ctx, dependencies, options, result)
+}
+
+// ErrNameTaken means another source owns the project name already.
+var ErrNameTaken = errors.New("project name taken")
+
+// sameSource keeps a second repository from taking over a project, and its
+// stored secrets, only because both derive the same name. A name given on
+// purpose moves the project to the new source, with a notice saying so.
+// Uploads are not compared: each is a new temporary folder.
+func sameSource(ctx context.Context, database *store.Store, options Options, result *Result) error {
+	name := result.Plan.App.Name
+	existing, err := database.FindProject(ctx, name)
+	if errors.Is(err, store.ErrNotFound) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	moved := existing.SourceURL != "" && existing.SourceURL != result.Source.URL
+	if !moved || options.Uploaded {
+		return nil
+	}
+	if options.Name == "" {
+		return fmt.Errorf("%w: %s comes from %s; give this one another name (--name, or Project name on the New page)", ErrNameTaken, name, existing.SourceURL)
+	}
+	result.Notices = append(result.Notices, fmt.Sprintf("%s came from %s and now comes from %s; its stored secrets were kept",
+		name, existing.SourceURL, result.Source.URL))
+	return nil
 }
 
 // plan builds the plan with the chosen engine, verifies the images and runs

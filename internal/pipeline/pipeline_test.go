@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -72,6 +73,36 @@ func (repairer *fakeRepairer) Repair(_ context.Context, plan *ir.IR, _ sandbox.V
 		repairer.mutate(repaired)
 	}
 	return repaired, llm.Call{Provider: "fake", Model: "repairer", PromptHash: "hash"}, nil
+}
+
+// TestAnotherSourceCannotTakeOverAProject: a second repository whose plan
+// derives an existing project's name is refused, so it never inherits that
+// project's stored secrets; the same source still regenerates, and a name
+// given on purpose moves the project to the new source with a notice.
+func TestAnotherSourceCannotTakeOverAProject(t *testing.T) {
+	ctx := context.Background()
+	dependencies := testDependencies(t, &scriptedDocker{})
+	first := generated(t, dependencies)
+	fork := testOptions()
+	fork.RunSandbox, fork.Upstream = false, "https://github.com/someone/v2"
+	if _, err := Generate(ctx, dependencies, fork); !errors.Is(err, ErrNameTaken) {
+		t.Fatalf("another source took over %s: %v", first.Plan.App.Name, err)
+	}
+	again := testOptions()
+	again.RunSandbox = false
+	if _, err := Generate(ctx, dependencies, again); err != nil {
+		t.Fatalf("the same source cannot regenerate: %v", err)
+	}
+	fork.Name = first.Plan.App.Name
+	moved, err := Generate(ctx, dependencies, fork)
+	if err != nil {
+		t.Fatalf("a name given on purpose was refused: %v", err)
+	}
+	if !slices.ContainsFunc(moved.Notices, func(notice string) bool {
+		return strings.Contains(notice, "now comes from https://github.com/someone/v2")
+	}) {
+		t.Fatalf("the move to another source was silent: %v", moved.Notices)
+	}
 }
 
 func testDependencies(t *testing.T, docker *scriptedDocker) Dependencies {
