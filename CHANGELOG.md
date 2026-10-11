@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-11
+
+Fixes from the first install on a server: composewright prepares its own
+data folder, answers every host name, asks for a setup key, and says why
+Docker cannot be used; generated stacks can get the Docker socket when you
+grant it.
+
 ### Added
 
 - A `docker_socket` need. An app whose upstream mounts the Docker socket

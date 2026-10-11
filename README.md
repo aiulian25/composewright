@@ -11,7 +11,7 @@ composewright reads a repository (or a README, or a compose file you already hav
 
 ![The start page: paste a GitHub link, drop files, or paste a compose file and .env](.github/assets/screenshots/home.png)
 
-> Status: 0.1.0. Expect rough edges and breaking changes before 1.0; the [CHANGELOG](CHANGELOG.md) lists what each release changes.
+> Status: 0.1.1. Expect rough edges and breaking changes before 1.0; the [CHANGELOG](CHANGELOG.md) lists what each release changes.
 
 **On this page:** [Install](#install) · [First login](#first-login) · [Your first project](#your-first-project) · [Environment variables](#environment-variables) · [Settings](#settings) · [Reach it from other machines](#reach-it-from-other-machines) · [Update, back up, recover](#update-back-up-recover) · [Troubleshooting](#troubleshooting)
 
@@ -26,7 +26,7 @@ Make a folder for it, for example `~/composewright`, and save this as `compose.y
 ```yaml
 services:
   composewright:
-    image: ghcr.io/aiulian25/composewright:0.1.0    # add @sha256:… from the release notes to pin these exact bytes
+    image: ghcr.io/aiulian25/composewright:0.1.1    # add @sha256:… from the release notes to pin these exact bytes
     container_name: composewright
     restart: unless-stopped
     ports:
@@ -70,7 +70,7 @@ docker run -d --name composewright --restart unless-stopped \
   -v /var/run/docker.sock:/var/run/docker.sock \
   --read-only --tmpfs /tmp --cap-drop ALL --cap-add CHOWN --cap-add SETGID --cap-add SETUID \
   --security-opt no-new-privileges \
-  ghcr.io/aiulian25/composewright:0.1.0
+  ghcr.io/aiulian25/composewright:0.1.1
 ```
 
 On Synology DSM 7.2 or later: **Container Manager → Project → Create**, and paste the compose file above.

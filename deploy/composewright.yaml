@@ -3,7 +3,7 @@
 # then open http://127.0.0.1:8484 and create the administrator.
 services:
   composewright:
-    image: ghcr.io/aiulian25/composewright:0.1.0    # add @sha256:… from the release notes to pin these exact bytes
+    image: ghcr.io/aiulian25/composewright:0.1.1    # add @sha256:… from the release notes to pin these exact bytes
     container_name: composewright
     restart: unless-stopped
     ports:
