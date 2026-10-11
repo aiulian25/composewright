@@ -483,6 +483,9 @@ func TestEvaluateYAML(t *testing.T) {
 		{"journald logging", service("    logging:\n      driver: journald\n"), policy.OK, nil, nil},
 		{"low published port", service("    ports: ['80:80']\n"), policy.Need, nil, nil},
 		{"loopback published port", service("    ports: ['127.0.0.1:8080:80']\n"), policy.OK, nil, nil},
+		{"host port range starting low", service("    ports: ['80-90:8080']\n"), policy.Need, nil, nil},
+		{"long syntax host port range starting low", service("    ports:\n      - {target: 8080, published: '80-90'}\n"), policy.Need, nil, nil},
+		{"loopback host port range from 1024", service("    ports: ['127.0.0.1:1024-1030:8080']\n"), policy.OK, nil, nil},
 		{"image outside allowlist", "services:\n  app:\n    image: evil.example/miner:1\n", policy.Deny, nil, nil},
 	}
 	for _, testCase := range cases {

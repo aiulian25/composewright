@@ -151,12 +151,30 @@ func (check *checker) bindSource(service, field, source string) {
 
 func (check *checker) composePorts(name string, service types.ServiceConfig) {
 	for _, port := range service.Ports {
-		published, err := strconv.Atoi(port.Published)
-		if err != nil || published == 0 || published >= lowPortLimit {
+		lowest, readable := lowestPublished(port.Published)
+		if !readable || lowest == 0 || lowest >= lowPortLimit {
 			continue
 		}
-		check.need("P4", ir.NeedLowPort, name, "services."+name+".ports", "%s publishes host port %d, below %d", name, published, lowPortLimit)
+		check.need("P4", ir.NeedLowPort, name, "services."+name+".ports", "%s publishes host port %s, below %d", name, port.Published, lowPortLimit)
 	}
+}
+
+// lowestPublished is the lowest host port of "8080", or of a range such as
+// "80-90", from which Docker may pick any port.
+func lowestPublished(published string) (int, bool) {
+	start, end, isRange := strings.Cut(published, "-")
+	first, err := strconv.Atoi(start)
+	if err != nil {
+		return 0, false
+	}
+	if !isRange {
+		return first, true
+	}
+	last, err := strconv.Atoi(end)
+	if err != nil {
+		return 0, false
+	}
+	return min(first, last), true
 }
 
 func (check *checker) composeImage(name string, service types.ServiceConfig) {
