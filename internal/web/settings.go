@@ -40,10 +40,6 @@ const (
 )
 
 var (
-	networkKinds     = []string{"proxy", "tunnel", "vpn", "other"}
-	networkProviders = []string{"", "npm", "traefik", "caddy", "pangolin", "cloudflare", "tailscale"}
-	restartChoices   = []string{"unless-stopped", "always", "on-failure", "no"}
-	themeChoices     = []string{config.ThemeDark, config.ThemeLight, config.ThemeSystem}
 	// settingsSections are the Settings pages in order; each page is one
 	// form, saved in one go.
 	settingsSections = []string{sectionProfile, sectionEngine, sectionModels, sectionAppearance, sectionAccount}
@@ -147,14 +143,15 @@ func (server *Server) renderSettings(writer http.ResponseWriter, request *http.R
 		return err
 	}
 	view := settingsView{Page: state.shown, Title: settingsTitles[state.shown], Engines: server.engineOptions(configuration.LLM.Engine), File: file,
-		Config: configuration, MaxNetworks: maxNetworkRows, Models: models, Restarts: restartChoices, Themes: themeChoices,
+		Config: configuration, MaxNetworks: maxNetworkRows, Models: models, Restarts: config.RestartModes(), Themes: config.Themes(),
 		ConfigFile: server.paths().ConfigFile, Private: strings.Join(configuration.Network.AllowPrivateTargets, "\n"),
 		Registries: strings.Join(configuration.Registries.Allow, "\n"), Minimum: auth.MinimumPasswordLength}
+	kinds, providers := config.NetworkKinds(), config.NetworkProviders()
 	for index, network := range configuration.Profile.Networks {
 		view.Networks = append(view.Networks, networkRow{Index: strconv.Itoa(index), Name: network.Name, Kind: network.Kind,
-			Provider: network.Provider, Default: network.Default, Domain: network.Domain, Kinds: networkKinds, Providers: networkProviders})
+			Provider: network.Provider, Default: network.Default, Domain: network.Domain, Kinds: kinds, Providers: providers})
 	}
-	blank := networkRow{Index: strconv.Itoa(len(view.Networks)), Kind: networkKinds[0], Kinds: networkKinds, Providers: networkProviders}
+	blank := networkRow{Index: strconv.Itoa(len(view.Networks)), Kind: kinds[0], Kinds: kinds, Providers: providers}
 	view.Networks = append(view.Networks, blank)
 	view.NewNetwork, view.NewNetwork.Index = blank, newRowIndex
 	if state.shown == sectionProfile {

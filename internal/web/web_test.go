@@ -768,6 +768,11 @@ func TestSettings(t *testing.T) {
 	if !strings.Contains(page, savedNotice) || !strings.Contains(page, `value="newt"`) {
 		t.Fatal("the settings page after a save does not say it was saved or show the networks")
 	}
+	const restartOptions = `<option value="unless-stopped" selected>unless-stopped</option><option value="always">always</option>` +
+		`<option value="on-failure">on-failure</option><option value="no">no</option>`
+	if !strings.Contains(page, restartOptions) {
+		t.Fatal("the restart policy does not offer the modes validation accepts, the usual one first")
+	}
 	if networks := harness.server.config().Profile.Networks; len(networks) != 2 || !networks[0].Default || !networks[1].Default {
 		t.Fatalf("both networks were not saved as defaults: %+v", networks)
 	}

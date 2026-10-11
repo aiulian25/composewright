@@ -1,6 +1,9 @@
 package config
 
-import "time"
+import (
+	"slices"
+	"time"
+)
 
 const (
 	AppName        = "composewright"
@@ -89,13 +92,21 @@ var Presets = []Preset{
 }
 
 var (
-	sandboxTiers   = []string{SandboxTierPolicy, SandboxTierRootless, SandboxTierProxy}
-	providers      = []string{ProviderAnthropic, ProviderOpenAICompatible, ProviderOllama, ProviderNone}
-	modelProviders = []string{ProviderAnthropic, ProviderOpenAICompatible, ProviderOllama}
-	engines        = []string{EngineRules, EngineAssisted, EngineModel}
-	themes         = []string{ThemeDark, ThemeLight, ThemeSystem}
-	storageStyles  = []string{StorageVolumes, StorageBind}
-	networkKinds   = []string{"proxy", "tunnel", "vpn", "other"}
-	networkVendors = []string{"", "npm", "traefik", "caddy", "pangolin", "cloudflare", "tailscale"}
-	restartModes   = []string{"no", "always", "on-failure", "unless-stopped"}
+	sandboxTiers     = []string{SandboxTierPolicy, SandboxTierRootless, SandboxTierProxy}
+	providers        = []string{ProviderAnthropic, ProviderOpenAICompatible, ProviderOllama, ProviderNone}
+	modelProviders   = []string{ProviderAnthropic, ProviderOpenAICompatible, ProviderOllama}
+	engines          = []string{EngineRules, EngineAssisted, EngineModel}
+	themes           = []string{ThemeDark, ThemeLight, ThemeSystem}
+	storageStyles    = []string{StorageVolumes, StorageBind}
+	networkKinds     = []string{"proxy", "tunnel", "vpn", "other"}
+	networkProviders = []string{"", "npm", "traefik", "caddy", "pangolin", "cloudflare", "tailscale"}
+	restartModes     = []string{"unless-stopped", "always", "on-failure", "no"}
 )
+
+// The choices Settings offers are the lists validation accepts, in the order
+// Settings shows them. Each call returns a copy, so no caller can change what
+// validation accepts.
+func NetworkKinds() []string     { return slices.Clone(networkKinds) }
+func NetworkProviders() []string { return slices.Clone(networkProviders) }
+func RestartModes() []string     { return slices.Clone(restartModes) }
+func Themes() []string           { return slices.Clone(themes) }

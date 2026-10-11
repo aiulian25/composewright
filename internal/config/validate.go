@@ -162,7 +162,7 @@ func (profile Profile) Validate() error {
 		}
 		seen[network.Name] = true
 		problems = append(problems, oneOf(field+".kind", network.Kind, networkKinds))
-		problems = append(problems, oneOf(field+".provider", network.Provider, networkVendors))
+		problems = append(problems, oneOf(field+".provider", network.Provider, networkProviders))
 		if network.Domain != "" && !hostnamePattern.MatchString(network.Domain) {
 			problems = append(problems, fmt.Errorf("%s.domain %q is not a domain such as apps.example.com", field, network.Domain))
 		}
