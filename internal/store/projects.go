@@ -46,12 +46,23 @@ const (
 
 // SaveProject creates the project, or updates the source and status of the
 // project with the same name so regenerating keeps history in one place.
+// SaveProject creates the project, or updates the one with its name.
 func (store *Store) SaveProject(ctx context.Context, project Project) (Project, error) {
-	existing, err := store.FindProject(ctx, project.Name)
+	var saved Project
+	err := store.transaction(ctx, func(transaction *sql.Tx) error {
+		var err error
+		saved, err = upsertProject(ctx, transaction, project)
+		return err
+	})
+	return saved, err
+}
+
+func upsertProject(ctx context.Context, transaction *sql.Tx, project Project) (Project, error) {
+	existing, err := findProject(ctx, transaction, project.Name)
 	now := time.Now()
 	if errors.Is(err, ErrNotFound) {
 		project.ID, project.CreatedAt, project.UpdatedAt = newID(), now, now
-		_, err = store.database.ExecContext(ctx, `INSERT INTO projects (`+projectColumns+`) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+		_, err = transaction.ExecContext(ctx, `INSERT INTO projects (`+projectColumns+`) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
 			project.ID, project.Name, project.Slug, project.SourceKind, project.SourceURL, project.SourceRef,
 			project.SourceCommit, project.SourceOwner, project.Status, unix(now), unix(now))
 		return project, err
@@ -60,7 +71,7 @@ func (store *Store) SaveProject(ctx context.Context, project Project) (Project, 
 		return Project{}, err
 	}
 	project.ID, project.Slug, project.CreatedAt, project.UpdatedAt = existing.ID, existing.Slug, existing.CreatedAt, now
-	_, err = store.database.ExecContext(ctx, `UPDATE projects SET source_kind=?, source_url=?, source_ref=?, source_commit=?,
+	_, err = transaction.ExecContext(ctx, `UPDATE projects SET source_kind=?, source_url=?, source_ref=?, source_commit=?,
 		source_owner=?, status=?, updated_at=? WHERE id=?`,
 		project.SourceKind, project.SourceURL, project.SourceRef, project.SourceCommit, project.SourceOwner, project.Status, unix(now), project.ID)
 	return project, err
@@ -73,7 +84,16 @@ func (store *Store) SetProjectStatus(ctx context.Context, projectID, status stri
 
 // FindProject looks a project up by name, slug or full id.
 func (store *Store) FindProject(ctx context.Context, reference string) (Project, error) {
-	row := store.database.QueryRowContext(ctx, `SELECT `+projectColumns+` FROM projects WHERE name=? OR slug=? OR id=?`,
+	return findProject(ctx, store.database, reference)
+}
+
+// rowQuerier is the database, or a transaction a lookup takes part in.
+type rowQuerier interface {
+	QueryRowContext(ctx context.Context, query string, arguments ...any) *sql.Row
+}
+
+func findProject(ctx context.Context, querier rowQuerier, reference string) (Project, error) {
+	row := querier.QueryRowContext(ctx, `SELECT `+projectColumns+` FROM projects WHERE name=? OR slug=? OR id=?`,
 		reference, reference, reference)
 	project, err := scanProject(row)
 	if errors.Is(err, sql.ErrNoRows) {

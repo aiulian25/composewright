@@ -45,25 +45,36 @@ type AuditEntry struct {
 
 // Audit appends an entry whose hash covers the previous entry's hash, so
 // editing or deleting any row breaks every hash after it.
+// Event is one audit entry to write: what was done, and its details.
+type Event struct {
+	Action  string
+	Details map[string]any
+}
+
 func (store *Store) Audit(ctx context.Context, actor, action, projectID string, details map[string]any) error {
+	return store.transaction(ctx, func(transaction *sql.Tx) error {
+		return appendAudit(ctx, transaction, actor, action, projectID, details)
+	})
+}
+
+// appendAudit chains an entry onto the newest one.
+func appendAudit(ctx context.Context, transaction *sql.Tx, actor, action, projectID string, details map[string]any) error {
 	encoded, err := json.Marshal(details)
 	if err != nil {
 		return err
 	}
-	return store.transaction(ctx, func(transaction *sql.Tx) error {
-		var previous string
-		var sequence int64
-		err := transaction.QueryRowContext(ctx, `SELECT seq, hash FROM audit_log ORDER BY seq DESC LIMIT 1`).Scan(&sequence, &previous)
-		if err != nil && !errors.Is(err, sql.ErrNoRows) {
-			return err
-		}
-		sequence++
-		now := time.Now().UTC().Unix()
-		hash := auditHash(sequence, now, actor, action, projectID, string(encoded), previous)
-		_, err = transaction.ExecContext(ctx, `INSERT INTO audit_log (seq, ts, actor, action, project_id, details_json, prev_hash, hash)
-			VALUES (?,?,?,?,?,?,?,?)`, sequence, now, actor, action, projectID, string(encoded), previous, hash)
+	var previous string
+	var sequence int64
+	err = transaction.QueryRowContext(ctx, `SELECT seq, hash FROM audit_log ORDER BY seq DESC LIMIT 1`).Scan(&sequence, &previous)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return err
-	})
+	}
+	sequence++
+	now := time.Now().UTC().Unix()
+	hash := auditHash(sequence, now, actor, action, projectID, string(encoded), previous)
+	_, err = transaction.ExecContext(ctx, `INSERT INTO audit_log (seq, ts, actor, action, project_id, details_json, prev_hash, hash)
+		VALUES (?,?,?,?,?,?,?,?)`, sequence, now, actor, action, projectID, string(encoded), previous, hash)
+	return err
 }
 
 // VerifyAudit recomputes the chain and returns the number of entries.

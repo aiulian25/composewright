@@ -381,46 +381,39 @@ func storedValues(ctx context.Context, database *store.Store, name string) (map[
 	return values, nil
 }
 
-// persist stores the result as a new generation and audits it as action.
+// persist stores the result as a new generation, audited as action, in one
+// transaction with its project, images and .env.
 func persist(ctx context.Context, dependencies Dependencies, options Options, result *Result, iteration int, action string) error {
-	database := dependencies.Workspace.Store
 	status := store.StatusGenerated
 	if result.Report.Blocked() {
 		status = store.StatusBlocked
 	}
 	source := result.Source
-	project, err := database.SaveProject(ctx, store.Project{Name: result.Plan.App.Name, Slug: result.Plan.App.Name, SourceKind: source.Kind,
-		SourceURL: source.URL, SourceRef: source.Ref, SourceCommit: source.Commit, SourceOwner: source.Owner, Status: status})
-	if err != nil {
-		return err
-	}
-	generation, err := database.AddGeneration(ctx, generationRecord(project.ID, options, result, iteration), imageRecords(result.Plan, result.Inspected))
-	if err != nil {
-		return err
-	}
-	if err := database.ReplaceEnvVars(ctx, project.ID, envRecords(result.Plan, result.Values)); err != nil {
-		return err
-	}
-	result.Project, result.Generation = project, generation
-	details := map[string]any{"generation": generation.ID, "engine": result.Engine, "model": result.Call.Model, "source": source.URL, "commit": source.Commit,
-		"status": status, "denied": result.Report.Count(policy.Deny), "needs": result.Report.Count(policy.Need)}
-	if err := database.Audit(ctx, dependencies.Workspace.Actor, action, project.ID, details); err != nil {
-		return err
-	}
-	for _, capability := range options.AllowNeeds {
-		grant := map[string]any{"capability": capability, "generation": generation.ID}
-		if err := database.Audit(ctx, dependencies.Workspace.Actor, store.ActionGrantNeed, project.ID, grant); err != nil {
-			return err
+	project := store.Project{Name: result.Plan.App.Name, Slug: result.Plan.App.Name, SourceKind: source.Kind,
+		SourceURL: source.URL, SourceRef: source.Ref, SourceCommit: source.Commit, SourceOwner: source.Owner, Status: status}
+	events := func(_ store.Project, generation store.Generation) []store.Event {
+		recorded := []store.Event{{Action: action, Details: map[string]any{"generation": generation.ID, "engine": result.Engine,
+			"model": result.Call.Model, "source": source.URL, "commit": source.Commit, "status": status,
+			"denied": result.Report.Count(policy.Deny), "needs": result.Report.Count(policy.Need)}}}
+		for _, capability := range options.AllowNeeds {
+			recorded = append(recorded, store.Event{Action: store.ActionGrantNeed, Details: map[string]any{"capability": capability, "generation": generation.ID}})
 		}
+		return recorded
 	}
+	saved, generation, err := dependencies.Workspace.Store.RecordGeneration(ctx, project, generationRecord(options, result, iteration),
+		imageRecords(result.Plan, result.Inspected), envRecords(result.Plan, result.Values), dependencies.Workspace.Actor, events)
+	if err != nil {
+		return err
+	}
+	result.Project, result.Generation = saved, generation
 	return nil
 }
 
-func generationRecord(projectID string, options Options, result *Result, iteration int) store.Generation {
+func generationRecord(options Options, result *Result, iteration int) store.Generation {
 	plan, _ := json.Marshal(result.Plan)
 	settings, _ := json.Marshal(options)
 	report, _ := json.Marshal(result.Report)
-	return store.Generation{ProjectID: projectID, Iteration: iteration, Engine: result.Engine, Provider: result.Call.Provider,
+	return store.Generation{Iteration: iteration, Engine: result.Engine, Provider: result.Call.Provider,
 		Model: result.Call.Model, PromptHash: result.Call.PromptHash, IRJSON: string(plan),
 		ComposeYAML: string(result.Files.Compose), DeployMD: string(result.Files.Deploy), OptionsJSON: string(settings), PolicyJSON: string(report),
 		FactsJSON: factsJSON(result.Facts)}

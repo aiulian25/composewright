@@ -139,6 +139,47 @@ func TestDeleteProjectWipesSecrets(t *testing.T) {
 	}
 }
 
+// TestRecordGenerationIsAllOrNothing: a generation is stored with its
+// project, images, .env and audit entries, or not at all. Two variables with
+// one key break the .env after the project and generation rows are written,
+// and none of the five tables keeps a row.
+func TestRecordGenerationIsAllOrNothing(t *testing.T) {
+	ctx := context.Background()
+	store, _, _ := openTestStore(t)
+	project := Project{Name: "app", Slug: "app", SourceKind: "github", Status: StatusGenerated}
+	generation := Generation{Engine: "rules", IRJSON: "{}"}
+	images := []Image{{Service: "app", Reference: "docker.io/library/nginx:1"}}
+	events := func(_ Project, generation Generation) []Event {
+		return []Event{{Action: ActionGenerate, Details: map[string]any{"generation": generation.ID}},
+			{Action: ActionGrantNeed, Details: map[string]any{"capability": "low_port", "generation": generation.ID}}}
+	}
+	twice := []EnvVar{{Key: "TOKEN", Value: "first", Secret: true}, {Key: "TOKEN", Value: "second", Secret: true}}
+	if _, _, err := store.RecordGeneration(ctx, project, generation, images, twice, "cli:test", events); err == nil {
+		t.Fatal("a .env with one key twice was stored")
+	}
+	var rows int
+	if err := store.database.QueryRowContext(ctx, `SELECT (SELECT COUNT(*) FROM projects) + (SELECT COUNT(*) FROM generations)
+		+ (SELECT COUNT(*) FROM images) + (SELECT COUNT(*) FROM env_vars) + (SELECT COUNT(*) FROM audit_log)`).Scan(&rows); err != nil {
+		t.Fatal(err)
+	}
+	if rows != 0 {
+		t.Fatalf("%d rows of a failed generation remain", rows)
+	}
+	saved, added, err := store.RecordGeneration(ctx, project, generation, images, twice[:1], "cli:test", events)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if added.ProjectID != saved.ID {
+		t.Fatalf("generation %+v is not tied to project %s", added, saved.ID)
+	}
+	if count, err := store.VerifyAudit(ctx); err != nil || count != 2 {
+		t.Fatalf("%d audit entries (%v), want the generation and the grant", count, err)
+	}
+	if values, err := store.EnvVars(ctx, saved.ID); err != nil || len(values) != 1 || values[0].Value != "first" {
+		t.Fatalf("stored .env: %+v %v", values, err)
+	}
+}
+
 func TestSaveProjectKeepsOneProjectPerName(t *testing.T) {
 	ctx := context.Background()
 	store, _, _ := openTestStore(t)

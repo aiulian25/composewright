@@ -23,16 +23,20 @@ type EnvVar struct {
 // ReplaceEnvVars stores the complete .env of a project in one transaction.
 func (store *Store) ReplaceEnvVars(ctx context.Context, projectID string, variables []EnvVar) error {
 	return store.transaction(ctx, func(transaction *sql.Tx) error {
-		if _, err := transaction.ExecContext(ctx, `DELETE FROM env_vars WHERE project_id=?`, projectID); err != nil {
+		return store.replaceEnvVars(ctx, transaction, projectID, variables)
+	})
+}
+
+func (store *Store) replaceEnvVars(ctx context.Context, transaction *sql.Tx, projectID string, variables []EnvVar) error {
+	if _, err := transaction.ExecContext(ctx, `DELETE FROM env_vars WHERE project_id=?`, projectID); err != nil {
+		return err
+	}
+	for _, variable := range variables {
+		if err := store.insertEnvVar(ctx, transaction, projectID, variable); err != nil {
 			return err
 		}
-		for _, variable := range variables {
-			if err := store.insertEnvVar(ctx, transaction, projectID, variable); err != nil {
-				return err
-			}
-		}
-		return nil
-	})
+	}
+	return nil
 }
 
 func (store *Store) insertEnvVar(ctx context.Context, transaction *sql.Tx, projectID string, variable EnvVar) error {
