@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"syscall"
 )
 
 // Write replaces path with data via a temporary file and a rename.
@@ -22,7 +23,7 @@ func Write(path string, data []byte, mode os.FileMode) error {
 	if err := os.Rename(name, path); err != nil {
 		return errors.Join(err, os.Remove(name))
 	}
-	return nil
+	return syncDirectory(filepath.Dir(path))
 }
 
 // CreateExclusive writes a new file and fails if path already exists.
@@ -31,7 +32,26 @@ func CreateExclusive(path string, data []byte, mode os.FileMode) error {
 	if err != nil {
 		return err
 	}
-	return fill(file, data, mode)
+	// A file cut short, by a full disk for example, would block the next
+	// attempt, which refuses an existing file.
+	if err := fill(file, data, mode); err != nil {
+		return errors.Join(err, os.Remove(path))
+	}
+	return syncDirectory(filepath.Dir(path))
+}
+
+// syncDirectory makes a new or renamed entry in directory survive a crash.
+// Some file systems cannot sync a directory and answer EINVAL; the entry
+// stands there anyway.
+func syncDirectory(directory string) error {
+	handle, err := os.Open(directory)
+	if err != nil {
+		return err
+	}
+	if err := handle.Sync(); err != nil && !errors.Is(err, syscall.EINVAL) {
+		return errors.Join(err, handle.Close())
+	}
+	return handle.Close()
 }
 
 func fill(file *os.File, data []byte, mode os.FileMode) error {
