@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -50,7 +49,8 @@ func conflict(format string, arguments ...any) error {
 }
 
 // ServeHTTP sets the security headers every response carries, refuses
-// unknown hosts and cross-site writes, then routes.
+// cross-site writes, then routes. Every host name is answered: each page
+// needs a login, and the session cookie never goes to another name.
 func (server *Server) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	header := writer.Header()
 	header.Set("Content-Security-Policy", contentSecurity)
@@ -60,26 +60,11 @@ func (server *Server) ServeHTTP(writer http.ResponseWriter, request *http.Reques
 	header.Set("Permissions-Policy", permissionsPolicy)
 	header.Set("Cross-Origin-Opener-Policy", "same-origin")
 	header.Set("Cross-Origin-Resource-Policy", "same-origin")
-	if !server.knownHost(request.Host) {
-		http.Error(writer, "This address is not one composewright answers to; start it with --allow-host for a proxy name.", http.StatusMisdirectedRequest)
-		return
-	}
 	if unsafeMethod(request.Method) && !sameOrigin(request) {
 		http.Error(writer, "Cross-site request refused.", http.StatusForbidden)
 		return
 	}
 	server.mux.ServeHTTP(writer, request)
-}
-
-func (server *Server) knownHost(hostport string) bool {
-	host, _, err := net.SplitHostPort(hostport)
-	if err != nil {
-		host = hostport
-	}
-	host = strings.Trim(strings.ToLower(host), "[]")
-	// An address typed as an IP cannot be DNS rebinding, which needs a name
-	// the attacker controls; names must be known.
-	return net.ParseIP(host) != nil || server.hosts[host]
 }
 
 func unsafeMethod(method string) bool {

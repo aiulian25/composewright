@@ -7,11 +7,8 @@ import (
 	"context"
 	"html/template"
 	"log/slog"
-	"net"
 	"net/http"
 	"net/netip"
-	"os"
-	"strings"
 	"sync"
 	"time"
 
@@ -32,7 +29,6 @@ const (
 	forwardedProto      = "X-Forwarded-Proto"
 	forwardedFor        = "X-Forwarded-For"
 	httpsScheme         = "https"
-	mdnsSuffix          = ".local"
 	// SetupWindow is how long after start the first account can be created
 	// by opening the page: enough to set it up, too short for a stranger to
 	// find it later. A restart opens it again.
@@ -60,12 +56,11 @@ const (
 type Connector func(ctx context.Context, setup pipeline.Setup) (pipeline.Connection, error)
 
 type Options struct {
-	Loaded       *config.Loaded
-	Flags        config.Flags
-	Workspace    *workspace.Workspace
-	Version      string
-	Listen       string
-	AllowedHosts []string
+	Loaded    *config.Loaded
+	Flags     config.Flags
+	Workspace *workspace.Workspace
+	Version   string
+	Listen    string
 	// TrustedProxies are reverse proxies whose X-Forwarded-For names the
 	// visitor; nothing is trusted by default.
 	TrustedProxies []netip.Prefix
@@ -83,7 +78,6 @@ type Server struct {
 	jobs     *jobs
 	throttle *auth.Throttle
 	hashing  chan struct{}
-	hosts    map[string]bool
 	dummy    string
 	status   *statusCache
 
@@ -120,7 +114,7 @@ func New(options Options) (*Server, error) {
 		options.Logger = slog.Default()
 	}
 	server := &Server{options: options, assets: assets, pages: pages, mux: http.NewServeMux(), jobs: newJobs(options.Now, options.Logger), throttle: auth.NewThrottle(),
-		hosts: allowedHosts(options.Listen, options.AllowedHosts), dummy: dummy, loaded: options.Loaded, setupToken: options.SetupToken,
+		dummy: dummy, loaded: options.Loaded, setupToken: options.SetupToken,
 		started: options.Now(), hashing: make(chan struct{}, maxConcurrentHashes)}
 	server.status = newStatusCache(server)
 	server.routes()
@@ -219,23 +213,4 @@ func (server *Server) reload() error {
 
 func (server *Server) workspace() *workspace.Workspace {
 	return server.options.Workspace
-}
-
-// allowedHosts are the names the UI answers to. Anything else is refused,
-// which stops DNS rebinding from turning a web page into a client of this
-// loopback service.
-func allowedHosts(listen string, extra []string) map[string]bool {
-	hosts := map[string]bool{"localhost": true, "127.0.0.1": true, "::1": true}
-	host, _, err := net.SplitHostPort(listen)
-	if err == nil && host != "" && host != "0.0.0.0" && host != "::" {
-		hosts[strings.ToLower(host)] = true
-	}
-	for _, name := range extra {
-		hosts[strings.ToLower(strings.TrimSpace(name))] = true
-	}
-	if name, err := os.Hostname(); err == nil {
-		hosts[strings.ToLower(name)] = true
-		hosts[strings.ToLower(name)+mdnsSuffix] = true
-	}
-	return hosts
 }

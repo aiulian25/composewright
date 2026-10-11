@@ -6,6 +6,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- The web UI answers to every host name, so a reverse proxy or the
+  machine's own name works from the first visit. `serve --allow-host` is
+  accepted and ignored.
+
 ### Fixed
 
 - `composewright gen` no longer says the images it pulls for the sandbox

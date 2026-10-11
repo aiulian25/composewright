@@ -508,14 +508,14 @@ func TestHeadersHostsOriginsAndTokens(t *testing.T) {
 		t.Fatal("inline style or script in a page")
 	}
 	request, _ := http.NewRequest(http.MethodGet, harness.http.URL+"/login", nil)
-	request.Host = "rebound.example"
-	rebound, err := harness.client.Do(request)
+	request.Host = "composewright.proxy.example"
+	proxied, err := harness.client.Do(request)
 	if err != nil {
 		t.Fatal(err)
 	}
-	rebound.Body.Close()
-	if rebound.StatusCode != http.StatusMisdirectedRequest {
-		t.Fatalf("unknown host answered %d", rebound.StatusCode)
+	proxied.Body.Close()
+	if proxied.StatusCode != http.StatusOK {
+		t.Fatalf("a reverse proxy's name got %d", proxied.StatusCode)
 	}
 	response, page = harness.do(http.MethodPost, "/settings/appearance", url.Values{"theme": {"light"}, csrfField: {harness.token}},
 		map[string]string{"Origin": "https://evil.example"})
