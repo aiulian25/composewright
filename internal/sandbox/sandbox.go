@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/docker/go-units"
 
 	"github.com/aiulian25/composewright/internal/atomicfile"
@@ -32,6 +33,8 @@ const (
 	overrideFile     = "override.yaml"
 	envFile          = ".env"
 	pullAllowance    = 10 * time.Minute
+	pullAlways       = "always"
+	pullMissing      = "missing"
 	cleanupTimeout   = 2 * time.Minute
 	stopTimeout      = "10"
 	janitorFactor    = 2
@@ -88,8 +91,13 @@ func (sandbox *Sandbox) Validate(ctx context.Context, input Input) (verdict Verd
 	directory := filepath.Join(sandbox.root, slug(input.Project), "run", name)
 	output := newLiveOutput(input.Live, input.Secrets, sandbox.now)
 	environment := sandbox.Environment(ctx)
-	if err := sandbox.prepare(ctx, directory, name, input, started, environment.probesEarly()); err != nil {
+	pinned, err := sandbox.prepare(ctx, directory, name, input, started, environment.probesEarly())
+	if err != nil {
 		return Verdict{}, err
+	}
+	pull := pullAlways
+	if pinned {
+		pull = pullMissing
 	}
 	output.say("project %s: restart \"no\", no-new-privileges, at most %s memory, %g CPUs and %d processes per service, published ports on 127.0.0.1 only",
 		name, units.BytesSize(float64(sandbox.limits.MemoryBytes)), sandbox.limits.CPUs, sandbox.limits.PIDs)
@@ -104,7 +112,7 @@ func (sandbox *Sandbox) Validate(ctx context.Context, input Input) (verdict Verd
 	output.say("pulling images and starting; waiting up to %s for every service to be healthy%s", sandbox.timeout, probeNote(environment))
 	stopFollowing := output.follow(upCtx, sandbox, directory, name, started)
 	upOut, upErrOut, upErr := sandbox.compose(upCtx, directory, output.writer(SourceCompose), name, "up", "--wait", "--wait-timeout", waitTimeout,
-		"--pull", "always", "--no-build", "--quiet-pull")
+		"--pull", pull, "--no-build", "--quiet-pull")
 	stopFollowing()
 	statesOut, _, statesErr := sandbox.compose(ctx, directory, nil, name, "ps", "-a", "--format", "json")
 	logsOut, _, _ := sandbox.compose(ctx, directory, nil, name, "logs", "--no-color", "-t", "--since", started.UTC().Format(time.RFC3339))
@@ -148,25 +156,40 @@ func (sandbox *Sandbox) healthOutputs(ctx context.Context, states []ServiceState
 	}
 }
 
-func (sandbox *Sandbox) prepare(ctx context.Context, directory, name string, input Input, started time.Time, earlyProbes bool) error {
+// prepare writes the run's files and reports whether every image is pinned
+// by digest.
+func (sandbox *Sandbox) prepare(ctx context.Context, directory, name string, input Input, started time.Time, earlyProbes bool) (bool, error) {
 	project, err := composefile.Load(ctx, composeFile, input.Compose, nil, false)
 	if err != nil {
-		return fmt.Errorf("compose.yaml does not load: %w", err)
+		return false, fmt.Errorf("compose.yaml does not load: %w", err)
 	}
 	override, err := Override(project, input.Published, sandbox.limits, name, started.Unix(), earlyProbes)
 	if err != nil {
-		return err
+		return false, err
 	}
 	if err := os.MkdirAll(directory, runDirMode); err != nil {
-		return err
+		return false, err
 	}
 	files := map[string][]byte{composeFile: input.Compose, overrideFile: override, envFile: input.Env}
 	for file, content := range files {
 		if err := atomicfile.Write(filepath.Join(directory, file), content, runFileMode); err != nil {
-			return err
+			return false, err
 		}
 	}
-	return nil
+	return everyImagePinned(project), nil
+}
+
+// everyImagePinned reports whether each service names its image by digest.
+// A digest names exact content, so a local copy is the same image and the
+// run need not ask the registry, nor count against its pull limits.
+func everyImagePinned(project *types.Project) bool {
+	for _, service := range project.Services {
+		image, err := ir.ParseImage(service.Image)
+		if err != nil || image.Digest == "" {
+			return false
+		}
+	}
+	return true
 }
 
 // teardown uses its own context so a cancelled run is still cleaned up.

@@ -337,6 +337,32 @@ volumes:
 	}
 }
 
+// TestPullsPinnedImagesOnlyWhenMissing: a digest names exact content, so a
+// run whose every image is pinned uses a local copy and leaves the registry
+// alone; one image named by tag alone makes the run pull them all.
+func TestPullsPinnedImagesOnlyWhenMissing(t *testing.T) {
+	const digest = "@sha256:" + "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+	pinnedApp := strings.Replace(testCompose, "nginx:1.27", "nginx:1.27"+digest, 1)
+	cases := map[string]struct{ compose, pull string }{
+		"every image pinned": {strings.Replace(pinnedApp, "postgres:17", "postgres:17"+digest, 1), "missing"},
+		"one image by tag":   {pinnedApp, "always"},
+		"no image pinned":    {testCompose, "always"},
+	}
+	for name, testCase := range cases {
+		t.Run(name, func(t *testing.T) {
+			fake := &fakeDocker{ps: healthyApp}
+			sandbox := newTestSandbox(t, fake)
+			input := Input{Project: "app", Compose: []byte(testCase.compose), Env: []byte(""), Published: map[string][]string{"app": {"80/tcp"}}}
+			if _, err := sandbox.Validate(context.Background(), input); err != nil {
+				t.Fatal(err)
+			}
+			if !fake.called("--pull " + testCase.pull) {
+				t.Fatalf("up without --pull %s: %v", testCase.pull, fake.calls)
+			}
+		})
+	}
+}
+
 // TestLastHealthOutput keeps what the latest check printed, without secrets.
 func TestLastHealthOutput(t *testing.T) {
 	inspected := []byte(`{"Status":"unhealthy","FailingStreak":3,"Log":[{"ExitCode":1,"Output":"first try"},` +
