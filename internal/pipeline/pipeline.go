@@ -305,11 +305,10 @@ func policyInput(configuration config.Config, plan *ir.IR, source *fetch.Source,
 		ExtraRegistries: options.AllowRegistries, RepositoryOwner: source.Owner, GrantedNeeds: options.AllowNeeds}
 }
 
-// renderAndGate runs the plan gate, renders the files and runs the second
-// gate on the compose model compose-go reads back from the rendered YAML.
-// renderAndGate renders the files and runs the YAML gate. own are secrets
-// from the person's own .env, given only on a first generation: later runs
-// read stored, redacted facts, whose masks must never become values.
+// renderAndGate runs the plan gate, renders the files and runs the YAML gate
+// on the compose model compose-go reads back from them. own are secrets from
+// the person's own .env, given only on a first generation: later runs read
+// stored, redacted facts, whose masks must never become values.
 func renderAndGate(ctx context.Context, dependencies Dependencies, options Options, result *Result, input policy.Input, own map[string]string) error {
 	result.Report = policy.Evaluate(input)
 	profile, err := loadProfile(dependencies.Config.Profile, options.ProfileFile)
