@@ -32,10 +32,39 @@ That is the whole install. The image contains everything it needs: the app, the 
 
 ### Prefer a compose file?
 
-`deploy/composewright.yaml` is the same as one service:
+The same as one service, also in [`deploy/composewright.yaml`](deploy/composewright.yaml). Save it as `compose.yaml` in a folder of its own:
+
+```yaml
+services:
+  composewright:
+    image: ghcr.io/aiulian25/composewright:0.1.0    # add @sha256:… from the release notes to pin these exact bytes
+    container_name: composewright
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8484:8484"                     # this machine only; put a reverse proxy in front for LAN or TLS
+    volumes:
+      - composewright-data:/data                    # config, database, master key and projects
+      - /var/run/docker.sock:/var/run/docker.sock
+    group_add:
+      - "${DOCKER_GID:?set DOCKER_GID to the group of /var/run/docker.sock: stat -c %g /var/run/docker.sock}"
+    read_only: true                                 # it writes only to /data and the /tmp below
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+volumes:
+  composewright-data: {}
+```
+
+Next to it, a `.env` with the group that owns the Docker socket on this host. `stat -c '%g' /var/run/docker.sock` prints it; `999` is only an example:
+
+```dotenv
+DOCKER_GID=999
+```
+
+Then, in that folder:
 
 ```sh
-DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose -f deploy/composewright.yaml up -d
+docker compose up -d
 ```
 
 ### Running on rootless Docker
@@ -57,7 +86,7 @@ docker run -d --name composewright --restart unless-stopped \
 
 ### Synology (DSM 7.2+)
 
-Container Manager → Project → paste `deploy/composewright.yaml` and set `DOCKER_GID` to the gid of `/var/run/docker.sock` (`stat -c '%g' /var/run/docker.sock` over SSH).
+Container Manager → Project → paste the compose file above and set `DOCKER_GID` to the gid of `/var/run/docker.sock` (`stat -c '%g' /var/run/docker.sock` over SSH).
 
 ## Using it
 
