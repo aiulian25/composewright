@@ -11,6 +11,8 @@ const (
 	secretsDirPrefix  = "./secrets/"
 	digestPrefix      = "sha256:"
 	latestTag         = "latest"
+	includeKey        = "include"
+	composeFileName   = "compose.yaml"
 	rootUser          = "root"
 	rootUID           = "0"
 	networkModeHost   = "host"

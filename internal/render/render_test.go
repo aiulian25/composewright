@@ -70,7 +70,7 @@ func TestCorpusRendering(t *testing.T) {
 				if err != nil {
 					t.Fatalf("compose-go rejects the rendered file: %v\n%s", err, compose)
 				}
-				report := policy.EvaluateYAML(project, policy.Input{Plan: plan, Profile: options.Profile,
+				report := policy.EvaluateYAML(context.Background(), project, compose, policy.Input{Plan: plan, Profile: options.Profile,
 					AllowRegistries: config.Default().Registries.Allow, ExtraRegistries: entry.AllowRegistries, RepositoryOwner: entry.Source.Owner})
 				if report.Blocked() {
 					t.Fatalf("rendered file is blocked: %+v", report.Findings)

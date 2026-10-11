@@ -495,6 +495,11 @@ func TestEvaluateYAML(t *testing.T) {
 		{"long syntax host port range starting low", service("    ports:\n      - {target: 8080, published: '80-90'}\n"), policy.Need, nil, nil},
 		{"loopback host port range from 1024", service("    ports: ['127.0.0.1:1024-1030:8080']\n"), policy.OK, nil, nil},
 		{"image outside allowlist", "services:\n  app:\n    image: evil.example/miner:1\n", policy.Deny, nil, nil},
+		{"include brings in unchecked services", "include:\n  - oci://registry.example/evil/compose:1\n" + service(""), policy.Deny, nil, nil},
+		{"include in a later document", service("") + "---\ninclude:\n  - other.yaml\n", policy.Deny, nil, nil},
+		{"include behind a merge key", "x-base: &base\n  include:\n    - other.yaml\n<<: *base\n" + service(""), policy.Deny, nil, nil},
+		{"include behind an alias key", "x-key: &key include\n*key :\n  - other.yaml\n" + service(""), policy.Deny, nil, nil},
+		{"include only inside an extension", "x-notes:\n  include: other.yaml\n" + service(""), policy.OK, nil, nil},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -503,7 +508,7 @@ func TestEvaluateYAML(t *testing.T) {
 			input := baseInput(plan)
 			input.Profile.Storage.BasePath = base
 			input.GrantedNeeds = testCase.granted
-			report := policy.EvaluateYAML(loadCompose(t, testCase.yaml), input)
+			report := policy.EvaluateYAML(context.Background(), loadCompose(t, testCase.yaml), []byte(testCase.yaml), input)
 			if report.Worst() != testCase.want {
 				t.Fatalf("worst = %s, want %s: %+v", report.Worst(), testCase.want, report.Findings)
 			}

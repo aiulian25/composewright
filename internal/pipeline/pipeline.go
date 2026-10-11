@@ -343,7 +343,7 @@ func renderAndGate(ctx context.Context, dependencies Dependencies, options Optio
 		return fmt.Errorf("the rendered compose.yaml does not load: %w", err)
 	}
 	input.Profile = profile
-	result.Report = result.Report.Merge(policy.EvaluateYAML(project, input))
+	result.Report = result.Report.Merge(policy.EvaluateYAML(ctx, project, result.Files.Compose, input))
 	return nil
 }
 

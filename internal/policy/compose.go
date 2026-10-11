@@ -1,6 +1,7 @@
 package policy
 
 import (
+	"context"
 	"errors"
 	"io/fs"
 	"os"
@@ -12,13 +13,15 @@ import (
 
 	"github.com/compose-spec/compose-go/v2/types"
 
+	"github.com/aiulian25/composewright/internal/composefile"
 	"github.com/aiulian25/composewright/internal/ir"
 )
 
 // EvaluateYAML is the second gate (P9a, P13): it inspects the compose model
 // re-parsed from the rendered file, independently of the plan it came from.
-func EvaluateYAML(project *types.Project, input Input) Report {
+func EvaluateYAML(ctx context.Context, project *types.Project, content []byte, input Input) Report {
 	check := &checker{input: input}
+	check.composeInclude(ctx, content)
 	names := make([]string, 0, len(project.Services))
 	for name := range project.Services {
 		names = append(names, name)
@@ -29,6 +32,22 @@ func EvaluateYAML(project *types.Project, input Input) Report {
 	}
 	check.composeResources(project)
 	return Report{Findings: check.findings}
+}
+
+// composeInclude denies a top-level include. Loading skips it, so the project
+// never shows the files it names, yet docker compose up would follow them,
+// from this host or a registry, and run their services without this gate.
+// compose-go's own model is read, so an include in a later document or
+// behind a merge key or an alias is found exactly as docker compose finds it.
+func (check *checker) composeInclude(ctx context.Context, content []byte) {
+	model, err := composefile.LoadModel(ctx, composeFileName, content)
+	if err != nil {
+		check.add("P13", Deny, "", includeKey, "the compose file could not be read to look for include: %v", err)
+		return
+	}
+	if _, included := model[includeKey]; included {
+		check.add("P13", Deny, "", includeKey, "include is not allowed in a generated stack: the services it brings in would run unchecked")
+	}
 }
 
 func (check *checker) composeService(name string, service types.ServiceConfig) {

@@ -138,7 +138,7 @@ func regate(ctx context.Context, dependencies Dependencies, stored *Stored) (pol
 	input := policyInput(dependencies.Config, stored.Plan, stored.source(), stored.Options)
 	_, input.Images = stored.verifiedImages()
 	input.Profile = profile
-	return policy.Evaluate(input).Merge(policy.EvaluateYAML(project, input)), nil
+	return policy.Evaluate(input).Merge(policy.EvaluateYAML(ctx, project, []byte(stored.Generation.ComposeYAML), input)), nil
 }
 
 // blockedError names the first finding that blocks, so a refusal is clear
