@@ -22,6 +22,8 @@ const (
 	firstPage             = "/"
 )
 
+var errAdministratorExists = statusError{status: http.StatusForbidden, message: "An administrator exists already. Sign in instead."}
+
 type signInView struct {
 	Username string
 	Next     string
@@ -77,7 +79,7 @@ func (server *Server) setup(writer http.ResponseWriter, request *http.Request, _
 	}
 	token := request.PostFormValue("token")
 	if exists {
-		return statusError{status: http.StatusForbidden, message: "An administrator exists already. Sign in instead."}
+		return errAdministratorExists
 	}
 	if !server.setupOpen(token) {
 		return statusError{status: http.StatusForbidden, message: setupClosed()}
@@ -104,7 +106,10 @@ func (server *Server) setup(writer http.ResponseWriter, request *http.Request, _
 	if err != nil {
 		return err
 	}
-	user, err := server.workspace().Store.CreateUser(ctx, username, hash)
+	user, err := server.workspace().Store.CreateFirstUser(ctx, username, hash)
+	if errors.Is(err, store.ErrUserExists) {
+		return errAdministratorExists
+	}
 	if err != nil {
 		return err
 	}

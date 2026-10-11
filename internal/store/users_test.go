@@ -12,18 +12,54 @@ import (
 	"github.com/aiulian25/composewright/internal/secrets"
 )
 
+// TestCreateFirstUserOnlyOnce: two setups racing each other create one
+// administrator, and the other is told that one exists.
+func TestCreateFirstUserOnlyOnce(t *testing.T) {
+	store, _, _ := openTestStore(t)
+	ctx := context.Background()
+	start := make(chan struct{})
+	outcomes := make(chan error, 2)
+	for _, username := range []string{"first", "second"} {
+		go func() {
+			<-start
+			_, err := store.CreateFirstUser(ctx, username, "$argon2id$"+username)
+			outcomes <- err
+		}()
+	}
+	close(start)
+	created, refused := 0, 0
+	for range 2 {
+		err := <-outcomes
+		switch {
+		case err == nil:
+			created++
+		case errors.Is(err, ErrUserExists):
+			refused++
+		default:
+			t.Fatal(err)
+		}
+	}
+	var accounts int
+	if err := store.database.QueryRowContext(ctx, `SELECT COUNT(*) FROM users`).Scan(&accounts); err != nil {
+		t.Fatal(err)
+	}
+	if created != 1 || refused != 1 || accounts != 1 {
+		t.Fatalf("created %d, refused %d, accounts %d; want one of each", created, refused, accounts)
+	}
+}
+
 func TestUsersAndSessions(t *testing.T) {
 	store, _, _ := openTestStore(t)
 	ctx := context.Background()
 	if has, err := store.HasUsers(ctx); err != nil || has {
 		t.Fatalf("fresh store has users: %v %v", has, err)
 	}
-	user, err := store.CreateUser(ctx, "admin", "$argon2id$hash")
+	user, err := store.CreateFirstUser(ctx, "admin", "$argon2id$hash")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := store.CreateUser(ctx, "admin", "$argon2id$other"); err == nil {
-		t.Fatal("a second user with the same name was created")
+	if _, err := store.CreateFirstUser(ctx, "admin", "$argon2id$other"); !errors.Is(err, ErrUserExists) {
+		t.Fatalf("a second account: %v", err)
 	}
 	found, err := store.UserByName(ctx, "admin")
 	if err != nil || found.ID != user.ID || found.PasswordHash != "$argon2id$hash" {

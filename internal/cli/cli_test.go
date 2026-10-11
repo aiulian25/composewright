@@ -193,7 +193,7 @@ func TestPasswordResetsTheAdministrator(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	administrator, err := opened.Store.CreateUser(ctx, "iulian", hash)
+	administrator, err := opened.Store.CreateFirstUser(ctx, "iulian", hash)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -28,12 +28,27 @@ type Session struct {
 	ExpiresAt time.Time
 }
 
-func (store *Store) CreateUser(ctx context.Context, username, passwordHash string) (User, error) {
+// ErrUserExists means the administrator was created already; v1 has one.
+var ErrUserExists = errors.New("an administrator exists already")
+
+// CreateFirstUser creates the administrator only while no account exists,
+// in one statement, so two setups racing each other cannot both succeed.
+func (store *Store) CreateFirstUser(ctx context.Context, username, passwordHash string) (User, error) {
 	now := time.Now()
 	user := User{ID: newID(), Username: username, PasswordHash: passwordHash, CreatedAt: now, UpdatedAt: now}
-	_, err := store.database.ExecContext(ctx, `INSERT INTO users (id, username, pw_hash, created_at, updated_at) VALUES (?,?,?,?,?)`,
-		user.ID, user.Username, user.PasswordHash, unix(now), unix(now))
-	return user, err
+	result, err := store.database.ExecContext(ctx, `INSERT INTO users (id, username, pw_hash, created_at, updated_at)
+		SELECT ?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM users)`, user.ID, user.Username, user.PasswordHash, unix(now), unix(now))
+	if err != nil {
+		return User{}, err
+	}
+	created, err := result.RowsAffected()
+	if err != nil {
+		return User{}, err
+	}
+	if created == 0 {
+		return User{}, ErrUserExists
+	}
+	return user, nil
 }
 
 func (store *Store) HasUsers(ctx context.Context) (bool, error) {
