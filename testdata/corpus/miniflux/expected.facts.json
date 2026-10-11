@@ -1,0 +1,1369 @@
+{
+  "files": [
+    ".golangci.yml",
+    "README.md",
+    "client/README.md",
+    "contrib/README.md",
+    "contrib/ansible/inventories/group_vars/miniflux_vars.yml",
+    "contrib/ansible/playbooks/playbook.yml",
+    "contrib/ansible/roles/mgrote.miniflux/README.md",
+    "contrib/ansible/roles/mgrote.miniflux/defaults/main.yml",
+    "contrib/ansible/roles/mgrote.miniflux/handlers/main.yml",
+    "contrib/ansible/roles/mgrote.miniflux/tasks/main.yml",
+    "contrib/bruno/README.md",
+    "contrib/docker-compose/README.md",
+    "contrib/docker-compose/basic.yml",
+    "contrib/docker-compose/caddy.yml",
+    "contrib/docker-compose/traefik.yml",
+    "contrib/grafana/README.md",
+    "contrib/sysvinit/README.md",
+    "contrib/thunder_client/README.md",
+    "go.mod",
+    "internal/fever/README.md",
+    "internal/googlereader/README.md",
+    "internal/http/server/server.go",
+    "internal/systemd/systemd.go",
+    "packaging/debian/Dockerfile",
+    "packaging/docker/alpine/Dockerfile",
+    "packaging/docker/distroless/Dockerfile",
+    "packaging/rpm/Dockerfile"
+  ],
+  "compose_files": [
+    {
+      "path": "contrib/docker-compose/basic.yml",
+      "services": [
+        {
+          "name": "miniflux",
+          "location": {
+            "file": "contrib/docker-compose/basic.yml",
+            "line": 2
+          },
+          "image": "miniflux/miniflux:latest",
+          "image_at": {
+            "file": "contrib/docker-compose/basic.yml",
+            "line": 3
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 8080,
+              "published": "80",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "contrib/docker-compose/basic.yml",
+                "line": 7
+              }
+            }
+          ],
+          "volumes": null,
+          "environment": [
+            {
+              "key": "DATABASE_URL",
+              "raw": "postgres://miniflux:secret@db/miniflux?sslmode=disable",
+              "has_value": true,
+              "location": {
+                "file": "contrib/docker-compose/basic.yml",
+                "line": 12
+              }
+            },
+            {
+              "key": "RUN_MIGRATIONS",
+              "raw": "1",
+              "has_value": true,
+              "location": {
+                "file": "contrib/docker-compose/basic.yml",
+                "line": 13
+              }
+            },
+            {
+              "key": "CREATE_ADMIN",
+              "raw": "1",
+              "has_value": true,
+              "location": {
+                "file": "contrib/docker-compose/basic.yml",
+                "line": 14
+              }
+            },
+            {
+              "key": "ADMIN_USERNAME",
+              "raw": "admin",
+              "has_value": true,
+              "location": {
+                "file": "contrib/docker-compose/basic.yml",
+                "line": 15
+              }
+            },
+            {
+              "key": "ADMIN_PASSWORD",
+              "raw": "test123",
+              "has_value": true,
+              "location": {
+                "file": "contrib/docker-compose/basic.yml",
+                "line": 16
+              }
+            },
+            {
+              "key": "DEBUG",
+              "raw": "1",
+              "has_value": true,
+              "location": {
+                "file": "contrib/docker-compose/basic.yml",
+                "line": 17
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": [
+            {
+              "service": "db",
+              "condition": "service_healthy"
+            }
+          ],
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "db",
+          "location": {
+            "file": "contrib/docker-compose/basic.yml",
+            "line": 21
+          },
+          "image": "postgres:latest",
+          "image_at": {
+            "file": "contrib/docker-compose/basic.yml",
+            "line": 22
+          },
+          "build": false,
+          "ports": null,
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "miniflux-db",
+              "target": "/var/lib/postgresql",
+              "read_only": false,
+              "location": {
+                "file": "contrib/docker-compose/basic.yml",
+                "line": 30
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "POSTGRES_USER",
+              "raw": "miniflux",
+              "has_value": true,
+              "location": {
+                "file": "contrib/docker-compose/basic.yml",
+                "line": 26
+              }
+            },
+            {
+              "key": "POSTGRES_PASSWORD",
+              "raw": "secret",
+              "has_value": true,
+              "location": {
+                "file": "contrib/docker-compose/basic.yml",
+                "line": 27
+              }
+            },
+            {
+              "key": "POSTGRES_DB",
+              "raw": "miniflux",
+              "has_value": true,
+              "location": {
+                "file": "contrib/docker-compose/basic.yml",
+                "line": 28
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "healthcheck": {
+            "test": [
+              "CMD",
+              "pg_isready",
+              "-U",
+              "miniflux"
+            ],
+            "interval": "10s",
+            "timeout": "",
+            "start_period": "30s",
+            "retries": 0,
+            "disabled": false,
+            "location": {
+              "file": "contrib/docker-compose/basic.yml",
+              "line": 31
+            }
+          },
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": [
+        {
+          "name": "MINIFLUX_IMAGE",
+          "kind": "compose",
+          "default": "miniflux/miniflux:latest",
+          "location": {
+            "file": "contrib/docker-compose/basic.yml",
+            "line": 3
+          }
+        }
+      ]
+    },
+    {
+      "path": "contrib/docker-compose/caddy.yml",
+      "services": [
+        {
+          "name": "caddy",
+          "location": {
+            "file": "contrib/docker-compose/caddy.yml",
+            "line": 2
+          },
+          "image": "caddy:2",
+          "image_at": {
+            "file": "contrib/docker-compose/caddy.yml",
+            "line": 3
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 80,
+              "published": "80",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "contrib/docker-compose/caddy.yml",
+                "line": 8
+              }
+            },
+            {
+              "target": 443,
+              "published": "443",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "contrib/docker-compose/caddy.yml",
+                "line": 9
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "/Caddyfile",
+              "target": "/etc/caddy/Caddyfile",
+              "read_only": false,
+              "location": {
+                "file": "contrib/docker-compose/caddy.yml",
+                "line": 11
+              }
+            },
+            {
+              "type": "volume",
+              "source": "caddy_data",
+              "target": "/data",
+              "read_only": false,
+              "location": {
+                "file": "contrib/docker-compose/caddy.yml",
+                "line": 12
+              }
+            },
+            {
+              "type": "volume",
+              "source": "caddy_config",
+              "target": "/config",
+              "read_only": false,
+              "location": {
+                "file": "contrib/docker-compose/caddy.yml",
+                "line": 13
+              }
+            }
+          ],
+          "environment": null,
+          "env_files": null,
+          "depends_on": [
+            {
+              "service": "miniflux",
+              "condition": "service_started"
+            }
+          ],
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "miniflux",
+          "location": {
+            "file": "contrib/docker-compose/caddy.yml",
+            "line": 14
+          },
+          "image": "miniflux/miniflux:latest",
+          "image_at": {
+            "file": "contrib/docker-compose/caddy.yml",
+            "line": 15
+          },
+          "build": false,
+          "ports": null,
+          "volumes": null,
+          "environment": [
+            {
+              "key": "DATABASE_URL",
+              "raw": "postgres://miniflux:secret@db/miniflux?sslmode=disable",
+              "has_value": true,
+              "location": {
+                "file": "contrib/docker-compose/caddy.yml",
+                "line": 21
+              }
+            },
+            {
+              "key": "RUN_MIGRATIONS",
+              "raw": "1",
+              "has_value": true,
+              "location": {
+                "file": "contrib/docker-compose/caddy.yml",
+                "line": 22
+              }
+            },
+            {
+              "key": "CREATE_ADMIN",
+              "raw": "1",
+              "has_value": true,
+              "location": {
+                "file": "contrib/docker-compose/caddy.yml",
+                "line": 23
+              }
+            },
+            {
+              "key": "ADMIN_USERNAME",
+              "raw": "admin",
+              "has_value": true,
+              "location": {
+                "file": "contrib/docker-compose/caddy.yml",
+                "line": 24
+              }
+            },
+            {
+              "key": "ADMIN_PASSWORD",
+              "raw": "test123",
+              "has_value": true,
+              "location": {
+                "file": "contrib/docker-compose/caddy.yml",
+                "line": 25
+              }
+            },
+            {
+              "key": "BASE_URL",
+              "raw": "https://miniflux.example.org",
+              "has_value": true,
+              "location": {
+                "file": "contrib/docker-compose/caddy.yml",
+                "line": 26
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": [
+            {
+              "service": "db",
+              "condition": "service_healthy"
+            }
+          ],
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "db",
+          "location": {
+            "file": "contrib/docker-compose/caddy.yml",
+            "line": 27
+          },
+          "image": "postgres:latest",
+          "image_at": {
+            "file": "contrib/docker-compose/caddy.yml",
+            "line": 28
+          },
+          "build": false,
+          "ports": null,
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "miniflux-db",
+              "target": "/var/lib/postgresql",
+              "read_only": false,
+              "location": {
+                "file": "contrib/docker-compose/caddy.yml",
+                "line": 34
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "POSTGRES_USER",
+              "raw": "miniflux",
+              "has_value": true,
+              "location": {
+                "file": "contrib/docker-compose/caddy.yml",
+                "line": 31
+              }
+            },
+            {
+              "key": "POSTGRES_PASSWORD",
+              "raw": "secret",
+              "has_value": true,
+              "location": {
+                "file": "contrib/docker-compose/caddy.yml",
+                "line": 32
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "healthcheck": {
+            "test": [
+              "CMD",
+              "pg_isready",
+              "-U",
+              "miniflux"
+            ],
+            "interval": "10s",
+            "timeout": "",
+            "start_period": "30s",
+            "retries": 0,
+            "disabled": false,
+            "location": {
+              "file": "contrib/docker-compose/caddy.yml",
+              "line": 35
+            }
+          },
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": [
+        {
+          "name": "MINIFLUX_IMAGE",
+          "kind": "compose",
+          "default": "miniflux/miniflux:latest",
+          "location": {
+            "file": "contrib/docker-compose/caddy.yml",
+            "line": 15
+          }
+        },
+        {
+          "name": "PWD",
+          "kind": "compose",
+          "location": {
+            "file": "contrib/docker-compose/caddy.yml",
+            "line": 11
+          }
+        }
+      ]
+    },
+    {
+      "path": "contrib/docker-compose/traefik.yml",
+      "services": [
+        {
+          "name": "traefik",
+          "location": {
+            "file": "contrib/docker-compose/traefik.yml",
+            "line": 2
+          },
+          "image": "traefik:v2.3",
+          "image_at": {
+            "file": "contrib/docker-compose/traefik.yml",
+            "line": 3
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 443,
+              "published": "443",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "contrib/docker-compose/traefik.yml",
+                "line": 15
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "./letsencrypt",
+              "target": "/letsencrypt",
+              "read_only": false,
+              "location": {
+                "file": "contrib/docker-compose/traefik.yml",
+                "line": 17
+              }
+            },
+            {
+              "type": "bind",
+              "source": "/var/run/docker.sock",
+              "target": "/var/run/docker.sock",
+              "read_only": true,
+              "location": {
+                "file": "contrib/docker-compose/traefik.yml",
+                "line": 18
+              }
+            }
+          ],
+          "environment": null,
+          "env_files": null,
+          "depends_on": [
+            {
+              "service": "miniflux",
+              "condition": "service_started"
+            }
+          ],
+          "command": [
+            "--providers.docker=true",
+            "--providers.docker.exposedbydefault=false",
+            "--entrypoints.websecure.address=:443",
+            "--certificatesresolvers.myresolver.acme.tlschallenge=true",
+            "--certificatesresolvers.myresolver.acme.email=postmaster@example.com",
+            "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+          ],
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "miniflux",
+          "location": {
+            "file": "contrib/docker-compose/traefik.yml",
+            "line": 19
+          },
+          "image": "miniflux/miniflux:latest",
+          "image_at": {
+            "file": "contrib/docker-compose/traefik.yml",
+            "line": 20
+          },
+          "build": false,
+          "ports": null,
+          "volumes": null,
+          "environment": [
+            {
+              "key": "DATABASE_URL",
+              "raw": "postgres://miniflux:secret@db/miniflux?sslmode=disable",
+              "has_value": true,
+              "location": {
+                "file": "contrib/docker-compose/traefik.yml",
+                "line": 28
+              }
+            },
+            {
+              "key": "RUN_MIGRATIONS",
+              "raw": "1",
+              "has_value": true,
+              "location": {
+                "file": "contrib/docker-compose/traefik.yml",
+                "line": 29
+              }
+            },
+            {
+              "key": "CREATE_ADMIN",
+              "raw": "1",
+              "has_value": true,
+              "location": {
+                "file": "contrib/docker-compose/traefik.yml",
+                "line": 30
+              }
+            },
+            {
+              "key": "ADMIN_USERNAME",
+              "raw": "admin",
+              "has_value": true,
+              "location": {
+                "file": "contrib/docker-compose/traefik.yml",
+                "line": 31
+              }
+            },
+            {
+              "key": "ADMIN_PASSWORD",
+              "raw": "test123",
+              "has_value": true,
+              "location": {
+                "file": "contrib/docker-compose/traefik.yml",
+                "line": 32
+              }
+            },
+            {
+              "key": "BASE_URL",
+              "raw": "https://miniflux.example.org",
+              "has_value": true,
+              "location": {
+                "file": "contrib/docker-compose/traefik.yml",
+                "line": 33
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": [
+            {
+              "service": "db",
+              "condition": "service_healthy"
+            }
+          ],
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "db",
+          "location": {
+            "file": "contrib/docker-compose/traefik.yml",
+            "line": 39
+          },
+          "image": "postgres:latest",
+          "image_at": {
+            "file": "contrib/docker-compose/traefik.yml",
+            "line": 40
+          },
+          "build": false,
+          "ports": null,
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "miniflux-db",
+              "target": "/var/lib/postgresql",
+              "read_only": false,
+              "location": {
+                "file": "contrib/docker-compose/traefik.yml",
+                "line": 46
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "POSTGRES_USER",
+              "raw": "miniflux",
+              "has_value": true,
+              "location": {
+                "file": "contrib/docker-compose/traefik.yml",
+                "line": 43
+              }
+            },
+            {
+              "key": "POSTGRES_PASSWORD",
+              "raw": "secret",
+              "has_value": true,
+              "location": {
+                "file": "contrib/docker-compose/traefik.yml",
+                "line": 44
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "healthcheck": {
+            "test": [
+              "CMD",
+              "pg_isready",
+              "-U",
+              "miniflux"
+            ],
+            "interval": "10s",
+            "timeout": "",
+            "start_period": "30s",
+            "retries": 0,
+            "disabled": false,
+            "location": {
+              "file": "contrib/docker-compose/traefik.yml",
+              "line": 47
+            }
+          },
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": [
+        {
+          "name": "MINIFLUX_IMAGE",
+          "kind": "compose",
+          "default": "miniflux/miniflux:latest",
+          "location": {
+            "file": "contrib/docker-compose/traefik.yml",
+            "line": 20
+          }
+        }
+      ]
+    }
+  ],
+  "dockerfiles": [
+    {
+      "path": "packaging/debian/Dockerfile",
+      "base_image": "docker.io/golang:1-trixie",
+      "exposed": null,
+      "volumes": null,
+      "env": [
+        {
+          "key": "DEBIAN_FRONTEND",
+          "value": "noninteractive",
+          "location": {
+            "file": "packaging/debian/Dockerfile",
+            "line": 3
+          }
+        }
+      ],
+      "args": null,
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": null,
+      "command": [
+        "/src/packaging/debian/build.sh"
+      ]
+    },
+    {
+      "path": "packaging/docker/alpine/Dockerfile",
+      "base_image": "docker.io/library/alpine:3.24",
+      "exposed": [
+        {
+          "port": 8080,
+          "protocol": "tcp",
+          "location": {
+            "file": "packaging/docker/alpine/Dockerfile",
+            "line": 17
+          }
+        }
+      ],
+      "volumes": null,
+      "env": [
+        {
+          "key": "LISTEN_ADDR",
+          "value": "0.0.0.0:8080",
+          "location": {
+            "file": "packaging/docker/alpine/Dockerfile",
+            "line": 18
+          }
+        }
+      ],
+      "args": null,
+      "user": "65534",
+      "user_at": {
+        "file": "packaging/docker/alpine/Dockerfile",
+        "line": 21
+      },
+      "entrypoint": null,
+      "command": [
+        "/usr/bin/miniflux"
+      ]
+    },
+    {
+      "path": "packaging/docker/distroless/Dockerfile",
+      "base_image": "gcr.io/distroless/base-debian13:nonroot",
+      "exposed": [
+        {
+          "port": 8080,
+          "protocol": "tcp",
+          "location": {
+            "file": "packaging/docker/distroless/Dockerfile",
+            "line": 16
+          }
+        }
+      ],
+      "volumes": null,
+      "env": [
+        {
+          "key": "LISTEN_ADDR",
+          "value": "0.0.0.0:8080",
+          "location": {
+            "file": "packaging/docker/distroless/Dockerfile",
+            "line": 17
+          }
+        }
+      ],
+      "args": null,
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": null,
+      "command": [
+        "/usr/bin/miniflux"
+      ]
+    },
+    {
+      "path": "packaging/rpm/Dockerfile",
+      "base_image": "rockylinux:9",
+      "exposed": null,
+      "volumes": null,
+      "env": null,
+      "args": null,
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": null,
+      "command": null
+    }
+  ],
+  "env_samples": null,
+  "variables": [
+    {
+      "name": "ADMIN_PASSWORD",
+      "default": "test123",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ADMIN_PASSWORD",
+          "kind": "compose",
+          "default": "test123",
+          "location": {
+            "file": "contrib/docker-compose/basic.yml",
+            "line": 16
+          }
+        },
+        {
+          "name": "ADMIN_PASSWORD",
+          "kind": "compose",
+          "default": "test123",
+          "location": {
+            "file": "contrib/docker-compose/caddy.yml",
+            "line": 25
+          }
+        },
+        {
+          "name": "ADMIN_PASSWORD",
+          "kind": "compose",
+          "default": "test123",
+          "location": {
+            "file": "contrib/docker-compose/traefik.yml",
+            "line": 32
+          }
+        }
+      ]
+    },
+    {
+      "name": "ADMIN_USERNAME",
+      "default": "admin",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ADMIN_USERNAME",
+          "kind": "compose",
+          "default": "admin",
+          "location": {
+            "file": "contrib/docker-compose/basic.yml",
+            "line": 15
+          }
+        },
+        {
+          "name": "ADMIN_USERNAME",
+          "kind": "compose",
+          "default": "admin",
+          "location": {
+            "file": "contrib/docker-compose/caddy.yml",
+            "line": 24
+          }
+        },
+        {
+          "name": "ADMIN_USERNAME",
+          "kind": "compose",
+          "default": "admin",
+          "location": {
+            "file": "contrib/docker-compose/traefik.yml",
+            "line": 31
+          }
+        }
+      ]
+    },
+    {
+      "name": "BASE_URL",
+      "default": "https://miniflux.example.org",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "BASE_URL",
+          "kind": "compose",
+          "default": "https://miniflux.example.org",
+          "location": {
+            "file": "contrib/docker-compose/caddy.yml",
+            "line": 26
+          }
+        },
+        {
+          "name": "BASE_URL",
+          "kind": "compose",
+          "default": "https://miniflux.example.org",
+          "location": {
+            "file": "contrib/docker-compose/traefik.yml",
+            "line": 33
+          }
+        }
+      ]
+    },
+    {
+      "name": "CREATE_ADMIN",
+      "default": "1",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CREATE_ADMIN",
+          "kind": "compose",
+          "default": "1",
+          "location": {
+            "file": "contrib/docker-compose/basic.yml",
+            "line": 14
+          }
+        },
+        {
+          "name": "CREATE_ADMIN",
+          "kind": "compose",
+          "default": "1",
+          "location": {
+            "file": "contrib/docker-compose/caddy.yml",
+            "line": 23
+          }
+        },
+        {
+          "name": "CREATE_ADMIN",
+          "kind": "compose",
+          "default": "1",
+          "location": {
+            "file": "contrib/docker-compose/traefik.yml",
+            "line": 30
+          }
+        }
+      ]
+    },
+    {
+      "name": "DATABASE_URL",
+      "default": "postgres://miniflux:secret@db/miniflux?sslmode=disable",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DATABASE_URL",
+          "kind": "compose",
+          "default": "postgres://miniflux:secret@db/miniflux?sslmode=disable",
+          "location": {
+            "file": "contrib/docker-compose/basic.yml",
+            "line": 12
+          }
+        },
+        {
+          "name": "DATABASE_URL",
+          "kind": "compose",
+          "default": "postgres://miniflux:secret@db/miniflux?sslmode=disable",
+          "location": {
+            "file": "contrib/docker-compose/caddy.yml",
+            "line": 21
+          }
+        },
+        {
+          "name": "DATABASE_URL",
+          "kind": "compose",
+          "default": "postgres://miniflux:secret@db/miniflux?sslmode=disable",
+          "location": {
+            "file": "contrib/docker-compose/traefik.yml",
+            "line": 28
+          }
+        }
+      ]
+    },
+    {
+      "name": "DEBIAN_FRONTEND",
+      "default": "noninteractive",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DEBIAN_FRONTEND",
+          "kind": "dockerfile",
+          "default": "noninteractive",
+          "location": {
+            "file": "packaging/debian/Dockerfile",
+            "line": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "DEBUG",
+      "default": "1",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DEBUG",
+          "kind": "compose",
+          "default": "1",
+          "location": {
+            "file": "contrib/docker-compose/basic.yml",
+            "line": 17
+          }
+        }
+      ]
+    },
+    {
+      "name": "LISTEN_ADDR",
+      "default": "0.0.0.0:8080",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LISTEN_ADDR",
+          "kind": "dockerfile",
+          "default": "0.0.0.0:8080",
+          "location": {
+            "file": "packaging/docker/alpine/Dockerfile",
+            "line": 18
+          }
+        },
+        {
+          "name": "LISTEN_ADDR",
+          "kind": "dockerfile",
+          "default": "0.0.0.0:8080",
+          "location": {
+            "file": "packaging/docker/distroless/Dockerfile",
+            "line": 17
+          }
+        }
+      ]
+    },
+    {
+      "name": "LISTEN_PID",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LISTEN_PID",
+          "kind": "code",
+          "location": {
+            "file": "internal/http/server/server.go",
+            "line": 114
+          }
+        }
+      ]
+    },
+    {
+      "name": "MINIFLUX_IMAGE",
+      "default": "miniflux/miniflux:latest",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MINIFLUX_IMAGE",
+          "kind": "compose",
+          "default": "miniflux/miniflux:latest",
+          "location": {
+            "file": "contrib/docker-compose/basic.yml",
+            "line": 3
+          }
+        },
+        {
+          "name": "MINIFLUX_IMAGE",
+          "kind": "compose",
+          "default": "miniflux/miniflux:latest",
+          "location": {
+            "file": "contrib/docker-compose/caddy.yml",
+            "line": 15
+          }
+        },
+        {
+          "name": "MINIFLUX_IMAGE",
+          "kind": "compose",
+          "default": "miniflux/miniflux:latest",
+          "location": {
+            "file": "contrib/docker-compose/traefik.yml",
+            "line": 20
+          }
+        }
+      ]
+    },
+    {
+      "name": "NOTIFY_SOCKET",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "NOTIFY_SOCKET",
+          "kind": "code",
+          "location": {
+            "file": "internal/systemd/systemd.go",
+            "line": 28
+          }
+        },
+        {
+          "name": "NOTIFY_SOCKET",
+          "kind": "code",
+          "location": {
+            "file": "internal/systemd/systemd.go",
+            "line": 55
+          }
+        }
+      ]
+    },
+    {
+      "name": "POSTGRES_DB",
+      "default": "miniflux",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "POSTGRES_DB",
+          "kind": "compose",
+          "default": "miniflux",
+          "location": {
+            "file": "contrib/docker-compose/basic.yml",
+            "line": 28
+          }
+        }
+      ]
+    },
+    {
+      "name": "POSTGRES_PASSWORD",
+      "default": "secret",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "POSTGRES_PASSWORD",
+          "kind": "compose",
+          "default": "secret",
+          "location": {
+            "file": "contrib/docker-compose/basic.yml",
+            "line": 27
+          }
+        },
+        {
+          "name": "POSTGRES_PASSWORD",
+          "kind": "compose",
+          "default": "secret",
+          "location": {
+            "file": "contrib/docker-compose/caddy.yml",
+            "line": 32
+          }
+        },
+        {
+          "name": "POSTGRES_PASSWORD",
+          "kind": "compose",
+          "default": "secret",
+          "location": {
+            "file": "contrib/docker-compose/traefik.yml",
+            "line": 44
+          }
+        }
+      ]
+    },
+    {
+      "name": "POSTGRES_USER",
+      "default": "miniflux",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "POSTGRES_USER",
+          "kind": "compose",
+          "default": "miniflux",
+          "location": {
+            "file": "contrib/docker-compose/basic.yml",
+            "line": 26
+          }
+        },
+        {
+          "name": "POSTGRES_USER",
+          "kind": "compose",
+          "default": "miniflux",
+          "location": {
+            "file": "contrib/docker-compose/caddy.yml",
+            "line": 31
+          }
+        },
+        {
+          "name": "POSTGRES_USER",
+          "kind": "compose",
+          "default": "miniflux",
+          "location": {
+            "file": "contrib/docker-compose/traefik.yml",
+            "line": 43
+          }
+        }
+      ]
+    },
+    {
+      "name": "PWD",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PWD",
+          "kind": "compose",
+          "location": {
+            "file": "contrib/docker-compose/caddy.yml",
+            "line": 11
+          }
+        }
+      ]
+    },
+    {
+      "name": "RUN_MIGRATIONS",
+      "default": "1",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "RUN_MIGRATIONS",
+          "kind": "compose",
+          "default": "1",
+          "location": {
+            "file": "contrib/docker-compose/basic.yml",
+            "line": 13
+          }
+        },
+        {
+          "name": "RUN_MIGRATIONS",
+          "kind": "compose",
+          "default": "1",
+          "location": {
+            "file": "contrib/docker-compose/caddy.yml",
+            "line": 22
+          }
+        },
+        {
+          "name": "RUN_MIGRATIONS",
+          "kind": "compose",
+          "default": "1",
+          "location": {
+            "file": "contrib/docker-compose/traefik.yml",
+            "line": 29
+          }
+        }
+      ]
+    },
+    {
+      "name": "WATCHDOG_USEC",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "WATCHDOG_USEC",
+          "kind": "code",
+          "location": {
+            "file": "internal/systemd/systemd.go",
+            "line": 33
+          }
+        },
+        {
+          "name": "WATCHDOG_USEC",
+          "kind": "code",
+          "location": {
+            "file": "internal/systemd/systemd.go",
+            "line": 38
+          }
+        }
+      ]
+    }
+  ],
+  "images": [
+    {
+      "reference": "miniflux/miniflux:latest",
+      "kind": "compose",
+      "location": {
+        "file": "contrib/docker-compose/basic.yml",
+        "line": 3
+      }
+    },
+    {
+      "reference": "postgres:latest",
+      "kind": "compose",
+      "location": {
+        "file": "contrib/docker-compose/basic.yml",
+        "line": 22
+      }
+    },
+    {
+      "reference": "caddy:2",
+      "kind": "compose",
+      "location": {
+        "file": "contrib/docker-compose/caddy.yml",
+        "line": 3
+      }
+    },
+    {
+      "reference": "traefik:v2.3",
+      "kind": "compose",
+      "location": {
+        "file": "contrib/docker-compose/traefik.yml",
+        "line": 3
+      }
+    }
+  ],
+  "docker_runs": null,
+  "notes": null,
+  "suspicious": null,
+  "readmes": [
+    "README.md",
+    "client/README.md",
+    "contrib/README.md",
+    "contrib/ansible/roles/mgrote.miniflux/README.md",
+    "contrib/bruno/README.md",
+    "contrib/docker-compose/README.md",
+    "contrib/grafana/README.md",
+    "contrib/sysvinit/README.md",
+    "contrib/thunder_client/README.md",
+    "internal/fever/README.md",
+    "internal/googlereader/README.md"
+  ],
+  "summary": {
+    "text": "Miniflux is a minimalist and opinionated feed reader.",
+    "location": {
+      "file": "README.md",
+      "line": 4
+    }
+  },
+  "file_mentions": [
+    {
+      "text": "basic.yml",
+      "location": {
+        "file": "contrib/docker-compose/README.md",
+        "line": 6
+      }
+    },
+    {
+      "text": "caddy.yml",
+      "location": {
+        "file": "contrib/docker-compose/README.md",
+        "line": 7
+      }
+    },
+    {
+      "text": "traefik.yml",
+      "location": {
+        "file": "contrib/docker-compose/README.md",
+        "line": 8
+      }
+    },
+    {
+      "text": "basic.yml",
+      "location": {
+        "file": "contrib/docker-compose/README.md",
+        "line": 11
+      }
+    }
+  ],
+  "stack_hints": [
+    "go.mod"
+  ],
+  "problems": null
+}

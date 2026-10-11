@@ -1,0 +1,7 @@
+{
+  "url": "https://github.com/FreshRSS/FreshRSS",
+  "owner": "FreshRSS",
+  "commit": "9c04882cc15a09880b2b4d62ff0f9604869c466d",
+  "allow_registries": "-",
+  "verdict": "pass"
+}

@@ -1,0 +1,2538 @@
+{
+  "files": [
+    ".env.sample",
+    "README.md",
+    "bookmarks/admin.py",
+    "bookmarks/management/commands/create_initial_superuser.py",
+    "bookmarks/settings/base.py",
+    "bookmarks/settings/prod.py",
+    "docker-compose.yml",
+    "docker/alpine.Dockerfile",
+    "docker/default.Dockerfile",
+    "docs/README.md",
+    "docs/package.json",
+    "docs/src/content/docs/admin.md",
+    "docs/src/content/docs/api.md",
+    "docs/src/content/docs/archiving.md",
+    "docs/src/content/docs/auto-tagging.md",
+    "docs/src/content/docs/backups.md",
+    "docs/src/content/docs/browser-extension.md",
+    "docs/src/content/docs/community.md",
+    "docs/src/content/docs/how-to.md",
+    "docs/src/content/docs/installation.md",
+    "docs/src/content/docs/managed-hosting.md",
+    "docs/src/content/docs/options.md",
+    "docs/src/content/docs/search.md",
+    "docs/src/content/docs/shortcuts.md",
+    "docs/src/content/docs/troubleshooting.md",
+    "package.json",
+    "pyproject.toml",
+    "scripts/test-environments/authelia-oidc/authelia/configuration.yml",
+    "scripts/test-environments/authelia-oidc/authelia/users_database.yml",
+    "scripts/test-environments/authelia-oidc/compose.yml",
+    "scripts/test-environments/authelia-oidc/traefik/certificates.yml",
+    "scripts/test-environments/postgres/compose.yml"
+  ],
+  "compose_files": [
+    {
+      "path": "docker-compose.yml",
+      "services": [
+        {
+          "name": "linkding",
+          "location": {
+            "file": "docker-compose.yml",
+            "line": 2
+          },
+          "image": "sissbruecker/linkding:latest",
+          "image_at": {
+            "file": "docker-compose.yml",
+            "line": 4
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 9090,
+              "published": "9090",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docker-compose.yml",
+                "line": 6
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "./data",
+              "target": "/etc/linkding/data",
+              "read_only": false,
+              "location": {
+                "file": "docker-compose.yml",
+                "line": 8
+              }
+            }
+          ],
+          "environment": null,
+          "env_files": [
+            ".env"
+          ],
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": [
+        {
+          "name": "LD_CONTAINER_NAME",
+          "kind": "compose",
+          "default": "linkding",
+          "location": {
+            "file": "docker-compose.yml",
+            "line": 3
+          }
+        },
+        {
+          "name": "LD_HOST_DATA_DIR",
+          "kind": "compose",
+          "default": "./data",
+          "location": {
+            "file": "docker-compose.yml",
+            "line": 8
+          }
+        },
+        {
+          "name": "LD_HOST_PORT",
+          "kind": "compose",
+          "default": "9090",
+          "location": {
+            "file": "docker-compose.yml",
+            "line": 6
+          }
+        }
+      ]
+    },
+    {
+      "path": "scripts/test-environments/authelia-oidc/compose.yml",
+      "services": [
+        {
+          "name": "linkding",
+          "location": {
+            "file": "scripts/test-environments/authelia-oidc/compose.yml",
+            "line": 10
+          },
+          "image": "sissbruecker/linkding:local",
+          "image_at": {
+            "file": "scripts/test-environments/authelia-oidc/compose.yml",
+            "line": 11
+          },
+          "build": false,
+          "ports": null,
+          "volumes": null,
+          "environment": [
+            {
+              "key": "LD_SUPERUSER_NAME",
+              "raw": "admin",
+              "has_value": true,
+              "location": {
+                "file": "scripts/test-environments/authelia-oidc/compose.yml",
+                "line": 13
+              }
+            },
+            {
+              "key": "LD_SUPERUSER_PASSWORD",
+              "raw": "admin",
+              "has_value": true,
+              "location": {
+                "file": "scripts/test-environments/authelia-oidc/compose.yml",
+                "line": 14
+              }
+            },
+            {
+              "key": "LD_ENABLE_OIDC",
+              "raw": "True",
+              "has_value": true,
+              "location": {
+                "file": "scripts/test-environments/authelia-oidc/compose.yml",
+                "line": 15
+              }
+            },
+            {
+              "key": "OIDC_RP_CLIENT_ID",
+              "raw": "linkding",
+              "has_value": true,
+              "location": {
+                "file": "scripts/test-environments/authelia-oidc/compose.yml",
+                "line": 16
+              }
+            },
+            {
+              "key": "OIDC_RP_CLIENT_SECRET",
+              "raw": "insecure_secret",
+              "has_value": true,
+              "location": {
+                "file": "scripts/test-environments/authelia-oidc/compose.yml",
+                "line": 17
+              }
+            },
+            {
+              "key": "OIDC_OP_AUTHORIZATION_ENDPOINT",
+              "raw": "https://authelia.example.com/api/oidc/authorization",
+              "has_value": true,
+              "location": {
+                "file": "scripts/test-environments/authelia-oidc/compose.yml",
+                "line": 18
+              }
+            },
+            {
+              "key": "OIDC_OP_TOKEN_ENDPOINT",
+              "raw": "http://authelia:9091/api/oidc/token",
+              "has_value": true,
+              "location": {
+                "file": "scripts/test-environments/authelia-oidc/compose.yml",
+                "line": 19
+              }
+            },
+            {
+              "key": "OIDC_OP_USER_ENDPOINT",
+              "raw": "http://authelia:9091/api/oidc/userinfo",
+              "has_value": true,
+              "location": {
+                "file": "scripts/test-environments/authelia-oidc/compose.yml",
+                "line": 20
+              }
+            },
+            {
+              "key": "OIDC_OP_JWKS_ENDPOINT",
+              "raw": "http://authelia:9091/jwks.json",
+              "has_value": true,
+              "location": {
+                "file": "scripts/test-environments/authelia-oidc/compose.yml",
+                "line": 21
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "authelia",
+          "location": {
+            "file": "scripts/test-environments/authelia-oidc/compose.yml",
+            "line": 30
+          },
+          "image": "authelia/authelia:latest",
+          "image_at": {
+            "file": "scripts/test-environments/authelia-oidc/compose.yml",
+            "line": 31
+          },
+          "build": false,
+          "ports": null,
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "./authelia",
+              "target": "/config",
+              "read_only": false,
+              "location": {
+                "file": "scripts/test-environments/authelia-oidc/compose.yml",
+                "line": 33
+              }
+            }
+          ],
+          "environment": null,
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "traefik",
+          "location": {
+            "file": "scripts/test-environments/authelia-oidc/compose.yml",
+            "line": 42
+          },
+          "image": "traefik:v3.5.0",
+          "image_at": {
+            "file": "scripts/test-environments/authelia-oidc/compose.yml",
+            "line": 43
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 80,
+              "published": "80",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "scripts/test-environments/authelia-oidc/compose.yml",
+                "line": 57
+              }
+            },
+            {
+              "target": 443,
+              "published": "443",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "scripts/test-environments/authelia-oidc/compose.yml",
+                "line": 58
+              }
+            },
+            {
+              "target": 443,
+              "published": "443",
+              "host_ip": "",
+              "protocol": "udp",
+              "location": {
+                "file": "scripts/test-environments/authelia-oidc/compose.yml",
+                "line": 59
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "./traefik",
+              "target": "/etc/traefik",
+              "read_only": false,
+              "location": {
+                "file": "scripts/test-environments/authelia-oidc/compose.yml",
+                "line": 45
+              }
+            },
+            {
+              "type": "bind",
+              "source": "/var/run/docker.sock",
+              "target": "/var/run/docker.sock",
+              "read_only": false,
+              "location": {
+                "file": "scripts/test-environments/authelia-oidc/compose.yml",
+                "line": 46
+              }
+            }
+          ],
+          "environment": null,
+          "env_files": null,
+          "depends_on": null,
+          "command": [
+            "--api",
+            "--providers.docker=true",
+            "--providers.docker.exposedByDefault=false",
+            "--providers.file.filename=/etc/traefik/certificates.yml",
+            "--entrypoints.http=true",
+            "--entrypoints.http.address=:80",
+            "--entrypoints.http.http.redirections.entrypoint.to=https",
+            "--entrypoints.http.http.redirections.entrypoint.scheme=https",
+            "--entrypoints.https=true",
+            "--entrypoints.https.address=:443",
+            "--log=true",
+            "--log.level=DEBUG"
+          ],
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": []
+    },
+    {
+      "path": "scripts/test-environments/postgres/compose.yml",
+      "services": [
+        {
+          "name": "postgres",
+          "location": {
+            "file": "scripts/test-environments/postgres/compose.yml",
+            "line": 6
+          },
+          "image": "postgres:16",
+          "image_at": {
+            "file": "scripts/test-environments/postgres/compose.yml",
+            "line": 7
+          },
+          "build": false,
+          "ports": null,
+          "volumes": null,
+          "environment": [
+            {
+              "key": "POSTGRES_DB",
+              "raw": "linkding",
+              "has_value": true,
+              "location": {
+                "file": "scripts/test-environments/postgres/compose.yml",
+                "line": 9
+              }
+            },
+            {
+              "key": "POSTGRES_USER",
+              "raw": "linkding",
+              "has_value": true,
+              "location": {
+                "file": "scripts/test-environments/postgres/compose.yml",
+                "line": 10
+              }
+            },
+            {
+              "key": "POSTGRES_PASSWORD",
+              "raw": "linkding",
+              "has_value": true,
+              "location": {
+                "file": "scripts/test-environments/postgres/compose.yml",
+                "line": 11
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "healthcheck": {
+            "test": [
+              "CMD-SHELL",
+              "pg_isready -U linkding -d linkding"
+            ],
+            "interval": "10s",
+            "timeout": "5s",
+            "start_period": "",
+            "retries": 5,
+            "disabled": false,
+            "location": {
+              "file": "scripts/test-environments/postgres/compose.yml",
+              "line": 12
+            }
+          },
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "linkding",
+          "location": {
+            "file": "scripts/test-environments/postgres/compose.yml",
+            "line": 18
+          },
+          "image": "sissbruecker/linkding:local",
+          "image_at": {
+            "file": "scripts/test-environments/postgres/compose.yml",
+            "line": 19
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 9090,
+              "published": "9090",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "scripts/test-environments/postgres/compose.yml",
+                "line": 30
+              }
+            }
+          ],
+          "volumes": null,
+          "environment": [
+            {
+              "key": "LD_SUPERUSER_NAME",
+              "raw": "admin",
+              "has_value": true,
+              "location": {
+                "file": "scripts/test-environments/postgres/compose.yml",
+                "line": 21
+              }
+            },
+            {
+              "key": "LD_SUPERUSER_PASSWORD",
+              "raw": "admin",
+              "has_value": true,
+              "location": {
+                "file": "scripts/test-environments/postgres/compose.yml",
+                "line": 22
+              }
+            },
+            {
+              "key": "LD_DB_ENGINE",
+              "raw": "postgres",
+              "has_value": true,
+              "location": {
+                "file": "scripts/test-environments/postgres/compose.yml",
+                "line": 23
+              }
+            },
+            {
+              "key": "LD_DB_HOST",
+              "raw": "postgres",
+              "has_value": true,
+              "location": {
+                "file": "scripts/test-environments/postgres/compose.yml",
+                "line": 24
+              }
+            },
+            {
+              "key": "LD_DB_PORT",
+              "raw": "5432",
+              "has_value": true,
+              "location": {
+                "file": "scripts/test-environments/postgres/compose.yml",
+                "line": 25
+              }
+            },
+            {
+              "key": "LD_DB_DATABASE",
+              "raw": "linkding",
+              "has_value": true,
+              "location": {
+                "file": "scripts/test-environments/postgres/compose.yml",
+                "line": 26
+              }
+            },
+            {
+              "key": "LD_DB_USER",
+              "raw": "linkding",
+              "has_value": true,
+              "location": {
+                "file": "scripts/test-environments/postgres/compose.yml",
+                "line": 27
+              }
+            },
+            {
+              "key": "LD_DB_PASSWORD",
+              "raw": "linkding",
+              "has_value": true,
+              "location": {
+                "file": "scripts/test-environments/postgres/compose.yml",
+                "line": 28
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": [
+            {
+              "service": "postgres",
+              "condition": "service_healthy"
+            }
+          ],
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": []
+    }
+  ],
+  "dockerfiles": [
+    {
+      "path": "docker/alpine.Dockerfile",
+      "base_image": "python:3.13.7-alpine3.22",
+      "exposed": [
+        {
+          "port": 9090,
+          "protocol": "tcp",
+          "location": {
+            "file": "docker/alpine.Dockerfile",
+            "line": 79
+          }
+        }
+      ],
+      "volumes": null,
+      "env": [
+        {
+          "key": "VIRTUAL_ENV",
+          "value": "/etc/linkding/.venv",
+          "location": {
+            "file": "docker/alpine.Dockerfile",
+            "line": 70
+          }
+        },
+        {
+          "key": "PATH",
+          "value": "/etc/linkding/.venv/bin:$PATH",
+          "location": {
+            "file": "docker/alpine.Dockerfile",
+            "line": 71
+          }
+        },
+        {
+          "key": "UWSGI_MAX_FD",
+          "value": "4096",
+          "location": {
+            "file": "docker/alpine.Dockerfile",
+            "line": 77
+          }
+        },
+        {
+          "key": "LD_ENABLE_SNAPSHOTS",
+          "value": "True",
+          "location": {
+            "file": "docker/alpine.Dockerfile",
+            "line": 114
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "SQLITE_RELEASE_YEAR",
+          "value": "2023",
+          "location": {
+            "file": "docker/alpine.Dockerfile",
+            "line": 36
+          }
+        },
+        {
+          "key": "SQLITE_RELEASE",
+          "value": "3430000",
+          "location": {
+            "file": "docker/alpine.Dockerfile",
+            "line": 37
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "curl -f http://localhost:${LD_SERVER_PORT:-9090}/${LD_CONTEXT_PATH}health || exit 1"
+        ],
+        "interval": "30s",
+        "timeout": "1s",
+        "start_period": "",
+        "retries": 3,
+        "disabled": false,
+        "location": {
+          "file": "docker/alpine.Dockerfile",
+          "line": 84
+        }
+      },
+      "entrypoint": null,
+      "command": [
+        "./bootstrap.sh"
+      ]
+    },
+    {
+      "path": "docker/default.Dockerfile",
+      "base_image": "python:3.13.7-slim-trixie",
+      "exposed": [
+        {
+          "port": 9090,
+          "protocol": "tcp",
+          "location": {
+            "file": "docker/default.Dockerfile",
+            "line": 74
+          }
+        }
+      ],
+      "volumes": null,
+      "env": [
+        {
+          "key": "VIRTUAL_ENV",
+          "value": "/etc/linkding/.venv",
+          "location": {
+            "file": "docker/default.Dockerfile",
+            "line": 65
+          }
+        },
+        {
+          "key": "PATH",
+          "value": "/etc/linkding/.venv/bin:$PATH",
+          "location": {
+            "file": "docker/default.Dockerfile",
+            "line": 66
+          }
+        },
+        {
+          "key": "UWSGI_MAX_FD",
+          "value": "4096",
+          "location": {
+            "file": "docker/default.Dockerfile",
+            "line": 72
+          }
+        },
+        {
+          "key": "NODE_MAJOR",
+          "value": "22",
+          "location": {
+            "file": "docker/default.Dockerfile",
+            "line": 99
+          }
+        },
+        {
+          "key": "LD_ENABLE_SNAPSHOTS",
+          "value": "True",
+          "location": {
+            "file": "docker/default.Dockerfile",
+            "line": 116
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "SQLITE_RELEASE_YEAR",
+          "value": "2023",
+          "location": {
+            "file": "docker/default.Dockerfile",
+            "line": 35
+          }
+        },
+        {
+          "key": "SQLITE_RELEASE",
+          "value": "3430000",
+          "location": {
+            "file": "docker/default.Dockerfile",
+            "line": 36
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "curl -f http://localhost:${LD_SERVER_PORT:-9090}/${LD_CONTEXT_PATH}health || exit 1"
+        ],
+        "interval": "30s",
+        "timeout": "1s",
+        "start_period": "",
+        "retries": 3,
+        "disabled": false,
+        "location": {
+          "file": "docker/default.Dockerfile",
+          "line": 79
+        }
+      },
+      "entrypoint": null,
+      "command": [
+        "./bootstrap.sh"
+      ]
+    }
+  ],
+  "env_samples": [
+    {
+      "path": ".env.sample",
+      "entries": [
+        {
+          "key": "LD_CONTAINER_NAME",
+          "value": "linkding",
+          "comment": "Docker container name",
+          "commented": false,
+          "location": {
+            "file": ".env.sample",
+            "line": 2
+          }
+        },
+        {
+          "key": "LD_HOST_PORT",
+          "value": "9090",
+          "comment": "Port on the host system that the application should be published on",
+          "commented": false,
+          "location": {
+            "file": ".env.sample",
+            "line": 4
+          }
+        },
+        {
+          "key": "LD_HOST_DATA_DIR",
+          "value": "./data",
+          "comment": "Directory on the host system that should be mounted as data dir into the Docker container",
+          "commented": false,
+          "location": {
+            "file": ".env.sample",
+            "line": 6
+          }
+        },
+        {
+          "key": "LD_CONTEXT_PATH",
+          "value": "",
+          "comment": "Can be used to run linkding under a context path, for example: linkding/ Must end with a slash `/`",
+          "commented": false,
+          "location": {
+            "file": ".env.sample",
+            "line": 10
+          }
+        },
+        {
+          "key": "LD_SUPERUSER_NAME",
+          "value": "",
+          "comment": "Username of the initial superuser to create, leave empty to not create one",
+          "commented": false,
+          "location": {
+            "file": ".env.sample",
+            "line": 12
+          }
+        },
+        {
+          "key": "LD_SUPERUSER_PASSWORD",
+          "value": "",
+          "comment": "Password for the initial superuser, leave empty to disable credentials authentication and rely on proxy authentication instead",
+          "commented": false,
+          "location": {
+            "file": ".env.sample",
+            "line": 14
+          }
+        },
+        {
+          "key": "LD_DISABLE_BACKGROUND_TASKS",
+          "value": "False",
+          "comment": "Option to disable background tasks",
+          "commented": false,
+          "location": {
+            "file": ".env.sample",
+            "line": 16
+          }
+        },
+        {
+          "key": "LD_DISABLE_URL_VALIDATION",
+          "value": "False",
+          "comment": "Option to disable URL validation for bookmarks completely",
+          "commented": false,
+          "location": {
+            "file": ".env.sample",
+            "line": 18
+          }
+        },
+        {
+          "key": "LD_ENABLE_AUTH_PROXY",
+          "value": "False",
+          "comment": "Enables support for authentication proxies such as Authelia",
+          "commented": false,
+          "location": {
+            "file": ".env.sample",
+            "line": 20
+          }
+        },
+        {
+          "key": "LD_AUTH_PROXY_USERNAME_HEADER",
+          "value": "",
+          "comment": "Name of the request header that the auth proxy passes to the application to identify the user See docs/Options.md for more details",
+          "commented": false,
+          "location": {
+            "file": ".env.sample",
+            "line": 23
+          }
+        },
+        {
+          "key": "LD_AUTH_PROXY_LOGOUT_URL",
+          "value": "",
+          "comment": "The URL that linkding should redirect to after a logout, when using an auth proxy See docs/Options.md for more details",
+          "commented": false,
+          "location": {
+            "file": ".env.sample",
+            "line": 26
+          }
+        },
+        {
+          "key": "LD_DISABLE_LOGIN_FORM",
+          "value": "False",
+          "comment": "Disables the login form, useful to enforce OIDC authentication",
+          "commented": false,
+          "location": {
+            "file": ".env.sample",
+            "line": 28
+          }
+        },
+        {
+          "key": "LD_CSRF_TRUSTED_ORIGINS",
+          "value": "",
+          "comment": "List of trusted origins from which to accept POST requests See docs/Options.md for more details",
+          "commented": false,
+          "location": {
+            "file": ".env.sample",
+            "line": 31
+          }
+        },
+        {
+          "key": "LD_DB_ENGINE",
+          "value": "",
+          "comment": "Database engine, can be sqlite (default) or postgres",
+          "commented": false,
+          "location": {
+            "file": ".env.sample",
+            "line": 38
+          }
+        },
+        {
+          "key": "LD_DB_DATABASE",
+          "value": "",
+          "comment": "Database name (default: linkding)",
+          "commented": false,
+          "location": {
+            "file": ".env.sample",
+            "line": 40
+          }
+        },
+        {
+          "key": "LD_DB_USER",
+          "value": "",
+          "comment": "Username to connect to the database server  (default: linkding)",
+          "commented": false,
+          "location": {
+            "file": ".env.sample",
+            "line": 42
+          }
+        },
+        {
+          "key": "LD_DB_PASSWORD",
+          "value": "",
+          "comment": "Password to connect to the database server",
+          "commented": false,
+          "location": {
+            "file": ".env.sample",
+            "line": 44
+          }
+        },
+        {
+          "key": "LD_DB_HOST",
+          "value": "",
+          "comment": "The hostname where the database is hosted (default: localhost)",
+          "commented": false,
+          "location": {
+            "file": ".env.sample",
+            "line": 46
+          }
+        },
+        {
+          "key": "LD_DB_PORT",
+          "value": "",
+          "comment": "Port use to connect to the database server Should use the default port if not set",
+          "commented": false,
+          "location": {
+            "file": ".env.sample",
+            "line": 49
+          }
+        },
+        {
+          "key": "LD_DB_OPTIONS",
+          "value": "",
+          "comment": "Any additional options to pass to the database (default: {})",
+          "commented": false,
+          "location": {
+            "file": ".env.sample",
+            "line": 51
+          }
+        }
+      ]
+    }
+  ],
+  "variables": [
+    {
+      "name": "HOST_NAME",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "HOST_NAME",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/prod.py",
+            "line": 26
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_ALLOWED_INTERNAL_HOSTS",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_ALLOWED_INTERNAL_HOSTS",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 167
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_AUTH_PROXY_LOGOUT_URL",
+      "default": "",
+      "description": "The URL that linkding should redirect to after a logout, when using an auth proxy See docs/Options.md for more details",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_AUTH_PROXY_LOGOUT_URL",
+          "kind": "env_sample",
+          "text": "The URL that linkding should redirect to after a logout, when using an auth proxy See docs/Options.md for more details",
+          "location": {
+            "file": ".env.sample",
+            "line": 26
+          }
+        },
+        {
+          "name": "LD_AUTH_PROXY_LOGOUT_URL",
+          "kind": "readme",
+          "text": "The URL that linkding should redirect to after a logout.",
+          "location": {
+            "file": "docs/src/content/docs/options.md",
+            "line": 138
+          }
+        },
+        {
+          "name": "LD_AUTH_PROXY_LOGOUT_URL",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 240
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_AUTH_PROXY_USERNAME_HEADER",
+      "default": "",
+      "description": "Name of the request header that the auth proxy passes to the application to identify the user See docs/Options.md for more details",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_AUTH_PROXY_USERNAME_HEADER",
+          "kind": "env_sample",
+          "text": "Name of the request header that the auth proxy passes to the application to identify the user See docs/Options.md for more details",
+          "location": {
+            "file": ".env.sample",
+            "line": 23
+          }
+        },
+        {
+          "name": "LD_AUTH_PROXY_USERNAME_HEADER",
+          "kind": "readme",
+          "text": "The name of the request header that the auth proxy passes to the proxied application (linkding in this case), so that the application can identify the user.",
+          "location": {
+            "file": "docs/src/content/docs/options.md",
+            "line": 134
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_CONTAINER_NAME",
+      "default": "linkding",
+      "description": "Docker container name",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_CONTAINER_NAME",
+          "kind": "compose",
+          "default": "linkding",
+          "location": {
+            "file": "docker-compose.yml",
+            "line": 3
+          }
+        },
+        {
+          "name": "LD_CONTAINER_NAME",
+          "kind": "env_sample",
+          "default": "linkding",
+          "text": "Docker container name",
+          "location": {
+            "file": ".env.sample",
+            "line": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_CONTEXT_PATH",
+      "default": "",
+      "description": "Can be used to run linkding under a context path, for example: linkding/ Must end with a slash `/`",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_CONTEXT_PATH",
+          "kind": "env_sample",
+          "text": "Can be used to run linkding under a context path, for example: linkding/ Must end with a slash `/`",
+          "location": {
+            "file": ".env.sample",
+            "line": 10
+          }
+        },
+        {
+          "name": "LD_CONTEXT_PATH",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/admin.py",
+            "line": 94
+          }
+        },
+        {
+          "name": "LD_CONTEXT_PATH",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 111
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_CORS_ALLOWED_ORIGINS",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_CORS_ALLOWED_ORIGINS",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 258
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_CSRF_TRUSTED_ORIGINS",
+      "default": "",
+      "description": "List of trusted origins from which to accept POST requests See docs/Options.md for more details",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_CSRF_TRUSTED_ORIGINS",
+          "kind": "env_sample",
+          "text": "List of trusted origins from which to accept POST requests See docs/Options.md for more details",
+          "location": {
+            "file": ".env.sample",
+            "line": 31
+          }
+        },
+        {
+          "name": "LD_CSRF_TRUSTED_ORIGINS",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 253
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_DB_DATABASE",
+      "default": "linkding",
+      "description": "Database name (default: linkding)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_DB_DATABASE",
+          "kind": "compose",
+          "default": "linkding",
+          "location": {
+            "file": "scripts/test-environments/postgres/compose.yml",
+            "line": 26
+          }
+        },
+        {
+          "name": "LD_DB_DATABASE",
+          "kind": "env_sample",
+          "text": "Database name (default: linkding)",
+          "location": {
+            "file": ".env.sample",
+            "line": 40
+          }
+        },
+        {
+          "name": "LD_DB_DATABASE",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 265
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_DB_ENGINE",
+      "default": "postgres",
+      "description": "Database engine, can be sqlite (default) or postgres",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_DB_ENGINE",
+          "kind": "compose",
+          "default": "postgres",
+          "location": {
+            "file": "scripts/test-environments/postgres/compose.yml",
+            "line": 23
+          }
+        },
+        {
+          "name": "LD_DB_ENGINE",
+          "kind": "env_sample",
+          "text": "Database engine, can be sqlite (default) or postgres",
+          "location": {
+            "file": ".env.sample",
+            "line": 38
+          }
+        },
+        {
+          "name": "LD_DB_ENGINE",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 263
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_DB_HOST",
+      "default": "postgres",
+      "description": "The hostname where the database is hosted (default: localhost)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_DB_HOST",
+          "kind": "compose",
+          "default": "postgres",
+          "location": {
+            "file": "scripts/test-environments/postgres/compose.yml",
+            "line": 24
+          }
+        },
+        {
+          "name": "LD_DB_HOST",
+          "kind": "env_sample",
+          "text": "The hostname where the database is hosted (default: localhost)",
+          "location": {
+            "file": ".env.sample",
+            "line": 46
+          }
+        },
+        {
+          "name": "LD_DB_HOST",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 264
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_DB_OPTIONS",
+      "default": "",
+      "description": "Any additional options to pass to the database (default: {})",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_DB_OPTIONS",
+          "kind": "env_sample",
+          "text": "Any additional options to pass to the database (default: {})",
+          "location": {
+            "file": ".env.sample",
+            "line": 51
+          }
+        },
+        {
+          "name": "LD_DB_OPTIONS",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 269
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_DB_PASSWORD",
+      "default": "linkding",
+      "description": "Password to connect to the database server",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_DB_PASSWORD",
+          "kind": "compose",
+          "default": "linkding",
+          "location": {
+            "file": "scripts/test-environments/postgres/compose.yml",
+            "line": 28
+          }
+        },
+        {
+          "name": "LD_DB_PASSWORD",
+          "kind": "env_sample",
+          "text": "Password to connect to the database server",
+          "location": {
+            "file": ".env.sample",
+            "line": 44
+          }
+        },
+        {
+          "name": "LD_DB_PASSWORD",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 267
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_DB_PORT",
+      "default": "5432",
+      "description": "Port use to connect to the database server Should use the default port if not set",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_DB_PORT",
+          "kind": "compose",
+          "default": "5432",
+          "location": {
+            "file": "scripts/test-environments/postgres/compose.yml",
+            "line": 25
+          }
+        },
+        {
+          "name": "LD_DB_PORT",
+          "kind": "env_sample",
+          "text": "Port use to connect to the database server Should use the default port if not set",
+          "location": {
+            "file": ".env.sample",
+            "line": 49
+          }
+        },
+        {
+          "name": "LD_DB_PORT",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 268
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_DB_USER",
+      "default": "linkding",
+      "description": "Username to connect to the database server  (default: linkding)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_DB_USER",
+          "kind": "compose",
+          "default": "linkding",
+          "location": {
+            "file": "scripts/test-environments/postgres/compose.yml",
+            "line": 27
+          }
+        },
+        {
+          "name": "LD_DB_USER",
+          "kind": "env_sample",
+          "text": "Username to connect to the database server  (default: linkding)",
+          "location": {
+            "file": ".env.sample",
+            "line": 42
+          }
+        },
+        {
+          "name": "LD_DB_USER",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 266
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_DISABLE_ASSET_UPLOAD",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_DISABLE_ASSET_UPLOAD",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 331
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_DISABLE_BACKGROUND_TASKS",
+      "default": "False",
+      "description": "Option to disable background tasks",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_DISABLE_BACKGROUND_TASKS",
+          "kind": "env_sample",
+          "default": "False",
+          "text": "Option to disable background tasks",
+          "location": {
+            "file": ".env.sample",
+            "line": 16
+          }
+        },
+        {
+          "name": "LD_DISABLE_BACKGROUND_TASKS",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 170
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_DISABLE_LOGIN_FORM",
+      "default": "False",
+      "description": "Disables the login form, useful to enforce OIDC authentication",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_DISABLE_LOGIN_FORM",
+          "kind": "env_sample",
+          "default": "False",
+          "text": "Disables the login form, useful to enforce OIDC authentication",
+          "location": {
+            "file": ".env.sample",
+            "line": 28
+          }
+        },
+        {
+          "name": "LD_DISABLE_LOGIN_FORM",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 202
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_DISABLE_URL_VALIDATION",
+      "default": "False",
+      "description": "Option to disable URL validation for bookmarks completely",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_DISABLE_URL_VALIDATION",
+          "kind": "env_sample",
+          "default": "False",
+          "text": "Option to disable URL validation for bookmarks completely",
+          "location": {
+            "file": ".env.sample",
+            "line": 18
+          }
+        },
+        {
+          "name": "LD_DISABLE_URL_VALIDATION",
+          "kind": "readme",
+          "default": "True",
+          "location": {
+            "file": "docs/src/content/docs/options.md",
+            "line": 15
+          }
+        },
+        {
+          "name": "LD_DISABLE_URL_VALIDATION",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 156
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_ENABLE_AUTH_PROXY",
+      "default": "False",
+      "description": "Enables support for authentication proxies such as Authelia",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_ENABLE_AUTH_PROXY",
+          "kind": "env_sample",
+          "default": "False",
+          "text": "Enables support for authentication proxies such as Authelia",
+          "location": {
+            "file": ".env.sample",
+            "line": 20
+          }
+        },
+        {
+          "name": "LD_ENABLE_AUTH_PROXY",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 231
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_ENABLE_OIDC",
+      "default": "True",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_ENABLE_OIDC",
+          "kind": "compose",
+          "default": "True",
+          "location": {
+            "file": "scripts/test-environments/authelia-oidc/compose.yml",
+            "line": 15
+          }
+        },
+        {
+          "name": "LD_ENABLE_OIDC",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 210
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_ENABLE_REFRESH_FAVICONS",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_ENABLE_REFRESH_FAVICONS",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 303
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_ENABLE_SNAPSHOTS",
+      "default": "True",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_ENABLE_SNAPSHOTS",
+          "kind": "dockerfile",
+          "default": "True",
+          "location": {
+            "file": "docker/alpine.Dockerfile",
+            "line": 114
+          }
+        },
+        {
+          "name": "LD_ENABLE_SNAPSHOTS",
+          "kind": "dockerfile",
+          "default": "True",
+          "location": {
+            "file": "docker/default.Dockerfile",
+            "line": 116
+          }
+        },
+        {
+          "name": "LD_ENABLE_SNAPSHOTS",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 325
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_FAVICON_PROVIDER",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_FAVICON_PROVIDER",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 301
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_HOST_DATA_DIR",
+      "default": "./data",
+      "description": "Directory on the host system that should be mounted as data dir into the Docker container",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_HOST_DATA_DIR",
+          "kind": "compose",
+          "default": "./data",
+          "location": {
+            "file": "docker-compose.yml",
+            "line": 8
+          }
+        },
+        {
+          "name": "LD_HOST_DATA_DIR",
+          "kind": "env_sample",
+          "default": "./data",
+          "text": "Directory on the host system that should be mounted as data dir into the Docker container",
+          "location": {
+            "file": ".env.sample",
+            "line": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_HOST_PORT",
+      "default": "9090",
+      "description": "Port on the host system that the application should be published on",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_HOST_PORT",
+          "kind": "compose",
+          "default": "9090",
+          "location": {
+            "file": "docker-compose.yml",
+            "line": 6
+          }
+        },
+        {
+          "name": "LD_HOST_PORT",
+          "kind": "env_sample",
+          "default": "9090",
+          "text": "Port on the host system that the application should be published on",
+          "location": {
+            "file": ".env.sample",
+            "line": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_MONOLITH_OPTIONS",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_MONOLITH_OPTIONS",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 357
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_MONOLITH_PATH",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_MONOLITH_PATH",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 356
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_PREVIEW_MAX_SIZE",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_PREVIEW_MAX_SIZE",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 312
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_SESSION_COOKIE_AGE",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_SESSION_COOKIE_AGE",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 199
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_SINGLEFILE_OPTIONS",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_SINGLEFILE_OPTIONS",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 349
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_SINGLEFILE_PATH",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_SINGLEFILE_PATH",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 337
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_SINGLEFILE_TIMEOUT_SEC",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_SINGLEFILE_TIMEOUT_SEC",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 350
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_SNAPSHOT_PDF_MAX_SIZE",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_SNAPSHOT_PDF_MAX_SIZE",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 351
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_SUPERUSER_NAME",
+      "default": "admin",
+      "description": "Username of the initial superuser to create, leave empty to not create one",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_SUPERUSER_NAME",
+          "kind": "compose",
+          "default": "admin",
+          "location": {
+            "file": "scripts/test-environments/authelia-oidc/compose.yml",
+            "line": 13
+          }
+        },
+        {
+          "name": "LD_SUPERUSER_NAME",
+          "kind": "compose",
+          "default": "admin",
+          "location": {
+            "file": "scripts/test-environments/postgres/compose.yml",
+            "line": 21
+          }
+        },
+        {
+          "name": "LD_SUPERUSER_NAME",
+          "kind": "env_sample",
+          "text": "Username of the initial superuser to create, leave empty to not create one",
+          "location": {
+            "file": ".env.sample",
+            "line": 12
+          }
+        },
+        {
+          "name": "LD_SUPERUSER_NAME",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/management/commands/create_initial_superuser.py",
+            "line": 15
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_SUPERUSER_PASSWORD",
+      "default": "admin",
+      "description": "Password for the initial superuser, leave empty to disable credentials authentication and rely on proxy authentication instead",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_SUPERUSER_PASSWORD",
+          "kind": "compose",
+          "default": "admin",
+          "location": {
+            "file": "scripts/test-environments/authelia-oidc/compose.yml",
+            "line": 14
+          }
+        },
+        {
+          "name": "LD_SUPERUSER_PASSWORD",
+          "kind": "compose",
+          "default": "admin",
+          "location": {
+            "file": "scripts/test-environments/postgres/compose.yml",
+            "line": 22
+          }
+        },
+        {
+          "name": "LD_SUPERUSER_PASSWORD",
+          "kind": "env_sample",
+          "text": "Password for the initial superuser, leave empty to disable credentials authentication and rely on proxy authentication instead",
+          "location": {
+            "file": ".env.sample",
+            "line": 14
+          }
+        },
+        {
+          "name": "LD_SUPERUSER_PASSWORD",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/management/commands/create_initial_superuser.py",
+            "line": 16
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_USE_X_FORWARDED_HOST",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_USE_X_FORWARDED_HOST",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 32
+          }
+        }
+      ]
+    },
+    {
+      "name": "NODE_MAJOR",
+      "default": "22",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "NODE_MAJOR",
+          "kind": "dockerfile",
+          "default": "22",
+          "location": {
+            "file": "docker/default.Dockerfile",
+            "line": 99
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_OP_AUTHORIZATION_ENDPOINT",
+      "default": "https://authelia.example.com/api/oidc/authorization",
+      "description": "The authorization endpoint of the OIDC provider.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_OP_AUTHORIZATION_ENDPOINT",
+          "kind": "compose",
+          "default": "https://authelia.example.com/api/oidc/authorization",
+          "location": {
+            "file": "scripts/test-environments/authelia-oidc/compose.yml",
+            "line": 18
+          }
+        },
+        {
+          "name": "OIDC_OP_AUTHORIZATION_ENDPOINT",
+          "kind": "readme",
+          "text": "The authorization endpoint of the OIDC provider.",
+          "location": {
+            "file": "docs/src/content/docs/options.md",
+            "line": 191
+          }
+        },
+        {
+          "name": "OIDC_OP_AUTHORIZATION_ENDPOINT",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 218
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_OP_JWKS_ENDPOINT",
+      "default": "http://authelia:9091/jwks.json",
+      "description": "The JWKS endpoint of the OIDC provider.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_OP_JWKS_ENDPOINT",
+          "kind": "compose",
+          "default": "http://authelia:9091/jwks.json",
+          "location": {
+            "file": "scripts/test-environments/authelia-oidc/compose.yml",
+            "line": 21
+          }
+        },
+        {
+          "name": "OIDC_OP_JWKS_ENDPOINT",
+          "kind": "readme",
+          "text": "The JWKS endpoint of the OIDC provider.",
+          "location": {
+            "file": "docs/src/content/docs/options.md",
+            "line": 194
+          }
+        },
+        {
+          "name": "OIDC_OP_JWKS_ENDPOINT",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 221
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_OP_TOKEN_ENDPOINT",
+      "default": "http://authelia:9091/api/oidc/token",
+      "description": "The token endpoint of the OIDC provider.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_OP_TOKEN_ENDPOINT",
+          "kind": "compose",
+          "default": "http://authelia:9091/api/oidc/token",
+          "location": {
+            "file": "scripts/test-environments/authelia-oidc/compose.yml",
+            "line": 19
+          }
+        },
+        {
+          "name": "OIDC_OP_TOKEN_ENDPOINT",
+          "kind": "readme",
+          "text": "The token endpoint of the OIDC provider.",
+          "location": {
+            "file": "docs/src/content/docs/options.md",
+            "line": 192
+          }
+        },
+        {
+          "name": "OIDC_OP_TOKEN_ENDPOINT",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 219
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_OP_USER_ENDPOINT",
+      "default": "http://authelia:9091/api/oidc/userinfo",
+      "description": "The user info endpoint of the OIDC provider.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_OP_USER_ENDPOINT",
+          "kind": "compose",
+          "default": "http://authelia:9091/api/oidc/userinfo",
+          "location": {
+            "file": "scripts/test-environments/authelia-oidc/compose.yml",
+            "line": 20
+          }
+        },
+        {
+          "name": "OIDC_OP_USER_ENDPOINT",
+          "kind": "readme",
+          "text": "The user info endpoint of the OIDC provider.",
+          "location": {
+            "file": "docs/src/content/docs/options.md",
+            "line": 193
+          }
+        },
+        {
+          "name": "OIDC_OP_USER_ENDPOINT",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 220
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_RP_CLIENT_ID",
+      "default": "linkding",
+      "description": "The client ID of the application.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_RP_CLIENT_ID",
+          "kind": "compose",
+          "default": "linkding",
+          "location": {
+            "file": "scripts/test-environments/authelia-oidc/compose.yml",
+            "line": 16
+          }
+        },
+        {
+          "name": "OIDC_RP_CLIENT_ID",
+          "kind": "readme",
+          "text": "The client ID of the application.",
+          "location": {
+            "file": "docs/src/content/docs/options.md",
+            "line": 195
+          }
+        },
+        {
+          "name": "OIDC_RP_CLIENT_ID",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 222
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_RP_CLIENT_SECRET",
+      "default": "insecure_secret",
+      "description": "The client secret of the application.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_RP_CLIENT_SECRET",
+          "kind": "compose",
+          "default": "insecure_secret",
+          "location": {
+            "file": "scripts/test-environments/authelia-oidc/compose.yml",
+            "line": 17
+          }
+        },
+        {
+          "name": "OIDC_RP_CLIENT_SECRET",
+          "kind": "readme",
+          "text": "The client secret of the application.",
+          "location": {
+            "file": "docs/src/content/docs/options.md",
+            "line": 196
+          }
+        },
+        {
+          "name": "OIDC_RP_CLIENT_SECRET",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 223
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_RP_SCOPES",
+      "default": "",
+      "description": "Scopes asked for on the authorization flow. Default is oidc email profile.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_RP_SCOPES",
+          "kind": "readme",
+          "text": "Scopes asked for on the authorization flow. Default is oidc email profile.",
+          "location": {
+            "file": "docs/src/content/docs/options.md",
+            "line": 200
+          }
+        },
+        {
+          "name": "OIDC_RP_SCOPES",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 225
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_RP_SIGN_ALGO",
+      "default": "",
+      "description": "The algorithm the OIDC provider uses to sign ID tokens. Default is RS256.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_RP_SIGN_ALGO",
+          "kind": "readme",
+          "text": "The algorithm the OIDC provider uses to sign ID tokens. Default is RS256.",
+          "location": {
+            "file": "docs/src/content/docs/options.md",
+            "line": 197
+          }
+        },
+        {
+          "name": "OIDC_RP_SIGN_ALGO",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 224
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_USERNAME_CLAIM",
+      "default": "",
+      "description": "A custom claim to used as username for new accounts, for example preferred_username. If the configured claim does not exist or is empty, the email claim is used as fallback. Default is email.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_USERNAME_CLAIM",
+          "kind": "readme",
+          "text": "A custom claim to used as username for new accounts, for example preferred_username. If the configured claim does not exist or is empty, the email claim is used as fallback. Default is email.",
+          "location": {
+            "file": "docs/src/content/docs/options.md",
+            "line": 201
+          }
+        },
+        {
+          "name": "OIDC_USERNAME_CLAIM",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 228
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_USE_PKCE",
+      "default": "",
+      "description": "Whether to use PKCE for the OIDC flow. Default is True.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_USE_PKCE",
+          "kind": "readme",
+          "text": "Whether to use PKCE for the OIDC flow. Default is True.",
+          "location": {
+            "file": "docs/src/content/docs/options.md",
+            "line": 198
+          }
+        },
+        {
+          "name": "OIDC_USE_PKCE",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 226
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_VERIFY_SSL",
+      "default": "",
+      "description": "Whether to verify the SSL certificate of the OIDC provider. Set to False if using self-signed certificates or custom certificate authority. Default is True.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_VERIFY_SSL",
+          "kind": "readme",
+          "text": "Whether to verify the SSL certificate of the OIDC provider. Set to False if using self-signed certificates or custom certificate authority. Default is True.",
+          "location": {
+            "file": "docs/src/content/docs/options.md",
+            "line": 199
+          }
+        },
+        {
+          "name": "OIDC_VERIFY_SSL",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 227
+          }
+        }
+      ]
+    },
+    {
+      "name": "PATH",
+      "default": "/etc/linkding/.venv/bin:$PATH",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PATH",
+          "kind": "dockerfile",
+          "default": "/etc/linkding/.venv/bin:$PATH",
+          "location": {
+            "file": "docker/alpine.Dockerfile",
+            "line": 71
+          }
+        },
+        {
+          "name": "PATH",
+          "kind": "dockerfile",
+          "default": "/etc/linkding/.venv/bin:$PATH",
+          "location": {
+            "file": "docker/default.Dockerfile",
+            "line": 66
+          }
+        }
+      ]
+    },
+    {
+      "name": "POSTGRES_DB",
+      "default": "linkding",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "POSTGRES_DB",
+          "kind": "compose",
+          "default": "linkding",
+          "location": {
+            "file": "scripts/test-environments/postgres/compose.yml",
+            "line": 9
+          }
+        }
+      ]
+    },
+    {
+      "name": "POSTGRES_PASSWORD",
+      "default": "linkding",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "POSTGRES_PASSWORD",
+          "kind": "compose",
+          "default": "linkding",
+          "location": {
+            "file": "scripts/test-environments/postgres/compose.yml",
+            "line": 11
+          }
+        }
+      ]
+    },
+    {
+      "name": "POSTGRES_USER",
+      "default": "linkding",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "POSTGRES_USER",
+          "kind": "compose",
+          "default": "linkding",
+          "location": {
+            "file": "scripts/test-environments/postgres/compose.yml",
+            "line": 10
+          }
+        }
+      ]
+    },
+    {
+      "name": "TZ",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TZ",
+          "kind": "code",
+          "location": {
+            "file": "bookmarks/settings/base.py",
+            "line": 130
+          }
+        }
+      ]
+    },
+    {
+      "name": "UWSGI_MAX_FD",
+      "default": "4096",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UWSGI_MAX_FD",
+          "kind": "dockerfile",
+          "default": "4096",
+          "location": {
+            "file": "docker/alpine.Dockerfile",
+            "line": 77
+          }
+        },
+        {
+          "name": "UWSGI_MAX_FD",
+          "kind": "dockerfile",
+          "default": "4096",
+          "location": {
+            "file": "docker/default.Dockerfile",
+            "line": 72
+          }
+        }
+      ]
+    },
+    {
+      "name": "VIRTUAL_ENV",
+      "default": "/etc/linkding/.venv",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "VIRTUAL_ENV",
+          "kind": "dockerfile",
+          "default": "/etc/linkding/.venv",
+          "location": {
+            "file": "docker/alpine.Dockerfile",
+            "line": 70
+          }
+        },
+        {
+          "name": "VIRTUAL_ENV",
+          "kind": "dockerfile",
+          "default": "/etc/linkding/.venv",
+          "location": {
+            "file": "docker/default.Dockerfile",
+            "line": 65
+          }
+        }
+      ]
+    }
+  ],
+  "images": [
+    {
+      "reference": "sissbruecker/linkding:latest",
+      "kind": "compose",
+      "location": {
+        "file": "docker-compose.yml",
+        "line": 4
+      }
+    },
+    {
+      "reference": "codeberg.org/strubbl/feed2linkding",
+      "kind": "readme",
+      "location": {
+        "file": "docs/src/content/docs/community.md",
+        "line": 35
+      }
+    },
+    {
+      "reference": "codeberg.org/kodemonaut/komrade",
+      "kind": "readme",
+      "location": {
+        "file": "docs/src/content/docs/community.md",
+        "line": 36
+      }
+    },
+    {
+      "reference": "sissbruecker/linkding:latest",
+      "kind": "readme",
+      "location": {
+        "file": "docs/src/content/docs/installation.md",
+        "line": 53
+      }
+    },
+    {
+      "reference": "ghcr.io/sissbruecker/linkding:latest",
+      "kind": "readme",
+      "location": {
+        "file": "docs/src/content/docs/installation.md",
+        "line": 56
+      }
+    },
+    {
+      "reference": "`.",
+      "kind": "readme",
+      "location": {
+        "file": "docs/src/content/docs/options.md",
+        "line": 12
+      }
+    },
+    {
+      "reference": "authelia/authelia:latest",
+      "kind": "readme",
+      "location": {
+        "file": "docs/src/content/docs/options.md",
+        "line": 235
+      }
+    },
+    {
+      "reference": "sissbruecker/linkding:local",
+      "kind": "compose",
+      "location": {
+        "file": "scripts/test-environments/authelia-oidc/compose.yml",
+        "line": 11
+      }
+    },
+    {
+      "reference": "authelia/authelia:latest",
+      "kind": "compose",
+      "location": {
+        "file": "scripts/test-environments/authelia-oidc/compose.yml",
+        "line": 31
+      }
+    },
+    {
+      "reference": "traefik:v3.5.0",
+      "kind": "compose",
+      "location": {
+        "file": "scripts/test-environments/authelia-oidc/compose.yml",
+        "line": 43
+      }
+    },
+    {
+      "reference": "postgres:16",
+      "kind": "compose",
+      "location": {
+        "file": "scripts/test-environments/postgres/compose.yml",
+        "line": 7
+      }
+    }
+  ],
+  "docker_runs": [
+    {
+      "image": "sissbruecker/linkding:latest",
+      "ports": [
+        "9090:9090"
+      ],
+      "volumes": [
+        "{host-data-folder}:/etc/linkding/data"
+      ],
+      "env": null,
+      "location": {
+        "file": "docs/src/content/docs/installation.md",
+        "line": 53
+      }
+    },
+    {
+      "image": "ghcr.io/sissbruecker/linkding:latest",
+      "ports": [
+        "9090:9090"
+      ],
+      "volumes": [
+        "{host-data-folder}:/etc/linkding/data"
+      ],
+      "env": null,
+      "location": {
+        "file": "docs/src/content/docs/installation.md",
+        "line": 56
+      }
+    },
+    {
+      "image": "`.",
+      "ports": null,
+      "volumes": null,
+      "env": null,
+      "location": {
+        "file": "docs/src/content/docs/options.md",
+        "line": 12
+      }
+    },
+    {
+      "image": "sissbruecker/linkding:latest",
+      "ports": [
+        "9090:9090"
+      ],
+      "volumes": null,
+      "env": [
+        {
+          "key": "LD_DISABLE_URL_VALIDATION",
+          "value": "True",
+          "location": {
+            "file": "docs/src/content/docs/options.md",
+            "line": 15
+          }
+        }
+      ],
+      "location": {
+        "file": "docs/src/content/docs/options.md",
+        "line": 15
+      }
+    },
+    {
+      "image": "authelia/authelia:latest",
+      "ports": null,
+      "volumes": null,
+      "env": null,
+      "location": {
+        "file": "docs/src/content/docs/options.md",
+        "line": 235
+      }
+    }
+  ],
+  "notes": null,
+  "suspicious": null,
+  "readmes": [
+    "README.md",
+    "docs/README.md"
+  ],
+  "summary": {
+    "text": "linkding is a bookmark manager that you can host yourself.",
+    "location": {
+      "file": "README.md",
+      "line": 11
+    }
+  },
+  "file_mentions": [
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/src/content/docs/installation.md",
+        "line": 69
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/src/content/docs/installation.md",
+        "line": 69
+      }
+    }
+  ],
+  "stack_hints": [
+    "docs/package.json",
+    "package.json",
+    "pyproject.toml"
+  ],
+  "problems": null
+}

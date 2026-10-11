@@ -1,0 +1,278 @@
+{
+  "ir_version": "1",
+  "app": {
+    "name": "miniflux",
+    "summary": "Minimalist feed reader.",
+    "upstream_url": "https://github.com/miniflux/v2",
+    "docs_url": ""
+  },
+  "services": [
+    {
+      "name": "miniflux",
+      "role": "app",
+      "image": {
+        "registry": "docker.io",
+        "repository": "miniflux/miniflux",
+        "tag": "2.2.3",
+        "digest": "",
+        "provenance": {
+          "source": "compose",
+          "source_ref": "docker-compose.yml:1",
+          "confidence": "high"
+        }
+      },
+      "command": [],
+      "entrypoint": [],
+      "env": [
+        {
+          "key": "DATABASE_URL",
+          "ref": "DATABASE_URL",
+          "literal": "",
+          "required": true,
+          "secret": true,
+          "description": "Postgres DSN",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker-compose.yml:1",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "BASE_URL",
+          "ref": "BASE_URL",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "Public URL",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker-compose.yml:1",
+            "confidence": "high"
+          }
+        }
+      ],
+      "ports": [
+        {
+          "container": 8080,
+          "protocol": "tcp",
+          "publish": true,
+          "host_port": 0,
+          "description": "web UI",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker-compose.yml:1",
+            "confidence": "high"
+          }
+        }
+      ],
+      "volumes": [],
+      "depends_on": [
+        {
+          "service": "db",
+          "condition": "service_healthy"
+        }
+      ],
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "/usr/bin/miniflux",
+          "-healthcheck",
+          "auto"
+        ],
+        "interval": "30s",
+        "timeout": "5s",
+        "retries": 5,
+        "start_period": "20s",
+        "omitted_reason": "",
+        "provenance": {
+          "source": "compose",
+          "source_ref": "docker-compose.yml:1",
+          "confidence": "high"
+        }
+      },
+      "user": "",
+      "resources": {
+        "memory_limit": "256m",
+        "cpus": "1",
+        "pids_limit": 256
+      },
+      "notes": [],
+      "provenance": {
+        "source": "compose",
+        "source_ref": "docker-compose.yml:1",
+        "confidence": "high"
+      }
+    },
+    {
+      "name": "db",
+      "role": "db",
+      "image": {
+        "registry": "docker.io",
+        "repository": "library/postgres",
+        "tag": "17",
+        "digest": "",
+        "provenance": {
+          "source": "compose",
+          "source_ref": "docker-compose.yml:1",
+          "confidence": "high"
+        }
+      },
+      "command": [],
+      "entrypoint": [],
+      "env": [
+        {
+          "key": "POSTGRES_USER",
+          "ref": "POSTGRES_USER",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "db user",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker-compose.yml:1",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "POSTGRES_PASSWORD",
+          "ref": "POSTGRES_PASSWORD",
+          "literal": "",
+          "required": true,
+          "secret": true,
+          "description": "db password",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker-compose.yml:1",
+            "confidence": "high"
+          }
+        }
+      ],
+      "ports": [],
+      "volumes": [
+        {
+          "name": "miniflux-db",
+          "container_path": "/var/lib/postgresql/data",
+          "description": "database",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker-compose.yml:1",
+            "confidence": "high"
+          }
+        }
+      ],
+      "depends_on": [],
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "pg_isready -U $$POSTGRES_USER"
+        ],
+        "interval": "10s",
+        "timeout": "5s",
+        "retries": 5,
+        "start_period": "",
+        "omitted_reason": "",
+        "provenance": {
+          "source": "compose",
+          "source_ref": "docker-compose.yml:1",
+          "confidence": "high"
+        }
+      },
+      "user": "",
+      "resources": {
+        "memory_limit": "512m",
+        "cpus": "1",
+        "pids_limit": 256
+      },
+      "notes": [],
+      "provenance": {
+        "source": "compose",
+        "source_ref": "docker-compose.yml:1",
+        "confidence": "high"
+      }
+    }
+  ],
+  "env_file": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:8080",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "Public URL",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "docker-compose.yml:1",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": "miniflux",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "db user",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "docker-compose.yml:1",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "value": "",
+      "generate": "hex32",
+      "secret": true,
+      "required": true,
+      "description": "db password",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "docker-compose.yml:1",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "DATABASE_URL",
+      "value": "postgres://miniflux:${POSTGRES_PASSWORD}@db/miniflux?sslmode=disable",
+      "generate": "",
+      "secret": true,
+      "required": true,
+      "description": "DSN",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "docker-compose.yml:1",
+        "confidence": "high"
+      }
+    }
+  ],
+  "needs": [
+    {
+      "capability": "host_network",
+      "service": "miniflux",
+      "detail": "",
+      "reason": "mDNS discovery",
+      "provenance": {
+        "source": "",
+        "source_ref": "",
+        "confidence": ""
+      }
+    }
+  ],
+  "probe": {
+    "service": "miniflux",
+    "port": 8080,
+    "path": "/healthcheck",
+    "expect": [
+      200
+    ]
+  },
+  "post_install_notes": [],
+  "confidence": "high",
+  "evidence": [],
+  "suspicious_instructions": [],
+  "unfilled": []
+}

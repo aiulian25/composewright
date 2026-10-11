@@ -1,0 +1,660 @@
+definitions:
+  api_v1.bookmarkTagPayload:
+    properties:
+      tag_id:
+        type: integer
+    required:
+    - tag_id
+    type: object
+  api_v1.bulkUpdateBookmarkTagsPayload:
+    properties:
+      bookmark_ids:
+        items:
+          type: integer
+        type: array
+      tag_ids:
+        items:
+          type: integer
+        type: array
+    required:
+    - bookmark_ids
+    - tag_ids
+    type: object
+  api_v1.infoResponse:
+    properties:
+      database:
+        type: string
+      os:
+        type: string
+      version:
+        properties:
+          commit:
+            type: string
+          date:
+            type: string
+          tag:
+            type: string
+        type: object
+    type: object
+  api_v1.loginRequestPayload:
+    properties:
+      password:
+        type: string
+      remember_me:
+        type: boolean
+      username:
+        type: string
+    type: object
+  api_v1.loginResponseMessage:
+    properties:
+      expires:
+        type: integer
+      token:
+        type: string
+    type: object
+  api_v1.readableResponseMessage:
+    properties:
+      content:
+        type: string
+      html:
+        type: string
+    type: object
+  api_v1.updateAccountPayload:
+    properties:
+      config:
+        $ref: '#/definitions/model.UserConfig'
+      new_password:
+        type: string
+      old_password:
+        type: string
+      owner:
+        type: boolean
+      username:
+        type: string
+    type: object
+  api_v1.updateCachePayload:
+    properties:
+      create_archive:
+        type: boolean
+      create_ebook:
+        type: boolean
+      ids:
+        items:
+          type: integer
+        type: array
+      keep_metadata:
+        type: boolean
+      skip_exist:
+        type: boolean
+    required:
+    - ids
+    type: object
+  model.Account:
+    properties:
+      config:
+        $ref: '#/definitions/model.UserConfig'
+      id:
+        type: integer
+      owner:
+        type: boolean
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  model.AccountDTO:
+    properties:
+      config:
+        $ref: '#/definitions/model.UserConfig'
+      id:
+        type: integer
+      owner:
+        type: boolean
+      passowrd:
+        description: Used only to store, not to retrieve
+        type: string
+      username:
+        type: string
+    type: object
+  model.BookmarkDTO:
+    properties:
+      author:
+        type: string
+      create_archive:
+        description: 'TODO: migrate outside the DTO'
+        type: boolean
+      create_ebook:
+        description: 'TODO: migrate outside the DTO'
+        type: boolean
+      createdAt:
+        type: string
+      excerpt:
+        type: string
+      hasArchive:
+        type: boolean
+      hasContent:
+        type: boolean
+      hasEbook:
+        type: boolean
+      html:
+        type: string
+      id:
+        type: integer
+      imageURL:
+        type: string
+      modifiedAt:
+        type: string
+      public:
+        type: integer
+      tags:
+        items:
+          $ref: '#/definitions/model.TagDTO'
+        type: array
+      title:
+        type: string
+      url:
+        type: string
+    type: object
+  model.TagDTO:
+    properties:
+      bookmark_count:
+        description: Number of bookmarks with this tag
+        type: integer
+      deleted:
+        description: Marks when a tag is deleted from a bookmark
+        type: boolean
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  model.UserConfig:
+    properties:
+      createEbook:
+        type: boolean
+      hideExcerpt:
+        type: boolean
+      hideThumbnail:
+        type: boolean
+      keepMetadata:
+        type: boolean
+      listMode:
+        type: boolean
+      makePublic:
+        type: boolean
+      showId:
+        type: boolean
+      theme:
+        type: string
+      useArchive:
+        type: boolean
+    type: object
+info:
+  contact: {}
+paths:
+  /api/v1/accounts:
+    get:
+      description: List accounts
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.AccountDTO'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: List accounts
+      tags:
+      - accounts
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.AccountDTO'
+        "400":
+          description: Bad Request
+        "409":
+          description: Account already exists
+        "500":
+          description: Internal Server Error
+      summary: Create an account
+      tags:
+      - accounts
+  /api/v1/accounts/{id}:
+    delete:
+      parameters:
+      - description: Account ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No content
+        "400":
+          description: Invalid ID
+        "404":
+          description: Account not found
+        "500":
+          description: Internal Server Error
+      summary: Delete an account
+      tags:
+      - accounts
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Account ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Account data
+        in: body
+        name: account
+        required: true
+        schema:
+          $ref: '#/definitions/api_v1.updateAccountPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.AccountDTO'
+        "400":
+          description: Invalid ID/data
+        "404":
+          description: Account not found
+        "409":
+          description: Account already exists
+        "500":
+          description: Internal Server Error
+      summary: Update an account
+      tags:
+      - accounts
+  /api/v1/auth/account:
+    patch:
+      parameters:
+      - description: Account data
+        in: body
+        name: payload
+        schema:
+          $ref: '#/definitions/api_v1.updateAccountPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Account'
+        "403":
+          description: Token not provided/invalid
+      summary: Update account information
+      tags:
+      - Auth
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Login data
+        in: body
+        name: payload
+        schema:
+          $ref: '#/definitions/api_v1.loginRequestPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            $ref: '#/definitions/api_v1.loginResponseMessage'
+        "400":
+          description: Invalid login data
+      summary: Login to an account using username and password
+      tags:
+      - Auth
+  /api/v1/auth/logout:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Logout successful
+        "403":
+          description: Token not provided/invalid
+      summary: Logout from the current session
+      tags:
+      - Auth
+  /api/v1/auth/me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Account'
+        "403":
+          description: Token not provided/invalid
+      summary: Get information for the current logged in user
+      tags:
+      - Auth
+  /api/v1/auth/refresh:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Refresh successful
+          schema:
+            $ref: '#/definitions/api_v1.loginResponseMessage'
+        "403":
+          description: Token not provided/invalid
+      summary: Refresh a token for an account
+      tags:
+      - Auth
+  /api/v1/bookmarks/{id}/tags:
+    delete:
+      parameters:
+      - description: Bookmark ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Remove Tag Payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/api_v1.bookmarkTagPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "403":
+          description: Token not provided/invalid
+        "404":
+          description: Bookmark not found
+      summary: Remove a tag from a bookmark.
+      tags:
+      - Auth
+    get:
+      parameters:
+      - description: Bookmark ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.TagDTO'
+            type: array
+        "403":
+          description: Token not provided/invalid
+        "404":
+          description: Bookmark not found
+      summary: Get tags for a bookmark.
+      tags:
+      - Auth
+    post:
+      parameters:
+      - description: Bookmark ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Add Tag Payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/api_v1.bookmarkTagPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "403":
+          description: Token not provided/invalid
+        "404":
+          description: Bookmark or tag not found
+      summary: Add a tag to a bookmark.
+      tags:
+      - Auth
+  /api/v1/bookmarks/bulk/tags:
+    put:
+      parameters:
+      - description: Bulk Update Bookmark Tags Payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/api_v1.bulkUpdateBookmarkTagsPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.BookmarkDTO'
+            type: array
+        "400":
+          description: Invalid request payload
+        "403":
+          description: Token not provided/invalid
+        "404":
+          description: No bookmarks found
+      summary: Bulk update tags for multiple bookmarks.
+      tags:
+      - Auth
+  /api/v1/bookmarks/cache:
+    put:
+      parameters:
+      - description: Update Cache Payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/api_v1.updateCachePayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.BookmarkDTO'
+        "403":
+          description: Token not provided/invalid
+      summary: Update Cache and Ebook on server.
+      tags:
+      - Auth
+  /api/v1/bookmarks/id/readable:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api_v1.readableResponseMessage'
+        "403":
+          description: Token not provided/invalid
+      summary: Get readable version of bookmark.
+      tags:
+      - Auth
+  /api/v1/system/info:
+    get:
+      description: Get general system information like Shiori version, database, and
+        OS
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api_v1.infoResponse'
+        "403":
+          description: Only owners can access this endpoint
+      summary: Get general system information
+      tags:
+      - System
+  /api/v1/tags:
+    get:
+      description: List all tags
+      parameters:
+      - description: Include bookmark count for each tag
+        in: query
+        name: with_bookmark_count
+        type: boolean
+      - description: Filter tags by bookmark ID
+        in: query
+        name: bookmark_id
+        type: integer
+      - description: Search tags by name
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.TagDTO'
+            type: array
+        "403":
+          description: Authentication required
+        "500":
+          description: Internal server error
+      summary: List tags
+      tags:
+      - Tags
+    post:
+      consumes:
+      - application/json
+      description: Create a new tag
+      parameters:
+      - description: Tag data
+        in: body
+        name: tag
+        required: true
+        schema:
+          $ref: '#/definitions/model.TagDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.TagDTO'
+        "400":
+          description: Invalid request
+        "403":
+          description: Authentication required
+        "500":
+          description: Internal server error
+      summary: Create tag
+      tags:
+      - Tags
+  /api/v1/tags/{id}:
+    delete:
+      description: Delete a tag
+      parameters:
+      - description: Tag ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "403":
+          description: Authentication required
+        "404":
+          description: Tag not found
+        "500":
+          description: Internal server error
+      summary: Delete tag
+      tags:
+      - Tags
+    get:
+      description: Get a tag by ID
+      parameters:
+      - description: Tag ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.TagDTO'
+        "403":
+          description: Authentication required
+        "404":
+          description: Tag not found
+        "500":
+          description: Internal server error
+      summary: Get tag
+      tags:
+      - Tags
+    put:
+      consumes:
+      - application/json
+      description: Update an existing tag
+      parameters:
+      - description: Tag ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Tag data
+        in: body
+        name: tag
+        required: true
+        schema:
+          $ref: '#/definitions/model.TagDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.TagDTO'
+        "400":
+          description: Invalid request
+        "403":
+          description: Authentication required
+        "404":
+          description: Tag not found
+        "500":
+          description: Internal server error
+      summary: Update tag
+      tags:
+      - Tags
+swagger: "2.0"

@@ -1,0 +1,21 @@
+# slug	repository	pinned commit	registries the user would allow (comma separated, "-" for none)	expected rules-only verdict ("pass", or what blocks it: need:<capability>, deny:<rule>, comma separated)
+# broken-readme has no upstream: its files and source.json are written by hand, so it is not listed here.
+uptime-kuma	louislam/uptime-kuma	b61b322c1257604906f9a9b16e5c182131a43a9f	-	pass
+linkding	sissbruecker/linkding	27b7303baf41bb28babc610ac8eaa486e1ddfab5	-	pass
+freshrss	FreshRSS/FreshRSS	9c04882cc15a09880b2b4d62ff0f9604869c466d	-	pass
+navidrome	navidrome/navidrome	497dfe25866d32e2229bcd962c38bda0e753c875	docker.io/deluan/*	pass
+miniflux	miniflux/v2	c52bdef6e9811f7c20cebc034a6c0ec6799dc6df	-	pass
+vaultwarden	dani-garcia/vaultwarden	df2cd3c8693782eeedfd1f70318f6f14033213a8	docker.io/vaultwarden/*	pass
+paperless-ngx	paperless-ngx/paperless-ngx	138160cbda97796ffbc8c7048139c728210c020d	-	pass
+gitea	go-gitea/gitea	4ebd5e319b6a9e629bfd7a04292a6fe85b08dee9	docker.io/gitea/*	deny:P1
+mealie	mealie-recipes/mealie	0552eaa4a80031b8572849cca0ed95d07f1be001	-	pass
+nextcloud	nextcloud/docker	701b437d6796550d8efacd132dfcfd5b135ee914	-	pass
+bookstack	linuxserver/docker-bookstack	5e408b3ea77d6bf8f6d57eb1143032a490d59846	-	pass
+actual	actualbudget/actual	2bebdbaae0b701120a8cad9d56aafd64fa04c577	-	pass
+wallabag	wallabag/docker	480d3833bc44c555b6ee76491635fef84ec7dd86	-	pass
+homarr	homarr-labs/homarr	ebbd4876d25a51151444a009ab596e1154d62880	-	deny:P1
+shiori	go-shiori/shiori	da56f82faac5bf350fc4175e5ff50726cb10d956	-	pass
+immich	immich-app/immich	db6e11ecc851228aec9c525abb0ee026d1f5055e	-	pass
+home-assistant	home-assistant/core	abe1fdd7cd6b4de1715c87b6fd87d92699514ef9	-	deny:P1
+zigbee2mqtt	Koenkk/zigbee2mqtt	5c0c1c60078e1737c5dee5f8217583bca7610e66	-	deny:P1
+pi-hole	pi-hole/docker-pi-hole	dd91b4847d97f0aac68bfefd1c108ed0627e6c68	docker.io/pihole/*	pass

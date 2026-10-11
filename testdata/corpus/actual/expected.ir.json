@@ -1,0 +1,110 @@
+{
+  "ir_version": "1",
+  "app": {
+    "name": "actual-server",
+    "summary": "Actual is a local-first personal finance tool. It is 100% free and open-source, written in NodeJS, it has a synchronization element so that all your changes can move between devices without any heavy…",
+    "upstream_url": "https://github.com/actualbudget/actual",
+    "docs_url": ""
+  },
+  "services": [
+    {
+      "name": "actual_server",
+      "role": "app",
+      "image": {
+        "registry": "docker.io",
+        "repository": "actualbudget/actual-server",
+        "tag": "latest",
+        "digest": "",
+        "provenance": {
+          "source": "compose",
+          "source_ref": "packages/sync-server/docker-compose.yml:3",
+          "confidence": "high"
+        }
+      },
+      "command": [],
+      "entrypoint": [],
+      "env": [],
+      "ports": [
+        {
+          "container": 5006,
+          "protocol": "tcp",
+          "publish": true,
+          "host_port": 5006,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "packages/sync-server/docker-compose.yml:7",
+            "confidence": "high"
+          }
+        }
+      ],
+      "volumes": [
+        {
+          "name": "actual-data",
+          "container_path": "/data",
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "packages/sync-server/docker-compose.yml:21",
+            "confidence": "high"
+          }
+        }
+      ],
+      "depends_on": [],
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "node scripts/health-check.js"
+        ],
+        "interval": "1m0s",
+        "timeout": "10s",
+        "retries": 3,
+        "start_period": "20s",
+        "omitted_reason": "",
+        "provenance": {
+          "source": "compose",
+          "source_ref": "packages/sync-server/docker-compose.yml:22",
+          "confidence": "high"
+        }
+      },
+      "user": "",
+      "resources": {
+        "memory_limit": "",
+        "cpus": "",
+        "pids_limit": 0
+      },
+      "notes": [
+        "upstream bind mount ./actual-data:/data is a named volume here (use --storage bind for a host folder)"
+      ],
+      "provenance": {
+        "source": "compose",
+        "source_ref": "packages/sync-server/docker-compose.yml:2",
+        "confidence": "high"
+      }
+    }
+  ],
+  "env_file": [],
+  "needs": [],
+  "probe": {
+    "service": "actual_server",
+    "port": 5006,
+    "path": "/",
+    "expect": []
+  },
+  "post_install_notes": [],
+  "confidence": "high",
+  "evidence": [
+    {
+      "claim": "compose file packages/sync-server/docker-compose.yml chosen among 2 upstream compose files",
+      "file": "packages/sync-server/docker-compose.yml",
+      "line": 1
+    },
+    {
+      "claim": "app image docker.io/actualbudget/actual-server",
+      "file": "packages/sync-server/docker-compose.yml",
+      "line": 3
+    }
+  ],
+  "suspicious_instructions": [],
+  "unfilled": []
+}

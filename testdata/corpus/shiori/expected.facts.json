@@ -1,0 +1,1455 @@
+{
+  "files": [
+    ".golangci.yml",
+    ".goreleaser.yaml",
+    "Dockerfile",
+    "Dockerfile.alpine",
+    "Dockerfile.compose",
+    "Dockerfile.e2e",
+    "README.md",
+    "codecov.yml",
+    "docker-compose.yaml",
+    "docs/API.md",
+    "docs/APIv1.md",
+    "docs/CLI.md",
+    "docs/Configuration.md",
+    "docs/Contribute.md",
+    "docs/Installation.md",
+    "docs/Screenshots.md",
+    "docs/Storage.md",
+    "docs/Usage.md",
+    "docs/faq.md",
+    "docs/index.md",
+    "docs/swagger/swagger.yaml",
+    "go.mod",
+    "internal/cmd/root.go",
+    "internal/config/config.go",
+    "internal/view/assets/js/vue.min.js",
+    "mkdocs.yml",
+    "package.json",
+    "webapp/README.md",
+    "webapp/package.json"
+  ],
+  "compose_files": [
+    {
+      "path": "docker-compose.yaml",
+      "services": [
+        {
+          "name": "shiori",
+          "location": {
+            "file": "docker-compose.yaml",
+            "line": 4
+          },
+          "image": "",
+          "image_at": {
+            "file": "docker-compose.yaml",
+            "line": 4
+          },
+          "build": true,
+          "ports": [
+            {
+              "target": 8080,
+              "published": "8080",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docker-compose.yaml",
+                "line": 14
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "./dev-data",
+              "target": "/srv/shiori",
+              "read_only": false,
+              "location": {
+                "file": "docker-compose.yaml",
+                "line": 16
+              }
+            },
+            {
+              "type": "bind",
+              "source": ".",
+              "target": "/src/shiori",
+              "read_only": false,
+              "location": {
+                "file": "docker-compose.yaml",
+                "line": 17
+              }
+            },
+            {
+              "type": "volume",
+              "source": "go-mod-cache",
+              "target": "/go/pkg/mod",
+              "read_only": false,
+              "location": {
+                "file": "docker-compose.yaml",
+                "line": 18
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "SHIORI_DIR",
+              "raw": "/srv/shiori",
+              "has_value": true,
+              "location": {
+                "file": "docker-compose.yaml",
+                "line": 24
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": [
+            {
+              "service": "mariadb",
+              "condition": "service_started"
+            },
+            {
+              "service": "postgres",
+              "condition": "service_started"
+            }
+          ],
+          "command": [
+            "server",
+            "--log-level",
+            "debug"
+          ],
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "nginx",
+          "location": {
+            "file": "docker-compose.yaml",
+            "line": 29
+          },
+          "image": "nginx:alpine",
+          "image_at": {
+            "file": "docker-compose.yaml",
+            "line": 30
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 8081,
+              "published": "8081",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docker-compose.yaml",
+                "line": 32
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "./testdata/nginx.conf",
+              "target": "/etc/nginx/nginx.conf",
+              "read_only": true,
+              "location": {
+                "file": "docker-compose.yaml",
+                "line": 34
+              }
+            }
+          ],
+          "environment": null,
+          "env_files": null,
+          "depends_on": [
+            {
+              "service": "shiori",
+              "condition": "service_started"
+            }
+          ],
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "postgres",
+          "location": {
+            "file": "docker-compose.yaml",
+            "line": 38
+          },
+          "image": "postgres:13.18",
+          "image_at": {
+            "file": "docker-compose.yaml",
+            "line": 39
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 5432,
+              "published": "5432",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docker-compose.yaml",
+                "line": 44
+              }
+            }
+          ],
+          "volumes": null,
+          "environment": [
+            {
+              "key": "POSTGRES_PASSWORD",
+              "raw": "shiori",
+              "has_value": true,
+              "location": {
+                "file": "docker-compose.yaml",
+                "line": 41
+              }
+            },
+            {
+              "key": "POSTGRES_USER",
+              "raw": "shiori",
+              "has_value": true,
+              "location": {
+                "file": "docker-compose.yaml",
+                "line": 42
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "mariadb",
+          "location": {
+            "file": "docker-compose.yaml",
+            "line": 46
+          },
+          "image": "mariadb:10.5.27",
+          "image_at": {
+            "file": "docker-compose.yaml",
+            "line": 47
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 3306,
+              "published": "3306",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docker-compose.yaml",
+                "line": 54
+              }
+            }
+          ],
+          "volumes": null,
+          "environment": [
+            {
+              "key": "MYSQL_ROOT_PASSWORD",
+              "raw": "toor",
+              "has_value": true,
+              "location": {
+                "file": "docker-compose.yaml",
+                "line": 49
+              }
+            },
+            {
+              "key": "MYSQL_DATABASE",
+              "raw": "shiori",
+              "has_value": true,
+              "location": {
+                "file": "docker-compose.yaml",
+                "line": 50
+              }
+            },
+            {
+              "key": "MYSQL_USER",
+              "raw": "shiori",
+              "has_value": true,
+              "location": {
+                "file": "docker-compose.yaml",
+                "line": 51
+              }
+            },
+            {
+              "key": "MYSQL_PASSWORD",
+              "raw": "shiori",
+              "has_value": true,
+              "location": {
+                "file": "docker-compose.yaml",
+                "line": 52
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "mysql",
+          "location": {
+            "file": "docker-compose.yaml",
+            "line": 56
+          },
+          "image": "mysql:8.0.40",
+          "image_at": {
+            "file": "docker-compose.yaml",
+            "line": 57
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 3306,
+              "published": "3307",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docker-compose.yaml",
+                "line": 64
+              }
+            }
+          ],
+          "volumes": null,
+          "environment": [
+            {
+              "key": "MYSQL_ROOT_PASSWORD",
+              "raw": "toor",
+              "has_value": true,
+              "location": {
+                "file": "docker-compose.yaml",
+                "line": 59
+              }
+            },
+            {
+              "key": "MYSQL_DATABASE",
+              "raw": "shiori",
+              "has_value": true,
+              "location": {
+                "file": "docker-compose.yaml",
+                "line": 60
+              }
+            },
+            {
+              "key": "MYSQL_USER",
+              "raw": "shiori",
+              "has_value": true,
+              "location": {
+                "file": "docker-compose.yaml",
+                "line": 61
+              }
+            },
+            {
+              "key": "MYSQL_PASSWORD",
+              "raw": "shiori",
+              "has_value": true,
+              "location": {
+                "file": "docker-compose.yaml",
+                "line": 62
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": []
+    }
+  ],
+  "dockerfiles": [
+    {
+      "path": "Dockerfile",
+      "base_image": "scratch",
+      "exposed": null,
+      "volumes": null,
+      "env": [
+        {
+          "key": "PORT",
+          "value": "8080",
+          "location": {
+            "file": "Dockerfile",
+            "line": 16
+          }
+        },
+        {
+          "key": "SHIORI_DIR",
+          "value": "/shiori",
+          "location": {
+            "file": "Dockerfile",
+            "line": 17
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "ALPINE_VERSION",
+          "value": "3.19",
+          "location": {
+            "file": "Dockerfile",
+            "line": 2
+          }
+        },
+        {
+          "key": "TARGETARCH",
+          "value": "",
+          "location": {
+            "file": "Dockerfile",
+            "line": 5
+          }
+        },
+        {
+          "key": "TARGETOS",
+          "value": "",
+          "location": {
+            "file": "Dockerfile",
+            "line": 6
+          }
+        },
+        {
+          "key": "TARGETVARIANT",
+          "value": "",
+          "location": {
+            "file": "Dockerfile",
+            "line": 7
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": [
+        "/usr/bin/shiori"
+      ],
+      "command": [
+        "server"
+      ]
+    },
+    {
+      "path": "Dockerfile.alpine",
+      "base_image": "docker.io/library/alpine:3.19",
+      "exposed": null,
+      "volumes": null,
+      "env": [
+        {
+          "key": "PORT",
+          "value": "8080",
+          "location": {
+            "file": "Dockerfile.alpine",
+            "line": 13
+          }
+        },
+        {
+          "key": "SHIORI_DIR",
+          "value": "/shiori",
+          "location": {
+            "file": "Dockerfile.alpine",
+            "line": 14
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "ALPINE_VERSION",
+          "value": "3.19",
+          "location": {
+            "file": "Dockerfile.alpine",
+            "line": 1
+          }
+        },
+        {
+          "key": "TARGETARCH",
+          "value": "",
+          "location": {
+            "file": "Dockerfile.alpine",
+            "line": 4
+          }
+        },
+        {
+          "key": "TARGETOS",
+          "value": "",
+          "location": {
+            "file": "Dockerfile.alpine",
+            "line": 5
+          }
+        },
+        {
+          "key": "TARGETVARIANT",
+          "value": "",
+          "location": {
+            "file": "Dockerfile.alpine",
+            "line": 6
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": [
+        "/usr/bin/shiori"
+      ],
+      "command": [
+        "server"
+      ]
+    },
+    {
+      "path": "Dockerfile.compose",
+      "base_image": "docker.io/golang:1.22-alpine",
+      "exposed": null,
+      "volumes": null,
+      "env": null,
+      "args": null,
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": [
+        "go",
+        "run",
+        "main.go"
+      ],
+      "command": [
+        "server"
+      ]
+    },
+    {
+      "path": "Dockerfile.e2e",
+      "base_image": "docker.io/golang:${GOLANG_VERSION}-alpine${ALPINE_VERSION}",
+      "exposed": null,
+      "volumes": null,
+      "env": null,
+      "args": [
+        {
+          "key": "ALPINE_VERSION",
+          "value": "",
+          "location": {
+            "file": "Dockerfile.e2e",
+            "line": 1
+          }
+        },
+        {
+          "key": "GOLANG_VERSION",
+          "value": "",
+          "location": {
+            "file": "Dockerfile.e2e",
+            "line": 2
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": [
+        "go",
+        "run",
+        "main.go"
+      ],
+      "command": [
+        "server"
+      ]
+    }
+  ],
+  "env_samples": null,
+  "variables": [
+    {
+      "name": "HOSTNAME",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "HOSTNAME",
+          "kind": "code",
+          "location": {
+            "file": "internal/config/config.go",
+            "line": 177
+          }
+        }
+      ]
+    },
+    {
+      "name": "MYSQL_DATABASE",
+      "default": "shiori",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MYSQL_DATABASE",
+          "kind": "compose",
+          "default": "shiori",
+          "location": {
+            "file": "docker-compose.yaml",
+            "line": 50
+          }
+        },
+        {
+          "name": "MYSQL_DATABASE",
+          "kind": "compose",
+          "default": "shiori",
+          "location": {
+            "file": "docker-compose.yaml",
+            "line": 60
+          }
+        }
+      ]
+    },
+    {
+      "name": "MYSQL_PASSWORD",
+      "default": "shiori",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MYSQL_PASSWORD",
+          "kind": "compose",
+          "default": "shiori",
+          "location": {
+            "file": "docker-compose.yaml",
+            "line": 52
+          }
+        },
+        {
+          "name": "MYSQL_PASSWORD",
+          "kind": "compose",
+          "default": "shiori",
+          "location": {
+            "file": "docker-compose.yaml",
+            "line": 62
+          }
+        }
+      ]
+    },
+    {
+      "name": "MYSQL_ROOT_PASSWORD",
+      "default": "toor",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MYSQL_ROOT_PASSWORD",
+          "kind": "compose",
+          "default": "toor",
+          "location": {
+            "file": "docker-compose.yaml",
+            "line": 49
+          }
+        },
+        {
+          "name": "MYSQL_ROOT_PASSWORD",
+          "kind": "compose",
+          "default": "toor",
+          "location": {
+            "file": "docker-compose.yaml",
+            "line": 59
+          }
+        }
+      ]
+    },
+    {
+      "name": "MYSQL_USER",
+      "default": "shiori",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MYSQL_USER",
+          "kind": "compose",
+          "default": "shiori",
+          "location": {
+            "file": "docker-compose.yaml",
+            "line": 51
+          }
+        },
+        {
+          "name": "MYSQL_USER",
+          "kind": "compose",
+          "default": "shiori",
+          "location": {
+            "file": "docker-compose.yaml",
+            "line": 61
+          }
+        }
+      ]
+    },
+    {
+      "name": "PORT",
+      "default": "8080",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PORT",
+          "kind": "dockerfile",
+          "default": "8080",
+          "location": {
+            "file": "Dockerfile",
+            "line": 16
+          }
+        },
+        {
+          "name": "PORT",
+          "kind": "dockerfile",
+          "default": "8080",
+          "location": {
+            "file": "Dockerfile.alpine",
+            "line": 13
+          }
+        }
+      ]
+    },
+    {
+      "name": "POSTGRES_PASSWORD",
+      "default": "shiori",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "POSTGRES_PASSWORD",
+          "kind": "compose",
+          "default": "shiori",
+          "location": {
+            "file": "docker-compose.yaml",
+            "line": 41
+          }
+        }
+      ]
+    },
+    {
+      "name": "POSTGRES_USER",
+      "default": "shiori",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "POSTGRES_USER",
+          "kind": "compose",
+          "default": "shiori",
+          "location": {
+            "file": "docker-compose.yaml",
+            "line": 42
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHIORI_DATABASE_URL",
+      "default": "URL",
+      "description": "URL for the database (required)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHIORI_DATABASE_URL",
+          "kind": "readme",
+          "default": "URL",
+          "text": "URL for the database (required)",
+          "location": {
+            "file": "docs/Configuration.md",
+            "line": 78
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHIORI_DEVELOPMENT",
+      "default": "False",
+      "description": "Specifies if the server is in dev mode",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHIORI_DEVELOPMENT",
+          "kind": "readme",
+          "default": "False",
+          "text": "Specifies if the server is in dev mode",
+          "location": {
+            "file": "docs/Configuration.md",
+            "line": 26
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHIORI_DIR",
+      "default": "/srv/shiori",
+      "description": "Directory where Shiori stores its data.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHIORI_DIR",
+          "kind": "compose",
+          "default": "/srv/shiori",
+          "location": {
+            "file": "docker-compose.yaml",
+            "line": 24
+          }
+        },
+        {
+          "name": "SHIORI_DIR",
+          "kind": "readme",
+          "default": "(current dir)",
+          "text": "Directory where Shiori stores its data.",
+          "location": {
+            "file": "docs/Configuration.md",
+            "line": 55
+          }
+        },
+        {
+          "name": "SHIORI_DIR",
+          "kind": "dockerfile",
+          "default": "/shiori",
+          "location": {
+            "file": "Dockerfile",
+            "line": 17
+          }
+        },
+        {
+          "name": "SHIORI_DIR",
+          "kind": "dockerfile",
+          "default": "/shiori",
+          "location": {
+            "file": "Dockerfile.alpine",
+            "line": 14
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHIORI_HTTP_ACCESS_LOG",
+      "default": "True",
+      "description": "Logging accessibility for HTTP requests",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHIORI_HTTP_ACCESS_LOG",
+          "kind": "readme",
+          "default": "True",
+          "text": "Logging accessibility for HTTP requests",
+          "location": {
+            "file": "docs/Configuration.md",
+            "line": 36
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHIORI_HTTP_ADDRESS",
+      "default": ":",
+      "description": "Address for the HTTP service",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHIORI_HTTP_ADDRESS",
+          "kind": "readme",
+          "default": ":",
+          "text": "Address for the HTTP service",
+          "location": {
+            "file": "docs/Configuration.md",
+            "line": 34
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHIORI_HTTP_BODY_LIMIT",
+      "default": "1024",
+      "description": "Limit for request body size",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHIORI_HTTP_BODY_LIMIT",
+          "kind": "readme",
+          "default": "1024",
+          "text": "Limit for request body size",
+          "location": {
+            "file": "docs/Configuration.md",
+            "line": 39
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHIORI_HTTP_DISABLE_KEEP_ALIVE",
+      "default": "true",
+      "description": "Disable HTTP keep-alive connections",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHIORI_HTTP_DISABLE_KEEP_ALIVE",
+          "kind": "readme",
+          "default": "true",
+          "text": "Disable HTTP keep-alive connections",
+          "location": {
+            "file": "docs/Configuration.md",
+            "line": 43
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHIORI_HTTP_DISABLE_PARSE_MULTIPART_FORM",
+      "default": "true",
+      "description": "Disable pre-parsing of multipart form",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHIORI_HTTP_DISABLE_PARSE_MULTIPART_FORM",
+          "kind": "readme",
+          "default": "true",
+          "text": "Disable pre-parsing of multipart form",
+          "location": {
+            "file": "docs/Configuration.md",
+            "line": 44
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHIORI_HTTP_ENABLED",
+      "default": "True",
+      "description": "Enable HTTP service",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHIORI_HTTP_ENABLED",
+          "kind": "readme",
+          "default": "True",
+          "text": "Enable HTTP service",
+          "location": {
+            "file": "docs/Configuration.md",
+            "line": 32
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHIORI_HTTP_IDLE_TIMEOUT",
+      "default": "10s",
+      "description": "Maximum amount of time to wait for the next request",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHIORI_HTTP_IDLE_TIMEOUT",
+          "kind": "readme",
+          "default": "10s",
+          "text": "Maximum amount of time to wait for the next request",
+          "location": {
+            "file": "docs/Configuration.md",
+            "line": 42
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHIORI_HTTP_PORT",
+      "default": "8080",
+      "description": "Port number for the HTTP service",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHIORI_HTTP_PORT",
+          "kind": "readme",
+          "default": "8080",
+          "text": "Port number for the HTTP service",
+          "location": {
+            "file": "docs/Configuration.md",
+            "line": 33
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHIORI_HTTP_READ_TIMEOUT",
+      "default": "10s",
+      "description": "Maximum duration for reading the entire request",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHIORI_HTTP_READ_TIMEOUT",
+          "kind": "readme",
+          "default": "10s",
+          "text": "Maximum duration for reading the entire request",
+          "location": {
+            "file": "docs/Configuration.md",
+            "line": 40
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHIORI_HTTP_ROOT_PATH",
+      "default": "/",
+      "description": "Root path for the HTTP service",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHIORI_HTTP_ROOT_PATH",
+          "kind": "readme",
+          "default": "/",
+          "text": "Root path for the HTTP service",
+          "location": {
+            "file": "docs/Configuration.md",
+            "line": 35
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHIORI_HTTP_SECRET_KEY",
+      "default": "",
+      "description": "Secret key for HTTP sessions.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHIORI_HTTP_SECRET_KEY",
+          "kind": "readme",
+          "text": "Secret key for HTTP sessions.",
+          "location": {
+            "file": "docs/Configuration.md",
+            "line": 38
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHIORI_HTTP_SERVE_WEB_UI",
+      "default": "True",
+      "description": "Serving Web UI via HTTP. Disable serves only the API.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHIORI_HTTP_SERVE_WEB_UI",
+          "kind": "readme",
+          "default": "True",
+          "text": "Serving Web UI via HTTP. Disable serves only the API.",
+          "location": {
+            "file": "docs/Configuration.md",
+            "line": 37
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHIORI_HTTP_WRITE_TIMEOUT",
+      "default": "10s",
+      "description": "Maximum duration before timing out writes",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHIORI_HTTP_WRITE_TIMEOUT",
+          "kind": "readme",
+          "default": "10s",
+          "text": "Maximum duration before timing out writes",
+          "location": {
+            "file": "docs/Configuration.md",
+            "line": 41
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHIORI_MYSQL_ADDRESS",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHIORI_MYSQL_ADDRESS",
+          "kind": "code",
+          "location": {
+            "file": "internal/cmd/root.go",
+            "line": 164
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHIORI_MYSQL_NAME",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHIORI_MYSQL_NAME",
+          "kind": "code",
+          "location": {
+            "file": "internal/cmd/root.go",
+            "line": 163
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHIORI_MYSQL_PASS",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHIORI_MYSQL_PASS",
+          "kind": "code",
+          "location": {
+            "file": "internal/cmd/root.go",
+            "line": 162
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHIORI_MYSQL_USER",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHIORI_MYSQL_USER",
+          "kind": "code",
+          "location": {
+            "file": "internal/cmd/root.go",
+            "line": 161
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHIORI_PG_HOST",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHIORI_PG_HOST",
+          "kind": "code",
+          "location": {
+            "file": "internal/cmd/root.go",
+            "line": 171
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHIORI_PG_NAME",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHIORI_PG_NAME",
+          "kind": "code",
+          "location": {
+            "file": "internal/cmd/root.go",
+            "line": 175
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHIORI_PG_PASS",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHIORI_PG_PASS",
+          "kind": "code",
+          "location": {
+            "file": "internal/cmd/root.go",
+            "line": 174
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHIORI_PG_PORT",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHIORI_PG_PORT",
+          "kind": "code",
+          "location": {
+            "file": "internal/cmd/root.go",
+            "line": 172
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHIORI_PG_SSLMODE",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHIORI_PG_SSLMODE",
+          "kind": "code",
+          "location": {
+            "file": "internal/cmd/root.go",
+            "line": 176
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHIORI_PG_USER",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHIORI_PG_USER",
+          "kind": "code",
+          "location": {
+            "file": "internal/cmd/root.go",
+            "line": 173
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHIORI_SSO_PROXY_AUTH_ENABLED",
+      "default": "false",
+      "description": "Enable SSO Auth Proxy Header",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHIORI_SSO_PROXY_AUTH_ENABLED",
+          "kind": "readme",
+          "default": "false",
+          "text": "Enable SSO Auth Proxy Header",
+          "location": {
+            "file": "docs/Configuration.md",
+            "line": 45
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHIORI_SSO_PROXY_AUTH_HEADER_NAME",
+      "default": "Remote-User",
+      "description": "List of CIDRs of trusted proxies",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHIORI_SSO_PROXY_AUTH_HEADER_NAME",
+          "kind": "readme",
+          "default": "Remote-User",
+          "text": "List of CIDRs of trusted proxies",
+          "location": {
+            "file": "docs/Configuration.md",
+            "line": 46
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHIORI_SSO_PROXY_AUTH_TRUSTED",
+      "default": "10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, fc00::/7",
+      "description": "List of CIDRs of trusted proxies",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHIORI_SSO_PROXY_AUTH_TRUSTED",
+          "kind": "readme",
+          "default": "10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, fc00::/7",
+          "text": "List of CIDRs of trusted proxies",
+          "location": {
+            "file": "docs/Configuration.md",
+            "line": 47
+          }
+        }
+      ]
+    },
+    {
+      "name": "VUE_ENV",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "VUE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "internal/view/assets/js/vue.min.js",
+            "line": 6
+          }
+        }
+      ]
+    }
+  ],
+  "images": [
+    {
+      "reference": "nginx:alpine",
+      "kind": "compose",
+      "location": {
+        "file": "docker-compose.yaml",
+        "line": 30
+      }
+    },
+    {
+      "reference": "postgres:13.18",
+      "kind": "compose",
+      "location": {
+        "file": "docker-compose.yaml",
+        "line": 39
+      }
+    },
+    {
+      "reference": "mariadb:10.5.27",
+      "kind": "compose",
+      "location": {
+        "file": "docker-compose.yaml",
+        "line": 47
+      }
+    },
+    {
+      "reference": "mysql:8.0.40",
+      "kind": "compose",
+      "location": {
+        "file": "docker-compose.yaml",
+        "line": 57
+      }
+    },
+    {
+      "reference": "ghcr.io/go-shiori/shiori",
+      "kind": "readme",
+      "location": {
+        "file": "docs/Installation.md",
+        "line": 51
+      }
+    },
+    {
+      "reference": "ghcr.io/go-shiori/shiori:latest",
+      "kind": "readme",
+      "location": {
+        "file": "docs/Installation.md",
+        "line": 97
+      }
+    }
+  ],
+  "docker_runs": [
+    {
+      "image": "ghcr.io/go-shiori/shiori",
+      "ports": [
+        "8080:8080"
+      ],
+      "volumes": [
+        "$(pwd):/shiori"
+      ],
+      "env": null,
+      "location": {
+        "file": "docs/Usage.md",
+        "line": 23
+      }
+    },
+    {
+      "image": "ghcr.io/go-shiori/shiori",
+      "ports": [
+        "8080:8080"
+      ],
+      "volumes": [
+        "/srv/machines/shiori:/shiori"
+      ],
+      "env": null,
+      "location": {
+        "file": "docs/faq.md",
+        "line": 135
+      }
+    }
+  ],
+  "notes": [
+    {
+      "text": "Since this is our first time, we don't have any account registered yet. With that said, we can use the default user to access web interface:",
+      "location": {
+        "file": "docs/Usage.md",
+        "line": 91
+      }
+    }
+  ],
+  "suspicious": null,
+  "readmes": [
+    "README.md",
+    "webapp/README.md"
+  ],
+  "summary": {
+    "text": "Check out our latest Announcements",
+    "location": {
+      "file": "README.md",
+      "line": 8
+    }
+  },
+  "file_mentions": [
+    {
+      "text": "push.yml",
+      "location": {
+        "file": "README.md",
+        "line": 3
+      }
+    },
+    {
+      "text": "push.yml",
+      "location": {
+        "file": "README.md",
+        "line": 3
+      }
+    },
+    {
+      "text": "docker-compose.yaml",
+      "location": {
+        "file": "docs/Contribute.md",
+        "line": 97
+      }
+    },
+    {
+      "text": "docker-compose.yaml",
+      "location": {
+        "file": "docs/Contribute.md",
+        "line": 105
+      }
+    },
+    {
+      "text": "docker-compose.yaml",
+      "location": {
+        "file": "docs/Contribute.md",
+        "line": 111
+      }
+    },
+    {
+      "text": "deploy.yaml",
+      "location": {
+        "file": "docs/Installation.md",
+        "line": 69
+      }
+    },
+    {
+      "text": "service.yaml",
+      "location": {
+        "file": "docs/Installation.md",
+        "line": 128
+      }
+    },
+    {
+      "text": "ingress.yaml",
+      "location": {
+        "file": "docs/Installation.md",
+        "line": 146
+      }
+    }
+  ],
+  "stack_hints": [
+    "go.mod",
+    "package.json",
+    "webapp/package.json"
+  ],
+  "problems": null
+}

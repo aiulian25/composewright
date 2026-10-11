@@ -1,0 +1,88 @@
+{{define "content"}}
+{{with .Data}}
+<div class="page-head">
+  <h1 class="page-title">New project</h1>
+  <p class="lead">Start from a repository, files you drop, or files you paste. Any mix works.</p>
+</div>
+<form id="source-form" class="stack" method="post" action="/new" enctype="multipart/form-data" data-dropzone-form>
+  <input type="hidden" name="csrf" value="{{$.CSRF}}">
+  <section class="card" aria-labelledby="repository-title">
+    <div class="card-head"><h2 id="repository-title">{{template "icon-branch"}}Repository</h2></div>
+    <div class="card-body">
+      <div class="repository-row">
+        <label class="input-icon" for="source">{{template "icon-link"}}<input id="source" name="source" type="text" placeholder="github.com/miniflux/v2 or a folder on this machine" value="{{.Source}}" autocomplete="off" spellcheck="false"></label>
+        <input id="ref" name="ref" type="text" placeholder="default branch" value="{{.Ref}}" aria-label="Branch, tag or commit" autocomplete="off" spellcheck="false">
+        <button class="button button-primary" type="submit">{{template "icon-download"}}Fetch <span class="kbd">Enter</span></button>
+      </div>
+      <div class="row">
+        <span class="chip chip-neutral">GitHub</span>
+        <span class="chip chip-neutral">a folder on this machine</span>
+        <span class="muted small">Fetched through the GitHub API as a tarball: no git clone, no hooks, no submodules.</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="paste" aria-labelledby="paste-title">
+    <div class="card-head"><h2 id="paste-title">{{template "icon-paste"}}Paste existing files</h2><span class="note">Paste either or both. Your own values are kept; empty secrets and placeholders are generated.</span></div>
+    <div class="editor-pair">
+      <div class="editor-pane">
+        <label class="editor-name" for="compose">compose.yaml</label>
+        <div class="editor" data-editor><pre class="editor-lines" aria-hidden="true">1</pre><textarea id="compose" name="compose" rows="14" placeholder="Paste a compose file here…" spellcheck="false" autocomplete="off"></textarea></div>
+      </div>
+      <div class="editor-pane">
+        <label class="editor-name" for="env">.env</label>
+        <div class="editor" data-editor><pre class="editor-lines" aria-hidden="true">1</pre><textarea id="env" name="env" rows="14" placeholder="KEY=value, one per line…" spellcheck="false" autocomplete="off"></textarea></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="dropzone" data-dropzone>
+    {{template "icon-upload"}}
+    <span class="grow"><strong>Drop files anywhere in this window.</strong> README, compose.yaml, .env, Dockerfile; up to 50 files, archives are ignored.</span>
+    <label class="button" for="files">Choose files</label>
+    <input class="visually-hidden" id="files" name="files" type="file" multiple data-file-input>
+    <ul class="file-list" data-file-list aria-live="polite"></ul>
+  </div>
+
+  <div class="options-row">
+    <label class="row" for="engine">Engine
+      <select id="engine" name="engine">{{range .Engines}}<option value="{{.Value}}"{{if .Selected}} selected{{end}}{{if .Disabled}} disabled{{end}}>{{.Label}}</option>{{end}}</select>
+    </label>
+    <label class="row" for="name">Project name
+      <input id="name" name="name" type="text" placeholder="from the main container" value="{{.Name}}" pattern="[a-z0-9][a-z0-9_\-]{0,62}" autocomplete="off" spellcheck="false">
+    </label>
+    <label class="choice"><input type="checkbox" name="test" value="1"{{if not .FilesOnly}} checked{{end}}><input type="hidden" name="test" value="0"><span>Test in sandbox after generating</span></label>
+    <button class="button button-primary push-right" type="submit">Generate {{template "icon-arrow"}}<span class="kbd">Ctrl Enter</span></button>
+  </div>
+</form>
+{{end}}
+{{end}}
+
+{{define "context"}}
+<div class="tabs" role="tablist" aria-label="Source details"><span class="tab" role="tab" aria-selected="true">{{template "icon-shield"}}Fetch plan</span></div>
+<div class="context-section">
+  <p class="context-hint">What happens when you press Fetch. Nothing from the repository is executed.</p>
+  <dl class="kv">
+    <dt>request</dt><dd>GET api.github.com/repos/…/tarball</dd>
+    <dt>through</dt><dd>netguard, code host allowlist</dd>
+    <dt>size cap</dt><dd>{{.Data.ArchiveLimit}} compressed</dd>
+    <dt>extract</dt><dd>into an os.Root jail</dd>
+    <dt>refuse</dt><dd>symlinks out, devices, setuid bits</dd>
+    <dt>keep</dt><dd>README, compose, Dockerfile, env samples, docs</dd>
+    <dt>skip</dt><dd>.git, submodules, everything else</dd>
+    <dt>run</dt><dd>nothing</dd>
+  </dl>
+</div>
+<div class="context-section">
+  <h3>Accepted sources</h3>
+  <ul class="context-list">
+    <li>github.com/&lt;owner&gt;/&lt;repo&gt;</li>
+    <li>/path/to/a/folder on this machine</li>
+    <li>files you drop or paste</li>
+  </ul>
+</div>
+<div class="context-section">
+  <h3>Outbound connections</h3>
+  <p class="context-hint">{{.Data.Outbound}}. No telemetry, no update checks.</p>
+</div>
+{{end}}

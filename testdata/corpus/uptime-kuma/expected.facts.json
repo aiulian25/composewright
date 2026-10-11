@@ -1,0 +1,2112 @@
+{
+  "files": [
+    "README.md",
+    "compose.yaml",
+    "db/knex_migrations/README.md",
+    "db/old_migrations/README.md",
+    "docker/builder-go.dockerfile",
+    "docker/debian-base.dockerfile",
+    "docker/docker-compose-dev.yml",
+    "docker/dockerfile",
+    "extra/checkout-pr.mjs",
+    "extra/deploy-demo-server.js",
+    "extra/docker-latest-warning/Dockerfile.latest-warning",
+    "extra/docker-latest-warning/package.json",
+    "extra/healthcheck.go",
+    "extra/kuma-pr/package.json",
+    "extra/push-examples/javascript-fetch/package.json",
+    "extra/push-examples/typescript-fetch/README.md",
+    "extra/push-examples/typescript-fetch/package.json",
+    "extra/release/build-and-upload-assets.mjs",
+    "extra/release/build-images.mjs",
+    "extra/release/create-draft-release.mjs",
+    "extra/release/create-release.mjs",
+    "extra/release/generate-changelog.mjs",
+    "extra/release/lib.mjs",
+    "extra/release/merge-pr.mjs",
+    "extra/release/prepare-release.mjs",
+    "extra/release/release.mjs",
+    "extra/release/update-version.mjs",
+    "extra/release/upload-artifacts-beta.mjs",
+    "extra/release/upload-artifacts.mjs",
+    "extra/uptime-kuma-push/Dockerfile",
+    "extra/uptime-kuma-push/package.json",
+    "package.json",
+    "playwright.config.js",
+    "server/better-auth.ts",
+    "server/check-version.js",
+    "server/client.js",
+    "server/config.js",
+    "server/database.js",
+    "server/model/monitor.js",
+    "server/modules/apicache/apicache.js",
+    "server/monitor-types/real-browser-monitor-type.js",
+    "server/notification-providers/HaloPSA.js",
+    "server/notification-providers/notification-provider.js",
+    "server/server.js",
+    "server/setup-database.js",
+    "server/uptime-calculator.js",
+    "server/uptime-kuma-server.js",
+    "server/util-server.js",
+    "src/auth-client.ts",
+    "src/lang/README.md",
+    "src/main.js",
+    "src/mixins/public.js",
+    "src/mixins/socket.js",
+    "src/util.ts",
+    "vite.config.mjs"
+  ],
+  "compose_files": [
+    {
+      "path": "compose.yaml",
+      "services": [
+        {
+          "name": "uptime-kuma",
+          "location": {
+            "file": "compose.yaml",
+            "line": 2
+          },
+          "image": "louislam/uptime-kuma:2",
+          "image_at": {
+            "file": "compose.yaml",
+            "line": 3
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 3001,
+              "published": "3001",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "compose.yaml",
+                "line": 9
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "./data",
+              "target": "/app/data",
+              "read_only": false,
+              "location": {
+                "file": "compose.yaml",
+                "line": 6
+              }
+            }
+          ],
+          "environment": null,
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": []
+    },
+    {
+      "path": "docker/docker-compose-dev.yml",
+      "services": [
+        {
+          "name": "uptime-kuma",
+          "location": {
+            "file": "docker/docker-compose-dev.yml",
+            "line": 4
+          },
+          "image": "louislam/uptime-kuma:nightly3",
+          "image_at": {
+            "file": "docker/docker-compose-dev.yml",
+            "line": 6
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 3001,
+              "published": "3001",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docker/docker-compose-dev.yml",
+                "line": 12
+              }
+            },
+            {
+              "target": 3306,
+              "published": "3307",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docker/docker-compose-dev.yml",
+                "line": 13
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "../server",
+              "target": "/app/server",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose-dev.yml",
+                "line": 9
+              }
+            },
+            {
+              "type": "bind",
+              "source": "../db",
+              "target": "/app/db",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose-dev.yml",
+                "line": 10
+              }
+            }
+          ],
+          "environment": null,
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": []
+    }
+  ],
+  "dockerfiles": [
+    {
+      "path": "docker/builder-go.dockerfile",
+      "base_image": "golang:1-trixie",
+      "exposed": null,
+      "volumes": null,
+      "env": null,
+      "args": [
+        {
+          "key": "TARGETPLATFORM",
+          "value": "",
+          "location": {
+            "file": "docker/builder-go.dockerfile",
+            "line": 6
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": null,
+      "command": null
+    },
+    {
+      "path": "docker/debian-base.dockerfile",
+      "base_image": "louislam/uptime-kuma:base3-slim",
+      "exposed": null,
+      "volumes": null,
+      "env": [
+        {
+          "key": "UPTIME_KUMA_ENABLE_EMBEDDED_MARIADB",
+          "value": "1",
+          "location": {
+            "file": "docker/debian-base.dockerfile",
+            "line": 66
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "TARGETPLATFORM",
+          "value": "",
+          "location": {
+            "file": "docker/debian-base.dockerfile",
+            "line": 4
+          }
+        },
+        {
+          "key": "APPRISE_VERSION",
+          "value": "~=2.0.1",
+          "location": {
+            "file": "docker/debian-base.dockerfile",
+            "line": 32
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": null,
+      "command": null
+    },
+    {
+      "path": "docker/dockerfile",
+      "base_image": "louislam/uptime-kuma:base3",
+      "exposed": [
+        {
+          "port": 3001,
+          "protocol": "tcp",
+          "location": {
+            "file": "docker/dockerfile",
+            "line": 39
+          }
+        }
+      ],
+      "volumes": null,
+      "env": [
+        {
+          "key": "UPTIME_KUMA_IS_CONTAINER",
+          "value": "1",
+          "location": {
+            "file": "docker/dockerfile",
+            "line": 34
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "BASE_IMAGE",
+          "value": "louislam/uptime-kuma:base3",
+          "location": {
+            "file": "docker/dockerfile",
+            "line": 1
+          }
+        },
+        {
+          "key": "VERSION",
+          "value": "",
+          "location": {
+            "file": "docker/dockerfile",
+            "line": 102
+          }
+        },
+        {
+          "key": "GITHUB_TOKEN",
+          "value": "",
+          "location": {
+            "file": "docker/dockerfile",
+            "line": 103
+          }
+        },
+        {
+          "key": "TARGETARCH",
+          "value": "",
+          "location": {
+            "file": "docker/dockerfile",
+            "line": 104
+          }
+        },
+        {
+          "key": "PLATFORM",
+          "value": "debian",
+          "location": {
+            "file": "docker/dockerfile",
+            "line": 105
+          }
+        },
+        {
+          "key": "FILE",
+          "value": "$PLATFORM-$TARGETARCH-$VERSION.tar.gz",
+          "location": {
+            "file": "docker/dockerfile",
+            "line": 106
+          }
+        },
+        {
+          "key": "DIST",
+          "value": "dist.tar.gz",
+          "location": {
+            "file": "docker/dockerfile",
+            "line": 107
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "extra/healthcheck"
+        ],
+        "interval": "60s",
+        "timeout": "30s",
+        "start_period": "180s",
+        "retries": 5,
+        "disabled": false,
+        "location": {
+          "file": "docker/dockerfile",
+          "line": 40
+        }
+      },
+      "entrypoint": [
+        "/usr/bin/dumb-init",
+        "--"
+      ],
+      "command": [
+        "node",
+        "server/server.js"
+      ]
+    },
+    {
+      "path": "extra/docker-latest-warning/Dockerfile.latest-warning",
+      "base_image": "louislam/uptime-kuma:1.23.17-debian",
+      "exposed": null,
+      "volumes": null,
+      "env": null,
+      "args": null,
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": null,
+      "command": null
+    },
+    {
+      "path": "extra/uptime-kuma-push/Dockerfile",
+      "base_image": "debian:bookworm-slim",
+      "exposed": null,
+      "volumes": null,
+      "env": null,
+      "args": [
+        {
+          "key": "TARGETPLATFORM",
+          "value": "",
+          "location": {
+            "file": "extra/uptime-kuma-push/Dockerfile",
+            "line": 5
+          }
+        }
+      ],
+      "user": "kuma",
+      "user_at": {
+        "file": "extra/uptime-kuma-push/Dockerfile",
+        "line": 12
+      },
+      "entrypoint": [
+        "/home/kuma/uptime-kuma-push"
+      ],
+      "command": null
+    }
+  ],
+  "env_samples": null,
+  "variables": [
+    {
+      "name": "CI",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CI",
+          "kind": "code",
+          "location": {
+            "file": "playwright.config.js",
+            "line": 13
+          }
+        },
+        {
+          "name": "CI",
+          "kind": "code",
+          "location": {
+            "file": "playwright.config.js",
+            "line": 25
+          }
+        },
+        {
+          "name": "CI",
+          "kind": "code",
+          "location": {
+            "file": "playwright.config.js",
+            "line": 28
+          }
+        }
+      ]
+    },
+    {
+      "name": "DATA_DIR",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DATA_DIR",
+          "kind": "code",
+          "location": {
+            "file": "server/database.js",
+            "line": 152
+          }
+        }
+      ]
+    },
+    {
+      "name": "DEBUG",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DEBUG",
+          "kind": "code",
+          "location": {
+            "file": "server/modules/apicache/apicache.js",
+            "line": 106
+          }
+        },
+        {
+          "name": "DEBUG",
+          "kind": "code",
+          "location": {
+            "file": "server/modules/apicache/apicache.js",
+            "line": 106
+          }
+        }
+      ]
+    },
+    {
+      "name": "DRY_RUN",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DRY_RUN",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/build-and-upload-assets.mjs",
+            "line": 29
+          }
+        },
+        {
+          "name": "DRY_RUN",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/build-images.mjs",
+            "line": 28
+          }
+        },
+        {
+          "name": "DRY_RUN",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/create-draft-release.mjs",
+            "line": 24
+          }
+        },
+        {
+          "name": "DRY_RUN",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/lib.mjs",
+            "line": 12
+          }
+        },
+        {
+          "name": "DRY_RUN",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/merge-pr.mjs",
+            "line": 20
+          }
+        },
+        {
+          "name": "DRY_RUN",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/prepare-release.mjs",
+            "line": 31
+          }
+        },
+        {
+          "name": "DRY_RUN",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/release.mjs",
+            "line": 28
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITHUB_RUN_ID",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITHUB_RUN_ID",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/prepare-release.mjs",
+            "line": 34
+          }
+        }
+      ]
+    },
+    {
+      "name": "HEADLESS_E2E_TESTS",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "HEADLESS_E2E_TESTS",
+          "kind": "code",
+          "location": {
+            "file": "playwright.config.js",
+            "line": 13
+          }
+        }
+      ]
+    },
+    {
+      "name": "HOST",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "HOST",
+          "kind": "code",
+          "location": {
+            "file": "extra/healthcheck.go",
+            "line": 46
+          }
+        },
+        {
+          "name": "HOST",
+          "kind": "code",
+          "location": {
+            "file": "server/config.js",
+            "line": 9
+          }
+        }
+      ]
+    },
+    {
+      "name": "LOCALAPPDATA",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LOCALAPPDATA",
+          "kind": "code",
+          "location": {
+            "file": "server/monitor-types/real-browser-monitor-type.js",
+            "line": 22
+          }
+        },
+        {
+          "name": "LOCALAPPDATA",
+          "kind": "code",
+          "location": {
+            "file": "server/monitor-types/real-browser-monitor-type.js",
+            "line": 27
+          }
+        }
+      ]
+    },
+    {
+      "name": "MERGE_SHA",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MERGE_SHA",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/lib.mjs",
+            "line": 61
+          }
+        },
+        {
+          "name": "MERGE_SHA",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/lib.mjs",
+            "line": 62
+          }
+        }
+      ]
+    },
+    {
+      "name": "NODE_ENV",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "server/modules/apicache/apicache.js",
+            "line": 354
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "server/server.js",
+            "line": 65
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "server/server.js",
+            "line": 66
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "server/server.js",
+            "line": 73
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "server/uptime-kuma-server.js",
+            "line": 101
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "server/util-server.js",
+            "line": 598
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "server/util-server.js",
+            "line": 622
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "src/auth-client.ts",
+            "line": 7
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "src/main.js",
+            "line": 56
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "src/mixins/public.js",
+            "line": 4
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "src/mixins/socket.js",
+            "line": 105
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "src/util.ts",
+            "line": 19
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "src/util.ts",
+            "line": 26
+          }
+        }
+      ]
+    },
+    {
+      "name": "NODE_TLS_REJECT_UNAUTHORIZED",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "NODE_TLS_REJECT_UNAUTHORIZED",
+          "kind": "code",
+          "location": {
+            "file": "extra/healthcheck.go",
+            "line": 25
+          }
+        }
+      ]
+    },
+    {
+      "name": "NOTIFICATION_PROXY",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "NOTIFICATION_PROXY",
+          "kind": "code",
+          "location": {
+            "file": "server/notification-providers/notification-provider.js",
+            "line": 176
+          }
+        }
+      ]
+    },
+    {
+      "name": "PORT",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PORT",
+          "kind": "code",
+          "location": {
+            "file": "extra/healthcheck.go",
+            "line": 58
+          }
+        },
+        {
+          "name": "PORT",
+          "kind": "code",
+          "location": {
+            "file": "server/config.js",
+            "line": 12
+          }
+        }
+      ]
+    },
+    {
+      "name": "PROGRAMFILES",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PROGRAMFILES",
+          "kind": "code",
+          "location": {
+            "file": "server/monitor-types/real-browser-monitor-type.js",
+            "line": 23
+          }
+        },
+        {
+          "name": "PROGRAMFILES",
+          "kind": "code",
+          "location": {
+            "file": "server/monitor-types/real-browser-monitor-type.js",
+            "line": 28
+          }
+        }
+      ]
+    },
+    {
+      "name": "PR_NUMBER",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PR_NUMBER",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/merge-pr.mjs",
+            "line": 34
+          }
+        },
+        {
+          "name": "PR_NUMBER",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/merge-pr.mjs",
+            "line": 35
+          }
+        }
+      ]
+    },
+    {
+      "name": "RELEASE_BASE_BRANCH",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "RELEASE_BASE_BRANCH",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/generate-changelog.mjs",
+            "line": 301
+          }
+        },
+        {
+          "name": "RELEASE_BASE_BRANCH",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/lib.mjs",
+            "line": 623
+          }
+        }
+      ]
+    },
+    {
+      "name": "RELEASE_BETA_VERSION",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "RELEASE_BETA_VERSION",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/lib.mjs",
+            "line": 19
+          }
+        },
+        {
+          "name": "RELEASE_BETA_VERSION",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/lib.mjs",
+            "line": 27
+          }
+        },
+        {
+          "name": "RELEASE_BETA_VERSION",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/upload-artifacts-beta.mjs",
+            "line": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "RELEASE_DRY_RUN",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "RELEASE_DRY_RUN",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/lib.mjs",
+            "line": 12
+          }
+        }
+      ]
+    },
+    {
+      "name": "RELEASE_GITHUB_TOKEN",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "RELEASE_GITHUB_TOKEN",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/upload-artifacts-beta.mjs",
+            "line": 4
+          }
+        },
+        {
+          "name": "RELEASE_GITHUB_TOKEN",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/upload-artifacts.mjs",
+            "line": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "RELEASE_IS_BETA",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "RELEASE_IS_BETA",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/lib.mjs",
+            "line": 27
+          }
+        },
+        {
+          "name": "RELEASE_IS_BETA",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/release.mjs",
+            "line": 24
+          }
+        }
+      ]
+    },
+    {
+      "name": "RELEASE_PREVIOUS_VERSION",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "RELEASE_PREVIOUS_VERSION",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/create-draft-release.mjs",
+            "line": 23
+          }
+        },
+        {
+          "name": "RELEASE_PREVIOUS_VERSION",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/create-release.mjs",
+            "line": 5
+          }
+        },
+        {
+          "name": "RELEASE_PREVIOUS_VERSION",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/prepare-release.mjs",
+            "line": 30
+          }
+        }
+      ]
+    },
+    {
+      "name": "RELEASE_REPO_NAMES",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "RELEASE_REPO_NAMES",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/lib.mjs",
+            "line": 93
+          }
+        },
+        {
+          "name": "RELEASE_REPO_NAMES",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/lib.mjs",
+            "line": 95
+          }
+        }
+      ]
+    },
+    {
+      "name": "RELEASE_VERSION",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "RELEASE_VERSION",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/lib.mjs",
+            "line": 19
+          }
+        },
+        {
+          "name": "RELEASE_VERSION",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/update-version.mjs",
+            "line": 11
+          }
+        },
+        {
+          "name": "RELEASE_VERSION",
+          "kind": "code",
+          "location": {
+            "file": "extra/release/upload-artifacts.mjs",
+            "line": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "SET_MIGRATE_AGGREGATE_TABLE_TO_TRUE",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SET_MIGRATE_AGGREGATE_TABLE_TO_TRUE",
+          "kind": "code",
+          "location": {
+            "file": "server/database.js",
+            "line": 917
+          }
+        }
+      ]
+    },
+    {
+      "name": "SQL_LOG",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SQL_LOG",
+          "kind": "code",
+          "location": {
+            "file": "server/database.js",
+            "line": 435
+          }
+        }
+      ]
+    },
+    {
+      "name": "SSL_CERT",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SSL_CERT",
+          "kind": "code",
+          "location": {
+            "file": "extra/healthcheck.go",
+            "line": 41
+          }
+        },
+        {
+          "name": "SSL_CERT",
+          "kind": "code",
+          "location": {
+            "file": "server/config.js",
+            "line": 17
+          }
+        }
+      ]
+    },
+    {
+      "name": "SSL_KEY",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SSL_KEY",
+          "kind": "code",
+          "location": {
+            "file": "extra/healthcheck.go",
+            "line": 36
+          }
+        },
+        {
+          "name": "SSL_KEY",
+          "kind": "code",
+          "location": {
+            "file": "server/config.js",
+            "line": 16
+          }
+        }
+      ]
+    },
+    {
+      "name": "SSL_KEY_PASSPHRASE",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SSL_KEY_PASSPHRASE",
+          "kind": "code",
+          "location": {
+            "file": "server/config.js",
+            "line": 21
+          }
+        }
+      ]
+    },
+    {
+      "name": "TEST_BACKEND",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TEST_BACKEND",
+          "kind": "code",
+          "location": {
+            "file": "server/uptime-calculator.js",
+            "line": 105
+          }
+        },
+        {
+          "name": "TEST_BACKEND",
+          "kind": "code",
+          "location": {
+            "file": "server/uptime-calculator.js",
+            "line": 297
+          }
+        },
+        {
+          "name": "TEST_BACKEND",
+          "kind": "code",
+          "location": {
+            "file": "server/util-server.js",
+            "line": 837
+          }
+        }
+      ]
+    },
+    {
+      "name": "TEST_CHECK_VERSION",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TEST_CHECK_VERSION",
+          "kind": "code",
+          "location": {
+            "file": "server/check-version.js",
+            "line": 27
+          }
+        }
+      ]
+    },
+    {
+      "name": "TIMELOGGER",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TIMELOGGER",
+          "kind": "code",
+          "location": {
+            "file": "server/util-server.js",
+            "line": 494
+          }
+        },
+        {
+          "name": "TIMELOGGER",
+          "kind": "code",
+          "location": {
+            "file": "src/util.ts",
+            "line": 433
+          }
+        }
+      ]
+    },
+    {
+      "name": "TZ",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TZ",
+          "kind": "code",
+          "location": {
+            "file": "server/uptime-kuma-server.js",
+            "line": 224
+          }
+        },
+        {
+          "name": "TZ",
+          "kind": "code",
+          "location": {
+            "file": "server/uptime-kuma-server.js",
+            "line": 225
+          }
+        },
+        {
+          "name": "TZ",
+          "kind": "code",
+          "location": {
+            "file": "server/uptime-kuma-server.js",
+            "line": 226
+          }
+        },
+        {
+          "name": "TZ",
+          "kind": "code",
+          "location": {
+            "file": "server/uptime-kuma-server.js",
+            "line": 430
+          }
+        },
+        {
+          "name": "TZ",
+          "kind": "code",
+          "location": {
+            "file": "server/uptime-kuma-server.js",
+            "line": 432
+          }
+        },
+        {
+          "name": "TZ",
+          "kind": "code",
+          "location": {
+            "file": "server/uptime-kuma-server.js",
+            "line": 433
+          }
+        },
+        {
+          "name": "TZ",
+          "kind": "code",
+          "location": {
+            "file": "server/uptime-kuma-server.js",
+            "line": 434
+          }
+        },
+        {
+          "name": "TZ",
+          "kind": "code",
+          "location": {
+            "file": "server/uptime-kuma-server.js",
+            "line": 437
+          }
+        },
+        {
+          "name": "TZ",
+          "kind": "code",
+          "location": {
+            "file": "server/uptime-kuma-server.js",
+            "line": 500
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_ALLOW_ALL_CHROME_EXEC",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_ALLOW_ALL_CHROME_EXEC",
+          "kind": "code",
+          "location": {
+            "file": "server/monitor-types/real-browser-monitor-type.js",
+            "line": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_AUTH_SECRET",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_AUTH_SECRET",
+          "kind": "code",
+          "location": {
+            "file": "server/better-auth.ts",
+            "line": 190
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_CLOUDFLARED_TOKEN",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_CLOUDFLARED_TOKEN",
+          "kind": "code",
+          "location": {
+            "file": "server/server.js",
+            "line": 157
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_DB_HOSTNAME",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_DB_HOSTNAME",
+          "kind": "code",
+          "location": {
+            "file": "server/setup-database.js",
+            "line": 102
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_DB_NAME",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_DB_NAME",
+          "kind": "code",
+          "location": {
+            "file": "server/setup-database.js",
+            "line": 104
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_DB_POOL_MAX_CONNECTIONS",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_DB_POOL_MAX_CONNECTIONS",
+          "kind": "code",
+          "location": {
+            "file": "server/database.js",
+            "line": 275
+          }
+        },
+        {
+          "name": "UPTIME_KUMA_DB_POOL_MAX_CONNECTIONS",
+          "kind": "code",
+          "location": {
+            "file": "server/database.js",
+            "line": 277
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_DB_PORT",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_DB_PORT",
+          "kind": "code",
+          "location": {
+            "file": "server/setup-database.js",
+            "line": 103
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_DB_SOCKET",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_DB_SOCKET",
+          "kind": "code",
+          "location": {
+            "file": "server/setup-database.js",
+            "line": 107
+          }
+        },
+        {
+          "name": "UPTIME_KUMA_DB_SOCKET",
+          "kind": "code",
+          "location": {
+            "file": "server/setup-database.js",
+            "line": 166
+          }
+        },
+        {
+          "name": "UPTIME_KUMA_DB_SOCKET",
+          "kind": "code",
+          "location": {
+            "file": "server/setup-database.js",
+            "line": 210
+          }
+        },
+        {
+          "name": "UPTIME_KUMA_DB_SOCKET",
+          "kind": "code",
+          "location": {
+            "file": "server/setup-database.js",
+            "line": 211
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_DB_TYPE",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_DB_TYPE",
+          "kind": "code",
+          "location": {
+            "file": "server/setup-database.js",
+            "line": 98
+          }
+        },
+        {
+          "name": "UPTIME_KUMA_DB_TYPE",
+          "kind": "code",
+          "location": {
+            "file": "server/setup-database.js",
+            "line": 101
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_DEBUG_INSPECTOR",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_DEBUG_INSPECTOR",
+          "kind": "code",
+          "location": {
+            "file": "server/server.js",
+            "line": 80
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_DEMO_CWD",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_DEMO_CWD",
+          "kind": "code",
+          "location": {
+            "file": "extra/deploy-demo-server.js",
+            "line": 22
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_DEMO_HOST",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_DEMO_HOST",
+          "kind": "code",
+          "location": {
+            "file": "extra/deploy-demo-server.js",
+            "line": 16
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_DEMO_PORT",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_DEMO_PORT",
+          "kind": "code",
+          "location": {
+            "file": "extra/deploy-demo-server.js",
+            "line": 17
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_DEMO_PRIVATE_KEY_PATH",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_DEMO_PRIVATE_KEY_PATH",
+          "kind": "code",
+          "location": {
+            "file": "extra/deploy-demo-server.js",
+            "line": 19
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_DEMO_USERNAME",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_DEMO_USERNAME",
+          "kind": "code",
+          "location": {
+            "file": "extra/deploy-demo-server.js",
+            "line": 18
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_DISABLE_FRAME_SAMEORIGIN",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_DISABLE_FRAME_SAMEORIGIN",
+          "kind": "code",
+          "location": {
+            "file": "server/server.js",
+            "line": 156
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_DISABLE_LEAK_PWD_CHECK",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_DISABLE_LEAK_PWD_CHECK",
+          "kind": "code",
+          "location": {
+            "file": "server/better-auth.ts",
+            "line": 29
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_ENABLE_EMBEDDED_MARIADB",
+      "default": "1",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_ENABLE_EMBEDDED_MARIADB",
+          "kind": "dockerfile",
+          "default": "1",
+          "location": {
+            "file": "docker/debian-base.dockerfile",
+            "line": 66
+          }
+        },
+        {
+          "name": "UPTIME_KUMA_ENABLE_EMBEDDED_MARIADB",
+          "kind": "code",
+          "location": {
+            "file": "server/setup-database.js",
+            "line": 127
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_GH_REPO",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_GH_REPO",
+          "kind": "code",
+          "location": {
+            "file": "extra/checkout-pr.mjs",
+            "line": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_HIDE_LOG",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_HIDE_LOG",
+          "kind": "code",
+          "location": {
+            "file": "src/util.ts",
+            "line": 240
+          }
+        },
+        {
+          "name": "UPTIME_KUMA_HIDE_LOG",
+          "kind": "code",
+          "location": {
+            "file": "src/util.ts",
+            "line": 241
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_HOST",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_HOST",
+          "kind": "code",
+          "location": {
+            "file": "extra/healthcheck.go",
+            "line": 44
+          }
+        },
+        {
+          "name": "UPTIME_KUMA_HOST",
+          "kind": "code",
+          "location": {
+            "file": "server/config.js",
+            "line": 10
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_IS_CONTAINER",
+      "default": "1",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_IS_CONTAINER",
+          "kind": "dockerfile",
+          "default": "1",
+          "location": {
+            "file": "docker/dockerfile",
+            "line": 34
+          }
+        },
+        {
+          "name": "UPTIME_KUMA_IS_CONTAINER",
+          "kind": "code",
+          "location": {
+            "file": "server/client.js",
+            "line": 154
+          }
+        },
+        {
+          "name": "UPTIME_KUMA_IS_CONTAINER",
+          "kind": "code",
+          "location": {
+            "file": "server/monitor-types/real-browser-monitor-type.js",
+            "line": 117
+          }
+        },
+        {
+          "name": "UPTIME_KUMA_IS_CONTAINER",
+          "kind": "code",
+          "location": {
+            "file": "server/server.js",
+            "line": 74
+          }
+        },
+        {
+          "name": "UPTIME_KUMA_IS_CONTAINER",
+          "kind": "code",
+          "location": {
+            "file": "server/server.js",
+            "line": 87
+          }
+        },
+        {
+          "name": "UPTIME_KUMA_IS_CONTAINER",
+          "kind": "code",
+          "location": {
+            "file": "server/uptime-kuma-server.js",
+            "line": 534
+          }
+        },
+        {
+          "name": "UPTIME_KUMA_IS_CONTAINER",
+          "kind": "code",
+          "location": {
+            "file": "server/uptime-kuma-server.js",
+            "line": 549
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_LOG_FORMAT",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_LOG_FORMAT",
+          "kind": "code",
+          "location": {
+            "file": "src/util.ts",
+            "line": 282
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_LOG_RESPONSE_BODY_MONITOR_ID",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_LOG_RESPONSE_BODY_MONITOR_ID",
+          "kind": "code",
+          "location": {
+            "file": "server/model/monitor.js",
+            "line": 682
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_PORT",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_PORT",
+          "kind": "code",
+          "location": {
+            "file": "extra/healthcheck.go",
+            "line": 23
+          }
+        },
+        {
+          "name": "UPTIME_KUMA_PORT",
+          "kind": "code",
+          "location": {
+            "file": "extra/healthcheck.go",
+            "line": 55
+          }
+        },
+        {
+          "name": "UPTIME_KUMA_PORT",
+          "kind": "code",
+          "location": {
+            "file": "server/config.js",
+            "line": 12
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_SQLITE_SINGLE_CONNECTION",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_SQLITE_SINGLE_CONNECTION",
+          "kind": "code",
+          "location": {
+            "file": "server/database.js",
+            "line": 326
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_SSL_CERT",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_SSL_CERT",
+          "kind": "code",
+          "location": {
+            "file": "extra/healthcheck.go",
+            "line": 39
+          }
+        },
+        {
+          "name": "UPTIME_KUMA_SSL_CERT",
+          "kind": "code",
+          "location": {
+            "file": "server/config.js",
+            "line": 17
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_SSL_KEY",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_SSL_KEY",
+          "kind": "code",
+          "location": {
+            "file": "extra/healthcheck.go",
+            "line": 34
+          }
+        },
+        {
+          "name": "UPTIME_KUMA_SSL_KEY",
+          "kind": "code",
+          "location": {
+            "file": "server/config.js",
+            "line": 16
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_SSL_KEY_PASSPHRASE",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_SSL_KEY_PASSPHRASE",
+          "kind": "code",
+          "location": {
+            "file": "server/config.js",
+            "line": 20
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPTIME_KUMA_WS_ORIGIN_CHECK",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPTIME_KUMA_WS_ORIGIN_CHECK",
+          "kind": "code",
+          "location": {
+            "file": "server/server.js",
+            "line": 69
+          }
+        },
+        {
+          "name": "UPTIME_KUMA_WS_ORIGIN_CHECK",
+          "kind": "code",
+          "location": {
+            "file": "server/server.js",
+            "line": 70
+          }
+        },
+        {
+          "name": "UPTIME_KUMA_WS_ORIGIN_CHECK",
+          "kind": "code",
+          "location": {
+            "file": "server/server.js",
+            "line": 76
+          }
+        },
+        {
+          "name": "UPTIME_KUMA_WS_ORIGIN_CHECK",
+          "kind": "code",
+          "location": {
+            "file": "server/server.js",
+            "line": 77
+          }
+        },
+        {
+          "name": "UPTIME_KUMA_WS_ORIGIN_CHECK",
+          "kind": "code",
+          "location": {
+            "file": "server/uptime-kuma-server.js",
+            "line": 165
+          }
+        }
+      ]
+    },
+    {
+      "name": "notification_proxy",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "notification_proxy",
+          "kind": "code",
+          "location": {
+            "file": "server/notification-providers/notification-provider.js",
+            "line": 176
+          }
+        }
+      ]
+    },
+    {
+      "name": "npm_package_version",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "npm_package_version",
+          "kind": "code",
+          "location": {
+            "file": "server/notification-providers/HaloPSA.js",
+            "line": 47
+          }
+        },
+        {
+          "name": "npm_package_version",
+          "kind": "code",
+          "location": {
+            "file": "vite.config.mjs",
+            "line": 16
+          }
+        }
+      ]
+    }
+  ],
+  "images": [
+    {
+      "reference": "louislam/uptime-kuma:2",
+      "kind": "readme",
+      "location": {
+        "file": "README.md",
+        "line": 57
+      }
+    },
+    {
+      "reference": "...",
+      "kind": "readme",
+      "location": {
+        "file": "README.md",
+        "line": 65
+      }
+    },
+    {
+      "reference": "louislam/uptime-kuma:2",
+      "kind": "compose",
+      "location": {
+        "file": "compose.yaml",
+        "line": 3
+      }
+    },
+    {
+      "reference": "louislam/uptime-kuma:nightly3",
+      "kind": "compose",
+      "location": {
+        "file": "docker/docker-compose-dev.yml",
+        "line": 6
+      }
+    }
+  ],
+  "docker_runs": [
+    {
+      "image": "louislam/uptime-kuma:2",
+      "ports": [
+        "3001:3001"
+      ],
+      "volumes": [
+        "uptime-kuma:/app/data"
+      ],
+      "env": null,
+      "location": {
+        "file": "README.md",
+        "line": 57
+      }
+    },
+    {
+      "image": "...",
+      "ports": null,
+      "volumes": null,
+      "env": null,
+      "location": {
+        "file": "README.md",
+        "line": 65
+      }
+    }
+  ],
+  "notes": null,
+  "suspicious": null,
+  "readmes": [
+    "README.md",
+    "db/knex_migrations/README.md",
+    "db/old_migrations/README.md",
+    "extra/push-examples/typescript-fetch/README.md",
+    "src/lang/README.md"
+  ],
+  "summary": {
+    "text": "Uptime Kuma is an easy-to-use self-hosted monitoring tool.",
+    "location": {
+      "file": "README.md",
+      "line": 7
+    }
+  },
+  "file_mentions": [
+    {
+      "text": "compose.yaml",
+      "location": {
+        "file": "README.md",
+        "line": 45
+      }
+    },
+    {
+      "text": "compose.yaml",
+      "location": {
+        "file": "README.md",
+        "line": 45
+      }
+    }
+  ],
+  "stack_hints": [
+    "extra/docker-latest-warning/package.json",
+    "extra/kuma-pr/package.json",
+    "extra/push-examples/javascript-fetch/package.json",
+    "extra/push-examples/typescript-fetch/package.json",
+    "extra/uptime-kuma-push/package.json",
+    "package.json"
+  ],
+  "problems": null
+}

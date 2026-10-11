@@ -1,0 +1,217 @@
+{
+  "ir_version": "1",
+  "app": {
+    "name": "freshrss",
+    "summary": "FreshRSS is a self-hosted RSS feed aggregator.",
+    "upstream_url": "https://github.com/FreshRSS/FreshRSS",
+    "docs_url": ""
+  },
+  "services": [
+    {
+      "name": "freshrss",
+      "role": "app",
+      "image": {
+        "registry": "docker.io",
+        "repository": "freshrss/freshrss",
+        "tag": "latest",
+        "digest": "",
+        "provenance": {
+          "source": "compose",
+          "source_ref": "Docker/freshrss/docker-compose.yml:7",
+          "confidence": "high"
+        }
+      },
+      "command": [],
+      "entrypoint": [],
+      "env": [
+        {
+          "key": "TZ",
+          "ref": "TZ",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "(default is UTC) A [server timezone](https://www.php.net/timezones)",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "Docker/freshrss/docker-compose.yml:23",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "CRON_MIN",
+          "ref": "CRON_MIN",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "(default is disabled) Define minutes for the built-in cron job to automatically refresh feeds (see below for more advanced options)",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "Docker/freshrss/docker-compose.yml:24",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "TRUSTED_PROXY",
+          "ref": "TRUSTED_PROXY",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "Docker/freshrss/docker-compose.yml:25",
+            "confidence": "high"
+          }
+        }
+      ],
+      "ports": [
+        {
+          "container": 80,
+          "protocol": "tcp",
+          "publish": true,
+          "host_port": 0,
+          "description": "",
+          "provenance": {
+            "source": "dockerfile",
+            "source_ref": "Docker/Dockerfile:70",
+            "confidence": "medium"
+          }
+        }
+      ],
+      "volumes": [
+        {
+          "name": "data",
+          "container_path": "/var/www/FreshRSS/data",
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "Docker/freshrss/docker-compose.yml:20",
+            "confidence": "high"
+          }
+        },
+        {
+          "name": "extensions",
+          "container_path": "/var/www/FreshRSS/extensions",
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "Docker/freshrss/docker-compose.yml:21",
+            "confidence": "high"
+          }
+        }
+      ],
+      "depends_on": [],
+      "healthcheck": {
+        "test": [],
+        "interval": "",
+        "timeout": "",
+        "retries": 0,
+        "start_period": "",
+        "omitted_reason": "",
+        "provenance": {
+          "source": "default",
+          "source_ref": "",
+          "confidence": "low"
+        }
+      },
+      "user": "",
+      "resources": {
+        "memory_limit": "",
+        "cpus": "",
+        "pids_limit": 0
+      },
+      "notes": [],
+      "provenance": {
+        "source": "compose",
+        "source_ref": "Docker/freshrss/docker-compose.yml:6",
+        "confidence": "high"
+      }
+    }
+  ],
+  "env_file": [
+    {
+      "key": "TZ",
+      "value": "Europe/Paris",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "(default is UTC) A [server timezone](https://www.php.net/timezones)",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "Docker/freshrss/docker-compose.yml:23",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "CRON_MIN",
+      "value": "3,33",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "(default is disabled) Define minutes for the built-in cron job to automatically refresh feeds (see below for more advanced options)",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "Docker/freshrss/docker-compose.yml:24",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "TRUSTED_PROXY",
+      "value": "172.16.0.1/12 192.168.0.1/16",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "Docker/freshrss/docker-compose.yml:25",
+        "confidence": "high"
+      }
+    }
+  ],
+  "needs": [],
+  "probe": {
+    "service": "freshrss",
+    "port": 80,
+    "path": "/",
+    "expect": []
+  },
+  "post_install_notes": [
+    "The [default user](13_Default_user.md) is marked with italic letters. (docs/en/admins/12_User_management.md:7)",
+    "# Default user (docs/en/admins/13_Default_user.md:1)",
+    "Currently, we have one main user, also called default user, or admin. All the others are regular users. (docs/en/admins/13_Default_user.md:3)",
+    "The default user is the first created user within the install routine. (docs/en/admins/13_Default_user.md:5)",
+    "The default user is always an administrator. (docs/en/admins/13_Default_user.md:9)",
+    "The default user is used for the anonymous reading. (docs/en/admins/13_Default_user.md:15)",
+    "* enable the checkbox of Allow anonymous reading of the default user’s articles (docs/en/admins/13_Default_user.md:19)",
+    "* when no user is logged in then the feeds of the default user is shown (docs/en/admins/13_Default_user.md:20)",
+    "## Change the default user (docs/en/admins/13_Default_user.md:22)",
+    "There is no UI for changing the default user, but a CLI (./cli/reconfigure.php --default_user YourNewAdmin) is provided. It can also be changed manually by editing the text file ./FreshRSS/data/config.php and changing 'default_user' =\u003e 'alice', to the desired user. (docs/en/admins/13_Default_user.md:24)",
+    "* Enter the exact username that matches your OIDC identity (e.g., admin@idm.example.com) as the default user (docs/en/admins/16_OpenID-Connect.md:22)",
+    "\u003e ⚠️ Important: Using a random username instead of your actual OIDC identity as the default user may result in no administrator access to your instance. (docs/en/admins/16_OpenID-Connect.md:28)",
+    "FreshRSS has a default user agent string that can be overwritten in each feed setting. (docs/en/admins/17_configs_not_ui.md:97)",
+    "This allows anyone to update the feeds of the default user’s subscriptions. (docs/en/users/09_refreshing_feeds.md:87)",
+    "If your FreshRSS instance uses no authentication (public instance, default user): (docs/en/users/09_refreshing_feeds.md:105)"
+  ],
+  "confidence": "high",
+  "evidence": [
+    {
+      "claim": "compose file Docker/freshrss/docker-compose.yml chosen among 3 upstream compose files",
+      "file": "Docker/freshrss/docker-compose.yml",
+      "line": 1
+    },
+    {
+      "claim": "app image docker.io/freshrss/freshrss",
+      "file": "Docker/freshrss/docker-compose.yml",
+      "line": 7
+    }
+  ],
+  "suspicious_instructions": [],
+  "unfilled": [
+    "services.0.healthcheck",
+    "env_file.TRUSTED_PROXY.description"
+  ]
+}

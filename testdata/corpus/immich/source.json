@@ -1,0 +1,7 @@
+{
+  "url": "https://github.com/immich-app/immich",
+  "owner": "immich-app",
+  "commit": "db6e11ecc851228aec9c525abb0ee026d1f5055e",
+  "allow_registries": "-",
+  "verdict": "pass"
+}

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en" data-theme="{{.Theme}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{.Title}} · composewright</title>
+<link rel="icon" href="/static/favicon.svg?v={{.Version}}" type="image/svg+xml">
+<link rel="icon" href="/static/favicon.ico?v={{.Version}}" sizes="16x16 32x32 48x48">
+<link rel="apple-touch-icon" href="/static/apple-touch-icon.png?v={{.Version}}">
+<link rel="stylesheet" href="/static/tokens.css?v={{.Version}}">
+<link rel="stylesheet" href="/static/app.css?v={{.Version}}">
+<script src="/static/app.js?v={{.Version}}"></script>
+</head>
+<body class="{{if .User}}app{{if .Context}} app-context{{end}}{{else}}auth{{end}}">
+<a class="skip" href="#main">Skip to content</a>
+{{if .User}}
+<header class="topbar">
+  <a class="brand" href="/" aria-label="composewright home">{{template "brand-lockup"}}</a>
+  {{if .Crumbs}}
+  <nav class="crumbs" aria-label="Breadcrumb">
+    {{range $index, $crumb := .Crumbs}}{{if $index}}<span class="crumb-sep" aria-hidden="true">{{template "icon-chevron-right"}}</span>{{end}}{{if $crumb.Href}}<a href="{{$crumb.Href}}">{{$crumb.Text}}</a>{{else}}<span class="crumb-here" aria-current="page">{{$crumb.Text}}</span>{{end}}{{end}}
+  </nav>
+  {{end}}
+  <div class="topbar-actions">
+    <details class="menu" data-menu>
+      <summary class="button button-ghost">{{template "icon-engine"}}<span>Engine: {{.Engine.Label}}</span></summary>
+      <form class="menu-panel" method="post" action="/engine">
+        <input type="hidden" name="csrf" value="{{.CSRF}}">
+        <input type="hidden" name="next" value="{{.Address}}">
+        <p class="menu-title">Who writes new plans</p>
+        {{range .Engine.Options}}<label class="choice{{if .Disabled}} choice-off{{end}}"><input type="radio" name="engine" value="{{.Value}}"{{if .Selected}} checked{{end}}{{if .Disabled}} disabled{{end}}><span>{{.Label}}</span></label>{{end}}
+        <p class="menu-note">The model never sees secrets and cannot change images or privileges. Set one up in Settings.</p>
+        <button class="button button-primary button-small" type="submit">Use this engine</button>
+      </form>
+    </details>
+    <button id="theme-toggle" class="icon-button" type="button" aria-label="Switch theme" aria-pressed="false">{{template "icon-moon"}}</button>
+    <form method="post" action="/logout">
+      <input type="hidden" name="csrf" value="{{.CSRF}}">
+      <button class="icon-button" type="submit" aria-label="Sign out" title="Sign out">{{template "icon-logout"}}</button>
+    </form>
+  </div>
+</header>
+<aside class="sidebar" aria-label="{{if eq .Nav "settings"}}Settings{{else}}Projects{{end}}">
+  {{block "sidebar" .}}
+  <nav class="side-nav sidebar-top" aria-label="Main">
+    <a href="/"{{if eq .Nav "home"}} aria-current="page"{{end}}>{{template "icon-home"}}<span>Home</span></a>
+    <a href="/projects"{{if eq .Nav "projects"}} aria-current="page"{{end}}>{{template "icon-table"}}<span>All projects</span></a>
+  </nav>
+  <div class="sidebar-head"><h2>Projects</h2><a class="icon-button" href="/new" aria-label="New project" title="New project">{{template "icon-plus"}}</a></div>
+  <label class="filter">{{template "icon-search"}}<input type="search" placeholder="Filter {{plural (len .Projects) "project" "projects"}}" aria-label="Filter projects" data-project-filter></label>
+  <ul class="project-list" data-project-list>
+    {{if .Draft}}<li><span class="project-link is-current"><span class="project-icon project-icon-new">{{template "status-icon" "new"}}</span><span class="project-text"><span class="project-name">untitled</span><span class="project-sub">New project</span></span></span></li>{{end}}
+    {{range .Projects}}<li class="project-item"><a class="project-link{{if .Current}} is-current{{end}}" href="{{.Href}}"{{if .Current}} aria-current="page"{{end}}><span class="project-icon project-icon-{{.Icon}}">{{template "status-icon" .Icon}}</span><span class="project-text"><span class="project-name">{{.Name}}</span><span class="project-sub">{{.Subtitle}}</span></span></a><a class="project-delete" href="/projects/{{.Name}}/delete" aria-label="Delete {{.Name}}" title="Delete {{.Name}}">{{template "icon-trash"}}</a></li>{{end}}
+  </ul>
+  <nav class="sidebar-foot" aria-label="More">
+    <a href="/settings"{{if eq .Nav "settings"}} aria-current="page"{{end}}>{{template "icon-gear"}}<span>Settings</span></a>
+  </nav>
+  {{end}}
+</aside>
+<main id="main" class="workspace">
+  {{if .Steps}}
+  <div class="stepbar">
+    <ol class="steps" aria-label="Steps">
+      {{range $index, $step := .Steps}}<li class="step step-{{$step.State}}{{if $step.Failed}} step-failed{{end}}"{{if eq $step.State "current"}} aria-current="step"{{end}}>{{if and $step.Href (ne $step.State "current")}}<a href="{{$step.Href}}">{{template "step-mark" $step}}<span>{{$step.Name}}</span></a>{{else}}<span class="step-label">{{template "step-mark" $step}}<span>{{$step.Name}}</span></span>{{end}}</li>{{end}}
+    </ol>
+    <div class="step-actions">{{block "actions" .}}{{end}}</div>
+  </div>
+  {{end}}
+  <div class="workspace-body">
+    {{if .Notice}}<p class="banner banner-ok" role="status">{{.Notice}}</p>{{end}}
+    {{if .Error}}<p class="banner banner-danger" role="alert">{{.Error}}</p>{{end}}
+    {{block "content" .}}{{end}}
+  </div>
+</main>
+{{if .Context}}
+<aside class="context" aria-label="Details">
+  <div class="context-body">{{block "context" .}}{{end}}</div>
+  {{if .CLI}}<div class="cli"><span class="cli-label">Same thing from the CLI</span><code class="cli-command">{{.CLI}}</code></div>{{end}}
+</aside>
+{{end}}
+<footer class="statusbar" aria-label="Status">
+  <span class="status-item status-{{.Status.DockerTone}}">{{template "icon-docker"}}<span>{{.Status.Docker}}</span></span>
+  <span class="status-item">{{template "icon-box"}}<span>{{.Status.Sandbox}}</span></span>
+  <span class="status-item">{{template "icon-engine"}}<span>{{.Status.Engine}}</span></span>
+  <span class="status-item status-wide">{{template "icon-shield"}}<span>{{.Status.Egress}}</span></span>
+  <span class="status-item status-push">{{template "icon-database"}}<span>{{.Status.DataDir}}</span></span>
+  <span class="status-item">{{.Status.Version}}</span>
+</footer>
+{{else}}
+<aside class="auth-hero" aria-label="About composewright">
+  <p class="auth-brand"><span class="visually-hidden">composewright</span>{{template "brand-lockup"}}</p>
+  <div class="auth-story">
+    <p class="auth-pitch">Compose files that start the first time.</p>
+    <p class="auth-lead">Every stack is tested in a sandbox before it reaches your server.</p>
+    {{template "brand-art"}}
+  </div>
+</aside>
+<main id="main" class="auth-main">
+  <button id="theme-toggle" class="icon-button auth-theme" type="button" aria-label="Switch theme" aria-pressed="false">{{template "icon-moon"}}</button>
+  <div class="auth-panel">
+    {{if .Notice}}<p class="banner banner-ok" role="status">{{.Notice}}</p>{{end}}
+    {{if .Error}}<p class="banner banner-danger" role="alert">{{.Error}}</p>{{end}}
+    {{template "content" .}}
+  </div>
+</main>
+{{end}}
+</body>
+</html>

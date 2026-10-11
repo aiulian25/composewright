@@ -1,0 +1,9 @@
+/bin/
+*.test
+*.out
+coverage.*
+eval-report.json
+/.env
+/.dev/
+/.dev-*/
+/docs/

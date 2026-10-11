@@ -1,0 +1,146 @@
+{
+  "ir_version": "1",
+  "app": {
+    "name": "docker-pi-hole",
+    "summary": "Using Docker-compose:",
+    "upstream_url": "https://github.com/pi-hole/docker-pi-hole",
+    "docs_url": ""
+  },
+  "services": [
+    {
+      "name": "docker-pi-hole",
+      "role": "app",
+      "image": {
+        "registry": "docker.io",
+        "repository": "pihole/pihole",
+        "tag": "latest",
+        "digest": "",
+        "provenance": {
+          "source": "readme",
+          "source_ref": "README.md:45",
+          "confidence": "medium"
+        }
+      },
+      "command": [],
+      "entrypoint": [],
+      "env": [],
+      "ports": [
+        {
+          "container": 53,
+          "protocol": "tcp",
+          "publish": true,
+          "host_port": 0,
+          "description": "",
+          "provenance": {
+            "source": "dockerfile",
+            "source_ref": "src/Dockerfile:104",
+            "confidence": "medium"
+          }
+        },
+        {
+          "container": 53,
+          "protocol": "udp",
+          "publish": true,
+          "host_port": 0,
+          "description": "",
+          "provenance": {
+            "source": "dockerfile",
+            "source_ref": "src/Dockerfile:104",
+            "confidence": "medium"
+          }
+        },
+        {
+          "container": 67,
+          "protocol": "udp",
+          "publish": true,
+          "host_port": 0,
+          "description": "",
+          "provenance": {
+            "source": "dockerfile",
+            "source_ref": "src/Dockerfile:105",
+            "confidence": "medium"
+          }
+        },
+        {
+          "container": 80,
+          "protocol": "tcp",
+          "publish": true,
+          "host_port": 0,
+          "description": "",
+          "provenance": {
+            "source": "dockerfile",
+            "source_ref": "src/Dockerfile:106",
+            "confidence": "medium"
+          }
+        },
+        {
+          "container": 123,
+          "protocol": "udp",
+          "publish": true,
+          "host_port": 0,
+          "description": "",
+          "provenance": {
+            "source": "dockerfile",
+            "source_ref": "src/Dockerfile:107",
+            "confidence": "medium"
+          }
+        },
+        {
+          "container": 443,
+          "protocol": "tcp",
+          "publish": true,
+          "host_port": 0,
+          "description": "",
+          "provenance": {
+            "source": "dockerfile",
+            "source_ref": "src/Dockerfile:108",
+            "confidence": "medium"
+          }
+        }
+      ],
+      "volumes": [],
+      "depends_on": [],
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "dig -p $$(pihole-FTL --config dns.port) +short +norecurse +retry=0 @127.0.0.1 pi.hole || exit 1"
+        ],
+        "interval": "",
+        "timeout": "",
+        "retries": 0,
+        "start_period": "",
+        "omitted_reason": "",
+        "provenance": {
+          "source": "dockerfile",
+          "source_ref": "src/Dockerfile:138",
+          "confidence": "medium"
+        }
+      },
+      "user": "",
+      "resources": {
+        "memory_limit": "",
+        "cpus": "",
+        "pids_limit": 0
+      },
+      "notes": [],
+      "provenance": {
+        "source": "readme",
+        "source_ref": "README.md:45",
+        "confidence": "medium"
+      }
+    }
+  ],
+  "env_file": [],
+  "needs": [],
+  "probe": {
+    "service": "docker-pi-hole",
+    "port": 53,
+    "path": "/",
+    "expect": []
+  },
+  "post_install_notes": [],
+  "confidence": "medium",
+  "evidence": [],
+  "suspicious_instructions": [],
+  "unfilled": []
+}

@@ -1,0 +1,504 @@
+{
+  "files": [
+    "Dockerfile",
+    "README.md",
+    "root/etc/wallabag/parameters.template.yml"
+  ],
+  "compose_files": null,
+  "dockerfiles": [
+    {
+      "path": "Dockerfile",
+      "base_image": "alpine:3.19",
+      "exposed": [
+        {
+          "port": 80,
+          "protocol": "tcp",
+          "location": {
+            "file": "Dockerfile",
+            "line": 89
+          }
+        }
+      ],
+      "volumes": null,
+      "env": [
+        {
+          "key": "PATH",
+          "value": "${PATH}:/var/www/wallabag/bin",
+          "location": {
+            "file": "Dockerfile",
+            "line": 82
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "COMPOSER_VERSION",
+          "value": "2.8.10",
+          "location": {
+            "file": "Dockerfile",
+            "line": 1
+          }
+        },
+        {
+          "key": "WALLABAG_VERSION",
+          "value": "2.6.14",
+          "location": {
+            "file": "Dockerfile",
+            "line": 16
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "curl --fail --silent --show-error --user-agent healthcheck http://localhost/api/info || exit 1"
+        ],
+        "interval": "",
+        "timeout": "",
+        "start_period": "",
+        "retries": 0,
+        "disabled": false,
+        "location": {
+          "file": "Dockerfile",
+          "line": 87
+        }
+      },
+      "entrypoint": [
+        "/entrypoint.sh"
+      ],
+      "command": [
+        "wallabag"
+      ]
+    }
+  ],
+  "env_samples": null,
+  "variables": [
+    {
+      "name": "MYSQL_ROOT_PASSWORD",
+      "default": "my-secret-pw",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MYSQL_ROOT_PASSWORD",
+          "kind": "readme",
+          "default": "my-secret-pw",
+          "location": {
+            "file": "README.md",
+            "line": 65
+          }
+        }
+      ]
+    },
+    {
+      "name": "PATH",
+      "default": "${PATH}:/var/www/wallabag/bin",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PATH",
+          "kind": "dockerfile",
+          "default": "${PATH}:/var/www/wallabag/bin",
+          "location": {
+            "file": "Dockerfile",
+            "line": 82
+          }
+        }
+      ]
+    },
+    {
+      "name": "POSTGRES_PASSWORD",
+      "default": "my-secret-pw",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "POSTGRES_PASSWORD",
+          "kind": "readme",
+          "default": "my-secret-pw",
+          "location": {
+            "file": "README.md",
+            "line": 74
+          }
+        }
+      ]
+    },
+    {
+      "name": "POSTGRES_USER",
+      "default": "my-super-user",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "POSTGRES_USER",
+          "kind": "readme",
+          "default": "my-super-user",
+          "location": {
+            "file": "README.md",
+            "line": 74
+          }
+        }
+      ]
+    },
+    {
+      "name": "SYMFONY__ENV__DOMAIN_NAME",
+      "default": "http://localhost",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SYMFONY__ENV__DOMAIN_NAME",
+          "kind": "readme",
+          "default": "http://localhost",
+          "location": {
+            "file": "README.md",
+            "line": 51
+          }
+        },
+        {
+          "name": "SYMFONY__ENV__DOMAIN_NAME",
+          "kind": "readme",
+          "default": "http://localhost",
+          "location": {
+            "file": "README.md",
+            "line": 57
+          }
+        },
+        {
+          "name": "SYMFONY__ENV__DOMAIN_NAME",
+          "kind": "readme",
+          "default": "http://localhost",
+          "location": {
+            "file": "README.md",
+            "line": 84
+          }
+        },
+        {
+          "name": "SYMFONY__ENV__DOMAIN_NAME",
+          "kind": "readme",
+          "default": "http://localhost",
+          "location": {
+            "file": "README.md",
+            "line": 90
+          }
+        }
+      ]
+    },
+    {
+      "name": "SYMFONY__ENV__REDIS_HOST",
+      "default": "my.server.hostname",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SYMFONY__ENV__REDIS_HOST",
+          "kind": "readme",
+          "default": "my.server.hostname",
+          "location": {
+            "file": "README.md",
+            "line": 90
+          }
+        }
+      ]
+    },
+    {
+      "name": "SYMFONY__ENV__REDIS_PASSWORD",
+      "default": "my-secret-pw",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SYMFONY__ENV__REDIS_PASSWORD",
+          "kind": "readme",
+          "default": "my-secret-pw",
+          "location": {
+            "file": "README.md",
+            "line": 90
+          }
+        }
+      ]
+    }
+  ],
+  "images": [
+    {
+      "reference": "wallabag/wallabag",
+      "kind": "readme",
+      "location": {
+        "file": "README.md",
+        "line": 51
+      }
+    },
+    {
+      "reference": "mariadb",
+      "kind": "readme",
+      "location": {
+        "file": "README.md",
+        "line": 65
+      }
+    },
+    {
+      "reference": "wallabag-db:wallabag-db",
+      "kind": "readme",
+      "location": {
+        "file": "README.md",
+        "line": 66
+      }
+    },
+    {
+      "reference": "postgres:9.6",
+      "kind": "readme",
+      "location": {
+        "file": "README.md",
+        "line": 74
+      }
+    },
+    {
+      "reference": "redis:alpine",
+      "kind": "readme",
+      "location": {
+        "file": "README.md",
+        "line": 83
+      }
+    },
+    {
+      "reference": "redis:redis",
+      "kind": "readme",
+      "location": {
+        "file": "README.md",
+        "line": 84
+      }
+    }
+  ],
+  "docker_runs": [
+    {
+      "image": "wallabag/wallabag",
+      "ports": [
+        "80:80"
+      ],
+      "volumes": null,
+      "env": [
+        {
+          "key": "SYMFONY__ENV__DOMAIN_NAME",
+          "value": "http://localhost",
+          "location": {
+            "file": "README.md",
+            "line": 51
+          }
+        }
+      ],
+      "location": {
+        "file": "README.md",
+        "line": 51
+      }
+    },
+    {
+      "image": "wallabag/wallabag",
+      "ports": [
+        "80:80"
+      ],
+      "volumes": [
+        "/opt/wallabag/data:/var/www/wallabag/data",
+        "/opt/wallabag/images:/var/www/wallabag/web/assets/images"
+      ],
+      "env": [
+        {
+          "key": "SYMFONY__ENV__DOMAIN_NAME",
+          "value": "http://localhost",
+          "location": {
+            "file": "README.md",
+            "line": 57
+          }
+        }
+      ],
+      "location": {
+        "file": "README.md",
+        "line": 57
+      }
+    },
+    {
+      "image": "mariadb",
+      "ports": null,
+      "volumes": null,
+      "env": [
+        {
+          "key": "MYSQL_ROOT_PASSWORD",
+          "value": "my-secret-pw",
+          "location": {
+            "file": "README.md",
+            "line": 65
+          }
+        }
+      ],
+      "location": {
+        "file": "README.md",
+        "line": 65
+      }
+    },
+    {
+      "image": "wallabag-db:wallabag-db",
+      "ports": null,
+      "volumes": null,
+      "env": null,
+      "location": {
+        "file": "README.md",
+        "line": 66
+      }
+    },
+    {
+      "image": "postgres:9.6",
+      "ports": null,
+      "volumes": null,
+      "env": [
+        {
+          "key": "POSTGRES_PASSWORD",
+          "value": "my-secret-pw",
+          "location": {
+            "file": "README.md",
+            "line": 74
+          }
+        },
+        {
+          "key": "POSTGRES_USER",
+          "value": "my-super-user",
+          "location": {
+            "file": "README.md",
+            "line": 74
+          }
+        }
+      ],
+      "location": {
+        "file": "README.md",
+        "line": 74
+      }
+    },
+    {
+      "image": "wallabag-db:wallabag-db",
+      "ports": null,
+      "volumes": null,
+      "env": null,
+      "location": {
+        "file": "README.md",
+        "line": 75
+      }
+    },
+    {
+      "image": "redis:alpine",
+      "ports": [
+        "6379:6379"
+      ],
+      "volumes": null,
+      "env": null,
+      "location": {
+        "file": "README.md",
+        "line": 83
+      }
+    },
+    {
+      "image": "redis:redis",
+      "ports": [
+        "80:80"
+      ],
+      "volumes": null,
+      "env": [
+        {
+          "key": "SYMFONY__ENV__DOMAIN_NAME",
+          "value": "http://localhost",
+          "location": {
+            "file": "README.md",
+            "line": 84
+          }
+        }
+      ],
+      "location": {
+        "file": "README.md",
+        "line": 84
+      }
+    },
+    {
+      "image": "wallabag/wallabag",
+      "ports": [
+        "80:80"
+      ],
+      "volumes": null,
+      "env": [
+        {
+          "key": "SYMFONY__ENV__REDIS_HOST",
+          "value": "my.server.hostname",
+          "location": {
+            "file": "README.md",
+            "line": 90
+          }
+        },
+        {
+          "key": "SYMFONY__ENV__REDIS_PASSWORD",
+          "value": "my-secret-pw",
+          "location": {
+            "file": "README.md",
+            "line": 90
+          }
+        },
+        {
+          "key": "SYMFONY__ENV__DOMAIN_NAME",
+          "value": "http://localhost",
+          "location": {
+            "file": "README.md",
+            "line": 90
+          }
+        }
+      ],
+      "location": {
+        "file": "README.md",
+        "line": 90
+      }
+    },
+    {
+      "image": "wallabag-db:wallabag-db",
+      "ports": null,
+      "volumes": null,
+      "env": null,
+      "location": {
+        "file": "README.md",
+        "line": 98
+      }
+    },
+    {
+      "image": "wallabag-db:wallabag-db",
+      "ports": null,
+      "volumes": null,
+      "env": null,
+      "location": {
+        "file": "README.md",
+        "line": 186
+      }
+    }
+  ],
+  "notes": [
+    {
+      "text": "Default login is wallabag:wallabag.",
+      "location": {
+        "file": "README.md",
+        "line": 13
+      }
+    }
+  ],
+  "suspicious": null,
+  "readmes": [
+    "README.md"
+  ],
+  "summary": {
+    "text": "With this application you will not miss content anymore. Click, save, read it when you want. It saves the content you select so that you can read it when you have time.",
+    "location": {
+      "file": "README.md",
+      "line": 9
+    }
+  },
+  "file_mentions": null,
+  "stack_hints": null,
+  "problems": null
+}

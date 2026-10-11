@@ -1,0 +1,14 @@
+{
+  "id": "chatcmpl-B9MHDbslfkBeAs8l4bebGdFOJ6PeG",
+  "object": "chat.completion",
+  "created": 1791504000,
+  "model": "gpt-5.2-2026-08-12",
+  "choices": [
+    {
+      "index": 0,
+      "message": {"role": "assistant", "content": "__PLAN__", "refusal": null},
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {"prompt_tokens": 17120, "completion_tokens": 2411, "total_tokens": 19531}
+}

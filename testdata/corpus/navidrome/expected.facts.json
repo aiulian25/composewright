@@ -1,0 +1,990 @@
+{
+  "files": [
+    ".golangci.yml",
+    ".octocov.yml",
+    "Dockerfile",
+    "README.md",
+    "api/.vacuum.yaml",
+    "api/bundled/openapi.yaml",
+    "api/openapi/components/headers/ETag.yaml",
+    "api/openapi/components/parameters/limit.yaml",
+    "api/openapi/components/parameters/offset.yaml",
+    "api/openapi/components/responses/BadRequest.yaml",
+    "api/openapi/components/responses/Forbidden.yaml",
+    "api/openapi/components/responses/InternalError.yaml",
+    "api/openapi/components/responses/NotFound.yaml",
+    "api/openapi/components/responses/NotModified.yaml",
+    "api/openapi/components/responses/Unauthorized.yaml",
+    "api/openapi/components/schemas/ListMeta.yaml",
+    "api/openapi/components/schemas/Problem.yaml",
+    "api/openapi/components/schemas/ServerInfo.yaml",
+    "api/openapi/components/schemas/ValidationError.yaml",
+    "api/openapi/openapi.yaml",
+    "api/openapi/paths/openapi.yaml",
+    "api/openapi/paths/server.yaml",
+    "conf/configuration.go",
+    "contrib/docker-compose/docker-compose-caddy.yml",
+    "contrib/docker-compose/docker-compose-traefik.yml",
+    "contrib/docker-compose/docker-compose.yml",
+    "contrib/k8s/README.md",
+    "contrib/k8s/manifest.yml",
+    "core/agents/README.md",
+    "core/metrics/insights.go",
+    "go.mod",
+    "plugins/README.md",
+    "plugins/capabilities/README.md",
+    "plugins/capabilities/lifecycle.yaml",
+    "plugins/capabilities/lyrics.yaml",
+    "plugins/capabilities/metadata_agent.yaml",
+    "plugins/capabilities/scheduler_callback.yaml",
+    "plugins/capabilities/scrobbler.yaml",
+    "plugins/capabilities/sonic_similarity.yaml",
+    "plugins/capabilities/taskworker.yaml",
+    "plugins/capabilities/websocket_callback.yaml",
+    "plugins/cmd/ndpgen/README.md",
+    "plugins/cmd/ndpgen/go.mod",
+    "plugins/examples/README.md",
+    "plugins/examples/coverartarchive-py/README.md",
+    "plugins/examples/crypto-ticker/README.md",
+    "plugins/examples/crypto-ticker/go.mod",
+    "plugins/examples/discord-rich-presence-rs/Cargo.toml",
+    "plugins/examples/discord-rich-presence-rs/README.md",
+    "plugins/examples/library-inspector-rs/Cargo.toml",
+    "plugins/examples/library-inspector-rs/README.md",
+    "plugins/examples/minimal/README.md",
+    "plugins/examples/minimal/go.mod",
+    "plugins/examples/nowplaying-py/README.md",
+    "plugins/examples/webhook-rs/Cargo.toml",
+    "plugins/examples/webhook-rs/README.md",
+    "plugins/examples/wikimedia/README.md",
+    "plugins/examples/wikimedia/go.mod",
+    "plugins/pdk/go/README.md",
+    "plugins/pdk/go/go.mod",
+    "plugins/pdk/rust/README.md",
+    "plugins/pdk/rust/nd-pdk-capabilities/Cargo.toml",
+    "plugins/pdk/rust/nd-pdk-host/Cargo.toml",
+    "plugins/pdk/rust/nd-pdk-host/README.md",
+    "plugins/pdk/rust/nd-pdk-types/Cargo.toml",
+    "plugins/pdk/rust/nd-pdk/Cargo.toml",
+    "release/goreleaser.yml",
+    "release/wix/msitools.dockerfile",
+    "resources/mappings.yaml",
+    "resources/mime_types.yaml",
+    "scanner/README.md",
+    "server/apiv1/oapi-codegen.yaml",
+    "server/jellyfin/README.md",
+    "ui/package.json",
+    "ui/src/store/createAdminStore.js",
+    "ui/src/themes/README.md",
+    "ui/vite.config.js"
+  ],
+  "compose_files": [
+    {
+      "path": "contrib/docker-compose/docker-compose-caddy.yml",
+      "services": [
+        {
+          "name": "caddy",
+          "location": {
+            "file": "contrib/docker-compose/docker-compose-caddy.yml",
+            "line": 9
+          },
+          "image": "caddy:2.6-alpine",
+          "image_at": {
+            "file": "contrib/docker-compose/docker-compose-caddy.yml",
+            "line": 11
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 80,
+              "published": "80",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "contrib/docker-compose/docker-compose-caddy.yml",
+                "line": 18
+              }
+            },
+            {
+              "target": 443,
+              "published": "443",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "contrib/docker-compose/docker-compose-caddy.yml",
+                "line": 19
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "caddy_data",
+              "target": "/data",
+              "read_only": false,
+              "location": {
+                "file": "contrib/docker-compose/docker-compose-caddy.yml",
+                "line": 15
+              }
+            },
+            {
+              "type": "bind",
+              "source": "./Caddyfile",
+              "target": "/etc/caddy/Caddyfile",
+              "read_only": true,
+              "location": {
+                "file": "contrib/docker-compose/docker-compose-caddy.yml",
+                "line": 16
+              }
+            }
+          ],
+          "environment": null,
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "navidrome",
+          "location": {
+            "file": "contrib/docker-compose/docker-compose-caddy.yml",
+            "line": 21
+          },
+          "image": "deluan/navidrome:latest",
+          "image_at": {
+            "file": "contrib/docker-compose/docker-compose-caddy.yml",
+            "line": 23
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 4533,
+              "published": "4533",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "contrib/docker-compose/docker-compose-caddy.yml",
+                "line": 28
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "navidrome_data",
+              "target": "/data",
+              "read_only": false,
+              "location": {
+                "file": "contrib/docker-compose/docker-compose-caddy.yml",
+                "line": 30
+              }
+            }
+          ],
+          "environment": null,
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": []
+    },
+    {
+      "path": "contrib/docker-compose/docker-compose-traefik.yml",
+      "services": [
+        {
+          "name": "traefik",
+          "location": {
+            "file": "contrib/docker-compose/docker-compose-traefik.yml",
+            "line": 9
+          },
+          "image": "traefik:2.9",
+          "image_at": {
+            "file": "contrib/docker-compose/docker-compose-traefik.yml",
+            "line": 11
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 443,
+              "published": "443",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "contrib/docker-compose/docker-compose-traefik.yml",
+                "line": 24
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "traefik_data",
+              "target": "/letsencrypt",
+              "read_only": false,
+              "location": {
+                "file": "contrib/docker-compose/docker-compose-traefik.yml",
+                "line": 26
+              }
+            }
+          ],
+          "environment": null,
+          "env_files": null,
+          "depends_on": null,
+          "command": [
+            "--log.level=ERROR",
+            "--providers.docker=true",
+            "--providers.docker.exposedbydefault=false",
+            "--entrypoints.websecure.address=:443",
+            "--certificatesresolvers.tc.acme.tlschallenge=true",
+            "--certificatesresolvers.tc.acme.email=foo@foo.com",
+            "--certificatesresolvers.tc.acme.storage=/letsencrypt/acme.json"
+          ],
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "navidrome",
+          "location": {
+            "file": "contrib/docker-compose/docker-compose-traefik.yml",
+            "line": 29
+          },
+          "image": "deluan/navidrome:latest",
+          "image_at": {
+            "file": "contrib/docker-compose/docker-compose-traefik.yml",
+            "line": 31
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 4533,
+              "published": "4533",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "contrib/docker-compose/docker-compose-traefik.yml",
+                "line": 36
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "navidrome_data",
+              "target": "/data",
+              "read_only": false,
+              "location": {
+                "file": "contrib/docker-compose/docker-compose-traefik.yml",
+                "line": 43
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "ND_SCANINTERVAL",
+              "raw": "6h",
+              "has_value": true,
+              "location": {
+                "file": "contrib/docker-compose/docker-compose-traefik.yml",
+                "line": 38
+              }
+            },
+            {
+              "key": "ND_LOGLEVEL",
+              "raw": "info",
+              "has_value": true,
+              "location": {
+                "file": "contrib/docker-compose/docker-compose-traefik.yml",
+                "line": 39
+              }
+            },
+            {
+              "key": "ND_SESSIONTIMEOUT",
+              "raw": "168h",
+              "has_value": true,
+              "location": {
+                "file": "contrib/docker-compose/docker-compose-traefik.yml",
+                "line": 40
+              }
+            },
+            {
+              "key": "ND_BASEURL",
+              "raw": "",
+              "has_value": true,
+              "location": {
+                "file": "contrib/docker-compose/docker-compose-traefik.yml",
+                "line": 41
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": []
+    },
+    {
+      "path": "contrib/docker-compose/docker-compose.yml",
+      "services": [
+        {
+          "name": "navidrome",
+          "location": {
+            "file": "contrib/docker-compose/docker-compose.yml",
+            "line": 8
+          },
+          "image": "deluan/navidrome:latest",
+          "image_at": {
+            "file": "contrib/docker-compose/docker-compose.yml",
+            "line": 10
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 4533,
+              "published": "4533",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "contrib/docker-compose/docker-compose.yml",
+                "line": 15
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "navidrome_data",
+              "target": "/data",
+              "read_only": false,
+              "location": {
+                "file": "contrib/docker-compose/docker-compose.yml",
+                "line": 17
+              }
+            }
+          ],
+          "environment": null,
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": []
+    }
+  ],
+  "dockerfiles": [
+    {
+      "path": "Dockerfile",
+      "base_image": "alpine:3.22",
+      "exposed": null,
+      "volumes": [
+        {
+          "path": "/data",
+          "location": {
+            "file": "Dockerfile",
+            "line": 205
+          }
+        },
+        {
+          "path": "/music",
+          "location": {
+            "file": "Dockerfile",
+            "line": 205
+          }
+        }
+      ],
+      "env": [
+        {
+          "key": "ND_MUSICFOLDER",
+          "value": "/music",
+          "location": {
+            "file": "Dockerfile",
+            "line": 206
+          }
+        },
+        {
+          "key": "ND_DATAFOLDER",
+          "value": "/data",
+          "location": {
+            "file": "Dockerfile",
+            "line": 207
+          }
+        },
+        {
+          "key": "ND_CONFIGFILE",
+          "value": "/data/navidrome.toml",
+          "location": {
+            "file": "Dockerfile",
+            "line": 208
+          }
+        },
+        {
+          "key": "ND_PORT",
+          "value": "4533",
+          "location": {
+            "file": "Dockerfile",
+            "line": 209
+          }
+        },
+        {
+          "key": "PATH",
+          "value": "/app:${PATH}",
+          "location": {
+            "file": "Dockerfile",
+            "line": 214
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "TARGETPLATFORM",
+          "value": "",
+          "location": {
+            "file": "Dockerfile",
+            "line": 49
+          }
+        },
+        {
+          "key": "GIT_SHA",
+          "value": "",
+          "location": {
+            "file": "Dockerfile",
+            "line": 62
+          }
+        },
+        {
+          "key": "GIT_TAG",
+          "value": "",
+          "location": {
+            "file": "Dockerfile",
+            "line": 63
+          }
+        },
+        {
+          "key": "TARGETPLATFORM",
+          "value": "",
+          "location": {
+            "file": "Dockerfile",
+            "line": 96
+          }
+        },
+        {
+          "key": "GIT_SHA",
+          "value": "",
+          "location": {
+            "file": "Dockerfile",
+            "line": 106
+          }
+        },
+        {
+          "key": "GIT_TAG",
+          "value": "",
+          "location": {
+            "file": "Dockerfile",
+            "line": 107
+          }
+        },
+        {
+          "key": "TARGETPLATFORM",
+          "value": "",
+          "location": {
+            "file": "Dockerfile",
+            "line": 162
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": [
+        "/app/navidrome"
+      ],
+      "command": null
+    },
+    {
+      "path": "release/wix/msitools.dockerfile",
+      "base_image": "alpine",
+      "exposed": null,
+      "volumes": null,
+      "env": null,
+      "args": null,
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": null,
+      "command": null
+    }
+  ],
+  "env_samples": null,
+  "variables": [
+    {
+      "name": "JOURNAL_STREAM",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "JOURNAL_STREAM",
+          "kind": "code",
+          "location": {
+            "file": "conf/configuration.go",
+            "line": 418
+          }
+        }
+      ]
+    },
+    {
+      "name": "ND_BASEURL",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ND_BASEURL",
+          "kind": "compose",
+          "location": {
+            "file": "contrib/docker-compose/docker-compose-traefik.yml",
+            "line": 41
+          }
+        }
+      ]
+    },
+    {
+      "name": "ND_CONFIGFILE",
+      "default": "/data/navidrome.toml",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ND_CONFIGFILE",
+          "kind": "dockerfile",
+          "default": "/data/navidrome.toml",
+          "location": {
+            "file": "Dockerfile",
+            "line": 208
+          }
+        },
+        {
+          "name": "ND_CONFIGFILE",
+          "kind": "code",
+          "location": {
+            "file": "conf/configuration.go",
+            "line": 1201
+          }
+        }
+      ]
+    },
+    {
+      "name": "ND_DATAFOLDER",
+      "default": "/data",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ND_DATAFOLDER",
+          "kind": "dockerfile",
+          "default": "/data",
+          "location": {
+            "file": "Dockerfile",
+            "line": 207
+          }
+        }
+      ]
+    },
+    {
+      "name": "ND_LOGLEVEL",
+      "default": "info",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ND_LOGLEVEL",
+          "kind": "compose",
+          "default": "info",
+          "location": {
+            "file": "contrib/docker-compose/docker-compose-traefik.yml",
+            "line": 39
+          }
+        }
+      ]
+    },
+    {
+      "name": "ND_MUSICFOLDER",
+      "default": "/music",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ND_MUSICFOLDER",
+          "kind": "dockerfile",
+          "default": "/music",
+          "location": {
+            "file": "Dockerfile",
+            "line": 206
+          }
+        }
+      ]
+    },
+    {
+      "name": "ND_PLATFORM",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ND_PLATFORM",
+          "kind": "code",
+          "location": {
+            "file": "core/metrics/insights.go",
+            "line": 165
+          }
+        }
+      ]
+    },
+    {
+      "name": "ND_PORT",
+      "default": "4533",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ND_PORT",
+          "kind": "dockerfile",
+          "default": "4533",
+          "location": {
+            "file": "Dockerfile",
+            "line": 209
+          }
+        }
+      ]
+    },
+    {
+      "name": "ND_SCANINTERVAL",
+      "default": "6h",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ND_SCANINTERVAL",
+          "kind": "compose",
+          "default": "6h",
+          "location": {
+            "file": "contrib/docker-compose/docker-compose-traefik.yml",
+            "line": 38
+          }
+        }
+      ]
+    },
+    {
+      "name": "ND_SESSIONTIMEOUT",
+      "default": "168h",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ND_SESSIONTIMEOUT",
+          "kind": "compose",
+          "default": "168h",
+          "location": {
+            "file": "contrib/docker-compose/docker-compose-traefik.yml",
+            "line": 40
+          }
+        }
+      ]
+    },
+    {
+      "name": "ND_SYSTEMD_PRIORITY_LOGGING",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ND_SYSTEMD_PRIORITY_LOGGING",
+          "kind": "code",
+          "location": {
+            "file": "conf/configuration.go",
+            "line": 418
+          }
+        }
+      ]
+    },
+    {
+      "name": "NODE_ENV",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "ui/src/store/createAdminStore.js",
+            "line": 34
+          }
+        }
+      ]
+    },
+    {
+      "name": "PATH",
+      "default": "/app:${PATH}",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PATH",
+          "kind": "dockerfile",
+          "default": "/app:${PATH}",
+          "location": {
+            "file": "Dockerfile",
+            "line": 214
+          }
+        }
+      ]
+    },
+    {
+      "name": "PORT",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PORT",
+          "kind": "code",
+          "location": {
+            "file": "ui/vite.config.js",
+            "line": 5
+          }
+        }
+      ]
+    }
+  ],
+  "images": [
+    {
+      "reference": "caddy:2.6-alpine",
+      "kind": "compose",
+      "location": {
+        "file": "contrib/docker-compose/docker-compose-caddy.yml",
+        "line": 11
+      }
+    },
+    {
+      "reference": "deluan/navidrome:latest",
+      "kind": "compose",
+      "location": {
+        "file": "contrib/docker-compose/docker-compose-caddy.yml",
+        "line": 23
+      }
+    },
+    {
+      "reference": "traefik:2.9",
+      "kind": "compose",
+      "location": {
+        "file": "contrib/docker-compose/docker-compose-traefik.yml",
+        "line": 11
+      }
+    },
+    {
+      "reference": "ghcr.io/navidrome/navidrome:0.49.3",
+      "kind": "readme",
+      "location": {
+        "file": "contrib/k8s/README.md",
+        "line": 8
+      }
+    }
+  ],
+  "docker_runs": null,
+  "notes": null,
+  "suspicious": null,
+  "readmes": [
+    "README.md",
+    "contrib/k8s/README.md",
+    "core/agents/README.md",
+    "plugins/README.md",
+    "plugins/capabilities/README.md",
+    "plugins/cmd/ndpgen/README.md",
+    "plugins/examples/README.md",
+    "plugins/examples/coverartarchive-py/README.md",
+    "plugins/examples/crypto-ticker/README.md",
+    "plugins/examples/discord-rich-presence-rs/README.md",
+    "plugins/examples/library-inspector-rs/README.md",
+    "plugins/examples/minimal/README.md",
+    "plugins/examples/nowplaying-py/README.md",
+    "plugins/examples/webhook-rs/README.md",
+    "plugins/examples/wikimedia/README.md",
+    "plugins/pdk/go/README.md",
+    "plugins/pdk/rust/README.md",
+    "plugins/pdk/rust/nd-pdk-host/README.md",
+    "scanner/README.md",
+    "server/jellyfin/README.md",
+    "ui/src/themes/README.md"
+  ],
+  "summary": {
+    "text": "Navidrome is an open source web-based music collection server and streamer. It gives you freedom to listen to your",
+    "location": {
+      "file": "README.md",
+      "line": 14
+    }
+  },
+  "file_mentions": [
+    {
+      "text": "pipeline.yml",
+      "location": {
+        "file": "README.md",
+        "line": 6
+      }
+    },
+    {
+      "text": "metadata_agent.yaml",
+      "location": {
+        "file": "plugins/README.md",
+        "line": 1260
+      }
+    },
+    {
+      "text": "metadata_agent.yaml",
+      "location": {
+        "file": "plugins/capabilities/README.md",
+        "line": 39
+      }
+    },
+    {
+      "text": "scrobbler.yaml",
+      "location": {
+        "file": "plugins/capabilities/README.md",
+        "line": 43
+      }
+    },
+    {
+      "text": "lifecycle.yaml",
+      "location": {
+        "file": "plugins/capabilities/README.md",
+        "line": 47
+      }
+    },
+    {
+      "text": "scheduler_callback.yaml",
+      "location": {
+        "file": "plugins/capabilities/README.md",
+        "line": 51
+      }
+    },
+    {
+      "text": "websocket_callback.yaml",
+      "location": {
+        "file": "plugins/capabilities/README.md",
+        "line": 55
+      }
+    },
+    {
+      "text": "metadata_agent.yaml",
+      "location": {
+        "file": "plugins/capabilities/README.md",
+        "line": 63
+      }
+    },
+    {
+      "text": "scrobbler.yaml",
+      "location": {
+        "file": "plugins/capabilities/README.md",
+        "line": 64
+      }
+    },
+    {
+      "text": "lifecycle.yaml",
+      "location": {
+        "file": "plugins/capabilities/README.md",
+        "line": 65
+      }
+    },
+    {
+      "text": "scheduler_callback.yaml",
+      "location": {
+        "file": "plugins/capabilities/README.md",
+        "line": 66
+      }
+    },
+    {
+      "text": "websocket_callback.yaml",
+      "location": {
+        "file": "plugins/capabilities/README.md",
+        "line": 67
+      }
+    },
+    {
+      "text": "metadata_agent.yaml",
+      "location": {
+        "file": "plugins/examples/README.md",
+        "line": 111
+      }
+    },
+    {
+      "text": "metadata_agent.yaml",
+      "location": {
+        "file": "plugins/examples/README.md",
+        "line": 123
+      }
+    },
+    {
+      "text": "scrobbler.yaml",
+      "location": {
+        "file": "plugins/examples/README.md",
+        "line": 124
+      }
+    },
+    {
+      "text": "lifecycle.yaml",
+      "location": {
+        "file": "plugins/examples/README.md",
+        "line": 125
+      }
+    },
+    {
+      "text": "scheduler_callback.yaml",
+      "location": {
+        "file": "plugins/examples/README.md",
+        "line": 126
+      }
+    },
+    {
+      "text": "websocket_callback.yaml",
+      "location": {
+        "file": "plugins/examples/README.md",
+        "line": 127
+      }
+    },
+    {
+      "text": "metadata_agent.yaml",
+      "location": {
+        "file": "plugins/examples/wikimedia/README.md",
+        "line": 11
+      }
+    }
+  ],
+  "stack_hints": [
+    "go.mod",
+    "plugins/cmd/ndpgen/go.mod",
+    "plugins/examples/crypto-ticker/go.mod",
+    "plugins/examples/discord-rich-presence-rs/Cargo.toml",
+    "plugins/examples/library-inspector-rs/Cargo.toml",
+    "plugins/examples/minimal/go.mod",
+    "plugins/examples/webhook-rs/Cargo.toml",
+    "plugins/examples/wikimedia/go.mod",
+    "plugins/pdk/go/go.mod",
+    "plugins/pdk/rust/nd-pdk-capabilities/Cargo.toml",
+    "plugins/pdk/rust/nd-pdk-host/Cargo.toml",
+    "plugins/pdk/rust/nd-pdk-types/Cargo.toml",
+    "plugins/pdk/rust/nd-pdk/Cargo.toml",
+    "ui/package.json"
+  ],
+  "problems": null
+}

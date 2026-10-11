@@ -1,0 +1,301 @@
+{
+  "ir_version": "1",
+  "app": {
+    "name": "paperless-ngx",
+    "summary": "Paperless-ngx is a document management system that transforms your physical documents into a searchable online archive so you can keep, well, _less paper_.",
+    "upstream_url": "https://github.com/paperless-ngx/paperless-ngx",
+    "docs_url": ""
+  },
+  "services": [
+    {
+      "name": "broker",
+      "role": "cache",
+      "image": {
+        "registry": "docker.io",
+        "repository": "valkey/valkey",
+        "tag": "9-alpine",
+        "digest": "",
+        "provenance": {
+          "source": "compose",
+          "source_ref": "docker/compose/docker-compose.sqlite.yml:26",
+          "confidence": "high"
+        }
+      },
+      "command": [],
+      "entrypoint": [],
+      "env": [],
+      "ports": [],
+      "volumes": [
+        {
+          "name": "redisdata",
+          "container_path": "/data",
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker/compose/docker-compose.sqlite.yml:29",
+            "confidence": "high"
+          }
+        }
+      ],
+      "depends_on": [],
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "valkey-cli",
+          "ping"
+        ],
+        "interval": "10s",
+        "timeout": "5s",
+        "retries": 5,
+        "start_period": "30s",
+        "omitted_reason": "",
+        "provenance": {
+          "source": "healthcheck_catalogue",
+          "source_ref": "",
+          "confidence": "medium"
+        }
+      },
+      "user": "",
+      "resources": {
+        "memory_limit": "",
+        "cpus": "",
+        "pids_limit": 0
+      },
+      "notes": [],
+      "provenance": {
+        "source": "compose",
+        "source_ref": "docker/compose/docker-compose.sqlite.yml:25",
+        "confidence": "high"
+      }
+    },
+    {
+      "name": "webserver",
+      "role": "app",
+      "image": {
+        "registry": "ghcr.io",
+        "repository": "paperless-ngx/paperless-ngx",
+        "tag": "latest",
+        "digest": "",
+        "provenance": {
+          "source": "compose",
+          "source_ref": "docker/compose/docker-compose.sqlite.yml:31",
+          "confidence": "high"
+        }
+      },
+      "command": [],
+      "entrypoint": [],
+      "env": [
+        {
+          "key": "PAPERLESS_REDIS",
+          "ref": "PAPERLESS_REDIS",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker/compose/docker-compose.sqlite.yml:44",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "PAPERLESS_DBENGINE",
+          "ref": "PAPERLESS_DBENGINE",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker/compose/docker-compose.sqlite.yml:45",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "PAPERLESS_SECRET_KEY",
+          "ref": "PAPERLESS_SECRET_KEY",
+          "literal": "",
+          "required": false,
+          "secret": true,
+          "description": "Required. A unique secret key for session tokens and signing. Generate with: python3 -c \"import secrets; print(secrets.token_urlsafe(64))\"",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": "docker/compose/docker-compose.env:22",
+            "confidence": "medium"
+          }
+        }
+      ],
+      "ports": [
+        {
+          "container": 8000,
+          "protocol": "tcp",
+          "publish": true,
+          "host_port": 8000,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker/compose/docker-compose.sqlite.yml:36",
+            "confidence": "high"
+          }
+        }
+      ],
+      "volumes": [
+        {
+          "name": "data",
+          "container_path": "/usr/src/paperless/data",
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker/compose/docker-compose.sqlite.yml:38",
+            "confidence": "high"
+          }
+        },
+        {
+          "name": "media",
+          "container_path": "/usr/src/paperless/media",
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker/compose/docker-compose.sqlite.yml:39",
+            "confidence": "high"
+          }
+        },
+        {
+          "name": "export",
+          "container_path": "/usr/src/paperless/export",
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker/compose/docker-compose.sqlite.yml:40",
+            "confidence": "high"
+          }
+        },
+        {
+          "name": "consume",
+          "container_path": "/usr/src/paperless/consume",
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker/compose/docker-compose.sqlite.yml:41",
+            "confidence": "high"
+          }
+        }
+      ],
+      "depends_on": [
+        {
+          "service": "broker",
+          "condition": "service_healthy"
+        }
+      ],
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "curl",
+          "-fs",
+          "-S",
+          "-L",
+          "--max-time",
+          "2",
+          "http://localhost:8000"
+        ],
+        "interval": "30s",
+        "timeout": "10s",
+        "retries": 5,
+        "start_period": "",
+        "omitted_reason": "",
+        "provenance": {
+          "source": "dockerfile",
+          "source_ref": "Dockerfile:257",
+          "confidence": "medium"
+        }
+      },
+      "user": "",
+      "resources": {
+        "memory_limit": "",
+        "cpus": "",
+        "pids_limit": 0
+      },
+      "notes": [
+        "upstream bind mount ./export:/usr/src/paperless/export is a named volume here (use --storage bind for a host folder)",
+        "upstream bind mount ./consume:/usr/src/paperless/consume is a named volume here (use --storage bind for a host folder)"
+      ],
+      "provenance": {
+        "source": "compose",
+        "source_ref": "docker/compose/docker-compose.sqlite.yml:30",
+        "confidence": "high"
+      }
+    }
+  ],
+  "env_file": [
+    {
+      "key": "PAPERLESS_REDIS",
+      "value": "redis://broker:6379",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "docker/compose/docker-compose.sqlite.yml:44",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "PAPERLESS_DBENGINE",
+      "value": "sqlite",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "docker/compose/docker-compose.sqlite.yml:45",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "PAPERLESS_SECRET_KEY",
+      "value": "",
+      "generate": "hex32",
+      "secret": true,
+      "required": false,
+      "description": "Required. A unique secret key for session tokens and signing. Generate with: python3 -c \"import secrets; print(secrets.token_urlsafe(64))\"",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "docker/compose/docker-compose.env:22",
+        "confidence": "medium"
+      }
+    }
+  ],
+  "needs": [],
+  "probe": {
+    "service": "webserver",
+    "port": 8000,
+    "path": "/",
+    "expect": []
+  },
+  "post_install_notes": [
+    "PAPERLESS_SECRET_KEY was generated for you; it is in .env"
+  ],
+  "confidence": "high",
+  "evidence": [
+    {
+      "claim": "compose file docker/compose/docker-compose.sqlite.yml chosen among 8 upstream compose files",
+      "file": "docker/compose/docker-compose.sqlite.yml",
+      "line": 1
+    },
+    {
+      "claim": "app image ghcr.io/paperless-ngx/paperless-ngx",
+      "file": "docker/compose/docker-compose.sqlite.yml",
+      "line": 31
+    }
+  ],
+  "suspicious_instructions": [],
+  "unfilled": [
+    "env_file.PAPERLESS_REDIS.description",
+    "env_file.PAPERLESS_DBENGINE.description"
+  ]
+}

@@ -1,0 +1,231 @@
+package cli
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"log/slog"
+	"net"
+	"net/http"
+	"time"
+
+	"github.com/spf13/cobra"
+
+	"github.com/aiulian25/composewright/internal/auth"
+	"github.com/aiulian25/composewright/internal/config"
+	"github.com/aiulian25/composewright/internal/pipeline"
+	"github.com/aiulian25/composewright/internal/store"
+	"github.com/aiulian25/composewright/internal/web"
+	"github.com/aiulian25/composewright/internal/workspace"
+)
+
+const (
+	readHeaderTimeout = 10 * time.Second
+	readTimeout       = 2 * time.Minute
+	idleTimeout       = 2 * time.Minute
+	maxHeaderBytes    = 64 << 10
+	stopTimeout       = 10 * time.Second
+	// noSessionKept makes SetPassword end every session of the account.
+	noSessionKept = ""
+)
+
+func (application *app) serveCommand() *cobra.Command {
+	var listen string
+	var allowHosts []string
+	var initialise bool
+	command := &cobra.Command{
+		Use:   "serve",
+		Short: "Run the web UI (on 127.0.0.1:8484 by default)",
+		Long: fmt.Sprintf(`Serve the web UI: a guided flow from a repository to a validated compose.yaml
+and .env, the projects, and the settings. It listens on 127.0.0.1 only unless
+you say otherwise, always asks for a login, and contacts nothing beyond what
+the configuration allows.
+
+On first start no administrator exists: open the UI within %d minutes and
+create the account there. Later, restart serve, or use the setup link it
+prints, which only someone who can read its output has. With --init it first
+creates the data directory, master key and config that are missing and keeps
+those that exist, as the container image does on every start.
+
+To reach it from other machines, listen on 0.0.0.0 and open
+http://<this machine's address>:8484. Addresses typed as an IP and this
+machine's own name just work; any other host name, such as a reverse proxy's,
+needs --allow-host. Over plain HTTP the password crosses the network
+unencrypted, which is fine on a network you trust. The UI controls Docker,
+which is root-equivalent on this host: beyond a trusted network, put HTTPS
+in front, and the session cookie becomes Secure by itself.`, int(web.SetupWindow.Minutes())),
+		Example: "  composewright serve\n  composewright serve --listen 0.0.0.0:8484\n  composewright serve --listen 0.0.0.0:8484 --allow-host composewright.home.arpa",
+		Args:    cobra.NoArgs,
+		RunE: func(command *cobra.Command, _ []string) error {
+			return application.runServe(command.Context(), listen, allowHosts, initialise)
+		},
+	}
+	command.Flags().StringVar(&listen, "listen", "", "address to listen on (default: listen in config.yaml)")
+	command.Flags().StringSliceVar(&allowHosts, "allow-host", nil, "another host name the UI answers to, such as a reverse proxy's (repeatable)")
+	command.Flags().BoolVar(&initialise, "init", false, "first create the data directory, master key and config that are missing, like init")
+	return command
+}
+
+func (application *app) passwordCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:   "password",
+		Short: "Set a new password for the web UI's administrator",
+		Long: `Set a new password for the web UI's administrator, for when it is forgotten.
+composewright sends no email, so this runs on the machine where composewright runs,
+as the same user and with the same --config and --data-dir. It asks for the
+password twice without showing it (piped input is read once), prints the
+username, and signs every browser out. The change is written to the audit log.`,
+		Example: "  composewright password\n  docker exec -it composewright composewright password",
+		Args:    cobra.NoArgs,
+		RunE:    func(command *cobra.Command, _ []string) error { return application.runPassword(command.Context()) },
+	}
+}
+
+func (application *app) runPassword(ctx context.Context) error {
+	workspace, err := application.openWorkspace(ctx)
+	if err != nil {
+		return err
+	}
+	defer workspace.Close()
+	administrator, err := workspace.Store.Administrator(ctx)
+	if errors.Is(err, store.ErrNotFound) {
+		return errors.New("there is no administrator yet: open the web UI and create one")
+	}
+	if err != nil {
+		return err
+	}
+	password, err := application.readNewPassword(administrator.Username)
+	if err != nil {
+		return err
+	}
+	hash, err := auth.HashPassword(password)
+	if err != nil {
+		return err
+	}
+	if err := workspace.Store.SetPassword(ctx, administrator.ID, hash, noSessionKept); err != nil {
+		return err
+	}
+	details := map[string]any{"user": administrator.Username, "all_sessions_ended": true}
+	if err := workspace.Store.Audit(ctx, workspace.Actor, store.ActionPassword, "", details); err != nil {
+		return err
+	}
+	if !application.global.json {
+		fmt.Fprintf(application.stdout, "New password set for %s. Every browser is signed out; sign in again with it.\n", administrator.Username)
+	}
+	return nil
+}
+
+// readNewPassword asks twice on a terminal, so a typo cannot lock the
+// administrator out again; piped input is read once.
+func (application *app) readNewPassword(username string) (string, error) {
+	password, err := application.readSecret("New password for " + username + ": ")
+	if err != nil {
+		return "", err
+	}
+	if err := auth.CheckPassword(password); err != nil {
+		return "", err
+	}
+	if _, isTerminal := application.terminal(); !isTerminal {
+		return password, nil
+	}
+	again, err := application.readSecret("The same password again: ")
+	if err != nil {
+		return "", err
+	}
+	if again != password {
+		return "", errors.New("the two passwords differ; nothing was changed")
+	}
+	return password, nil
+}
+
+func (application *app) runServe(ctx context.Context, listen string, allowHosts []string, initialise bool) error {
+	loaded, err := application.loadConfig()
+	if err != nil {
+		return err
+	}
+	if err := initialiseFirst(ctx, initialise, loaded); err != nil {
+		return err
+	}
+	if !loaded.Config.UI.AuthRequired {
+		return errors.New("ui.auth_required must stay true: the web UI controls Docker, which is root-equivalent")
+	}
+	opened, err := workspace.Open(ctx, loaded)
+	if err != nil {
+		return err
+	}
+	defer opened.Close()
+	if listen == "" {
+		listen = loaded.Config.Listen
+	}
+	host, port, err := net.SplitHostPort(listen)
+	if err != nil {
+		return fmt.Errorf("--listen %q: %w", listen, err)
+	}
+	token, err := application.setupToken(ctx, opened)
+	if err != nil {
+		return err
+	}
+	server, err := web.New(web.Options{Loaded: loaded, Flags: config.Flags{ConfigFile: application.global.configFile, DataDir: application.global.dataDir},
+		Workspace: opened, Version: application.build.Version, Listen: listen, AllowedHosts: allowHosts, SetupToken: token,
+		Connect: pipeline.Connect, Logger: application.logger})
+	if err != nil {
+		return err
+	}
+	listener, err := (&net.ListenConfig{}).Listen(ctx, "tcp", listen)
+	if err != nil {
+		return err
+	}
+	httpServer := &http.Server{Handler: server, ReadHeaderTimeout: readHeaderTimeout, ReadTimeout: readTimeout, IdleTimeout: idleTimeout,
+		MaxHeaderBytes: maxHeaderBytes, ErrorLog: slog.NewLogLogger(application.logger.Handler(), slog.LevelWarn)}
+	application.announce(host, port, token)
+	failed := make(chan error, 1)
+	go func() { failed <- httpServer.Serve(listener) }()
+	select {
+	case err := <-failed:
+		server.Close()
+		return err
+	case <-ctx.Done():
+	}
+	fmt.Fprintln(application.stderr, "stopping: ending runs and removing their sandboxes…")
+	server.Close()
+	stopCtx, cancel := context.WithTimeout(context.Background(), stopTimeout)
+	defer cancel()
+	return httpServer.Shutdown(stopCtx)
+}
+
+// setupToken is the one-time secret in the setup link, made only while no
+// administrator exists.
+func (application *app) setupToken(ctx context.Context, opened *workspace.Workspace) (string, error) {
+	exists, err := opened.Store.HasUsers(ctx)
+	if err != nil || exists {
+		return "", err
+	}
+	return auth.NewCSRF()
+}
+
+func (application *app) announce(host, port, token string) {
+	address := "http://" + net.JoinHostPort(host, port)
+	wildcard := host == "" || host == "0.0.0.0" || host == "::"
+	if wildcard {
+		address = "http://<this machine's address>:" + port
+	}
+	fmt.Fprintf(application.stdout, "composewright is running at %s\n", address)
+	loopback := net.ParseIP(host) != nil && net.ParseIP(host).IsLoopback()
+	if !loopback && host != "localhost" {
+		fmt.Fprintln(application.stderr, application.colours.warn("note:"), "anyone on this network can open the sign-in page of a UI that controls Docker; put HTTPS in front beyond a network you trust.")
+	}
+	if token != "" {
+		fmt.Fprintf(application.stdout, "no administrator yet: open it within %d minutes to create one; after that, restart, or add /setup?token=%s to the address\n",
+			int(web.SetupWindow.Minutes()), token)
+	}
+}
+
+// initialiseFirst runs init before serving when asked; init keeps whatever
+// already exists, so the container can ask on every start.
+func initialiseFirst(ctx context.Context, wanted bool, loaded *config.Loaded) error {
+	if !wanted {
+		return nil
+	}
+	_, err := workspace.Init(ctx, loaded)
+	return err
+}

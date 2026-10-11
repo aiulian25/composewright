@@ -1,0 +1,495 @@
+{
+  "files": [
+    "README.md",
+    "examples/docker-compose-caddy-proxy.yml",
+    "src/Dockerfile"
+  ],
+  "compose_files": [
+    {
+      "path": "examples/docker-compose-caddy-proxy.yml",
+      "services": [
+        {
+          "name": "caddy",
+          "location": {
+            "file": "examples/docker-compose-caddy-proxy.yml",
+            "line": 4
+          },
+          "image": "caddy:latest",
+          "image_at": {
+            "file": "examples/docker-compose-caddy-proxy.yml",
+            "line": 6
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 80,
+              "published": "80",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "examples/docker-compose-caddy-proxy.yml",
+                "line": 11
+              }
+            },
+            {
+              "target": 443,
+              "published": "443",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "examples/docker-compose-caddy-proxy.yml",
+                "line": 12
+              }
+            },
+            {
+              "target": 443,
+              "published": "443",
+              "host_ip": "",
+              "protocol": "udp",
+              "location": {
+                "file": "examples/docker-compose-caddy-proxy.yml",
+                "line": 13
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "./Caddyfile",
+              "target": "/etc/caddy/Caddyfile",
+              "read_only": false,
+              "location": {
+                "file": "examples/docker-compose-caddy-proxy.yml",
+                "line": 15
+              }
+            },
+            {
+              "type": "volume",
+              "source": "caddy_data",
+              "target": "/data",
+              "read_only": false,
+              "location": {
+                "file": "examples/docker-compose-caddy-proxy.yml",
+                "line": 17
+              }
+            },
+            {
+              "type": "volume",
+              "source": "caddy_config",
+              "target": "/config",
+              "read_only": false,
+              "location": {
+                "file": "examples/docker-compose-caddy-proxy.yml",
+                "line": 18
+              }
+            }
+          ],
+          "environment": null,
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "pihole",
+          "location": {
+            "file": "examples/docker-compose-caddy-proxy.yml",
+            "line": 21
+          },
+          "image": "pihole/pihole:latest",
+          "image_at": {
+            "file": "examples/docker-compose-caddy-proxy.yml",
+            "line": 25
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 80,
+              "published": "8081",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "examples/docker-compose-caddy-proxy.yml",
+                "line": 27
+              }
+            },
+            {
+              "target": 53,
+              "published": "53",
+              "host_ip": "",
+              "protocol": "udp",
+              "location": {
+                "file": "examples/docker-compose-caddy-proxy.yml",
+                "line": 29
+              }
+            },
+            {
+              "target": 53,
+              "published": "53",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "examples/docker-compose-caddy-proxy.yml",
+                "line": 30
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "./etc-pihole",
+              "target": "/etc/pihole",
+              "read_only": false,
+              "location": {
+                "file": "examples/docker-compose-caddy-proxy.yml",
+                "line": 41
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "TZ",
+              "raw": "Europe/London",
+              "has_value": true,
+              "location": {
+                "file": "examples/docker-compose-caddy-proxy.yml",
+                "line": 35
+              }
+            },
+            {
+              "key": "FTLCONF_webserver_api_password",
+              "raw": "correct horse battery staple",
+              "has_value": true,
+              "location": {
+                "file": "examples/docker-compose-caddy-proxy.yml",
+                "line": 37
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": [
+            {
+              "service": "caddy",
+              "condition": "service_started"
+            }
+          ],
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": []
+    }
+  ],
+  "dockerfiles": [
+    {
+      "path": "src/Dockerfile",
+      "base_image": "alpine:3.24.1@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b",
+      "exposed": [
+        {
+          "port": 53,
+          "protocol": "tcp",
+          "location": {
+            "file": "src/Dockerfile",
+            "line": 104
+          }
+        },
+        {
+          "port": 53,
+          "protocol": "udp",
+          "location": {
+            "file": "src/Dockerfile",
+            "line": 104
+          }
+        },
+        {
+          "port": 67,
+          "protocol": "udp",
+          "location": {
+            "file": "src/Dockerfile",
+            "line": 105
+          }
+        },
+        {
+          "port": 80,
+          "protocol": "tcp",
+          "location": {
+            "file": "src/Dockerfile",
+            "line": 106
+          }
+        },
+        {
+          "port": 123,
+          "protocol": "udp",
+          "location": {
+            "file": "src/Dockerfile",
+            "line": 107
+          }
+        },
+        {
+          "port": 443,
+          "protocol": "tcp",
+          "location": {
+            "file": "src/Dockerfile",
+            "line": 108
+          }
+        }
+      ],
+      "volumes": null,
+      "env": [
+        {
+          "key": "DNSMASQ_USER",
+          "value": "pihole",
+          "location": {
+            "file": "src/Dockerfile",
+            "line": 20
+          }
+        },
+        {
+          "key": "FTL_CMD",
+          "value": "no-daemon",
+          "location": {
+            "file": "src/Dockerfile",
+            "line": 21
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "FTL_SOURCE",
+          "value": "remote",
+          "location": {
+            "file": "src/Dockerfile",
+            "line": 2
+          }
+        },
+        {
+          "key": "TARGETPLATFORM",
+          "value": "",
+          "location": {
+            "file": "src/Dockerfile",
+            "line": 6
+          }
+        },
+        {
+          "key": "WEB_BRANCH",
+          "value": "development",
+          "location": {
+            "file": "src/Dockerfile",
+            "line": 7
+          }
+        },
+        {
+          "key": "CORE_BRANCH",
+          "value": "development",
+          "location": {
+            "file": "src/Dockerfile",
+            "line": 8
+          }
+        },
+        {
+          "key": "FTL_BRANCH",
+          "value": "development",
+          "location": {
+            "file": "src/Dockerfile",
+            "line": 9
+          }
+        },
+        {
+          "key": "PIHOLE_DOCKER_TAG",
+          "value": "dev-localbuild",
+          "location": {
+            "file": "src/Dockerfile",
+            "line": 10
+          }
+        },
+        {
+          "key": "PADD_BRANCH",
+          "value": "development",
+          "location": {
+            "file": "src/Dockerfile",
+            "line": 11
+          }
+        },
+        {
+          "key": "CORE_FORK",
+          "value": "pi-hole",
+          "location": {
+            "file": "src/Dockerfile",
+            "line": 13
+          }
+        },
+        {
+          "key": "WEB_FORK",
+          "value": "pi-hole",
+          "location": {
+            "file": "src/Dockerfile",
+            "line": 14
+          }
+        },
+        {
+          "key": "PADD_FORK",
+          "value": "pi-hole",
+          "location": {
+            "file": "src/Dockerfile",
+            "line": 15
+          }
+        },
+        {
+          "key": "PIHOLE_UID",
+          "value": "1000",
+          "location": {
+            "file": "src/Dockerfile",
+            "line": 17
+          }
+        },
+        {
+          "key": "PIHOLE_GID",
+          "value": "1000",
+          "location": {
+            "file": "src/Dockerfile",
+            "line": 18
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "dig -p $(pihole-FTL --config dns.port) +short +norecurse +retry=0 @127.0.0.1 pi.hole || exit 1"
+        ],
+        "interval": "",
+        "timeout": "",
+        "start_period": "",
+        "retries": 0,
+        "disabled": false,
+        "location": {
+          "file": "src/Dockerfile",
+          "line": 138
+        }
+      },
+      "entrypoint": [
+        "start.sh"
+      ],
+      "command": null
+    }
+  ],
+  "env_samples": null,
+  "variables": [
+    {
+      "name": "DNSMASQ_USER",
+      "default": "pihole",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DNSMASQ_USER",
+          "kind": "dockerfile",
+          "default": "pihole",
+          "location": {
+            "file": "src/Dockerfile",
+            "line": 20
+          }
+        }
+      ]
+    },
+    {
+      "name": "FTLCONF_webserver_api_password",
+      "default": "correct horse battery staple",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "FTLCONF_webserver_api_password",
+          "kind": "compose",
+          "default": "correct horse battery staple",
+          "location": {
+            "file": "examples/docker-compose-caddy-proxy.yml",
+            "line": 37
+          }
+        }
+      ]
+    },
+    {
+      "name": "FTL_CMD",
+      "default": "no-daemon",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "FTL_CMD",
+          "kind": "dockerfile",
+          "default": "no-daemon",
+          "location": {
+            "file": "src/Dockerfile",
+            "line": 21
+          }
+        }
+      ]
+    },
+    {
+      "name": "TZ",
+      "default": "Europe/London",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TZ",
+          "kind": "compose",
+          "default": "Europe/London",
+          "location": {
+            "file": "examples/docker-compose-caddy-proxy.yml",
+            "line": 35
+          }
+        }
+      ]
+    }
+  ],
+  "images": [
+    {
+      "reference": "pihole/pihole:latest",
+      "kind": "readme",
+      "location": {
+        "file": "README.md",
+        "line": 45
+      }
+    },
+    {
+      "reference": "caddy:latest",
+      "kind": "compose",
+      "location": {
+        "file": "examples/docker-compose-caddy-proxy.yml",
+        "line": 6
+      }
+    },
+    {
+      "reference": "pihole/pihole:latest",
+      "kind": "compose",
+      "location": {
+        "file": "examples/docker-compose-caddy-proxy.yml",
+        "line": 25
+      }
+    }
+  ],
+  "docker_runs": null,
+  "notes": null,
+  "suspicious": null,
+  "readmes": [
+    "README.md"
+  ],
+  "summary": {
+    "text": "Using Docker-compose:",
+    "location": {
+      "file": "README.md",
+      "line": 36
+    }
+  },
+  "file_mentions": null,
+  "stack_hints": null,
+  "problems": null
+}

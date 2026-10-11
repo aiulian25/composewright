@@ -1,0 +1,463 @@
+name: CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: ["**"]
+  pull_request_target:
+    types: [closed]
+    branches: ["**"]
+  push:
+    branches: [main, dev, beta, next, v2, release/v2]
+  merge_group:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Operation to run
+        required: true
+        default: validate
+        type: choice
+        options:
+          - validate
+          - publish
+          - cleanup
+      pr_number:
+        description: PR number for publish or cleanup
+        required: false
+        type: number
+      ref:
+        description: Git ref to validate or publish
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  # Every event for a PR shares one group so a close event cancels stale image
+  # publication and a newer synchronize run cannot be overwritten by an older run.
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || inputs.pr_number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'pull_request_target' || github.event_name == 'workflow_dispatch' || github.ref != 'refs/heads/main' }}
+
+env:
+  FORCE_COLOR: 3
+  SKIP_ENV_VALIDATION: true
+  TURBO_TELEMETRY_DISABLED: 1
+  REGISTRY: ghcr.io
+  PREVIEW_IMAGE: ghcr.io/homarr-labs/homarr-test
+
+jobs:
+  database-validation:
+    name: Database validation
+    if: github.event_name != 'pull_request_target' && (github.event_name != 'release' || startsWith(github.event.release.tag_name, 'v2.')) && (github.event_name != 'workflow_dispatch' || inputs.operation != 'cleanup')
+    uses: ./.github/workflows/database.yml
+
+  fast-gate:
+    name: Fast gate
+    needs: database-validation
+    if: ${{ !cancelled() && github.event_name != 'pull_request_target' && (github.event_name != 'release' || startsWith(github.event.release.tag_name, 'v2.')) && (github.event_name != 'workflow_dispatch' || inputs.operation != 'cleanup') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      TURBO_API: ${{ secrets.TURBO_API }}
+      TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
+      TURBO_SCM_BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before || 'HEAD~1' }}
+      TURBO_SCM_HEAD: ${{ github.sha }}
+    steps:
+      - name: Require database validation
+        env:
+          DATABASE_RESULT: ${{ needs.database-validation.result }}
+        run: test "$DATABASE_RESULT" = success
+
+      - uses: actions/checkout@v7
+        if: "!env.ACT"
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || '' }}
+
+      - name: Validate manual inputs
+        if: github.event_name == 'workflow_dispatch' && inputs.operation == 'publish'
+        env:
+          PR_NUMBER: ${{ inputs.pr_number }}
+          BUILD_REF: ${{ inputs.ref }}
+        run: |
+          test -n "$PR_NUMBER" || { echo "pr_number is required for publish"; exit 1; }
+          test -n "$BUILD_REF" || { echo "ref is required for publish"; exit 1; }
+
+      - name: Setup
+        uses: ./tooling/github/setup
+        with:
+          next-cache: "all"
+          turbo-cache: "true"
+
+      - name: Copy environment defaults
+        run: cp .env.example .env
+
+      - name: Lint, typecheck, and build workspaces
+        run: |
+          scope=(--affected)
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            scope=()
+          fi
+          bun run turbo run lint typecheck build "${scope[@]}" --continue=dependencies-successful --concurrency=2
+
+      - name: Validate workspace configuration
+        run: bun run lint:ws
+
+      - name: Validate Custom Widget architecture
+        run: bun run check:custom-widgets
+
+      - name: Validate checked-in OpenAPI schema
+        run: bun run check:openapi
+
+      - name: Validate Custom Widget bundle budget
+        run: |
+          bun run turbo run build --filter=@homarr/nextjs
+          bun run check:custom-widget-bundle
+
+  container:
+    name: Container and migration smoke
+    # Legacy converter verification is opt-in, not a release publication gate.
+    needs: [fast-gate, preview-amd64]
+    if: |
+      !cancelled() && needs.fast-gate.result == 'success' &&
+      github.event_name == 'workflow_dispatch' && inputs.operation == 'validate'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v7
+        if: "!env.ACT"
+        with:
+          persist-credentials: false
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || '' }}
+
+      - name: Setup
+        uses: ./tooling/github/setup
+
+      - name: Reuse amd64 preview image
+        if: needs.preview-amd64.outputs.digest != '' && !env.ACT
+        env:
+          DIGEST: ${{ needs.preview-amd64.outputs.digest }}
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker pull "${PREVIEW_IMAGE}@${DIGEST}"
+          docker tag "${PREVIEW_IMAGE}@${DIGEST}" homarr-e2e
+
+      - name: Set up Docker Buildx
+        if: needs.preview-amd64.outputs.digest == '' && !env.ACT
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build container once
+        if: needs.preview-amd64.outputs.digest == '' && !env.ACT
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          network: host
+          platforms: linux/amd64
+          load: true
+          push: false
+          tags: |
+            homarr-ci
+            homarr-e2e
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.ref.name=pr-${{ github.event.pull_request.number || inputs.pr_number || 'none' }}
+          cache-from: type=gha,scope=homarr-e2e
+          cache-to: type=gha,scope=homarr-e2e,mode=max
+          secrets: |
+            TURBO_API=${{ secrets.TURBO_API }}
+            TURBO_TEAM=${{ secrets.TURBO_TEAM }}
+            TURBO_TOKEN=${{ secrets.TURBO_TOKEN }}
+            TURBO_REMOTE_CACHE_SIGNATURE_KEY=${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
+
+      - name: Build container once with Act
+        if: env.ACT
+        env:
+          TURBO_API: ${{ secrets.TURBO_API }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
+        run: |
+          bash tooling/github/docker-build.sh --platform linux/amd64 \
+            --tag homarr-ci --tag homarr-e2e .
+
+      - name: Cache Playwright browsers
+        if: "!env.ACT"
+        id: playwright-cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+
+      - name: Install Playwright Chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true' || env.ACT
+        run: bun x playwright install --with-deps chromium
+
+      - name: Install Playwright system deps
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: bun x playwright install-deps chromium
+
+      - name: Install standalone converter test dependencies
+        run: bun install --cwd tools/mysql-to-sqlite --frozen-lockfile
+
+      - name: Verify converted database boots and survives restart
+        env:
+          NODE_ENV: development
+          CI: "true"
+        run: bun x vitest run --project e2e e2e/mysql-conversion.spec.ts --maxWorkers 1
+
+      - name: Upload E2E artifacts
+        if: failure() && !env.ACT
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: e2e/test-results/
+          retention-days: 7
+
+  preview-amd64:
+    name: Build amd64 preview image
+    needs: fast-gate
+    if: |
+      (
+        (github.event_name == 'pull_request' && github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository) ||
+        (github.event_name == 'push' && github.ref == 'refs/heads/release/v2') ||
+        (github.event_name == 'workflow_dispatch' && inputs.operation == 'publish')
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      digest: ${{ steps.preview-build.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v7
+        if: "!env.ACT"
+        with:
+          persist-credentials: false
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || '' }}
+
+      - name: Log in to GHCR
+        if: "!env.ACT"
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        if: "!env.ACT"
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build and push amd64 preview image by digest
+        id: preview-build
+        if: "!env.ACT"
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          network: host
+          platforms: linux/amd64
+          outputs: type=image,"name=${{ env.PREVIEW_IMAGE }}",push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=homarr-linux-amd64
+          cache-to: type=gha,scope=homarr-linux-amd64,mode=max
+          secrets: |
+            TURBO_API=${{ secrets.TURBO_API }}
+            TURBO_TEAM=${{ secrets.TURBO_TEAM }}
+            TURBO_TOKEN=${{ secrets.TURBO_TOKEN }}
+            TURBO_REMOTE_CACHE_SIGNATURE_KEY=${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
+
+  preview-arm64:
+    name: Build arm64 preview image
+    needs: fast-gate
+    if: |
+      (
+        (github.event_name == 'pull_request' && github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository) ||
+        (github.event_name == 'push' && github.ref == 'refs/heads/release/v2') ||
+        (github.event_name == 'workflow_dispatch' && inputs.operation == 'publish')
+      )
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      digest: ${{ steps.preview-build.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v7
+        if: "!env.ACT"
+        with:
+          persist-credentials: false
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || '' }}
+
+      - name: Log in to GHCR
+        if: "!env.ACT"
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        if: "!env.ACT"
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build and push arm64 preview image by digest
+        id: preview-build
+        if: "!env.ACT"
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          network: host
+          platforms: linux/arm64
+          outputs: type=image,"name=${{ env.PREVIEW_IMAGE }}",push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=homarr-linux-arm64
+          cache-to: type=gha,scope=homarr-linux-arm64,mode=max
+          secrets: |
+            TURBO_API=${{ secrets.TURBO_API }}
+            TURBO_TEAM=${{ secrets.TURBO_TEAM }}
+            TURBO_TOKEN=${{ secrets.TURBO_TOKEN }}
+            TURBO_REMOTE_CACHE_SIGNATURE_KEY=${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
+
+  publish-preview:
+    name: Publish multi-platform preview image
+    needs: [fast-gate, preview-amd64, preview-arm64]
+    if: |
+      !cancelled() &&
+      needs.fast-gate.result == 'success' &&
+      needs.preview-amd64.result == 'success' &&
+      needs.preview-arm64.result == 'success' &&
+      (
+        (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) ||
+        (github.event_name == 'push' && github.ref == 'refs/heads/release/v2') ||
+        (github.event_name == 'workflow_dispatch' && inputs.operation == 'publish')
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      packages: write
+      pull-requests: read
+    env:
+      PREVIEW_TAG: ${{ github.event_name == 'push' && 'v2' || format('pr-{0}', github.event.pull_request.number || inputs.pr_number) }}
+    steps:
+      - name: Log in to GHCR
+        if: "!env.ACT"
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        if: "!env.ACT"
+        uses: docker/setup-buildx-action@v4
+
+      - name: Verify PR head before publication
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v8
+        env:
+          EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        with:
+          script: |
+            const { data: pull } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+            });
+            if (pull.state !== "open") {
+              core.setFailed(`PR #${pull.number} is ${pull.state}; refusing to publish its preview.`);
+              return;
+            }
+            if (pull.head.sha !== process.env.EXPECTED_HEAD_SHA) {
+              core.setFailed(`PR #${pull.number} moved from ${process.env.EXPECTED_HEAD_SHA} to ${pull.head.sha}.`);
+            }
+
+      - name: Publish preview manifest
+        if: "!env.ACT"
+        env:
+          AMD64_DIGEST: ${{ needs.preview-amd64.outputs.digest }}
+          ARM64_DIGEST: ${{ needs.preview-arm64.outputs.digest }}
+        run: |
+          tags=(-t "${PREVIEW_IMAGE}:${PREVIEW_TAG}")
+          docker buildx imagetools create "${tags[@]}" \
+            "${PREVIEW_IMAGE}@${AMD64_DIGEST}" \
+            "${PREVIEW_IMAGE}@${ARM64_DIGEST}"
+
+      - name: Verify preview manifest platforms
+        if: "!env.ACT"
+        run: |
+          tags=("${PREVIEW_TAG}")
+          for tag in "${tags[@]}"; do
+            image="${PREVIEW_IMAGE}:${tag}"
+            manifest="$(docker buildx imagetools inspect "$image" --raw)"
+            for architecture in amd64 arm64; do
+              jq --exit-status --arg architecture "$architecture" \
+                'any(.manifests[]; .platform.os == "linux" and .platform.architecture == $architecture)' \
+                <<<"$manifest" >/dev/null
+            done
+            docker buildx imagetools inspect "$image"
+          done
+
+  cleanup:
+    name: Clean up preview image
+    if: github.event_name == 'pull_request_target' || (github.event_name == 'workflow_dispatch' && inputs.operation == 'cleanup')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      packages: write
+    env:
+      IMAGE_TAG: pr-${{ github.event.pull_request.number || inputs.pr_number }}
+    steps:
+      - name: Validate cleanup input
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          PR_NUMBER: ${{ inputs.pr_number }}
+        run: test -n "$PR_NUMBER" || { echo "pr_number is required for cleanup"; exit 1; }
+
+      - name: Delete GHCR package version
+        if: "!env.ACT"
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const packageName = "homarr-test";
+            const org = context.repo.owner;
+            const tag = process.env.IMAGE_TAG;
+            const versions = await github.paginate(
+              github.rest.packages.getAllPackageVersionsForPackageOwnedByOrg,
+              { package_type: "container", package_name: packageName, org, per_page: 100 },
+            );
+            const target = versions.find((version) =>
+              version.metadata?.container?.tags?.includes(tag),
+            );
+            if (!target) {
+              core.info(`No package version found with tag "${tag}"`);
+              return;
+            }
+            const targetTags = target.metadata?.container?.tags ?? [];
+            const extraTags = targetTags.filter((targetTag) => targetTag !== tag);
+            if (extraTags.length > 0) {
+              core.warning(
+                `Package version ${target.id} also carries tag(s) ${extraTags.map((targetTag) => `"${targetTag}"`).join(", ")}; refusing cleanup.`,
+              );
+              return;
+            }
+            await github.rest.packages.deletePackageVersionForOrg({
+              package_type: "container",
+              package_name: packageName,
+              org,
+              package_version_id: target.id,
+            });
+            core.info(`Deleted package version ${target.id} (${tag})`);
+
+      - name: Show Act cleanup result
+        if: env.ACT
+        run: echo "Act validated cleanup for ${IMAGE_TAG}; external GHCR writes are disabled locally."

@@ -1,0 +1,36 @@
+{{define "content"}}
+<div class="page-head">
+  <h1 class="page-title">Projects</h1>
+  <a class="button button-primary push-right" href="/new">{{template "icon-plus"}}New project</a>
+</div>
+{{if .Data}}
+<section class="card" aria-label="Projects">
+  <div class="table-scroll">
+    <table class="table">
+      <thead><tr><th scope="col">Project</th><th scope="col">Status</th><th scope="col">Source</th><th scope="col">Engine</th><th scope="col">Images</th><th scope="col">Updated</th><th scope="col"><span class="visually-hidden">Delete</span></th></tr></thead>
+      <tbody>
+        {{range .Data}}
+        <tr>
+          <th scope="row"><a class="mono" href="/projects/{{.Name}}">{{.Name}}</a></th>
+          <td><span class="chip chip-{{.Tone}}">{{.Status}}</span>{{if .Running}} <a class="chip chip-accent" href="{{.Running}}">running</a>{{end}}</td>
+          <td class="mono muted">{{.Source}}</td>
+          <td class="muted">{{.Engine}}</td>
+          <td class="mono">{{range .Images}}<span class="block">{{.}}</span>{{end}}</td>
+          <td class="muted nowrap">{{.Updated}}</td>
+          <td><a class="button button-small button-ghost" href="/projects/{{.Name}}/delete" aria-label="Delete {{.Name}}">{{template "icon-trash"}}Delete…</a></td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+</section>
+{{else}}
+<section class="card" aria-labelledby="empty-title">
+  <div class="card-body">
+    <h2 id="empty-title">No projects yet</h2>
+    <p class="muted">Give composewright a repository, or just a compose file, and it works out how to run it, then proves it starts.</p>
+    <div class="row"><a class="button button-primary" href="/new">Start with a repository {{template "icon-arrow"}}</a></div>
+  </div>
+</section>
+{{end}}
+{{end}}

@@ -1,0 +1,87 @@
+[project]
+name = "linkding"
+version = "1.47.0"
+description = "Self-hosted bookmark manager that is designed be to be minimal, fast, and easy to set up using Docker."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "beautifulsoup4>=4.14.3",
+    "bleach>=6.4.0",
+    "bleach-allowlist>=1.0.3",
+    "django>=6.0.7",
+    "djangorestframework>=3.16.1",
+    "huey>=2.5.5",
+    "markdown>=3.10",
+    "mozilla-django-oidc>=5.0.2",
+    "requests>=2.33.0",
+    "supervisor>=4.3.0",
+    "uwsgi>=2.0.31",
+    "waybackpy>=3.0.6",
+]
+
+[dependency-groups]
+dev = [
+    "coverage>=7.13.1",
+    "cryptography>=50.0.0",
+    "django-debug-toolbar>=6.1.0",
+    "djlint>=1.36.4",
+    "playwright>=1.62.0",
+    "psycopg[binary]>=3.2.9",
+    "pytest>=9.0.3",
+    "pytest-django>=4.11.1",
+    "pytest-xdist>=3.8.0",
+    "ruff>=0.14.10",
+]
+# For PostgreSQL support, use the binary release for development so that not
+# everyone needs to build from source. For production, use a separate dependency
+# group that builds the driver from source. uv also needs to build it from
+# source to update the lockfile, which requires libpq. On macOS:
+# - brew install libpq
+# - export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
+# - uv add --group postgres psycopg[c]
+postgres = [
+    "psycopg[c]>=3.2.9",
+]
+
+[tool.uv]
+# Prefer system Python for now, less complications when copying the venv in the Docker build
+python-preference = "system"
+
+[tool.djlint]
+custom_html="ld-\\w+,ld-\\w+-\\w+"
+custom_blocks="formhelp"
+indent=2
+format_js=true
+profile="django"
+
+[tool.djlint.js]
+indent_size=2
+
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E",
+    # Pyflakes
+    "F",
+    # pyupgrade
+    "UP",
+    # flake8-bugbear
+    "B",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+    # flake8-tidy-imports: banned APIs
+    "TID251",
+]
+# ignore line length violations
+ignore = ["E501"]
+
+# Outbound requests to user-supplied URLs must go through http_client, which
+# protects against SSRF
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"requests".msg = "Use bookmarks.services.http_client instead (SSRF protection)"
+
+[tool.ruff.lint.per-file-ignores]
+"bookmarks/tests/*" = ["TID251"]
+"bookmarks/tests_e2e/*" = ["TID251"]

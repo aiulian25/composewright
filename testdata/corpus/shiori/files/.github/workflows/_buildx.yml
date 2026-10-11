@@ -1,0 +1,76 @@
+name: "Build Docker"
+
+on:
+  workflow_call:
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: true
+      DOCKERHUB_TOKEN:
+        required: true
+    inputs:
+      tag_prefix:
+        description: 'The tag prefix to use'
+        required: false
+        type: string
+        default: ''
+      dockerfile:
+        description: 'The Dockerfile to use'
+        required: false
+        type: string
+        default: 'Dockerfile'
+
+jobs:
+  buildx:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    name: Build Docker
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # 4.3.0
+        with:
+          name: dist
+          path: ./dist
+
+      # Every pull request that goes into master
+      - name: Prepare master push tags
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: |
+          REPO=ghcr.io/${{ github.repository }}
+          TAG=$(git describe --tags)
+          echo "tag_flags=--tag $REPO:${{ inputs.tag_prefix }}$TAG" >> $GITHUB_ENV
+
+      # New tagged version
+      - name: Prepare version push tags
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        run: |
+          REPO=ghcr.io/${{ github.repository }}
+          DOCKERHUB_REPO=shioriapp/shiori
+          TAG=$(git describe --tags)
+          if [[ "$TAG" == *"rc"* ]]
+          then
+            TAG2="dev"
+          else
+            TAG2="latest"
+          fi
+          echo "tag_flags=--tag $REPO:${{ inputs.tag_prefix }}$TAG --tag $REPO:${{ inputs.tag_prefix }}$TAG2 --tag $DOCKERHUB_REPO:${{ inputs.tag_prefix }}$TAG --tag $DOCKERHUB_REPO:${{ inputs.tag_prefix }}$TAG2" >> $GITHUB_ENV
+
+      # Every pull request
+      - name: Prepare pull request tags
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "tag_flags=--tag ${{ github.ref }}" >> $GITHUB_ENV
+          REPO=ghcr.io/${{ github.repository }}
+          echo "tag_flags=--tag $REPO:${{ inputs.tag_prefix }}pr-${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+
+      - name: Buildx
+        run: |
+          set -x
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login -u "${{ github.repository_owner }}" --password-stdin ghcr.io
+          # Login to DockerHub for versioned releases
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+          fi
+          make buildx CONTAINERFILE_NAME=${{ inputs.dockerfile }} CONTAINER_BUILDX_OPTIONS="--push ${{ env.tag_flags }}"

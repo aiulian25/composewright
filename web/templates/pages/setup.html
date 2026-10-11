@@ -1,0 +1,25 @@
+{{define "content"}}
+<section class="auth-card" aria-labelledby="setup-title">
+  <h1 id="setup-title">Create the administrator</h1>
+  <p class="auth-intro">The password is hashed with Argon2id and never leaves this machine. Use at least {{.Data.Minimum}} characters; a few unrelated words are easy to remember and hard to guess.</p>
+  <p class="muted small" data-insecure-context hidden>This connection is plain HTTP, so your password crosses the network unencrypted. That is fine on a network you trust; put HTTPS in front before exposing composewright further.</p>
+  {{if not .Data.Closed}}
+  <form class="auth-form" method="post" action="/setup">
+    {{if .Data.Token}}<input type="hidden" name="token" value="{{.Data.Token}}">{{end}}
+    <div class="auth-field">
+      <label for="username">Username</label>
+      <span class="input-icon">{{template "icon-user"}}<input id="username" name="username" type="text" autocomplete="username" required value="{{.Data.Username}}" autofocus></span>
+    </div>
+    <div class="auth-field">
+      <label for="password">Password</label>
+      <span class="input-icon">{{template "icon-lock"}}<input id="password" name="password" type="password" autocomplete="new-password" minlength="{{.Data.Minimum}}" required>{{template "password-reveal" "password"}}</span>
+    </div>
+    <div class="auth-field">
+      <label for="confirm">The same password again</label>
+      <span class="input-icon">{{template "icon-lock"}}<input id="confirm" name="confirm" type="password" autocomplete="new-password" minlength="{{.Data.Minimum}}" required>{{template "password-reveal" "confirm"}}</span>
+    </div>
+    <button class="button button-primary button-large" type="submit">Create and sign in{{template "icon-arrow"}}</button>
+  </form>
+  {{end}}
+</section>
+{{end}}

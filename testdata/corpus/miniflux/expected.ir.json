@@ -1,0 +1,427 @@
+{
+  "ir_version": "1",
+  "app": {
+    "name": "miniflux",
+    "summary": "Miniflux is a minimalist and opinionated feed reader.",
+    "upstream_url": "https://github.com/miniflux/v2",
+    "docs_url": ""
+  },
+  "services": [
+    {
+      "name": "miniflux",
+      "role": "app",
+      "image": {
+        "registry": "docker.io",
+        "repository": "miniflux/miniflux",
+        "tag": "latest",
+        "digest": "",
+        "provenance": {
+          "source": "compose",
+          "source_ref": "contrib/docker-compose/basic.yml:3",
+          "confidence": "high"
+        }
+      },
+      "command": [],
+      "entrypoint": [],
+      "env": [
+        {
+          "key": "DATABASE_URL",
+          "ref": "DATABASE_URL",
+          "literal": "",
+          "required": true,
+          "secret": true,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "contrib/docker-compose/basic.yml:12",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "RUN_MIGRATIONS",
+          "ref": "RUN_MIGRATIONS",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "contrib/docker-compose/basic.yml:13",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "CREATE_ADMIN",
+          "ref": "CREATE_ADMIN",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "contrib/docker-compose/basic.yml:14",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "ADMIN_USERNAME",
+          "ref": "ADMIN_USERNAME",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "contrib/docker-compose/basic.yml:15",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "ADMIN_PASSWORD",
+          "ref": "ADMIN_PASSWORD",
+          "literal": "",
+          "required": true,
+          "secret": true,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "contrib/docker-compose/basic.yml:16",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "DEBUG",
+          "ref": "DEBUG",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "contrib/docker-compose/basic.yml:17",
+            "confidence": "high"
+          }
+        }
+      ],
+      "ports": [
+        {
+          "container": 8080,
+          "protocol": "tcp",
+          "publish": true,
+          "host_port": 0,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "contrib/docker-compose/basic.yml:7",
+            "confidence": "high"
+          }
+        }
+      ],
+      "volumes": [],
+      "depends_on": [
+        {
+          "service": "db",
+          "condition": "service_healthy"
+        }
+      ],
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "/usr/bin/miniflux",
+          "-healthcheck",
+          "auto"
+        ],
+        "interval": "10s",
+        "timeout": "5s",
+        "retries": 5,
+        "start_period": "30s",
+        "omitted_reason": "",
+        "provenance": {
+          "source": "healthcheck_catalogue",
+          "source_ref": "",
+          "confidence": "medium"
+        }
+      },
+      "user": "",
+      "resources": {
+        "memory_limit": "",
+        "cpus": "",
+        "pids_limit": 0
+      },
+      "notes": [
+        "upstream publishes host port 80; a port above 1024 is used so no extra privilege is needed"
+      ],
+      "provenance": {
+        "source": "compose",
+        "source_ref": "contrib/docker-compose/basic.yml:2",
+        "confidence": "high"
+      }
+    },
+    {
+      "name": "db",
+      "role": "db",
+      "image": {
+        "registry": "docker.io",
+        "repository": "library/postgres",
+        "tag": "latest",
+        "digest": "",
+        "provenance": {
+          "source": "compose",
+          "source_ref": "contrib/docker-compose/basic.yml:22",
+          "confidence": "high"
+        }
+      },
+      "command": [],
+      "entrypoint": [],
+      "env": [
+        {
+          "key": "POSTGRES_USER",
+          "ref": "POSTGRES_USER",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "contrib/docker-compose/basic.yml:26",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "POSTGRES_PASSWORD",
+          "ref": "POSTGRES_PASSWORD",
+          "literal": "",
+          "required": true,
+          "secret": true,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "contrib/docker-compose/basic.yml:27",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "POSTGRES_DB",
+          "ref": "POSTGRES_DB",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "contrib/docker-compose/basic.yml:28",
+            "confidence": "high"
+          }
+        }
+      ],
+      "ports": [],
+      "volumes": [
+        {
+          "name": "miniflux-db",
+          "container_path": "/var/lib/postgresql",
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "contrib/docker-compose/basic.yml:30",
+            "confidence": "high"
+          }
+        }
+      ],
+      "depends_on": [],
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "pg_isready",
+          "-U",
+          "miniflux"
+        ],
+        "interval": "10s",
+        "timeout": "",
+        "retries": 0,
+        "start_period": "30s",
+        "omitted_reason": "",
+        "provenance": {
+          "source": "compose",
+          "source_ref": "contrib/docker-compose/basic.yml:31",
+          "confidence": "high"
+        }
+      },
+      "user": "",
+      "resources": {
+        "memory_limit": "",
+        "cpus": "",
+        "pids_limit": 0
+      },
+      "notes": [],
+      "provenance": {
+        "source": "compose",
+        "source_ref": "contrib/docker-compose/basic.yml:21",
+        "confidence": "high"
+      }
+    }
+  ],
+  "env_file": [
+    {
+      "key": "DATABASE_URL",
+      "value": "postgres://miniflux:${POSTGRES_PASSWORD}@db/miniflux?sslmode=disable",
+      "generate": "",
+      "secret": true,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "contrib/docker-compose/basic.yml:12",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "RUN_MIGRATIONS",
+      "value": "1",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "contrib/docker-compose/basic.yml:13",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "CREATE_ADMIN",
+      "value": "1",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "contrib/docker-compose/basic.yml:14",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "ADMIN_USERNAME",
+      "value": "admin",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "contrib/docker-compose/basic.yml:15",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "ADMIN_PASSWORD",
+      "value": "",
+      "generate": "password24",
+      "secret": true,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "contrib/docker-compose/basic.yml:16",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "DEBUG",
+      "value": "1",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "contrib/docker-compose/basic.yml:17",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": "miniflux",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "contrib/docker-compose/basic.yml:26",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "value": "",
+      "generate": "hex32",
+      "secret": true,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "contrib/docker-compose/basic.yml:27",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": "miniflux",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "contrib/docker-compose/basic.yml:28",
+        "confidence": "high"
+      }
+    }
+  ],
+  "needs": [],
+  "probe": {
+    "service": "miniflux",
+    "port": 8080,
+    "path": "/",
+    "expect": []
+  },
+  "post_install_notes": [
+    "ADMIN_PASSWORD was generated for you; it is in .env",
+    "POSTGRES_PASSWORD was generated for you; it is in .env"
+  ],
+  "confidence": "high",
+  "evidence": [
+    {
+      "claim": "compose file contrib/docker-compose/basic.yml chosen among 3 upstream compose files",
+      "file": "contrib/docker-compose/basic.yml",
+      "line": 1
+    },
+    {
+      "claim": "app image docker.io/miniflux/miniflux",
+      "file": "contrib/docker-compose/basic.yml",
+      "line": 3
+    }
+  ],
+  "suspicious_instructions": [],
+  "unfilled": [
+    "env_file.DATABASE_URL.description",
+    "env_file.RUN_MIGRATIONS.description",
+    "env_file.CREATE_ADMIN.description",
+    "env_file.ADMIN_USERNAME.description",
+    "env_file.ADMIN_PASSWORD.description",
+    "env_file.DEBUG.description",
+    "env_file.POSTGRES_USER.description",
+    "env_file.POSTGRES_PASSWORD.description",
+    "env_file.POSTGRES_DB.description"
+  ]
+}

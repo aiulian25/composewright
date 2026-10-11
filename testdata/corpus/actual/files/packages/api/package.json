@@ -1,0 +1,77 @@
+{
+  "name": "@actual-app/api",
+  "version": "26.10.0",
+  "description": "An API for Actual",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/actualbudget/actual.git",
+    "directory": "packages/api"
+  },
+  "files": [
+    "@types",
+    "dist",
+    "!@types/**/*.test.d.ts",
+    "!@types/**/*.test.d.ts.map"
+  ],
+  "main": "dist/index.js",
+  "types": "@types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./@types/index.d.ts",
+      "development": "./index.ts",
+      "browser": {
+        "types": "./@types/index.browser.d.ts",
+        "default": "./dist/browser.js"
+      },
+      "default": "./dist/index.js"
+    },
+    "./models": {
+      "types": "./@types/models.d.ts",
+      "development": "./models.ts",
+      "default": "./dist/models.js"
+    }
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./@types/index.d.ts",
+        "browser": {
+          "types": "./@types/index.browser.d.ts",
+          "default": "./dist/browser.js"
+        },
+        "default": "./dist/index.js"
+      },
+      "./models": {
+        "types": "./@types/models.d.ts",
+        "default": "./dist/models.js"
+      }
+    }
+  },
+  "scripts": {
+    "build": "vite build && tsgo --emitDeclarationOnly && vite build --config vite.browser.config.mts",
+    "test": "vitest --run",
+    "e2e": "playwright test",
+    "typecheck": "tsgo -b && tsc-strict"
+  },
+  "dependencies": {
+    "@actual-app/core": "workspace:*",
+    "@actual-app/crdt": "workspace:*",
+    "better-sqlite3": "^13.0.3",
+    "compare-versions": "^6.1.1",
+    "uuid": "^14.0.2"
+  },
+  "devDependencies": {
+    "@actual-app/vite-plugin-peggy": "workspace:*",
+    "@playwright/test": "1.61.1",
+    "@typescript/native-preview": "beta",
+    "rollup-plugin-visualizer": "^7.0.1",
+    "typescript-strict-plugin": "^2.4.4",
+    "vite": "^8.1.5",
+    "vite-plugin-node-polyfills": "patch:vite-plugin-node-polyfills@npm%3A0.28.0#~/.yarn/patches/vite-plugin-node-polyfills-npm-0.28.0-bac39616ee.patch",
+    "vitest": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

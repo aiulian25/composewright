@@ -1,0 +1,7 @@
+{
+  "url": "https://github.com/linuxserver/docker-bookstack",
+  "owner": "linuxserver",
+  "commit": "5e408b3ea77d6bf8f6d57eb1143032a490d59846",
+  "allow_registries": "-",
+  "verdict": "pass"
+}

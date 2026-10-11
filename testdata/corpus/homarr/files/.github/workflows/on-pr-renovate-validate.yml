@@ -1,0 +1,26 @@
+name: "[Renovate] Validate configuration"
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    branches: ["**"]
+    paths: [".github/renovate.json5"]
+
+jobs:
+  renovate-validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    env:
+      # The optional RE2 addon uses V8 APIs; validation can use JavaScript regexes.
+      RENOVATE_X_IGNORE_RE2: "true"
+    steps:
+      - uses: actions/checkout@v7
+        if: "!env.ACT"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: |
+          bun x --package renovate \
+              renovate-config-validator --strict .github/renovate.json5

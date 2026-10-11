@@ -1,0 +1,125 @@
+{
+  "ir_version": "1",
+  "app": {
+    "name": "docker",
+    "summary": "With this application you will not miss content anymore. Click, save, read it when you want. It saves the content you select so that you can read it when you have time.",
+    "upstream_url": "https://github.com/wallabag/docker",
+    "docs_url": ""
+  },
+  "services": [
+    {
+      "name": "docker",
+      "role": "app",
+      "image": {
+        "registry": "docker.io",
+        "repository": "wallabag/wallabag",
+        "tag": "latest",
+        "digest": "",
+        "provenance": {
+          "source": "readme",
+          "source_ref": "README.md:51",
+          "confidence": "medium"
+        }
+      },
+      "command": [],
+      "entrypoint": [],
+      "env": [
+        {
+          "key": "SYMFONY__ENV__DOMAIN_NAME",
+          "ref": "SYMFONY__ENV__DOMAIN_NAME",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "readme",
+            "source_ref": "README.md:51",
+            "confidence": "medium"
+          }
+        }
+      ],
+      "ports": [
+        {
+          "container": 80,
+          "protocol": "tcp",
+          "publish": true,
+          "host_port": 0,
+          "description": "",
+          "provenance": {
+            "source": "readme",
+            "source_ref": "README.md:51",
+            "confidence": "medium"
+          }
+        }
+      ],
+      "volumes": [],
+      "depends_on": [],
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "curl --fail --silent --show-error --user-agent healthcheck http://localhost/api/info || exit 1"
+        ],
+        "interval": "",
+        "timeout": "",
+        "retries": 0,
+        "start_period": "",
+        "omitted_reason": "",
+        "provenance": {
+          "source": "dockerfile",
+          "source_ref": "Dockerfile:87",
+          "confidence": "medium"
+        }
+      },
+      "user": "",
+      "resources": {
+        "memory_limit": "",
+        "cpus": "",
+        "pids_limit": 0
+      },
+      "notes": [],
+      "provenance": {
+        "source": "readme",
+        "source_ref": "README.md:51",
+        "confidence": "medium"
+      }
+    }
+  ],
+  "env_file": [
+    {
+      "key": "SYMFONY__ENV__DOMAIN_NAME",
+      "value": "http://localhost",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "README.md:51",
+        "confidence": "medium"
+      }
+    }
+  ],
+  "needs": [],
+  "probe": {
+    "service": "docker",
+    "port": 80,
+    "path": "/",
+    "expect": []
+  },
+  "post_install_notes": [
+    "Default login is wallabag:wallabag. (README.md:13)"
+  ],
+  "confidence": "medium",
+  "evidence": [
+    {
+      "claim": "documented docker run command",
+      "file": "README.md",
+      "line": 51
+    }
+  ],
+  "suspicious_instructions": [],
+  "unfilled": [
+    "env_file.SYMFONY__ENV__DOMAIN_NAME.description"
+  ]
+}

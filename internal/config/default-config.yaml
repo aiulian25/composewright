@@ -1,0 +1,63 @@
+# composewright configuration. `composewright config show` prints every key.
+# Change values with:
+#   composewright config set <key> <value>
+listen: "127.0.0.1:8484"
+data_dir: ""                 # empty: --data-dir, COMPOSEWRIGHT_DATA_DIR, then $XDG_DATA_HOME/composewright
+master_key_file: ""          # empty: <data_dir>/keys/master.key (COMPOSEWRIGHT_MASTER_KEY_FILE overrides)
+docker:
+  host: ""                   # empty: DOCKER_HOST, then the active docker context
+  cli_path: ""               # empty: `docker` found on PATH
+  sandbox_tier: policy       # policy | rootless | proxy | runsc (see `composewright doctor`)
+  validate:
+    timeout: 5m0s
+    memory_limit: 2g         # upper bound per sandboxed service
+    cpus: 2
+    pids_limit: 512
+    max_iterations: 3
+llm:
+  engine: rules              # rules (no model) | assisted (a model fills what the rules leave open) | model (a model drafts the plan)
+  provider: ollama           # anthropic | openai_compatible | ollama | none
+  base_url: http://127.0.0.1:11434
+  model: qwen2.5-coder:14b
+  api_key_ref: keyring:llm   # keyring:<name> (encrypted in the database) or env:<VARIABLE>
+  max_input_tokens: 8000      # prompt budget; README sections fill what facts leave; raise it for cloud models
+registries:
+  allow:
+    - docker.io/library/*
+    - ghcr.io/*              # host-wide patterns are narrowed to the repository owner's namespace
+    - lscr.io/linuxserver/*
+    - quay.io/*
+    - docker.io/valkey/*     # the Valkey project's own images, a common cache sidecar
+scm:
+  allow_hosts:
+    - github.com
+    - api.github.com
+    - codeload.github.com
+  github_token_ref: ""       # optional keyring:<name> or env:<VARIABLE>; raises the GitHub API limit from 60 to 5000 requests per hour
+network:
+  allow_private_targets: []  # explicit opt-in for LAN or loopback services, e.g. ["192.168.1.10:3000"]
+  update_check: false        # must stay false: `composewright version --check` is the only update check
+ui:
+  auth_required: true
+  session_ttl: 12h0m0s
+  theme: dark                # dark (default) | light | system
+profile:
+  networks: []               # existing external networks, e.g. {name: npm_default, kind: proxy, provider: npm, default: true, domain: apps.example.com}
+  storage:
+    style: volumes           # volumes | bind
+    base_path: ""            # required for bind, e.g. /srv/docker
+    layout: "{base}/{project}/{volume}"
+    owner: "1000:1000"
+    save_dir: "{base}/{project}"
+  defaults:
+    tz: ""                   # e.g. Europe/London; added only to images that document TZ
+    puid: 1000               # added only to images that document PUID/PGID
+    pgid: 1000
+    restart: unless-stopped
+    domain_suffix: ""        # e.g. home.arpa: URL variables are pre-filled as http://<project>.<suffix>
+    log_max_size: 10m
+    log_max_file: 3
+    memory_limit: 512m       # every service gets at least this; a plan raises it for images that need more
+    cpus: 1
+    pids_limit: 256
+  registry_mirror: ""

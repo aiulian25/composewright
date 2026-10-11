@@ -1,0 +1,64 @@
+---
+title: "Troubleshooting"
+description: "Common issues and solutions"
+---
+
+## Login fails with `403 CSRF verification failed`
+
+This can be the case when using a reverse proxy that rewrites the `Host` header, such as Nginx.
+Since linkding version 1.15, the application includes a CSRF check that verifies that the `Origin` request header matches the `Host` header.
+If the `Host` header is modified by the reverse proxy then this check fails.
+
+To fix this, check the [reverse proxy setup documentation](/installation#reverse-proxy-setup) on how to configure header forwarding for your proxy server, or alternatively configure the  [`LD_CSRF_TRUSTED_ORIGINS` option](/options#ld_csrf_trusted_origins) to the URL from which you are accessing your linkding instance.
+
+## API clients fail to authenticate when using an authentication proxy
+
+When you have enabled authentication proxy support with the [`LD_ENABLE_AUTH_PROXY` option](/options#ld_enable_auth_proxy), API clients such as the browser extension or a mobile app may fail to connect, even though the API token is configured correctly. Depending on your setup, requests may be answered with a redirect to the login page of your auth proxy, or fail with a `401` or `403` error.
+
+The reason is that the auth proxy intercepts requests before they reach linkding, and API clients can not complete the browser-based authentication flow that the proxy expects. They authenticate with an API token instead.
+
+To fix this, configure your reverse proxy to let external API requests bypass the authentication proxy. See the *Using REST API clients* note in the [`LD_ENABLE_AUTH_PROXY` documentation](/options#ld_enable_auth_proxy).
+
+## Automatically detected title and description are incorrect
+
+linkding automatically fetches the title and description of the web page from the metadata in the HTML `<head>`. By default, this happens on the server, which can return different results than what you see in your browser, for example, if a website uses JavaScript to dynamically change the title or description, or if a website requires login. Alternatively, both the browser extension and the bookmarklet can use the metadata directly from the page you are currently viewing in your browser. Note that for some websites this can give worse results, as not all websites correctly update the metadata in `<head>` while browsing the website (which is why fetching a fresh page on the server is still the default).
+
+To use the title and description that you see in your browser:
+- When using the linkding browser extension, enable the *Use browser metadata* option in the options of the extension.
+- When adding the bookmarklet, the respective settings page allows you to choose whether to detect title and description from the server or in the browser.
+
+## Archiving fails for certain websites
+
+When using the server-based archiving feature (available in the `latest-plus` Docker image), you may encounter issues with certain websites where snapshots fail to capture the web page contents correctly.
+Common issues include the website showing a bot detection page, a login screen, or some banner that blocks the content.
+In rare cases taking a snapshot may also time out.
+
+There are some options to mitigate these issues:
+- To capture web page contents exactly as they appear in your browser, use the [Singlefile browser extension](/archiving#using-the-singlefile-browser-extension) or the [linkding browser extension](/archiving#using-the-linkding-browser-extension) with Singlefile integration.
+- You can pass custom options to the SingleFile CLI, which linkding uses to capture web pages on the server, using the [`LD_SINGLEFILE_OPTIONS`](/options#ld_singlefile_options) environment variable. For example, changing the user agent might help with some bot detection systems.
+- If snapshots are timing out, you can increase the timeout by setting the [`LD_SINGLEFILE_TIMEOUT_SEC`](/options#ld_singlefile_timeout_sec) environment variable to a higher value.
+
+Check the [archiving documentation](/archiving) for more information on how to archive web pages with linkding.
+
+## URL validation fails for seemingly valid URLs
+
+When adding a bookmark, you may encounter URL validation errors even for URLs that seem valid and work in your browser. This is because linkding uses Django's URL validator, which has some limitations in what it considers a valid URL.
+
+Common cases that may fail validation:
+- Domains that contain an underscore
+- URLs without a top-level domain
+- URLs with a non-standard protocol (e.g. `chrome://`)
+
+If you need to store URLs that don't pass the default validation, you can disable URL validation completely by setting the `LD_DISABLE_URL_VALIDATION` option to `True`. See the [options documentation](/options#ld_disable_url_validation) for how to configure this setting.
+
+Further info:
+- https://github.com/sissbruecker/linkding/issues/206
+- https://code.djangoproject.com/ticket/18517
+
+## No title, description or preview image for URLs on the local network
+
+By default, linkding does not load website metadata, preview images or PDF snapshots for URLs that point to hosts on internal networks, for example `http://nas.local:5000` or `http://192.168.1.20`.
+This is a security measure to prevent users from using linkding to access internal services, see [`LD_ALLOWED_INTERNAL_HOSTS`](/options#ld_allowed_internal_hosts).
+Blocked requests are logged as warnings in the application logs.
+
+If you want linkding to load metadata for such URLs, add the respective hosts to the `LD_ALLOWED_INTERNAL_HOSTS` option, or set it to `*` to allow all hosts.

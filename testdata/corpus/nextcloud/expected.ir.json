@@ -1,0 +1,396 @@
+{
+  "ir_version": "1",
+  "app": {
+    "name": "docker",
+    "summary": "A safe home for all your data. Access \u0026 share your files, calendars, contacts, mail \u0026 more from any device, on your terms.",
+    "upstream_url": "https://github.com/nextcloud/docker",
+    "docs_url": ""
+  },
+  "services": [
+    {
+      "name": "db",
+      "role": "db",
+      "image": {
+        "registry": "docker.io",
+        "repository": "library/postgres",
+        "tag": "latest",
+        "digest": "",
+        "provenance": {
+          "source": "compose",
+          "source_ref": "stack.yml:5",
+          "confidence": "high"
+        }
+      },
+      "command": [],
+      "entrypoint": [],
+      "env": [
+        {
+          "key": "POSTGRES_DB",
+          "ref": "POSTGRES_DB",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "stack.yml:10",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "POSTGRES_USER",
+          "ref": "POSTGRES_USER",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "stack.yml:11",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "POSTGRES_PASSWORD",
+          "ref": "POSTGRES_PASSWORD",
+          "literal": "",
+          "required": true,
+          "secret": true,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "stack.yml:12",
+            "confidence": "high"
+          }
+        }
+      ],
+      "ports": [],
+      "volumes": [
+        {
+          "name": "db",
+          "container_path": "/var/lib/postgresql",
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "stack.yml:8",
+            "confidence": "high"
+          }
+        }
+      ],
+      "depends_on": [],
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "pg_isready -U \"$${POSTGRES_USER:-postgres}\""
+        ],
+        "interval": "10s",
+        "timeout": "5s",
+        "retries": 5,
+        "start_period": "30s",
+        "omitted_reason": "",
+        "provenance": {
+          "source": "healthcheck_catalogue",
+          "source_ref": "",
+          "confidence": "medium"
+        }
+      },
+      "user": "",
+      "resources": {
+        "memory_limit": "",
+        "cpus": "",
+        "pids_limit": 0
+      },
+      "notes": [
+        "upstream mounts db at /var/lib/postgresql/data; this version of the image keeps its data in /var/lib/postgresql, so it is mounted there"
+      ],
+      "provenance": {
+        "source": "compose",
+        "source_ref": "stack.yml:4",
+        "confidence": "high"
+      }
+    },
+    {
+      "name": "app",
+      "role": "app",
+      "image": {
+        "registry": "docker.io",
+        "repository": "library/nextcloud",
+        "tag": "latest",
+        "digest": "",
+        "provenance": {
+          "source": "compose",
+          "source_ref": "stack.yml:15",
+          "confidence": "high"
+        }
+      },
+      "command": [],
+      "entrypoint": [],
+      "env": [
+        {
+          "key": "POSTGRES_HOST",
+          "ref": "POSTGRES_HOST",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "stack.yml:22",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "POSTGRES_DB",
+          "ref": "POSTGRES_DB",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "stack.yml:23",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "POSTGRES_USER",
+          "ref": "POSTGRES_USER",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "stack.yml:24",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "POSTGRES_PASSWORD",
+          "ref": "POSTGRES_PASSWORD",
+          "literal": "",
+          "required": true,
+          "secret": true,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "stack.yml:25",
+            "confidence": "high"
+          }
+        }
+      ],
+      "ports": [
+        {
+          "container": 80,
+          "protocol": "tcp",
+          "publish": true,
+          "host_port": 8080,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "stack.yml:18",
+            "confidence": "high"
+          }
+        }
+      ],
+      "volumes": [
+        {
+          "name": "nextcloud",
+          "container_path": "/var/www/html",
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "stack.yml:20",
+            "confidence": "high"
+          }
+        }
+      ],
+      "depends_on": [
+        {
+          "service": "db",
+          "condition": "service_healthy"
+        }
+      ],
+      "healthcheck": {
+        "test": [],
+        "interval": "",
+        "timeout": "",
+        "retries": 0,
+        "start_period": "",
+        "omitted_reason": "",
+        "provenance": {
+          "source": "default",
+          "source_ref": "",
+          "confidence": "low"
+        }
+      },
+      "user": "",
+      "resources": {
+        "memory_limit": "",
+        "cpus": "",
+        "pids_limit": 0
+      },
+      "notes": [],
+      "provenance": {
+        "source": "compose",
+        "source_ref": "stack.yml:14",
+        "confidence": "high"
+      }
+    },
+    {
+      "name": "cron",
+      "role": "worker",
+      "image": {
+        "registry": "docker.io",
+        "repository": "library/nextcloud",
+        "tag": "latest",
+        "digest": "",
+        "provenance": {
+          "source": "compose",
+          "source_ref": "stack.yml:30",
+          "confidence": "high"
+        }
+      },
+      "command": [],
+      "entrypoint": [
+        "/cron.sh"
+      ],
+      "env": [],
+      "ports": [],
+      "volumes": [
+        {
+          "name": "nextcloud",
+          "container_path": "/var/www/html",
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "stack.yml:33",
+            "confidence": "high"
+          }
+        }
+      ],
+      "depends_on": [
+        {
+          "service": "db",
+          "condition": "service_healthy"
+        }
+      ],
+      "healthcheck": {
+        "test": [],
+        "interval": "",
+        "timeout": "",
+        "retries": 0,
+        "start_period": "",
+        "omitted_reason": "",
+        "provenance": {
+          "source": "default",
+          "source_ref": "",
+          "confidence": "low"
+        }
+      },
+      "user": "",
+      "resources": {
+        "memory_limit": "",
+        "cpus": "",
+        "pids_limit": 0
+      },
+      "notes": [],
+      "provenance": {
+        "source": "compose",
+        "source_ref": "stack.yml:29",
+        "confidence": "high"
+      }
+    }
+  ],
+  "env_file": [
+    {
+      "key": "POSTGRES_DB",
+      "value": "nextcloud",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "stack.yml:10",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": "nextcloud",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "stack.yml:11",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "value": "",
+      "generate": "hex32",
+      "secret": true,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "stack.yml:12",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "POSTGRES_HOST",
+      "value": "db",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "stack.yml:22",
+        "confidence": "high"
+      }
+    }
+  ],
+  "needs": [],
+  "probe": {
+    "service": "app",
+    "port": 80,
+    "path": "/",
+    "expect": []
+  },
+  "post_install_notes": [
+    "The default user within a container is root (uid = 0). By default, processes inside the container will expect to have root privileges. Network services will drop privileges and use www-data to serve requests. (README.md:186)",
+    "Depending on your volumes configuration, this can lead to permission issues. You can address this by running the container with a different default user. When changing the default user, the image will no longer assume it has root privileges and will run all processes under the specified uid. To accomplish this, use the --user / user option in your container environment. (README.md:188)",
+    "POSTGRES_PASSWORD was generated for you; it is in .env"
+  ],
+  "confidence": "high",
+  "evidence": [
+    {
+      "claim": "compose file stack.yml chosen among 9 upstream compose files",
+      "file": "stack.yml",
+      "line": 1
+    },
+    {
+      "claim": "app image docker.io/library/nextcloud",
+      "file": "stack.yml",
+      "line": 15
+    }
+  ],
+  "suspicious_instructions": [],
+  "unfilled": [
+    "services.1.healthcheck",
+    "env_file.POSTGRES_DB.description",
+    "env_file.POSTGRES_USER.description",
+    "env_file.POSTGRES_PASSWORD.description",
+    "env_file.POSTGRES_HOST.description"
+  ]
+}

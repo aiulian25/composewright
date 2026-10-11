@@ -1,0 +1,7 @@
+{
+  "url": "https://github.com/wallabag/docker",
+  "owner": "wallabag",
+  "commit": "480d3833bc44c555b6ee76491635fef84ec7dd86",
+  "allow_registries": "-",
+  "verdict": "pass"
+}

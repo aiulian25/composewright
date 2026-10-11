@@ -1,0 +1,18 @@
+{{define "content"}}
+<section class="auth-card" aria-labelledby="forgot-title">
+  <h1 id="forgot-title">Forgot your password?</h1>
+  <p class="auth-intro">composewright sends no email, so a new password is set on the machine it runs on.</p>
+  <ol class="auth-steps">
+    <li>
+      <p>Open a terminal there and run:</p>
+      <p class="auth-command"><code id="reset-command">composewright password</code><button class="button button-small" type="button" data-copy-target="reset-command">Copy</button></p>
+      <p>If composewright runs in Docker, run it in the container, with your container's name:</p>
+      <p class="auth-command"><code id="reset-in-docker">docker exec -it composewright composewright password</code><button class="button button-small" type="button" data-copy-target="reset-in-docker">Copy</button></p>
+    </li>
+    <li><p>Type the new password twice. The command shows your username and signs every browser out.</p></li>
+    <li><p>Sign in with the new password.</p></li>
+  </ol>
+  <p class="muted small">Run it as the user composewright runs as, with the same <code class="nowrap">--config</code> and <code class="nowrap">--data-dir</code> if you gave it any.</p>
+  <a class="button button-large" href="/login">{{template "icon-arrow-left"}}Back to sign in</a>
+</section>
+{{end}}

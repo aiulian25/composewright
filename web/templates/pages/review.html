@@ -1,0 +1,148 @@
+{{define "actions"}}
+{{with .Data}}
+<a class="button button-ghost" href="/projects/{{.Project.Name}}/plan.json" target="_blank" rel="noopener">{{template "icon-braces"}}JSON</a>
+<button class="button button-primary" type="submit" form="review-form" name="action" value="validate"{{if .Blocked}} disabled{{end}} data-shortcut="run">{{template "icon-play"}}Run test <span class="kbd">Ctrl Enter</span></button>
+{{end}}
+{{end}}
+
+{{define "content"}}
+{{$csrf := .CSRF}}
+{{with .Data}}
+<div class="page-head">
+  <h1>{{.Project.Name}}</h1>
+  <span class="chip chip-{{.Tones.Confidence}}">confidence {{.Confidence}}</span>
+  <span class="chip chip-{{.Tones.Policy}}">{{.PolicyText}}</span>
+  {{if .Warnings}}<span class="chip chip-warn">{{plural .Warnings "warning" "warnings"}}</span>{{end}}
+  <span class="chip chip-neutral">engine: {{.Engine}}</span>
+  {{if .Edited}}<span class="chip chip-accent">{{template "icon-pencil"}}compose.yaml edited by you</span>{{end}}
+  <button class="button button-small push-right" type="submit" form="review-form" name="action" value="apply">Apply changes</button>
+</div>
+{{if .Running}}<p class="banner banner-info" role="status">A sandbox run is going. <a href="{{.Running}}">Watch it</a></p>{{end}}
+{{if .LastFailure}}<p class="banner banner-danger" role="status">The last test failed with {{.LastFailure}}. <a href="/projects/{{.Project.Name}}/validate">See why, with the logs</a>.{{if .ChangedSince}} You have changed the plan since; run the test again to check it.{{end}}</p>{{end}}
+{{range .Notices}}<p class="banner banner-warn" role="status">{{.}}</p>{{end}}
+{{if .Edited}}<p class="banner banner-info" role="note">The test runs your edited compose.yaml. Changing an option below renders a new file from the plan; your version stays in the history.</p>{{end}}
+
+<form id="review-form" class="stack" method="post" action="/projects/{{.Project.Name}}/review">
+  <input type="hidden" name="csrf" value="{{$csrf}}">
+  <button class="visually-hidden" type="submit" name="action" value="apply" tabindex="-1" aria-hidden="true">Apply changes</button>
+  {{range .Registries}}<input type="hidden" name="registry" value="{{.}}">{{end}}
+  <div class="columns">
+    <section class="card" aria-labelledby="expose-title">
+      <div class="card-head"><h2 id="expose-title">{{template "icon-network"}}Expose via</h2></div>
+      <fieldset class="option-list">
+        <legend class="option-group">Networks it joins</legend>
+        {{range .Networks}}<label class="option"><input type="checkbox" name="network" value="{{.Value}}"{{if .Selected}} checked{{end}}><span class="option-text"><span class="option-name">{{.Label}}</span><span class="option-sub">{{.Sub}}</span></span></label>{{else}}<p class="option-empty">None in your profile yet. <a href="/settings?section=profile#networks">Add your proxy or tunnel networks</a>.</p>{{end}}
+      </fieldset>
+      <fieldset class="option-list">
+        <legend class="option-group">Ports</legend>
+        {{range .Expose}}<label class="option"><input type="radio" name="expose" value="{{.Value}}"{{if .Selected}} checked{{end}}><span class="option-text"><span class="option-name">{{.Label}}</span><span class="option-sub">{{.Sub}}</span></span></label>{{end}}
+      </fieldset>
+    </section>
+    <section class="card" aria-labelledby="storage-title">
+      <div class="card-head"><h2 id="storage-title">{{template "icon-drive"}}Storage</h2><span class="chip chip-accent push-right">profile</span></div>
+      <fieldset class="option-list">
+        <legend class="visually-hidden">Storage</legend>
+        {{range .Storage}}<label class="option{{if .Disabled}} option-off{{end}}"><input type="radio" name="storage" value="{{.Value}}"{{if .Selected}} checked{{end}}{{if .Disabled}} disabled{{end}}><span class="option-text"><span class="option-name">{{.Label}}</span><span class="option-sub">{{.Sub}}</span></span></label>{{end}}
+      </fieldset>
+    </section>
+    <section class="card" aria-labelledby="needs-title">
+      <div class="card-head"><h2 id="needs-title">{{template "icon-shield"}}Needs</h2>{{if .Needed}}<span class="chip chip-danger push-right">{{plural .Needed "request" "requests"}}</span>{{else}}<span class="chip chip-ok push-right">none requested</span>{{end}}</div>
+      <fieldset class="option-list">
+        <legend class="visually-hidden">Privileges you grant</legend>
+        {{range .Needs}}<label class="option{{if not .Requested}} option-off{{end}}"><input type="checkbox" name="need" value="{{.Capability}}"{{if .Granted}} checked{{end}}{{if not .Requested}} disabled{{end}}><span class="option-text"><span>{{.Label}}</span>{{if .Requested}}<span class="option-sub">{{.Service}}: {{.Reason}}</span>{{end}}</span></label>{{end}}
+      </fieldset>
+      <p class="card-body muted small">Grant only with a reason. The policy gate blocks the rest, and a model can never grant one.</p>
+    </section>
+  </div>
+
+  <section class="card" aria-labelledby="env-title">
+    <div class="card-head">
+      <h2 id="env-title">{{template "icon-env"}}Environment</h2>
+      <span class="row push-right">
+        <span class="chip">{{plural .Variables "variable" "variables"}}</span>
+        <span class="chip">{{plural .Secrets "secret" "secrets"}}</span>
+        {{if .Questions}}<span class="chip chip-accent">{{plural .Questions "question" "questions"}}</span>{{end}}
+        {{if not .Revealed}}<button class="button button-small" type="submit" form="reveal-form">{{template "icon-eye"}}Reveal secrets</button>{{end}}
+      </span>
+    </div>
+    <div class="table-scroll">
+      <table class="table">
+        <thead><tr><th scope="col">Key</th><th scope="col">Value</th><th scope="col">Source</th><th scope="col">Confidence</th></tr></thead>
+        <tbody>
+          {{range .Env}}
+          <tr{{if .Question}} class="row-question"{{end}}>
+            <th scope="row" class="mono">{{.Key}}{{if .Description}}<span class="block muted small">{{.Description}}</span>{{end}}</th>
+            <td>
+              {{if eq .Kind "generated"}}
+              <span class="secret">{{if $.Data.Revealed}}<code>{{.Value}}</code>{{else}}<span class="secret-dots" aria-label="hidden">••••••••••••</span>{{end}}<span class="chip">{{template "icon-key"}}generated</span><button class="button button-small" type="submit" name="regenerate" value="{{.Key}}">Regenerate</button></span>
+              {{else if eq .Kind "supplied"}}
+              <input class="mono" type="password" name="secret:{{.Key}}" autocomplete="new-password" aria-label="{{.Key}} value" placeholder="{{if .Stored}}stored; type to replace{{else}}you supply this{{end}}">
+              {{if and $.Data.Revealed .Stored}}<code class="block">{{.Value}}</code>{{end}}
+              {{else}}
+              <input class="mono inline-input" type="text" name="value:{{.Key}}" value="{{.Value}}" aria-label="{{.Key}} value" spellcheck="false">
+              {{end}}
+            </td>
+            <td><span class="source" title="{{.Source}}">{{if .Badge}}<span class="badge badge-{{.BadgeTone}}">{{.Badge}}</span>{{end}}{{.SourceShort}}</span></td>
+            <td>{{template "confidence" .Confidence}}</td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+    <div class="card-foot">
+      <label class="visually-hidden" for="add-key">New variable name</label>
+      <input class="mono" id="add-key" name="add-key" type="text" placeholder="NEW_VARIABLE" pattern="[A-Za-z_][A-Za-z0-9_]*" autocomplete="off" spellcheck="false">
+      <label class="visually-hidden" for="add-value">Value</label>
+      <input class="mono grow" id="add-value" name="add-value" type="text" placeholder="value; names with PASSWORD, TOKEN or KEY are stored as secrets" autocomplete="off" spellcheck="false">
+      <button class="button button-small" type="submit" name="action" value="apply">{{template "icon-plus"}}Add</button>
+    </div>
+  </section>
+
+  {{if or .Findings .TrustOffers}}
+  <section class="card" aria-labelledby="findings-title">
+    <div class="card-head"><h2 id="findings-title">{{template "icon-warning"}}Policy findings</h2><span class="note">{{plural (len .Findings) "finding" "findings"}}</span></div>
+    {{range .Findings}}<div class="finding finding-{{.Tone}}"><span class="finding-rule">{{.Rule}} · {{.Label}}{{if .Service}} · {{.Service}}{{end}}</span><span>{{.Message}}</span>{{if .Line}}<a class="finding-where" href="?pane=compose&amp;edit={{.Line}}" data-edit-line="{{.Line}}">{{template "icon-pencil"}}<span>Edit line {{.Line}} of compose.yaml</span><code>{{.Code}}</code></a>{{end}}</div>{{end}}
+    {{if .TrustOffers}}<div class="card-foot">{{range .TrustOffers}}<button class="button button-small" type="submit" name="trust" value="{{.}}">{{template "icon-shield"}}Trust {{.}} for this project</button>{{end}}</div>{{end}}
+  </section>
+  {{end}}
+
+  {{if .Notes}}
+  <section class="card" aria-labelledby="notes-title">
+    <div class="card-head"><h2 id="notes-title">{{template "icon-book"}}Notes for deployment</h2></div>
+    <ul class="notes card-body">{{range .Notes}}<li>{{.}}</li>{{end}}</ul>
+  </section>
+  {{end}}
+</form>
+<form id="reveal-form" method="post" action="/projects/{{.Project.Name}}/reveal">
+  <input type="hidden" name="csrf" value="{{$csrf}}">
+  <input type="hidden" name="view" value="review">
+</form>
+{{end}}
+{{end}}
+
+{{define "context"}}
+{{$csrf := .CSRF}}
+{{with .Data}}
+<div class="tabs" role="tablist" aria-label="Files" data-tabs>
+  <a class="tab" role="tab" href="?pane=compose" aria-selected="{{eq .Pane "compose"}}" data-tab="compose">{{template "icon-file"}}compose.yaml</a>
+  <a class="tab" role="tab" href="?pane=env" aria-selected="{{eq .Pane "env"}}" data-tab="env">.env</a>
+  <a class="tab" role="tab" href="?pane=deploy" aria-selected="{{eq .Pane "deploy"}}" data-tab="deploy">DEPLOY.md</a>
+  <span class="tabs-actions"><a class="button button-small button-dark" href="?pane=compose&amp;edit" data-edit-compose>{{template "icon-pencil"}}Edit</a></span>
+</div>
+<div class="tab-panel" data-panel="compose"{{if ne .Pane "compose"}} hidden{{end}}>
+  <div class="code" data-compose-view{{if .Draft}} hidden{{end}}>{{template "code-lines" .Compose}}</div>
+  <form class="context-editor" method="post" action="/projects/{{.Project.Name}}/compose" data-compose-editor{{if not .Draft}} hidden{{end}}>
+    <input type="hidden" name="csrf" value="{{$csrf}}">
+    <div class="editor" data-editor><pre class="editor-lines" aria-hidden="true">1</pre><textarea name="compose" spellcheck="false" autocomplete="off" aria-label="compose.yaml">{{if .Draft}}{{.Draft}}{{else}}{{.ComposeText}}{{end}}</textarea></div>
+    <div class="editor-bar">
+      <button class="button button-primary button-small" type="submit">Save and check</button>
+      <a class="button button-small button-dark" href="?pane=compose" data-edit-cancel>Cancel</a>
+      <span>Saved as a new version. Both policy gates check it, and the test runs exactly this file.</span>
+    </div>
+  </form>
+  {{template "legend"}}
+</div>
+<div class="tab-panel" data-panel="env"{{if ne .Pane "env"}} hidden{{end}}><div class="code">{{template "code-lines" .EnvLines}}</div></div>
+<div class="tab-panel" data-panel="deploy"{{if ne .Pane "deploy"}} hidden{{end}}><div class="code">{{template "code-lines" .DeployLines}}</div></div>
+{{end}}
+{{end}}

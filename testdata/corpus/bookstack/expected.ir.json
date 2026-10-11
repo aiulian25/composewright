@@ -1,0 +1,554 @@
+{
+  "ir_version": "1",
+  "app": {
+    "name": "docker-bookstack",
+    "summary": "The LinuxServer.io team brings you another container release featuring:",
+    "upstream_url": "https://github.com/linuxserver/docker-bookstack",
+    "docs_url": ""
+  },
+  "services": [
+    {
+      "name": "docker-bookstack",
+      "role": "app",
+      "image": {
+        "registry": "lscr.io",
+        "repository": "linuxserver/bookstack",
+        "tag": "latest",
+        "digest": "",
+        "provenance": {
+          "source": "readme",
+          "source_ref": "README.md:51",
+          "confidence": "medium"
+        }
+      },
+      "command": [],
+      "entrypoint": [],
+      "env": [
+        {
+          "key": "PUID",
+          "ref": "PUID",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "readme",
+            "source_ref": "README.md:144",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "PGID",
+          "ref": "PGID",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "readme",
+            "source_ref": "README.md:144",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "TZ",
+          "ref": "TZ",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "readme",
+            "source_ref": "README.md:144",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "APP_URL",
+          "ref": "APP_URL",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "readme",
+            "source_ref": "README.md:144",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "APP_KEY",
+          "ref": "APP_KEY",
+          "literal": "",
+          "required": true,
+          "secret": true,
+          "description": "",
+          "provenance": {
+            "source": "readme",
+            "source_ref": "README.md:144",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "DB_HOST",
+          "ref": "DB_HOST",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "readme",
+            "source_ref": "README.md:144",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "DB_PORT",
+          "ref": "DB_PORT",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "readme",
+            "source_ref": "README.md:144",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "DB_USERNAME",
+          "ref": "DB_USERNAME",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "readme",
+            "source_ref": "README.md:144",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "DB_PASSWORD",
+          "ref": "DB_PASSWORD",
+          "literal": "",
+          "required": true,
+          "secret": true,
+          "description": "",
+          "provenance": {
+            "source": "readme",
+            "source_ref": "README.md:144",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "DB_DATABASE",
+          "ref": "DB_DATABASE",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "readme",
+            "source_ref": "README.md:144",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "QUEUE_CONNECTION",
+          "ref": "QUEUE_CONNECTION",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "readme",
+            "source_ref": "README.md:144",
+            "confidence": "medium"
+          }
+        }
+      ],
+      "ports": [
+        {
+          "container": 80,
+          "protocol": "tcp",
+          "publish": true,
+          "host_port": 6875,
+          "description": "",
+          "provenance": {
+            "source": "readme",
+            "source_ref": "README.md:144",
+            "confidence": "medium"
+          }
+        }
+      ],
+      "volumes": [
+        {
+          "name": "config",
+          "container_path": "/config",
+          "description": "",
+          "provenance": {
+            "source": "readme",
+            "source_ref": "README.md:144",
+            "confidence": "medium"
+          }
+        }
+      ],
+      "depends_on": [
+        {
+          "service": "mariadb",
+          "condition": "service_healthy"
+        }
+      ],
+      "healthcheck": {
+        "test": [],
+        "interval": "",
+        "timeout": "",
+        "retries": 0,
+        "start_period": "",
+        "omitted_reason": "",
+        "provenance": {
+          "source": "default",
+          "source_ref": "",
+          "confidence": "low"
+        }
+      },
+      "user": "",
+      "resources": {
+        "memory_limit": "",
+        "cpus": "",
+        "pids_limit": 0
+      },
+      "notes": [
+        "DB_HOST was left for a database you run; the stack runs docker.io/library/mariadb:11.8 as mariadb and points DB_HOST at it"
+      ],
+      "provenance": {
+        "source": "readme",
+        "source_ref": "README.md:51",
+        "confidence": "medium"
+      }
+    },
+    {
+      "name": "mariadb",
+      "role": "db",
+      "image": {
+        "registry": "docker.io",
+        "repository": "library/mariadb",
+        "tag": "11.8",
+        "digest": "",
+        "provenance": {
+          "source": "sidecar_rule",
+          "source_ref": "",
+          "confidence": "medium"
+        }
+      },
+      "command": [],
+      "entrypoint": [],
+      "env": [
+        {
+          "key": "MARIADB_USER",
+          "ref": "DB_USERNAME",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "sidecar_rule",
+            "source_ref": "",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "MARIADB_PASSWORD",
+          "ref": "DB_PASSWORD",
+          "literal": "",
+          "required": true,
+          "secret": true,
+          "description": "",
+          "provenance": {
+            "source": "sidecar_rule",
+            "source_ref": "",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "MARIADB_DATABASE",
+          "ref": "DB_DATABASE",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "sidecar_rule",
+            "source_ref": "",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "MARIADB_ROOT_PASSWORD",
+          "ref": "MARIADB_ROOT_PASSWORD",
+          "literal": "",
+          "required": true,
+          "secret": true,
+          "description": "",
+          "provenance": {
+            "source": "sidecar_rule",
+            "source_ref": "",
+            "confidence": "medium"
+          }
+        }
+      ],
+      "ports": [],
+      "volumes": [
+        {
+          "name": "mariadb-data",
+          "container_path": "/var/lib/mysql",
+          "description": "mariadb data",
+          "provenance": {
+            "source": "sidecar_rule",
+            "source_ref": "",
+            "confidence": "medium"
+          }
+        }
+      ],
+      "depends_on": [],
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "healthcheck.sh",
+          "--connect",
+          "--innodb_initialized"
+        ],
+        "interval": "10s",
+        "timeout": "5s",
+        "retries": 5,
+        "start_period": "30s",
+        "omitted_reason": "",
+        "provenance": {
+          "source": "healthcheck_catalogue",
+          "source_ref": "",
+          "confidence": "medium"
+        }
+      },
+      "user": "",
+      "resources": {
+        "memory_limit": "",
+        "cpus": "",
+        "pids_limit": 0
+      },
+      "notes": [],
+      "provenance": {
+        "source": "sidecar_rule",
+        "source_ref": "",
+        "confidence": "medium"
+      }
+    }
+  ],
+  "env_file": [
+    {
+      "key": "PUID",
+      "value": "1000",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "README.md:144",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "PGID",
+      "value": "1000",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "README.md:144",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "TZ",
+      "value": "Etc/UTC",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "README.md:144",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "APP_URL",
+      "value": "http://localhost:6875",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "default",
+        "source_ref": "README.md:144",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "APP_KEY",
+      "value": "",
+      "generate": "laravel_key",
+      "secret": true,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "README.md:144",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "DB_HOST",
+      "value": "mariadb",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "sidecar_rule",
+        "source_ref": "README.md:144",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "DB_PORT",
+      "value": "3306",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "README.md:144",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "DB_USERNAME",
+      "value": "bookstack",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "sidecar_rule",
+        "source_ref": "README.md:144",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "DB_PASSWORD",
+      "value": "",
+      "generate": "hex32",
+      "secret": true,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "README.md:144",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "DB_DATABASE",
+      "value": "bookstack",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "sidecar_rule",
+        "source_ref": "README.md:144",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "QUEUE_CONNECTION",
+      "value": "",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "readme",
+        "source_ref": "README.md:144",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "MARIADB_ROOT_PASSWORD",
+      "value": "",
+      "generate": "hex32",
+      "secret": true,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "sidecar_rule",
+        "source_ref": "",
+        "confidence": "medium"
+      }
+    }
+  ],
+  "needs": [],
+  "probe": {
+    "service": "docker-bookstack",
+    "port": 80,
+    "path": "/",
+    "expect": []
+  },
+  "post_install_notes": [
+    "The default username is admin@admin.com with the password of password, access the container at http://\u003chost ip\u003e:6875. (README.md:62)",
+    "APP_KEY was generated for you; it is in .env",
+    "DB_PASSWORD was generated for you; it is in .env",
+    "MARIADB_ROOT_PASSWORD was generated for you; it is in .env"
+  ],
+  "confidence": "medium",
+  "evidence": [
+    {
+      "claim": "documented docker run command",
+      "file": "README.md",
+      "line": 144
+    }
+  ],
+  "suspicious_instructions": [],
+  "unfilled": [
+    "services.0.healthcheck",
+    "env_file.PUID.description",
+    "env_file.PGID.description",
+    "env_file.TZ.description",
+    "env_file.APP_URL.description",
+    "env_file.APP_KEY.description",
+    "env_file.DB_HOST.description",
+    "env_file.DB_PORT.description",
+    "env_file.DB_USERNAME.description",
+    "env_file.DB_PASSWORD.description",
+    "env_file.DB_DATABASE.description",
+    "env_file.QUEUE_CONNECTION.description",
+    "env_file.MARIADB_ROOT_PASSWORD.description"
+  ]
+}

@@ -1,0 +1,48 @@
+{{define "content"}}
+{{with .Data}}
+<div class="home">
+  <div class="home-hero">
+    {{template "brand-mark"}}
+    <h1 class="home-title">Let’s get you started</h1>
+    <p class="home-lead">What would you like to self-host? Paste a link, drop files, or paste a compose file. composewright handles the rest and tests it first.</p>
+  </div>
+
+  <form class="ask" id="ask-form" method="post" action="/start" enctype="multipart/form-data" data-dropzone data-dropzone-form>
+    <input type="hidden" name="csrf" value="{{$.CSRF}}">
+    <label class="visually-hidden" for="ask">What to self-host</label>
+    <textarea id="ask" name="ask" rows="2" placeholder="Paste a GitHub link, drop files here, or paste a compose file and .env…" spellcheck="false" autocomplete="off" autofocus>{{.Ask}}</textarea>
+    <ul class="file-list" data-file-list aria-live="polite"></ul>
+    <div class="ask-bar">
+      <label class="button button-small" for="files">{{template "icon-paperclip"}}Add files</label>
+      <input class="visually-hidden" id="files" name="files" type="file" multiple data-file-input>
+      <a class="button button-small" href="/new#paste">{{template "icon-paste"}}Paste compose + .env</a>
+      <label class="ask-engine push-right" for="ask-engine">{{template "icon-engine"}}<span class="visually-hidden">Engine</span>
+        <select id="ask-engine" name="engine">{{range .Engines}}<option value="{{.Value}}"{{if .Selected}} selected{{end}}{{if .Disabled}} disabled{{end}}>{{.Label}}</option>{{end}}</select>
+      </label>
+      <button class="button button-primary" type="submit">Start {{template "icon-arrow-up"}}</button>
+    </div>
+  </form>
+
+  <div class="picks">
+    <p class="muted small">Or try one of these, from composewright’s own test set.</p>
+    <div class="pick-list">
+      {{range .Picks}}<button class="pick" type="submit" form="ask-form" name="pick" value="{{.Link}}" title="{{.Link}}"><span class="pick-mark pick-{{.Tone}}" aria-hidden="true">{{.Initials}}</span>{{.Name}}</button>{{end}}
+    </div>
+  </div>
+
+  <ol class="how">
+    <li>{{template "icon-scan"}}<span class="strong">Read</span><span class="muted">Rules go through the repo’s compose example, Dockerfile and README.</span></li>
+    <li>{{template "icon-engine"}}<span class="strong">Check</span><span class="muted">You choose how it’s reached and where its data lives.</span></li>
+    <li>{{template "icon-shield"}}<span class="strong">Test</span><span class="muted">It runs in a locked-down sandbox until every service is healthy.</span></li>
+    <li>{{template "icon-download"}}<span class="strong">Save</span><span class="muted">Copy, download, or save to a folder named after the app.</span></li>
+  </ol>
+
+  {{if .Recent}}
+  <nav class="recent" aria-label="Recent projects">
+    <span class="muted small">Recent</span>
+    {{range .Recent}}<a class="recent-item" href="{{.Href}}"><span class="project-icon project-icon-{{.Icon}}">{{template "status-icon" .Icon}}</span><span class="mono">{{.Name}}</span>{{if .Badge.Text}}<span class="chip chip-{{.Badge.Tone}}">{{.Badge.Text}}</span>{{end}}</a>{{end}}
+  </nav>
+  {{end}}
+</div>
+{{end}}
+{{end}}

@@ -1,0 +1,23 @@
+package cli
+
+const (
+	exitOK      = 0
+	exitFailure = 1
+	exitBlocked = 2
+	exitInvalid = 3
+
+	ansiReset  = "\x1b[0m"
+	ansiRed    = "\x1b[31m"
+	ansiGreen  = "\x1b[32m"
+	ansiYellow = "\x1b[33m"
+	ansiGray   = "\x1b[90m"
+
+	envNoColor = "NO_COLOR"
+
+	logLevelDebug = "debug"
+	logLevelInfo  = "info"
+	logLevelWarn  = "warn"
+	logLevelError = "error"
+
+	jsonIndent = "  "
+)

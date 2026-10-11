@@ -1,0 +1,7 @@
+{
+  "url": "https://github.com/go-shiori/shiori",
+  "owner": "go-shiori",
+  "commit": "da56f82faac5bf350fc4175e5ff50726cb10d956",
+  "allow_registries": "-",
+  "verdict": "pass"
+}

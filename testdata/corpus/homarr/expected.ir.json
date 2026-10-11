@@ -1,0 +1,574 @@
+{
+  "ir_version": "1",
+  "app": {
+    "name": "homarr",
+    "summary": "",
+    "upstream_url": "https://github.com/homarr-labs/homarr",
+    "docs_url": ""
+  },
+  "services": [
+    {
+      "name": "homarr",
+      "role": "app",
+      "image": {
+        "registry": "",
+        "repository": "",
+        "tag": "",
+        "digest": "",
+        "provenance": {
+          "source": "default",
+          "source_ref": "",
+          "confidence": "low"
+        }
+      },
+      "command": [],
+      "entrypoint": [],
+      "env": [
+        {
+          "key": "AUTH_SECRET",
+          "ref": "AUTH_SECRET",
+          "literal": "",
+          "required": false,
+          "secret": true,
+          "description": "Generate two different 64-character hex values with `openssl rand -hex 32` before starting Homarr. Never reuse these values or commit the populated `.env` file.",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": ".env.example:9",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "SECRET_ENCRYPTION_KEY",
+          "ref": "SECRET_ENCRYPTION_KEY",
+          "literal": "",
+          "required": false,
+          "secret": true,
+          "description": "The below secret is used to encrypt integration secrets in the database. Homarr will reject an empty or invalid value and print a randomly generated candidate.",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": ".env.example:13",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "LOG_LEVEL",
+          "ref": "LOG_LEVEL",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": ".env.example:15",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "DB_DRIVER",
+          "ref": "DB_DRIVER",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "This is how you can use the sqlite driver:",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": ".env.example:18",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "DB_URL",
+          "ref": "DB_URL",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "Set an absolute writable SQLite path so migrations and the app use the same file. Their working directories differ; do not use a relative path here. Container images use /appdata/db/db.sqlite by default instead.",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": ".env.example:22",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "TURBO_TELEMETRY_DISABLED",
+          "ref": "TURBO_TELEMETRY_DISABLED",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": ".env.example:33",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "UNSAFE_ENABLE_MOCK_INTEGRATION",
+          "ref": "UNSAFE_ENABLE_MOCK_INTEGRATION",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "Enable mock integration",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": ".env.example:53",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "HOMARR_WEBSITE_URL",
+          "ref": "HOMARR_WEBSITE_URL",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "Local Workshop stack:",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": ".env.example:59",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "PB_EXPOSE_PORT",
+          "ref": "PB_EXPOSE_PORT",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "Local PocketBase + Docusaurus development",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": "apps/workshop/.env.example:2",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "DOCS_EXPOSE_PORT",
+          "ref": "DOCS_EXPOSE_PORT",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": "apps/workshop/.env.example:3",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "PB_ALLOWED_ORIGINS",
+          "ref": "PB_ALLOWED_ORIGINS",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": "apps/workshop/.env.example:4",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "WORKSHOP_PUBLIC_ORIGIN",
+          "ref": "WORKSHOP_PUBLIC_ORIGIN",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "Documentation and PocketBase deployment settings.",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": "apps/workshop/.env.example:5",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "WORKSHOP_API_URL",
+          "ref": "WORKSHOP_API_URL",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "PocketBase API used by Homarr and by the standalone documentation site. Defaults to HOMARR_WEBSITE_URL.",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": "apps/workshop/.env.example:7",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "WORKSHOP_WEB_URL",
+          "ref": "WORKSHOP_WEB_URL",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "Public Workshop website used by links in Homarr, Custom Widgets, onboarding, and assistant context. Defaults to HOMARR_WEBSITE_URL/workshop.",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": "apps/workshop/.env.example:8",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "HOMARR_AI_DAILY_REQUEST_LIMIT",
+          "ref": "HOMARR_AI_DAILY_REQUEST_LIMIT",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": "apps/workshop/.env.example:12",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "HOMARR_AI_GLOBAL_DAILY_REQUEST_LIMIT",
+          "ref": "HOMARR_AI_GLOBAL_DAILY_REQUEST_LIMIT",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": "apps/workshop/.env.example:13",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "WORKSHOP_IMAGE",
+          "ref": "WORKSHOP_IMAGE",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": "apps/workshop/.env.staging.example:1",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "WORKSHOP_EXPOSE_PORT",
+          "ref": "WORKSHOP_EXPOSE_PORT",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": "apps/workshop/.env.staging.example:2",
+            "confidence": "medium"
+          }
+        }
+      ],
+      "ports": [],
+      "volumes": [],
+      "depends_on": [],
+      "healthcheck": {
+        "test": [],
+        "interval": "",
+        "timeout": "",
+        "retries": 0,
+        "start_period": "",
+        "omitted_reason": "",
+        "provenance": {
+          "source": "default",
+          "source_ref": "",
+          "confidence": "low"
+        }
+      },
+      "user": "",
+      "resources": {
+        "memory_limit": "",
+        "cpus": "",
+        "pids_limit": 0
+      },
+      "notes": [],
+      "provenance": {
+        "source": "default",
+        "source_ref": "",
+        "confidence": "low"
+      }
+    }
+  ],
+  "env_file": [
+    {
+      "key": "AUTH_SECRET",
+      "value": "",
+      "generate": "hex32",
+      "secret": true,
+      "required": false,
+      "description": "Generate two different 64-character hex values with `openssl rand -hex 32` before starting Homarr. Never reuse these values or commit the populated `.env` file.",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.example:9",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "SECRET_ENCRYPTION_KEY",
+      "value": "",
+      "generate": "hex32",
+      "secret": true,
+      "required": false,
+      "description": "The below secret is used to encrypt integration secrets in the database. Homarr will reject an empty or invalid value and print a randomly generated candidate.",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.example:13",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "LOG_LEVEL",
+      "value": "info",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.example:15",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "DB_DRIVER",
+      "value": "better-sqlite3",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "This is how you can use the sqlite driver:",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.example:18",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "DB_URL",
+      "value": "",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "Set an absolute writable SQLite path so migrations and the app use the same file. Their working directories differ; do not use a relative path here. Container images use /appdata/db/db.sqlite by default instead.",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.example:22",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "TURBO_TELEMETRY_DISABLED",
+      "value": "1",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.example:33",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "UNSAFE_ENABLE_MOCK_INTEGRATION",
+      "value": "true",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "Enable mock integration",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.example:53",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "HOMARR_WEBSITE_URL",
+      "value": "https://homarr.dev",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "Local Workshop stack:",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.example:59",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "PB_EXPOSE_PORT",
+      "value": "8090",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "Local PocketBase + Docusaurus development",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "apps/workshop/.env.example:2",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "DOCS_EXPOSE_PORT",
+      "value": "3003",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "apps/workshop/.env.example:3",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "PB_ALLOWED_ORIGINS",
+      "value": "*",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "apps/workshop/.env.example:4",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "WORKSHOP_PUBLIC_ORIGIN",
+      "value": "http://127.0.0.1:3003",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "Documentation and PocketBase deployment settings.",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "apps/workshop/.env.example:5",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "WORKSHOP_API_URL",
+      "value": "http://127.0.0.1:8090",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "PocketBase API used by Homarr and by the standalone documentation site. Defaults to HOMARR_WEBSITE_URL.",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "apps/workshop/.env.example:7",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "WORKSHOP_WEB_URL",
+      "value": "http://127.0.0.1:3003/workshop",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "Public Workshop website used by links in Homarr, Custom Widgets, onboarding, and assistant context. Defaults to HOMARR_WEBSITE_URL/workshop.",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "apps/workshop/.env.example:8",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "HOMARR_AI_DAILY_REQUEST_LIMIT",
+      "value": "50",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "apps/workshop/.env.example:12",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "HOMARR_AI_GLOBAL_DAILY_REQUEST_LIMIT",
+      "value": "10000",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "apps/workshop/.env.example:13",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "WORKSHOP_IMAGE",
+      "value": "ghcr.io/homarr-labs/workshop:latest",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "apps/workshop/.env.staging.example:1",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "WORKSHOP_EXPOSE_PORT",
+      "value": "8090",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "apps/workshop/.env.staging.example:2",
+        "confidence": "medium"
+      }
+    }
+  ],
+  "needs": [],
+  "probe": {
+    "service": "",
+    "port": 0,
+    "path": "",
+    "expect": []
+  },
+  "post_install_notes": [
+    "AUTH_SECRET was generated for you; it is in .env",
+    "SECRET_ENCRYPTION_KEY was generated for you; it is in .env"
+  ],
+  "confidence": "low",
+  "evidence": [],
+  "suspicious_instructions": [],
+  "unfilled": [
+    "app.summary",
+    "services.0.image",
+    "services.0.healthcheck",
+    "services.0.ports",
+    "env_file.LOG_LEVEL.description",
+    "env_file.TURBO_TELEMETRY_DISABLED.description",
+    "env_file.DOCS_EXPOSE_PORT.description",
+    "env_file.PB_ALLOWED_ORIGINS.description",
+    "env_file.HOMARR_AI_DAILY_REQUEST_LIMIT.description",
+    "env_file.HOMARR_AI_GLOBAL_DAILY_REQUEST_LIMIT.description",
+    "env_file.WORKSHOP_IMAGE.description",
+    "env_file.WORKSHOP_EXPOSE_PORT.description"
+  ]
+}

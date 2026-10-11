@@ -1,0 +1,278 @@
+{{define "sidebar"}}
+<div class="sidebar-head"><h2>Settings</h2></div>
+<nav class="side-nav" aria-label="Settings sections">
+  <h3>Profile</h3>
+  <a href="/settings?section=profile"{{if eq .Data.Page "profile"}} aria-current="page"{{end}}>{{template "icon-sliders"}}<span>Environment profile</span></a>
+  <h3>Generation</h3>
+  <a href="/settings?section=engine"{{if eq .Data.Page "engine"}} aria-current="page"{{end}}>{{template "icon-engine"}}<span>Engine</span></a>
+  <a href="/settings?section=models"{{if eq .Data.Page "models"}} aria-current="page"{{end}}>{{template "icon-plug"}}<span>Model providers</span></a>
+  <h3>Interface</h3>
+  <a href="/settings?section=appearance"{{if eq .Data.Page "appearance"}} aria-current="page"{{end}}>{{template "icon-palette"}}<span>Appearance</span></a>
+  <a href="/settings?section=account"{{if eq .Data.Page "account"}} aria-current="page"{{end}}>{{template "icon-user"}}<span>Account</span></a>
+</nav>
+<nav class="sidebar-foot" aria-label="More">
+  <a href="/projects">{{template "icon-arrow-left"}}<span>Back to projects</span></a>
+</nav>
+{{end}}
+
+{{define "network-row"}}{{$row := .}}<tr>
+  <td><input class="mono" type="text" name="name-{{.Index}}" value="{{.Name}}" aria-label="Network name" placeholder="{{if not .Name}}add a network{{end}}" pattern="[a-zA-Z0-9][a-zA-Z0-9_.\-]{0,62}" spellcheck="false"></td>
+  <td><select name="kind-{{.Index}}" aria-label="Kind">{{range .Kinds}}<option value="{{.}}"{{if eq . $row.Kind}} selected{{end}}>{{.}}</option>{{end}}</select></td>
+  <td><select name="provider-{{.Index}}" aria-label="Provider">{{range .Providers}}<option value="{{.}}"{{if eq . $row.Provider}} selected{{end}}>{{if .}}{{.}}{{else}}none{{end}}</option>{{end}}</select></td>
+  <td><input class="mono" type="text" name="domain-{{.Index}}" value="{{.Domain}}" aria-label="Domain{{if .Name}} of {{.Name}}{{end}}" placeholder="apps.example.com" spellcheck="false" autocomplete="off"></td>
+  <td>{{if and .Checked .Name}}{{if .OnHost}}<span class="chip chip-ok">{{template "icon-check"}}exists</span>{{else}}<span class="chip" title="Not on this Docker host. Compose files declare it external, so it must exist where you deploy them.">placeholder</span>{{end}}{{if .Detected}}<span class="block muted small">{{.Detected}} runs here</span>{{end}}{{if .Suggest}}<button class="button button-small" type="submit" name="adopt" value="{{.Suggest}}">Set to {{.SuggestLabel}}</button>{{end}}{{end}}</td>
+  <td><input type="checkbox" name="default-{{.Index}}" value="1"{{if .Default}} checked{{end}} aria-label="New projects join {{if .Name}}{{.Name}}{{else}}this network{{end}}"></td>
+  <td>{{if .Name}}<input type="checkbox" name="remove-{{.Index}}" value="1" aria-label="Remove {{.Name}}">{{end}}</td>
+</tr>{{end}}
+
+{{define "content"}}
+{{$csrf := .CSRF}}
+{{with .Data}}
+<div class="page-head">
+  <h1 class="page-title">{{.Title}}</h1>
+  <span class="lead">Saved to <span class="mono">{{.ConfigFile}}</span>; each save is checked as a whole and written to the audit log.</span>
+  {{if and (ne .Page "account") (ne .Page "models")}}<span class="row push-right"><span class="muted small" data-unsaved hidden>Unsaved changes</span><button class="button button-primary" type="submit" form="settings-form">Save</button></span>{{end}}
+</div>
+
+{{if eq .Page "models"}}{{template "models-page" $}}{{else}}
+<form class="stack" id="settings-form" method="post" action="/settings/{{.Page}}" data-settings-form>
+  <input type="hidden" name="csrf" value="{{$csrf}}">
+
+{{if eq .Page "profile"}}
+  <section class="card" id="networks" aria-labelledby="networks-title">
+    <div class="card-head">
+      <h2 id="networks-title">{{template "icon-network"}}Networks</h2>
+      <button class="button button-small push-right" type="button" data-add-row="network-row" data-max="{{.MaxNetworks}}">{{template "icon-plus"}}Add network</button>
+    </div>
+    <p class="card-body muted small">Reverse proxies and tunnels you already run. A project joins any of them you tick on its Review page; the ones marked here are ticked for every new project. Give one a domain and a project behind it is reached at &lt;project&gt;.&lt;domain&gt;, which settings such as BASE_URL or DOMAIN are set to; without one, the domain suffix under Defaults is used.</p>
+    <div class="table-scroll">
+      <table class="table table-networks">
+        <thead><tr><th scope="col">Name</th><th scope="col">Kind</th><th scope="col">Provider</th><th scope="col">Domain</th><th scope="col">On this host</th><th scope="col">Join by default</th><th scope="col">Remove</th></tr></thead>
+        <tbody data-rows="network-row">{{range .Networks}}{{template "network-row" .}}{{end}}</tbody>
+      </table>
+    </div>
+    <template id="network-row">{{template "network-row" .NewNetwork}}</template>
+    {{if .Found}}
+    <div class="card-body">
+      <p class="muted small">Running on this Docker host. Add its network, and apps can be reached through it:</p>
+      <ul class="found-list">
+        {{range .Found}}<li><span class="mono strong">{{.Network}}</span><span class="muted small">{{.Proxy}} · container <span class="mono">{{.Container}}</span></span><button class="button button-small push-right" type="submit" name="adopt" value="{{.Network}}|{{.Kind}}|{{.Provider}}">{{template "icon-plus"}}Add</button></li>{{end}}
+      </ul>
+    </div>
+    {{else if .Proxies}}
+    <p class="card-foot muted small">The networks of what runs here ({{range $index, $name := .Proxies}}{{if $index}}, {{end}}{{$name}}{{end}}) are all in the list.</p>
+    {{else if .HostChecked}}
+    <p class="card-foot muted small">No reverse proxy or tunnel runs on this Docker host.{{if .Config.Profile.Networks}} The networks above stay as placeholders: compose files declare them external, so they must exist where you deploy.{{else}} If yours runs on another machine, add its network by hand.{{end}}</p>
+    {{else if .HostProblem}}
+    <p class="card-foot muted small">{{.HostProblem}}{{if .Config.Profile.Networks}} The networks above are kept as placeholders.{{end}}</p>
+    {{end}}
+  </section>
+
+  <section class="card" id="storage" aria-labelledby="storage-title">
+    <div class="card-head"><h2 id="storage-title">{{template "icon-drive"}}Storage</h2></div>
+    {{with .Config.Profile.Storage}}
+    <div class="card-body field-grid">
+      <label class="field" for="style">Style
+        <select id="style" name="style"><option value="volumes"{{if eq .Style "volumes"}} selected{{end}}>Named volumes</option><option value="bind"{{if eq .Style "bind"}} selected{{end}}>Bind mounts under the base path</option></select>
+      </label>
+      <label class="field" for="base_path">Base path<input class="mono" type="text" id="base_path" name="base_path" value="{{.BasePath}}" placeholder="/srv/docker" spellcheck="false"></label>
+      <label class="field" for="layout">Layout<input class="mono" type="text" id="layout" name="layout" value="{{.Layout}}" spellcheck="false"></label>
+      <label class="field" for="owner">Owner (uid:gid)<input class="mono" type="text" id="owner" name="owner" value="{{.Owner}}" spellcheck="false"></label>
+      <label class="field" for="save_dir">Save folder<input class="mono" type="text" id="save_dir" name="save_dir" value="{{.SaveDir}}" spellcheck="false"></label>
+    </div>
+    {{end}}
+    <p class="card-foot muted small">{base} is the base path, {project} the project and {volume} the volume.</p>
+  </section>
+
+  <section class="card" id="defaults" aria-labelledby="defaults-title">
+    <div class="card-head"><h2 id="defaults-title">{{template "icon-sliders"}}Defaults</h2></div>
+    {{with .Config.Profile.Defaults}}
+    <div class="card-body field-grid">
+      <label class="field" for="tz">Time zone<input type="text" id="tz" name="tz" value="{{.TZ}}" placeholder="Europe/London"></label>
+      <label class="field" for="puid">User ID (PUID)<input type="text" id="puid" name="puid" value="{{.PUID}}" inputmode="numeric" pattern="[0-9]+"></label>
+      <label class="field" for="pgid">Group ID (PGID)<input type="text" id="pgid" name="pgid" value="{{.PGID}}" inputmode="numeric" pattern="[0-9]+"></label>
+      <label class="field" for="restart">Restart policy<select id="restart" name="restart">{{$current := .Restart}}{{range $.Data.Restarts}}<option value="{{.}}"{{if eq . $current}} selected{{end}}>{{.}}</option>{{end}}</select></label>
+      <label class="field" for="domain_suffix">Domain suffix<input type="text" id="domain_suffix" name="domain_suffix" value="{{.DomainSuffix}}" placeholder="home.arpa"></label>
+      <label class="field" for="log_max_size">Log file size<input type="text" id="log_max_size" name="log_max_size" value="{{.LogMaxSize}}"></label>
+      <label class="field" for="log_max_file">Log files kept<input type="text" id="log_max_file" name="log_max_file" value="{{.LogMaxFile}}" inputmode="numeric" pattern="[0-9]+"></label>
+      <label class="field" for="memory_limit">Memory per service<input type="text" id="memory_limit" name="memory_limit" value="{{.MemoryLimit}}"></label>
+      <label class="field" for="cpus">CPUs per service<input type="text" id="cpus" name="cpus" value="{{.CPUs}}" inputmode="decimal"></label>
+      <label class="field" for="pids_limit">Processes per service<input type="text" id="pids_limit" name="pids_limit" value="{{.PIDsLimit}}" inputmode="numeric" pattern="[0-9]+"></label>
+    </div>
+    {{end}}
+  </section>
+{{end}}
+
+{{if eq .Page "engine"}}
+  <section class="card" aria-labelledby="engine-title">
+    <div class="card-head"><h2 id="engine-title">{{template "icon-engine"}}Who writes new plans</h2><span class="note">the top bar switches it too</span></div>
+    <fieldset class="option-list">
+      <legend class="visually-hidden">Engine</legend>
+      {{range .Engines}}<label class="option{{if .Disabled}} option-off{{end}}"><input type="radio" name="engine" value="{{.Value}}"{{if .Selected}} checked{{end}}{{if .Disabled}} disabled{{end}}><span class="option-text"><span class="option-name">{{.Label}}</span><span class="option-sub">{{.Sub}}</span></span></label>{{end}}
+    </fieldset>
+    <p class="card-foot muted small">A model never sees secrets and cannot change images or privileges. Add or switch models under <a href="/settings?section=models">Model providers</a>.</p>
+  </section>
+
+  <section class="card" aria-labelledby="egress-title">
+    <div class="card-head"><h2 id="egress-title">{{template "icon-shield"}}Network and images</h2></div>
+    <div class="card-body field-grid">
+      <label class="field" for="private">Private targets<textarea class="mono" id="private" name="private" rows="3" spellcheck="false">{{.Private}}</textarea><span class="muted small">host:port on your LAN that may be reached, one per line. The model's base URL is allowed by itself.</span></label>
+      <label class="field" for="registries">Trusted images<textarea class="mono" id="registries" name="registries" rows="5" spellcheck="false">{{.Registries}}</textarea><span class="muted small">One pattern per line, such as docker.io/library/*. A host-wide pattern is narrowed to the repository owner.</span></label>
+    </div>
+  </section>
+{{end}}
+
+{{if eq .Page "appearance"}}
+  <section class="card" id="appearance" aria-labelledby="appearance-title">
+    <div class="card-head"><h2 id="appearance-title">{{template "icon-palette"}}Theme</h2></div>
+    <div class="card-body">
+      <label class="field" for="theme">Default theme
+        <select id="theme" name="theme">{{$current := .Config.UI.Theme}}{{range .Themes}}<option value="{{.}}"{{if eq . $current}} selected{{end}}>{{.}}</option>{{end}}</select>
+        <span class="muted small">The moon button in the top bar overrides it for one browser only.</span>
+      </label>
+    </div>
+  </section>
+{{end}}
+
+{{if eq .Page "account"}}
+  <section class="card" id="account" aria-labelledby="account-title">
+    <div class="card-head"><h2 id="account-title">{{template "icon-lock"}}Password</h2><span class="note">signed in as {{$.User}}</span></div>
+    <div class="card-body field-grid">
+      <label class="field" for="current">Current password<input id="current" name="current" type="password" autocomplete="current-password" required></label>
+      <label class="field" for="password">New password<input id="password" name="password" type="password" autocomplete="new-password" minlength="{{.Minimum}}" required></label>
+      <label class="field" for="confirm">New password again<input id="confirm" name="confirm" type="password" autocomplete="new-password" minlength="{{.Minimum}}" required></label>
+    </div>
+    <div class="card-foot"><span class="muted small">Changing the password signs every other browser out.</span><button class="button button-primary push-right" type="submit">Change password</button></div>
+  </section>
+{{end}}
+
+  {{if ne .Page "account"}}<div class="row"><button class="button button-primary push-right" type="submit">Save</button></div>{{end}}
+</form>
+{{end}}
+{{end}}
+{{end}}
+
+{{define "key-state"}}{{if .KeyFromEnv}}read from the environment{{else if .KeyStored}}<span class="chip chip-ok">{{template "icon-check"}}stored, encrypted</span>{{else if .Service.NeedsKey}}<span class="chip chip-danger">missing</span>{{else}}none needed{{end}}{{end}}
+
+{{define "service-guide"}}
+{{if eq .ID "anthropic"}}
+<ol class="guide-steps">
+  <li>Open the <a href="{{.Console}}" target="_blank" rel="noopener noreferrer">Claude Console</a> and sign in, or create an account. It is separate from a Claude.ai subscription: Claude Pro and Max do not include API use.</li>
+  <li>Under Billing in the console settings, buy credits; the least is $5. A key does nothing until the account has a balance, and a monthly limit there keeps costs in check.</li>
+  <li>Open <a href="{{.KeyPage}}" target="_blank" rel="noopener noreferrer">API keys</a>, click Create key, name it composewright and copy it. It starts with sk-ant- and is shown only once.</li>
+  <li>Paste it under API key below. claude-opus-5-5 is the most capable, claude-sonnet-5-5 cheaper and faster, claude-haiku-5-5 the cheapest.</li>
+</ol>
+{{else if eq .ID "openai"}}
+<ol class="guide-steps">
+  <li>Open the <a href="{{.Console}}" target="_blank" rel="noopener noreferrer">OpenAI Platform</a> and sign in. ChatGPT Plus does not include API use.</li>
+  <li>Under Billing in the platform settings, add a payment method or credits.</li>
+  <li>Open <a href="{{.KeyPage}}" target="_blank" rel="noopener noreferrer">API keys</a>, click Create new secret key, name it composewright and copy it; it is shown only once.</li>
+  <li>Paste it under API key below. Any model from their list works if it supports structured outputs.</li>
+</ol>
+{{else if eq .ID "ollama"}}
+<ol class="guide-steps">
+  <li><a href="{{.Console}}" target="_blank" rel="noopener noreferrer">Download Ollama</a> and install it on a machine with a graphics card or at least 16 GB of memory: this one, or another on your network.</li>
+  <li>Download a model there: <code>ollama pull qwen2.5-coder:7b</code>, or <code>qwen2.5-coder:14b</code> with more memory.</li>
+  <li>On another machine, let Ollama listen on the network (start it with <code>OLLAMA_HOST=0.0.0.0</code>) and put its address below, such as <span class="mono">{{.Example}}</span>. composewright may always reach the model in use.</li>
+  <li>No key is needed. A small local model reads short prompts best, so keep the budget near 8000.</li>
+</ol>
+{{else if eq .ID "gemini"}}
+<ol class="guide-steps">
+  <li>Open <a href="{{.Console}}" target="_blank" rel="noopener noreferrer">Google AI Studio</a> and sign in with a Google account.</li>
+  <li>Open <a href="{{.KeyPage}}" target="_blank" rel="noopener noreferrer">Get API key</a>, click Create API key and copy it.</li>
+  <li>Paste it under API key below. The free tier has rate limits, and on it Google may use what you send to improve its products. composewright never sends secrets, but it does send what it read from the repository; paid use does not have that clause.</li>
+</ol>
+{{else if eq .ID "openrouter"}}
+<ol class="guide-steps">
+  <li>Sign in to OpenRouter, open <a href="{{.KeyPage}}" target="_blank" rel="noopener noreferrer">Keys</a>, create a key and copy it. It starts with sk-or- and is shown only once.</li>
+  <li>Pick a model in <a href="{{.Console}}" target="_blank" rel="noopener noreferrer">their list</a> that supports structured outputs and copy its ID. Free ones end in :free and have a daily limit.</li>
+  <li>Paste the key and the model ID below. If a model does not follow the plan's format, composewright says so and keeps the rules' plan.</li>
+</ol>
+{{else}}
+<ol class="guide-steps">
+  <li>Any service that speaks the OpenAI Chat Completions API with structured outputs works: LM Studio, vLLM, Groq and others.</li>
+  <li>Put its address, usually ending in /v1, and a model it serves below. Add a key if it asks for one.</li>
+</ol>
+{{end}}
+{{end}}
+
+{{define "models-page"}}
+{{$csrf := .CSRF}}
+{{with .Data.Models}}
+<section class="card" aria-labelledby="in-use-title">
+  <div class="card-head"><h2 id="in-use-title">{{template "icon-plug"}}In use</h2><a class="button button-small push-right" href="/settings?section=engine">Who writes plans: {{.EngineLabel}}</a></div>
+  {{if eq .Current.Provider "none"}}
+  <p class="card-body">No model is set up, and none is needed: the rules write every plan. Add a connection below if you want a model to help with what they leave open.</p>
+  {{else}}
+  <dl class="card-body kv">
+    <dt>service</dt><dd>{{.Current.Service.Title}}{{if .Current.Name}} · saved as <span class="mono">{{.Current.Name}}</span>{{end}}</dd>
+    <dt>model</dt><dd class="mono">{{.Current.Model}}</dd>
+    <dt>address</dt><dd class="mono">{{.Current.BaseURL}}</dd>
+    <dt>key</dt><dd>{{template "key-state" .Current}}</dd>
+    <dt>input budget</dt><dd class="mono">{{.Current.MaxInputTokens}} tokens</dd>
+  </dl>
+  {{end}}
+</section>
+
+{{if .Connections}}
+<form class="card" method="post" action="/settings/models" aria-labelledby="saved-title">
+  <input type="hidden" name="csrf" value="{{$csrf}}">
+  <div class="card-head"><h2 id="saved-title">{{template "icon-history"}}Saved connections</h2><span class="note">switch any time; each keeps its own key</span></div>
+  <div class="table-scroll">
+    <table class="table">
+      <thead><tr><th scope="col">Name</th><th scope="col">Service</th><th scope="col">Model</th><th scope="col">Key</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+      <tbody>
+        {{range .Connections}}
+        <tr>
+          <th scope="row" class="mono">{{.Name}}</th>
+          <td>{{.Service.Title}}</td>
+          <td class="mono">{{.Model}}</td>
+          <td>{{template "key-state" .}}</td>
+          <td><span class="row">{{if .InUse}}<span class="chip chip-accent">in use</span>{{else}}<button class="button button-small" type="submit" name="use" value="{{.Name}}">Use</button>{{end}}<a class="button button-small button-ghost" href="/settings?section=models&amp;edit={{.Name}}#connection">Edit</a><button class="button button-small button-ghost" type="submit" name="remove" value="{{.Name}}" aria-label="Remove {{.Name}}" title="Remove {{.Name}}">{{template "icon-trash"}}</button></span></td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+</form>
+{{end}}
+
+<form class="card" id="connection" method="post" action="/settings/models" data-settings-form data-connection-form aria-labelledby="connection-title">
+  <input type="hidden" name="csrf" value="{{$csrf}}">
+  {{if .Form.Editing}}<input type="hidden" name="edit" value="1">{{end}}
+  <div class="card-head"><h2 id="connection-title">{{template "icon-plus"}}{{if .Form.Editing}}Edit {{.Form.Name}}{{else}}Add a connection{{end}}</h2>{{if .Form.Editing}}<a class="button button-small button-ghost push-right" href="/settings?section=models#connection">Add a new one instead</a>{{end}}</div>
+  <div class="card-body stack">
+    <h3 class="step-title">1. Choose a service</h3>
+    {{if .Form.Editing}}<p class="muted small">A saved connection keeps its service. For another service or account, add a new connection.</p>{{end}}
+    <p class="muted small">Claude and OpenAI charge for API use, and a Claude or ChatGPT subscription does not include it. Free: a model on your own machine with Ollama, Google Gemini's free tier, or OpenRouter's free models.</p>
+    <fieldset class="service-list">
+      <legend class="visually-hidden">Service</legend>
+      {{range .Services}}<label class="service"><input type="radio" name="preset" value="{{.ID}}" required{{if eq .ID $.Data.Models.Form.Preset}} checked{{end}}{{if and $.Data.Models.Form.Editing (ne .ID $.Data.Models.Form.Preset)}} disabled{{end}} data-base-url="{{.BaseURL}}" data-model="{{.Model}}" data-budget="{{.MaxInputTokens}}" data-name="{{.FreeName}}"><span class="service-text"><span class="strong">{{.Title}}</span><span class="small{{if .Free}} service-free{{else}} muted{{end}}">{{.Cost}}</span></span></label>{{end}}
+    </fieldset>
+    <h3 class="step-title">2. Get access</h3>
+    <p class="muted small" data-guide-hint{{if .Form.Preset}} hidden{{end}}>Choose a service above, and this shows where its key comes from and what it costs.</p>
+    {{range .Services}}<div class="guide" data-guide="{{.ID}}"{{if ne .ID $.Data.Models.Form.Preset}} hidden{{end}}>{{template "service-guide" .}}</div>{{end}}
+    {{range .Services}}<datalist id="models-{{.ID}}">{{range .Models}}<option value="{{.}}">{{end}}</datalist>{{end}}
+    <h3 class="step-title">3. Fill in</h3>
+    <div class="field-grid">
+      <label class="field" for="connection-name">Name<input class="mono" type="text" id="connection-name" name="name" value="{{.Form.Name}}" pattern="[a-z0-9][a-z0-9\-]{0,30}" required spellcheck="false"{{if .Form.Editing}} readonly{{end}}><span class="muted small">to tell accounts apart, such as claude-work</span></label>
+      <label class="field" for="connection-address">Address<input class="mono" type="text" id="connection-address" name="base_url" value="{{.Form.BaseURL}}" required spellcheck="false"></label>
+      <label class="field" for="connection-model">Model<input class="mono" type="text" id="connection-model" name="model" value="{{.Form.Model}}" list="models-{{.Form.Preset}}" required spellcheck="false"></label>
+      <label class="field" for="connection-budget">Input budget (tokens)<input type="text" id="connection-budget" name="max_input_tokens" value="{{if .Form.MaxInputTokens}}{{.Form.MaxInputTokens}}{{end}}" inputmode="numeric" pattern="[0-9]+"><span class="muted small">the most one prompt may hold</span></label>
+    </div>
+    <label class="field" for="connection-key">API key
+      <input class="mono" type="password" id="connection-key" name="api_key" autocomplete="off" spellcheck="false" placeholder="{{if .Form.KeyStored}}stored; type a new one to replace it{{else}}paste the key from step 2{{end}}"{{if .Form.KeyFromEnv}} disabled{{end}}>
+      <span class="muted small">Stored encrypted in composewright's database, never in config.yaml, and never shown again. Ollama needs none.</span>
+    </label>
+  </div>
+  <div class="card-foot"><span class="muted small push-right" data-unsaved hidden>Unsaved changes</span><button class="button" type="submit" name="action" value="save">Save</button><button class="button button-primary" type="submit" name="action" value="save-use">Save and use</button></div>
+</form>
+{{end}}
+{{end}}
+
+{{define "context"}}
+{{with .Data}}
+<div class="tabs"><h2 class="tab tab-title">{{template "icon-file"}}{{.File.Name}}</h2></div>
+<div class="code">{{template "code-lines" .File.Lines}}</div>
+{{end}}
+{{end}}

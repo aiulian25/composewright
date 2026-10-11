@@ -1,0 +1,26 @@
+name: Code Spell Checking
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+on: [ push, pull_request ]
+
+jobs:
+  typos:
+    name: Run typos spell checking
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      # Checkout the repo
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # End Checkout the repo
+
+      # When this version is updated, do not forget to update this in `.pre-commit-config.yaml` too
+      - name: Spell Check Repo
+        uses: crate-ci/typos@00f422f3b19c57bc6338715ebfe3316d38768461 # v1.50.3

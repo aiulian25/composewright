@@ -1,0 +1,4619 @@
+{
+  "files": [
+    ".agents/skills/codebase-context/agents/openai.yaml",
+    ".agents/skills/documentation-sync/agents/openai.yaml",
+    ".agents/skills/homarr-custom-widget/agents/openai.yaml",
+    ".agents/skills/mcp-integration/agents/openai.yaml",
+    ".env.example",
+    "Dockerfile",
+    "apps/docs/README.md",
+    "apps/docs/blog/authors.yml",
+    "apps/docs/package.json",
+    "apps/docs/scripts/verify-seo.ts",
+    "apps/docs/src/app/blog/rss.xml/route.ts",
+    "apps/docs/src/lib/metadata.ts",
+    "apps/nextjs/README.md",
+    "apps/nextjs/next.config.ts",
+    "apps/nextjs/package.json",
+    "apps/nextjs/src/app/api/backup/export/route.ts",
+    "apps/nextjs/src/components/board/layout/README.md",
+    "apps/nextjs/src/instrumentation.ts",
+    "apps/tasks/package.json",
+    "apps/websocket/package.json",
+    "apps/workshop/.env.example",
+    "apps/workshop/.env.staging.example",
+    "apps/workshop/Dockerfile",
+    "apps/workshop/Dockerfile.dockerignore",
+    "apps/workshop/README.md",
+    "apps/workshop/docker-compose.staging.yml",
+    "apps/workshop/docker-compose.yml",
+    "apps/workshop/go.mod",
+    "apps/workshop/homarr_provider.go",
+    "apps/workshop/pb_hooks/workshop-utils.js",
+    "apps/workshop/pb_hooks/workshop.pb.js",
+    "crowdin.yml",
+    "deployments/prebuilt-debian/Dockerfile",
+    "deployments/prebuilt-debian/package.json",
+    "development/development.docker-compose.yml",
+    "docs/README.md",
+    "package.json",
+    "packages/analytics/package.json",
+    "packages/api/package.json",
+    "packages/api/src/env.ts",
+    "packages/api/src/router/custom-widget/configuration-requests.ts",
+    "packages/api/src/router/custom-widget/preview-sessions.ts",
+    "packages/api/src/router/custom-widget/request-limits.ts",
+    "packages/api/src/router/kubernetes/kubernetes-client.ts",
+    "packages/auth/env.ts",
+    "packages/auth/package.json",
+    "packages/boards/package.json",
+    "packages/cli/package.json",
+    "packages/cli/src/commands/fix-usernames.ts",
+    "packages/cli/src/commands/harness.ts",
+    "packages/cli/src/commands/recreate-admin.ts",
+    "packages/cli/src/commands/reset-password.ts",
+    "packages/cli/src/commands/users-update-password.ts",
+    "packages/common/env.ts",
+    "packages/common/package.json",
+    "packages/core/package.json",
+    "packages/core/src/infrastructure/certificates/files/index.ts",
+    "packages/core/src/infrastructure/db/env.ts",
+    "packages/core/src/infrastructure/env/index.ts",
+    "packages/core/src/infrastructure/logs/transports/index.ts",
+    "packages/cron-job-status/package.json",
+    "packages/cron-jobs-core/package.json",
+    "packages/cron-jobs/package.json",
+    "packages/custom-widgets/package.json",
+    "packages/custom-widgets/scripts/ai-assistant-evaluation.ts",
+    "packages/custom-widgets/scripts/ai-evaluation.ts",
+    "packages/custom-widgets/scripts/evaluate-ai-authoring.ts",
+    "packages/custom-widgets/scripts/verify-reference-apis.ts",
+    "packages/db/migrations/seed.ts",
+    "packages/db/package.json",
+    "packages/definitions/package.json",
+    "packages/definitions/src/docs/index.ts",
+    "packages/docker/package.json",
+    "packages/form/package.json",
+    "packages/forms-collection/package.json",
+    "packages/icons/package.json",
+    "packages/image-proxy/package.json",
+    "packages/integrations/package.json",
+    "packages/modals-collection/package.json",
+    "packages/modals/package.json",
+    "packages/notifications/package.json",
+    "packages/onboarding/package.json",
+    "packages/ping/package.json",
+    "packages/redis/package.json",
+    "packages/redis/src/lib/connection.ts",
+    "packages/request-handler/package.json",
+    "packages/request-handler/src/docker.ts",
+    "packages/request-handler/src/stats.ts",
+    "packages/server-settings/package.json",
+    "packages/settings/package.json",
+    "packages/spotlight/package.json",
+    "packages/translation/package.json",
+    "packages/ui/package.json",
+    "packages/validation/package.json",
+    "packages/widgets/package.json",
+    "packages/workshop/package.json",
+    "scripts/check-custom-widget-bundle.mjs",
+    "scripts/update-contributors.mjs",
+    "tooling/github/package.json",
+    "tooling/github/setup/action.yml",
+    "tooling/typescript/package.json",
+    "tools/assistant-benchmark/README.md",
+    "tools/assistant-benchmark/server.mjs",
+    "tools/homarr-dev/README.md",
+    "tools/homarr-dev/go.mod",
+    "tools/homarr-dev/internal/docker/api.go",
+    "tools/motion-reel/README.md",
+    "tools/motion-reel/render.mjs",
+    "tools/mysql-to-sqlite/Dockerfile",
+    "tools/mysql-to-sqlite/README.md",
+    "tools/mysql-to-sqlite/package.json",
+    "tools/mysql-to-sqlite/src/cli.mjs",
+    "tools/v2-showreel/package.json",
+    "tools/v2-showreel/render.mjs",
+    "vitest.setup.node.ts"
+  ],
+  "compose_files": [
+    {
+      "path": "apps/workshop/docker-compose.staging.yml",
+      "services": [
+        {
+          "name": "workshop",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 4
+          },
+          "image": "ghcr.io/homarr-labs/workshop:latest",
+          "image_at": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 5
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 8090,
+              "published": "8090",
+              "host_ip": "127.0.0.1",
+              "protocol": "tcp",
+              "location": {
+                "file": "apps/workshop/docker-compose.staging.yml",
+                "line": 22
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "pb_data",
+              "target": "/pb_data",
+              "read_only": false,
+              "location": {
+                "file": "apps/workshop/docker-compose.staging.yml",
+                "line": 24
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "HOMARR_WEBSITE_URL",
+              "raw": "${HOMARR_WEBSITE_URL:?Set HOMARR_WEBSITE_URL in the Workshop environment file}",
+              "has_value": true,
+              "location": {
+                "file": "apps/workshop/docker-compose.staging.yml",
+                "line": 8
+              }
+            },
+            {
+              "key": "PB_ALLOWED_ORIGINS",
+              "raw": "${PB_ALLOWED_ORIGINS:-*}",
+              "has_value": true,
+              "location": {
+                "file": "apps/workshop/docker-compose.staging.yml",
+                "line": 9
+              }
+            },
+            {
+              "key": "PORT",
+              "raw": "8090",
+              "has_value": true,
+              "location": {
+                "file": "apps/workshop/docker-compose.staging.yml",
+                "line": 10
+              }
+            },
+            {
+              "key": "WORKSHOP_API_URL",
+              "raw": "${WORKSHOP_API_URL:?Set WORKSHOP_API_URL in the Workshop environment file}",
+              "has_value": true,
+              "location": {
+                "file": "apps/workshop/docker-compose.staging.yml",
+                "line": 11
+              }
+            },
+            {
+              "key": "WORKSHOP_PUBLIC_ORIGIN",
+              "raw": "${WORKSHOP_PUBLIC_ORIGIN:?Set WORKSHOP_PUBLIC_ORIGIN in the Workshop environment file}",
+              "has_value": true,
+              "location": {
+                "file": "apps/workshop/docker-compose.staging.yml",
+                "line": 12
+              }
+            },
+            {
+              "key": "WORKSHOP_WEB_URL",
+              "raw": "${WORKSHOP_WEB_URL:?Set WORKSHOP_WEB_URL in the Workshop environment file}",
+              "has_value": true,
+              "location": {
+                "file": "apps/workshop/docker-compose.staging.yml",
+                "line": 13
+              }
+            },
+            {
+              "key": "GITHUB_CLIENT_ID",
+              "raw": "${GITHUB_CLIENT_ID:-}",
+              "has_value": true,
+              "location": {
+                "file": "apps/workshop/docker-compose.staging.yml",
+                "line": 14
+              }
+            },
+            {
+              "key": "GITHUB_CLIENT_SECRET",
+              "raw": "${GITHUB_CLIENT_SECRET:-}",
+              "has_value": true,
+              "location": {
+                "file": "apps/workshop/docker-compose.staging.yml",
+                "line": 15
+              }
+            },
+            {
+              "key": "HOMARR_AI_DAILY_REQUEST_LIMIT",
+              "raw": "${HOMARR_AI_DAILY_REQUEST_LIMIT:-50}",
+              "has_value": true,
+              "location": {
+                "file": "apps/workshop/docker-compose.staging.yml",
+                "line": 16
+              }
+            },
+            {
+              "key": "HOMARR_AI_GLOBAL_DAILY_REQUEST_LIMIT",
+              "raw": "${HOMARR_AI_GLOBAL_DAILY_REQUEST_LIMIT:-10000}",
+              "has_value": true,
+              "location": {
+                "file": "apps/workshop/docker-compose.staging.yml",
+                "line": 17
+              }
+            },
+            {
+              "key": "HOMARR_AI_OPENROUTER_BASE_URL",
+              "raw": "${HOMARR_AI_OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}",
+              "has_value": true,
+              "location": {
+                "file": "apps/workshop/docker-compose.staging.yml",
+                "line": 18
+              }
+            },
+            {
+              "key": "HOMARR_AI_OPENROUTER_MODEL",
+              "raw": "${HOMARR_AI_OPENROUTER_MODEL:-openai/gpt-6-luna}",
+              "has_value": true,
+              "location": {
+                "file": "apps/workshop/docker-compose.staging.yml",
+                "line": 19
+              }
+            },
+            {
+              "key": "OPENROUTER_API_KEY",
+              "raw": "${OPENROUTER_API_KEY:-}",
+              "has_value": true,
+              "location": {
+                "file": "apps/workshop/docker-compose.staging.yml",
+                "line": 20
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": [
+        {
+          "name": "GITHUB_CLIENT_ID",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 14
+          }
+        },
+        {
+          "name": "GITHUB_CLIENT_SECRET",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 15
+          }
+        },
+        {
+          "name": "HOMARR_AI_DAILY_REQUEST_LIMIT",
+          "kind": "compose",
+          "default": "50",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 16
+          }
+        },
+        {
+          "name": "HOMARR_AI_GLOBAL_DAILY_REQUEST_LIMIT",
+          "kind": "compose",
+          "default": "10000",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 17
+          }
+        },
+        {
+          "name": "HOMARR_AI_OPENROUTER_BASE_URL",
+          "kind": "compose",
+          "default": "https://openrouter.ai/api/v1",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 18
+          }
+        },
+        {
+          "name": "HOMARR_AI_OPENROUTER_MODEL",
+          "kind": "compose",
+          "default": "openai/gpt-6-luna",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 19
+          }
+        },
+        {
+          "name": "HOMARR_WEBSITE_URL",
+          "kind": "compose",
+          "required": true,
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 8
+          }
+        },
+        {
+          "name": "OPENROUTER_API_KEY",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 20
+          }
+        },
+        {
+          "name": "PB_ALLOWED_ORIGINS",
+          "kind": "compose",
+          "default": "*",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 9
+          }
+        },
+        {
+          "name": "WORKSHOP_API_URL",
+          "kind": "compose",
+          "required": true,
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 11
+          }
+        },
+        {
+          "name": "WORKSHOP_EXPOSE_PORT",
+          "kind": "compose",
+          "default": "8090",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 22
+          }
+        },
+        {
+          "name": "WORKSHOP_IMAGE",
+          "kind": "compose",
+          "default": "ghcr.io/homarr-labs/workshop:latest",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 5
+          }
+        },
+        {
+          "name": "WORKSHOP_PUBLIC_ORIGIN",
+          "kind": "compose",
+          "required": true,
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 12
+          }
+        },
+        {
+          "name": "WORKSHOP_WEB_URL",
+          "kind": "compose",
+          "required": true,
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 13
+          }
+        }
+      ]
+    },
+    {
+      "path": "apps/workshop/docker-compose.yml",
+      "services": [
+        {
+          "name": "workshop",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 17
+          },
+          "image": "",
+          "image_at": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 17
+          },
+          "build": true,
+          "ports": [
+            {
+              "target": 8090,
+              "published": "8090",
+              "host_ip": "127.0.0.1",
+              "protocol": "tcp",
+              "location": {
+                "file": "apps/workshop/docker-compose.yml",
+                "line": 39
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "pb_data",
+              "target": "/pb_data",
+              "read_only": false,
+              "location": {
+                "file": "apps/workshop/docker-compose.yml",
+                "line": 41
+              }
+            },
+            {
+              "type": "bind",
+              "source": "./pb_hooks",
+              "target": "/pb_hooks",
+              "read_only": true,
+              "location": {
+                "file": "apps/workshop/docker-compose.yml",
+                "line": 42
+              }
+            },
+            {
+              "type": "bind",
+              "source": "./pb_migrations",
+              "target": "/pb_migrations",
+              "read_only": true,
+              "location": {
+                "file": "apps/workshop/docker-compose.yml",
+                "line": 43
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "HOMARR_WEBSITE_URL",
+              "raw": "${HOMARR_WEBSITE_URL:-http://localhost:3003}",
+              "has_value": true,
+              "location": {
+                "file": "apps/workshop/docker-compose.yml",
+                "line": 24
+              }
+            },
+            {
+              "key": "PB_ALLOWED_ORIGINS",
+              "raw": "${PB_ALLOWED_ORIGINS:-*}",
+              "has_value": true,
+              "location": {
+                "file": "apps/workshop/docker-compose.yml",
+                "line": 25
+              }
+            },
+            {
+              "key": "PORT",
+              "raw": "${PB_EXPOSE_PORT:-8090}",
+              "has_value": true,
+              "location": {
+                "file": "apps/workshop/docker-compose.yml",
+                "line": 26
+              }
+            },
+            {
+              "key": "WORKSHOP_API_URL",
+              "raw": "${WORKSHOP_API_URL:-http://localhost:8090}",
+              "has_value": true,
+              "location": {
+                "file": "apps/workshop/docker-compose.yml",
+                "line": 27
+              }
+            },
+            {
+              "key": "WORKSHOP_WEB_URL",
+              "raw": "${WORKSHOP_WEB_URL:-http://localhost:3003/workshop}",
+              "has_value": true,
+              "location": {
+                "file": "apps/workshop/docker-compose.yml",
+                "line": 28
+              }
+            },
+            {
+              "key": "GITHUB_CLIENT_ID",
+              "raw": "${GITHUB_CLIENT_ID:-}",
+              "has_value": true,
+              "location": {
+                "file": "apps/workshop/docker-compose.yml",
+                "line": 29
+              }
+            },
+            {
+              "key": "GITHUB_CLIENT_SECRET",
+              "raw": "${GITHUB_CLIENT_SECRET:-}",
+              "has_value": true,
+              "location": {
+                "file": "apps/workshop/docker-compose.yml",
+                "line": 30
+              }
+            },
+            {
+              "key": "HOMARR_AI_DAILY_REQUEST_LIMIT",
+              "raw": "${HOMARR_AI_DAILY_REQUEST_LIMIT:-50}",
+              "has_value": true,
+              "location": {
+                "file": "apps/workshop/docker-compose.yml",
+                "line": 31
+              }
+            },
+            {
+              "key": "HOMARR_AI_GLOBAL_DAILY_REQUEST_LIMIT",
+              "raw": "${HOMARR_AI_GLOBAL_DAILY_REQUEST_LIMIT:-10000}",
+              "has_value": true,
+              "location": {
+                "file": "apps/workshop/docker-compose.yml",
+                "line": 32
+              }
+            },
+            {
+              "key": "HOMARR_AI_OPENROUTER_BASE_URL",
+              "raw": "${HOMARR_AI_OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}",
+              "has_value": true,
+              "location": {
+                "file": "apps/workshop/docker-compose.yml",
+                "line": 33
+              }
+            },
+            {
+              "key": "HOMARR_AI_OPENROUTER_MODEL",
+              "raw": "${HOMARR_AI_OPENROUTER_MODEL:-openai/gpt-6-luna}",
+              "has_value": true,
+              "location": {
+                "file": "apps/workshop/docker-compose.yml",
+                "line": 34
+              }
+            },
+            {
+              "key": "HOMARR_AI_ALLOW_INSECURE_UPSTREAM",
+              "raw": "${HOMARR_AI_ALLOW_INSECURE_UPSTREAM:-false}",
+              "has_value": true,
+              "location": {
+                "file": "apps/workshop/docker-compose.yml",
+                "line": 35
+              }
+            },
+            {
+              "key": "OPENROUTER_API_KEY",
+              "raw": "${OPENROUTER_API_KEY:-}",
+              "has_value": true,
+              "location": {
+                "file": "apps/workshop/docker-compose.yml",
+                "line": 36
+              }
+            },
+            {
+              "key": "WORKSHOP_PUBLIC_ORIGIN",
+              "raw": "${WORKSHOP_PUBLIC_ORIGIN:-http://localhost:3003}",
+              "has_value": true,
+              "location": {
+                "file": "apps/workshop/docker-compose.yml",
+                "line": 37
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": [
+        {
+          "name": "DOCS_EXPOSE_PORT",
+          "kind": "compose",
+          "default": "3003",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 61
+          }
+        },
+        {
+          "name": "GITHUB_CLIENT_ID",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 29
+          }
+        },
+        {
+          "name": "GITHUB_CLIENT_SECRET",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 30
+          }
+        },
+        {
+          "name": "HOMARR_AI_ALLOW_INSECURE_UPSTREAM",
+          "kind": "compose",
+          "default": "false",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 35
+          }
+        },
+        {
+          "name": "HOMARR_AI_DAILY_REQUEST_LIMIT",
+          "kind": "compose",
+          "default": "50",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 31
+          }
+        },
+        {
+          "name": "HOMARR_AI_GLOBAL_DAILY_REQUEST_LIMIT",
+          "kind": "compose",
+          "default": "10000",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 32
+          }
+        },
+        {
+          "name": "HOMARR_AI_OPENROUTER_BASE_URL",
+          "kind": "compose",
+          "default": "https://openrouter.ai/api/v1",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 33
+          }
+        },
+        {
+          "name": "HOMARR_AI_OPENROUTER_MODEL",
+          "kind": "compose",
+          "default": "openai/gpt-6-luna",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 34
+          }
+        },
+        {
+          "name": "HOMARR_WEBSITE_URL",
+          "kind": "compose",
+          "default": "http://localhost:3003",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 24
+          }
+        },
+        {
+          "name": "OPENROUTER_API_KEY",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 36
+          }
+        },
+        {
+          "name": "PB_ALLOWED_ORIGINS",
+          "kind": "compose",
+          "default": "*",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 25
+          }
+        },
+        {
+          "name": "PB_EXPOSE_PORT",
+          "kind": "compose",
+          "default": "8090",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 26
+          }
+        },
+        {
+          "name": "WORKSHOP_API_URL",
+          "kind": "compose",
+          "default": "http://localhost:8090",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 27
+          }
+        },
+        {
+          "name": "WORKSHOP_PUBLIC_ORIGIN",
+          "kind": "compose",
+          "default": "http://localhost:3003",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 37
+          }
+        },
+        {
+          "name": "WORKSHOP_WEB_URL",
+          "kind": "compose",
+          "default": "http://localhost:3003/workshop",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 28
+          }
+        }
+      ]
+    },
+    {
+      "path": "development/development.docker-compose.yml",
+      "services": [
+        {
+          "name": "redis",
+          "location": {
+            "file": "development/development.docker-compose.yml",
+            "line": 10
+          },
+          "image": "redis",
+          "image_at": {
+            "file": "development/development.docker-compose.yml",
+            "line": 12
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 6379,
+              "published": "6379",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "development/development.docker-compose.yml",
+                "line": 14
+              }
+            }
+          ],
+          "volumes": null,
+          "environment": null,
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "postgresql",
+          "location": {
+            "file": "development/development.docker-compose.yml",
+            "line": 16
+          },
+          "image": "postgres",
+          "image_at": {
+            "file": "development/development.docker-compose.yml",
+            "line": 17
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 5432,
+              "published": "5432",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "development/development.docker-compose.yml",
+                "line": 35
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "postgresql_data",
+              "target": "/var/lib/postgresql/data",
+              "read_only": false,
+              "location": {
+                "file": "development/development.docker-compose.yml",
+                "line": 33
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "POSTGRES_PASSWORD",
+              "raw": "homarr",
+              "has_value": true,
+              "location": {
+                "file": "development/development.docker-compose.yml",
+                "line": 28
+              }
+            },
+            {
+              "key": "POSTGRES_USER",
+              "raw": "homarr",
+              "has_value": true,
+              "location": {
+                "file": "development/development.docker-compose.yml",
+                "line": 29
+              }
+            },
+            {
+              "key": "POSTGRES_DB",
+              "raw": "homarrdb",
+              "has_value": true,
+              "location": {
+                "file": "development/development.docker-compose.yml",
+                "line": 30
+              }
+            },
+            {
+              "key": "PGDATA",
+              "raw": "/var/lib/postgresql/data/pgdata",
+              "has_value": true,
+              "location": {
+                "file": "development/development.docker-compose.yml",
+                "line": 31
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": []
+    }
+  ],
+  "dockerfiles": [
+    {
+      "path": "Dockerfile",
+      "base_image": "alpine:3.24.2",
+      "exposed": [
+        {
+          "port": 7575,
+          "protocol": "tcp",
+          "location": {
+            "file": "Dockerfile",
+            "line": 60
+          }
+        }
+      ],
+      "volumes": [
+        {
+          "path": "/appdata",
+          "location": {
+            "file": "Dockerfile",
+            "line": 41
+          }
+        }
+      ],
+      "env": [
+        {
+          "key": "DB_URL",
+          "value": "/appdata/db/db.sqlite",
+          "location": {
+            "file": "Dockerfile",
+            "line": 54
+          }
+        },
+        {
+          "key": "DB_DIALECT",
+          "value": "sqlite",
+          "location": {
+            "file": "Dockerfile",
+            "line": 55
+          }
+        },
+        {
+          "key": "DB_DRIVER",
+          "value": "better-sqlite3",
+          "location": {
+            "file": "Dockerfile",
+            "line": 56
+          }
+        },
+        {
+          "key": "AUTH_PROVIDERS",
+          "value": "credentials",
+          "location": {
+            "file": "Dockerfile",
+            "line": 57
+          }
+        },
+        {
+          "key": "REDIS_IS_EXTERNAL",
+          "value": "false",
+          "location": {
+            "file": "Dockerfile",
+            "line": 58
+          }
+        },
+        {
+          "key": "NODE_ENV",
+          "value": "production",
+          "location": {
+            "file": "Dockerfile",
+            "line": 59
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "TARGETPLATFORM",
+          "value": "",
+          "location": {
+            "file": "Dockerfile",
+            "line": 8
+          }
+        },
+        {
+          "key": "SKIP_ENV_VALIDATION",
+          "value": "true",
+          "location": {
+            "file": "Dockerfile",
+            "line": 20
+          }
+        },
+        {
+          "key": "CI",
+          "value": "true",
+          "location": {
+            "file": "Dockerfile",
+            "line": 21
+          }
+        },
+        {
+          "key": "DISABLE_REDIS_LOGS",
+          "value": "true",
+          "location": {
+            "file": "Dockerfile",
+            "line": 22
+          }
+        },
+        {
+          "key": "TARGETPLATFORM",
+          "value": "",
+          "location": {
+            "file": "Dockerfile",
+            "line": 23
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": [
+        "/app/entrypoint.sh"
+      ],
+      "command": [
+        "sh",
+        "run.sh"
+      ]
+    },
+    {
+      "path": "apps/workshop/Dockerfile",
+      "base_image": "ghcr.io/muchobien/pocketbase:0.39.9@sha256:c0667fe6c5197ff226ff642120ab1ad870c3f2f27300940a61e5a7fa082b6816",
+      "exposed": [
+        {
+          "port": 8090,
+          "protocol": "tcp",
+          "location": {
+            "file": "apps/workshop/Dockerfile",
+            "line": 98
+          }
+        }
+      ],
+      "volumes": [
+        {
+          "path": "/pb_data",
+          "location": {
+            "file": "apps/workshop/Dockerfile",
+            "line": 80
+          }
+        }
+      ],
+      "env": [
+        {
+          "key": "PORT",
+          "value": "8090",
+          "location": {
+            "file": "apps/workshop/Dockerfile",
+            "line": 75
+          }
+        },
+        {
+          "key": "HOMARR_WEBSITE_URL",
+          "value": "$HOMARR_WEBSITE_URL",
+          "location": {
+            "file": "apps/workshop/Dockerfile",
+            "line": 91
+          }
+        },
+        {
+          "key": "WORKSHOP_API_URL",
+          "value": "$WORKSHOP_API_URL",
+          "location": {
+            "file": "apps/workshop/Dockerfile",
+            "line": 92
+          }
+        },
+        {
+          "key": "WORKSHOP_WEB_URL",
+          "value": "$WORKSHOP_WEB_URL",
+          "location": {
+            "file": "apps/workshop/Dockerfile",
+            "line": 93
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "POCKETBASE_IMAGE",
+          "value": "ghcr.io/muchobien/pocketbase:0.39.9@sha256:c0667fe6c5197ff226ff642120ab1ad870c3f2f27300940a61e5a7fa082b6816",
+          "location": {
+            "file": "apps/workshop/Dockerfile",
+            "line": 3
+          }
+        },
+        {
+          "key": "TARGETPLATFORM",
+          "value": "",
+          "location": {
+            "file": "apps/workshop/Dockerfile",
+            "line": 56
+          }
+        },
+        {
+          "key": "KAPA_WEBSITE_ID",
+          "value": "1e4656f4-abeb-4343-bbae-1d8626f52378",
+          "location": {
+            "file": "apps/workshop/Dockerfile",
+            "line": 57
+          }
+        },
+        {
+          "key": "HOMARR_WEBSITE_URL",
+          "value": "https://homarr.dev",
+          "location": {
+            "file": "apps/workshop/Dockerfile",
+            "line": 59
+          }
+        },
+        {
+          "key": "WORKSHOP_API_URL",
+          "value": "https://homarr.dev",
+          "location": {
+            "file": "apps/workshop/Dockerfile",
+            "line": 60
+          }
+        },
+        {
+          "key": "WORKSHOP_WEB_URL",
+          "value": "https://homarr.dev/workshop",
+          "location": {
+            "file": "apps/workshop/Dockerfile",
+            "line": 61
+          }
+        },
+        {
+          "key": "HOMARR_WEBSITE_URL",
+          "value": "https://homarr.dev",
+          "location": {
+            "file": "apps/workshop/Dockerfile",
+            "line": 88
+          }
+        },
+        {
+          "key": "WORKSHOP_API_URL",
+          "value": "https://homarr.dev",
+          "location": {
+            "file": "apps/workshop/Dockerfile",
+            "line": 89
+          }
+        },
+        {
+          "key": "WORKSHOP_WEB_URL",
+          "value": "https://homarr.dev/workshop",
+          "location": {
+            "file": "apps/workshop/Dockerfile",
+            "line": 90
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "wget -q --spider \"http://127.0.0.1:${PORT}/api/health\" || exit 1"
+        ],
+        "interval": "30s",
+        "timeout": "5s",
+        "start_period": "10s",
+        "retries": 3,
+        "disabled": false,
+        "location": {
+          "file": "apps/workshop/Dockerfile",
+          "line": 99
+        }
+      },
+      "entrypoint": [
+        "workshop-entrypoint"
+      ],
+      "command": null
+    },
+    {
+      "path": "apps/workshop/Dockerfile.dockerignore",
+      "base_image": "",
+      "exposed": null,
+      "volumes": null,
+      "env": null,
+      "args": null,
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": null,
+      "command": null
+    },
+    {
+      "path": "deployments/prebuilt-debian/Dockerfile",
+      "base_image": "node:24.18.0-trixie",
+      "exposed": null,
+      "volumes": null,
+      "env": null,
+      "args": null,
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": null,
+      "command": [
+        "sleep",
+        "60s"
+      ]
+    },
+    {
+      "path": "tools/mysql-to-sqlite/Dockerfile",
+      "base_image": "node:24.18.0-bookworm-slim",
+      "exposed": null,
+      "volumes": null,
+      "env": null,
+      "args": null,
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": [
+        "node",
+        "src/cli.mjs"
+      ],
+      "command": null
+    }
+  ],
+  "env_samples": [
+    {
+      "path": ".env.example",
+      "entries": [
+        {
+          "key": "AUTH_SECRET",
+          "value": "",
+          "comment": "Generate two different 64-character hex values with `openssl rand -hex 32` before starting Homarr. Never reuse these values or commit the populated `.env` file.",
+          "commented": false,
+          "location": {
+            "file": ".env.example",
+            "line": 9
+          }
+        },
+        {
+          "key": "SECRET_ENCRYPTION_KEY",
+          "value": "",
+          "comment": "The below secret is used to encrypt integration secrets in the database. Homarr will reject an empty or invalid value and print a randomly generated candidate.",
+          "commented": false,
+          "location": {
+            "file": ".env.example",
+            "line": 13
+          }
+        },
+        {
+          "key": "LOG_LEVEL",
+          "value": "info",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": ".env.example",
+            "line": 15
+          }
+        },
+        {
+          "key": "DB_DRIVER",
+          "value": "better-sqlite3",
+          "comment": "This is how you can use the sqlite driver:",
+          "commented": false,
+          "location": {
+            "file": ".env.example",
+            "line": 18
+          }
+        },
+        {
+          "key": "DB_URL",
+          "value": "",
+          "comment": "Set an absolute writable SQLite path so migrations and the app use the same file. Their working directories differ; do not use a relative path here. Container images use /appdata/db/db.sqlite by default instead.",
+          "commented": false,
+          "location": {
+            "file": ".env.example",
+            "line": 22
+          }
+        },
+        {
+          "key": "DB_DRIVER",
+          "value": "node-postgres",
+          "comment": "The following is an example on how to use the node-postgres driver:",
+          "commented": true,
+          "location": {
+            "file": ".env.example",
+            "line": 25
+          }
+        },
+        {
+          "key": "DB_URL",
+          "value": "postgres://user:password@host:port/database",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": ".env.example",
+            "line": 26
+          }
+        },
+        {
+          "key": "LOCAL_CERTIFICATE_PATH",
+          "value": "FULL_PATH_TO_CERTIFICATES",
+          "comment": "The below path can be used to store trusted certificates, it is not required and can be left empty. If it is empty, it will default to `/appdata/trusted-certificates` in production. If it is used, please use the full path to the directory where the certificates are stored.",
+          "commented": true,
+          "location": {
+            "file": ".env.example",
+            "line": 31
+          }
+        },
+        {
+          "key": "TURBO_TELEMETRY_DISABLED",
+          "value": "1",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": ".env.example",
+            "line": 33
+          }
+        },
+        {
+          "key": "TURBO_API",
+          "value": "https://your-cache-worker.workers.dev",
+          "comment": "Turborepo remote cache (optional, for faster CI/local builds) Uncomment and fill in to enable remote caching locally. CI uses GitHub secrets for these values automatically.",
+          "commented": true,
+          "location": {
+            "file": ".env.example",
+            "line": 38
+          }
+        },
+        {
+          "key": "TURBO_TEAM",
+          "value": "team_your_team",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": ".env.example",
+            "line": 39
+          }
+        },
+        {
+          "key": "TURBO_TOKEN",
+          "value": "your-turbo-token",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": ".env.example",
+            "line": 40
+          }
+        },
+        {
+          "key": "TURBO_REMOTE_CACHE_SIGNATURE_KEY",
+          "value": "your-signature-key",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": ".env.example",
+            "line": 41
+          }
+        },
+        {
+          "key": "DOCKER_SOCKET_PATHS",
+          "value": "",
+          "comment": "Comma-separated paths to Docker-compatible Unix sockets. Useful for connecting to multiple runtimes (Docker + Podman) simultaneously. When unset and no TCP hosts configured, defaults to /var/run/docker.sock. Example: DOCKER_SOCKET_PATHS=/var/run/docker.sock,/run/user/1000/podman/podman.sock",
+          "commented": true,
+          "location": {
+            "file": ".env.example",
+            "line": 47
+          }
+        },
+        {
+          "key": "ENABLE_KUBERNETES",
+          "value": "true",
+          "comment": "Enable kubernetes tool",
+          "commented": true,
+          "location": {
+            "file": ".env.example",
+            "line": 50
+          }
+        },
+        {
+          "key": "UNSAFE_ENABLE_MOCK_INTEGRATION",
+          "value": "true",
+          "comment": "Enable mock integration",
+          "commented": false,
+          "location": {
+            "file": ".env.example",
+            "line": 53
+          }
+        },
+        {
+          "key": "BASE_URL",
+          "value": "https://homarr.example.com",
+          "comment": "Public URL contract. Values must be absolute HTTP(S) URLs without credentials, query strings, or fragments. Trailing slashes are normalized at startup. Public Homarr origin used by MCP OAuth metadata and redirects behind proxies.",
+          "commented": true,
+          "location": {
+            "file": ".env.example",
+            "line": 58
+          }
+        },
+        {
+          "key": "HOMARR_WEBSITE_URL",
+          "value": "https://homarr.dev",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": ".env.example",
+            "line": 59
+          }
+        },
+        {
+          "key": "WORKSHOP_API_URL",
+          "value": "https://homarr.dev",
+          "comment": "PocketBase API used by Homarr and by the standalone documentation site. Defaults to HOMARR_WEBSITE_URL.",
+          "commented": true,
+          "location": {
+            "file": ".env.example",
+            "line": 62
+          }
+        },
+        {
+          "key": "WORKSHOP_WEB_URL",
+          "value": "https://homarr.dev/workshop",
+          "comment": "Public Workshop website used by links in Homarr, Custom Widgets, onboarding, and assistant context. Defaults to HOMARR_WEBSITE_URL/workshop.",
+          "commented": true,
+          "location": {
+            "file": ".env.example",
+            "line": 65
+          }
+        },
+        {
+          "key": "WORKSHOP_PUBLIC_ORIGIN",
+          "value": "https://homarr.dev",
+          "comment": "Documentation and PocketBase deployment settings.",
+          "commented": true,
+          "location": {
+            "file": ".env.example",
+            "line": 68
+          }
+        },
+        {
+          "key": "PB_ALLOWED_ORIGINS",
+          "value": "*",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": ".env.example",
+            "line": 69
+          }
+        },
+        {
+          "key": "HOMARR_WEBSITE_URL",
+          "value": "http://127.0.0.1:3003",
+          "comment": "Local Workshop stack:",
+          "commented": true,
+          "location": {
+            "file": ".env.example",
+            "line": 72
+          }
+        },
+        {
+          "key": "WORKSHOP_API_URL",
+          "value": "http://127.0.0.1:8090",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": ".env.example",
+            "line": 73
+          }
+        },
+        {
+          "key": "WORKSHOP_WEB_URL",
+          "value": "http://127.0.0.1:3003/workshop",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": ".env.example",
+            "line": 74
+          }
+        },
+        {
+          "key": "WORKSHOP_PUBLIC_ORIGIN",
+          "value": "http://127.0.0.1:3003",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": ".env.example",
+            "line": 75
+          }
+        },
+        {
+          "key": "DEMO_MODE",
+          "value": "true",
+          "comment": "Enable demo mode (seeds a demo user \"demo\"/\"demo\", a sample board and a mock integration)",
+          "commented": true,
+          "location": {
+            "file": ".env.example",
+            "line": 80
+          }
+        },
+        {
+          "key": "DEMO_READ_ONLY",
+          "value": "false",
+          "comment": "Whether demo mode is read-only. Defaults to true; Assistant conversation history remains writable for canned chats. Set to false for writable preview deployments so the demo user can modify the dashboard.",
+          "commented": true,
+          "location": {
+            "file": ".env.example",
+            "line": 84
+          }
+        }
+      ]
+    },
+    {
+      "path": "apps/workshop/.env.example",
+      "entries": [
+        {
+          "key": "PB_EXPOSE_PORT",
+          "value": "8090",
+          "comment": "Local PocketBase + Docusaurus development",
+          "commented": false,
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 2
+          }
+        },
+        {
+          "key": "DOCS_EXPOSE_PORT",
+          "value": "3003",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 3
+          }
+        },
+        {
+          "key": "PB_ALLOWED_ORIGINS",
+          "value": "*",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 4
+          }
+        },
+        {
+          "key": "WORKSHOP_PUBLIC_ORIGIN",
+          "value": "http://127.0.0.1:3003",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 5
+          }
+        },
+        {
+          "key": "HOMARR_WEBSITE_URL",
+          "value": "http://127.0.0.1:3003",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 6
+          }
+        },
+        {
+          "key": "WORKSHOP_API_URL",
+          "value": "http://127.0.0.1:8090",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 7
+          }
+        },
+        {
+          "key": "WORKSHOP_WEB_URL",
+          "value": "http://127.0.0.1:3003/workshop",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 8
+          }
+        },
+        {
+          "key": "OPENROUTER_API_KEY",
+          "value": "",
+          "comment": "Optional Homarr provider. The upstream key stays only in the Workshop server.",
+          "commented": true,
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 11
+          }
+        },
+        {
+          "key": "HOMARR_AI_DAILY_REQUEST_LIMIT",
+          "value": "50",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 12
+          }
+        },
+        {
+          "key": "HOMARR_AI_GLOBAL_DAILY_REQUEST_LIMIT",
+          "value": "10000",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 13
+          }
+        },
+        {
+          "key": "HOMARR_AI_OPENROUTER_BASE_URL",
+          "value": "https://openrouter.ai/api/v1",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 14
+          }
+        },
+        {
+          "key": "HOMARR_AI_OPENROUTER_MODEL",
+          "value": "",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 15
+          }
+        },
+        {
+          "key": "HOMARR_AI_ALLOW_INSECURE_UPSTREAM",
+          "value": "false",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 16
+          }
+        },
+        {
+          "key": "GITHUB_CLIENT_ID",
+          "value": "",
+          "comment": "Optional local GitHub OAuth application.",
+          "commented": true,
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 19
+          }
+        },
+        {
+          "key": "GITHUB_CLIENT_SECRET",
+          "value": "",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 20
+          }
+        }
+      ]
+    },
+    {
+      "path": "apps/workshop/.env.staging.example",
+      "entries": [
+        {
+          "key": "WORKSHOP_IMAGE",
+          "value": "ghcr.io/homarr-labs/workshop:latest",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "apps/workshop/.env.staging.example",
+            "line": 1
+          }
+        },
+        {
+          "key": "WORKSHOP_EXPOSE_PORT",
+          "value": "8090",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "apps/workshop/.env.staging.example",
+            "line": 2
+          }
+        },
+        {
+          "key": "HOMARR_WEBSITE_URL",
+          "value": "https://v2.preview.homarr.dev",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "apps/workshop/.env.staging.example",
+            "line": 4
+          }
+        },
+        {
+          "key": "WORKSHOP_API_URL",
+          "value": "https://v2.preview.homarr.dev",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "apps/workshop/.env.staging.example",
+            "line": 5
+          }
+        },
+        {
+          "key": "WORKSHOP_WEB_URL",
+          "value": "https://v2.preview.homarr.dev/workshop",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "apps/workshop/.env.staging.example",
+            "line": 6
+          }
+        },
+        {
+          "key": "WORKSHOP_PUBLIC_ORIGIN",
+          "value": "https://v2.preview.homarr.dev",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "apps/workshop/.env.staging.example",
+            "line": 7
+          }
+        },
+        {
+          "key": "PB_ALLOWED_ORIGINS",
+          "value": "*",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "apps/workshop/.env.staging.example",
+            "line": 8
+          }
+        },
+        {
+          "key": "OPENROUTER_API_KEY",
+          "value": "",
+          "comment": "Set this secret in the deployment environment to enable the Homarr provider.",
+          "commented": true,
+          "location": {
+            "file": "apps/workshop/.env.staging.example",
+            "line": 11
+          }
+        },
+        {
+          "key": "HOMARR_AI_DAILY_REQUEST_LIMIT",
+          "value": "50",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "apps/workshop/.env.staging.example",
+            "line": 12
+          }
+        },
+        {
+          "key": "HOMARR_AI_GLOBAL_DAILY_REQUEST_LIMIT",
+          "value": "10000",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "apps/workshop/.env.staging.example",
+            "line": 13
+          }
+        },
+        {
+          "key": "HOMARR_AI_OPENROUTER_BASE_URL",
+          "value": "https://openrouter.ai/api/v1",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": "apps/workshop/.env.staging.example",
+            "line": 14
+          }
+        },
+        {
+          "key": "HOMARR_AI_OPENROUTER_MODEL",
+          "value": "",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": "apps/workshop/.env.staging.example",
+            "line": 15
+          }
+        },
+        {
+          "key": "GITHUB_CLIENT_ID",
+          "value": "",
+          "comment": "Optional GitHub OAuth application for the preview hostname.",
+          "commented": true,
+          "location": {
+            "file": "apps/workshop/.env.staging.example",
+            "line": 18
+          }
+        },
+        {
+          "key": "GITHUB_CLIENT_SECRET",
+          "value": "",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": "apps/workshop/.env.staging.example",
+            "line": 19
+          }
+        }
+      ]
+    },
+    {
+      "path": "packages/api/src/env.ts",
+      "entries": null
+    },
+    {
+      "path": "packages/auth/env.ts",
+      "entries": null
+    },
+    {
+      "path": "packages/common/env.ts",
+      "entries": null
+    },
+    {
+      "path": "packages/core/src/infrastructure/db/env.ts",
+      "entries": null
+    }
+  ],
+  "variables": [
+    {
+      "name": "AGIFY_API_KEY",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "AGIFY_API_KEY",
+          "kind": "code",
+          "location": {
+            "file": "packages/custom-widgets/scripts/verify-reference-apis.ts",
+            "line": 173
+          }
+        }
+      ]
+    },
+    {
+      "name": "AUTH_PROVIDERS",
+      "default": "credentials",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "AUTH_PROVIDERS",
+          "kind": "dockerfile",
+          "default": "credentials",
+          "location": {
+            "file": "Dockerfile",
+            "line": 57
+          }
+        },
+        {
+          "name": "AUTH_PROVIDERS",
+          "kind": "code",
+          "location": {
+            "file": "packages/cli/src/commands/fix-usernames.ts",
+            "line": 11
+          }
+        },
+        {
+          "name": "AUTH_PROVIDERS",
+          "kind": "code",
+          "location": {
+            "file": "packages/cli/src/commands/recreate-admin.ts",
+            "line": 19
+          }
+        },
+        {
+          "name": "AUTH_PROVIDERS",
+          "kind": "code",
+          "location": {
+            "file": "packages/cli/src/commands/reset-password.ts",
+            "line": 16
+          }
+        },
+        {
+          "name": "AUTH_PROVIDERS",
+          "kind": "code",
+          "location": {
+            "file": "packages/cli/src/commands/users-update-password.ts",
+            "line": 17
+          }
+        }
+      ]
+    },
+    {
+      "name": "AUTH_SECRET",
+      "default": "",
+      "description": "Generate two different 64-character hex values with `openssl rand -hex 32` before starting Homarr. Never reuse these values or commit the populated `.env` file.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "AUTH_SECRET",
+          "kind": "env_sample",
+          "text": "Generate two different 64-character hex values with `openssl rand -hex 32` before starting Homarr. Never reuse these values or commit the populated `.env` file.",
+          "location": {
+            "file": ".env.example",
+            "line": 9
+          }
+        }
+      ]
+    },
+    {
+      "name": "BASE_URL",
+      "default": "https://homarr.example.com",
+      "description": "Public URL contract. Values must be absolute HTTP(S) URLs without credentials, query strings, or fragments. Trailing slashes are normalized at startup. Public Homarr origin used by MCP OAuth metadata and redirects behind proxies.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "BASE_URL",
+          "kind": "env_sample",
+          "default": "https://homarr.example.com",
+          "text": "Public URL contract. Values must be absolute HTTP(S) URLs without credentials, query strings, or fragments. Trailing slashes are normalized at startup. Public Homarr origin used by MCP OAuth metadata and redirects behind proxies.",
+          "location": {
+            "file": ".env.example",
+            "line": 58
+          }
+        }
+      ]
+    },
+    {
+      "name": "BENCHMARK_DATE",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "BENCHMARK_DATE",
+          "kind": "code",
+          "location": {
+            "file": "tools/assistant-benchmark/server.mjs",
+            "line": 8
+          }
+        }
+      ]
+    },
+    {
+      "name": "CI",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CI",
+          "kind": "code",
+          "location": {
+            "file": "packages/api/src/router/custom-widget/configuration-requests.ts",
+            "line": 29
+          }
+        },
+        {
+          "name": "CI",
+          "kind": "code",
+          "location": {
+            "file": "packages/api/src/router/custom-widget/preview-sessions.ts",
+            "line": 80
+          }
+        },
+        {
+          "name": "CI",
+          "kind": "code",
+          "location": {
+            "file": "packages/api/src/router/custom-widget/request-limits.ts",
+            "line": 48
+          }
+        },
+        {
+          "name": "CI",
+          "kind": "code",
+          "location": {
+            "file": "packages/core/src/infrastructure/env/index.ts",
+            "line": 6
+          }
+        },
+        {
+          "name": "CI",
+          "kind": "code",
+          "location": {
+            "file": "packages/core/src/infrastructure/logs/transports/index.ts",
+            "line": 10
+          }
+        },
+        {
+          "name": "CI",
+          "kind": "code",
+          "location": {
+            "file": "packages/redis/src/lib/connection.ts",
+            "line": 11
+          }
+        }
+      ]
+    },
+    {
+      "name": "CLEAN",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CLEAN",
+          "kind": "code",
+          "location": {
+            "file": "tools/v2-showreel/render.mjs",
+            "line": 115
+          }
+        }
+      ]
+    },
+    {
+      "name": "CROWDIN_TOKEN",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CROWDIN_TOKEN",
+          "kind": "code",
+          "location": {
+            "file": "scripts/update-contributors.mjs",
+            "line": 14
+          }
+        }
+      ]
+    },
+    {
+      "name": "CUSTOM_WIDGET_AI_ALLOW_SELF_JUDGE",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CUSTOM_WIDGET_AI_ALLOW_SELF_JUDGE",
+          "kind": "code",
+          "location": {
+            "file": "packages/custom-widgets/scripts/evaluate-ai-authoring.ts",
+            "line": 33
+          }
+        }
+      ]
+    },
+    {
+      "name": "CUSTOM_WIDGET_AI_GENERATION_MAX_OUTPUT_TOKENS",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CUSTOM_WIDGET_AI_GENERATION_MAX_OUTPUT_TOKENS",
+          "kind": "code",
+          "location": {
+            "file": "packages/custom-widgets/scripts/ai-evaluation.ts",
+            "line": 961
+          }
+        }
+      ]
+    },
+    {
+      "name": "CUSTOM_WIDGET_AI_JUDGE_MAX_OUTPUT_TOKENS",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CUSTOM_WIDGET_AI_JUDGE_MAX_OUTPUT_TOKENS",
+          "kind": "code",
+          "location": {
+            "file": "packages/custom-widgets/scripts/ai-evaluation.ts",
+            "line": 962
+          }
+        }
+      ]
+    },
+    {
+      "name": "CUSTOM_WIDGET_AI_MAX_LOOPS",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CUSTOM_WIDGET_AI_MAX_LOOPS",
+          "kind": "code",
+          "location": {
+            "file": "packages/custom-widgets/scripts/evaluate-ai-authoring.ts",
+            "line": 55
+          }
+        }
+      ]
+    },
+    {
+      "name": "CUSTOM_WIDGET_AI_MAX_OUTPUT_TOKENS",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CUSTOM_WIDGET_AI_MAX_OUTPUT_TOKENS",
+          "kind": "code",
+          "location": {
+            "file": "packages/custom-widgets/scripts/ai-assistant-evaluation.ts",
+            "line": 1205
+          }
+        }
+      ]
+    },
+    {
+      "name": "CUSTOM_WIDGET_AI_MAX_PROVIDER_CALLS",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CUSTOM_WIDGET_AI_MAX_PROVIDER_CALLS",
+          "kind": "code",
+          "location": {
+            "file": "packages/custom-widgets/scripts/ai-evaluation.ts",
+            "line": 35
+          }
+        },
+        {
+          "name": "CUSTOM_WIDGET_AI_MAX_PROVIDER_CALLS",
+          "kind": "code",
+          "location": {
+            "file": "packages/custom-widgets/scripts/evaluate-ai-authoring.ts",
+            "line": 45
+          }
+        }
+      ]
+    },
+    {
+      "name": "CUSTOM_WIDGET_AI_MAX_SPEND_USD",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CUSTOM_WIDGET_AI_MAX_SPEND_USD",
+          "kind": "code",
+          "location": {
+            "file": "packages/custom-widgets/scripts/ai-evaluation.ts",
+            "line": 36
+          }
+        },
+        {
+          "name": "CUSTOM_WIDGET_AI_MAX_SPEND_USD",
+          "kind": "code",
+          "location": {
+            "file": "packages/custom-widgets/scripts/evaluate-ai-authoring.ts",
+            "line": 46
+          }
+        }
+      ]
+    },
+    {
+      "name": "CUSTOM_WIDGET_CHUNK_BUDGET_BYTES",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CUSTOM_WIDGET_CHUNK_BUDGET_BYTES",
+          "kind": "code",
+          "location": {
+            "file": "scripts/check-custom-widget-bundle.mjs",
+            "line": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "CUSTOM_WIDGET_NEXT_ROOT",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CUSTOM_WIDGET_NEXT_ROOT",
+          "kind": "code",
+          "location": {
+            "file": "scripts/check-custom-widget-bundle.mjs",
+            "line": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "DB_DIALECT",
+      "default": "sqlite",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DB_DIALECT",
+          "kind": "dockerfile",
+          "default": "sqlite",
+          "location": {
+            "file": "Dockerfile",
+            "line": 55
+          }
+        }
+      ]
+    },
+    {
+      "name": "DB_DRIVER",
+      "default": "better-sqlite3",
+      "description": "This is how you can use the sqlite driver:",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DB_DRIVER",
+          "kind": "env_sample",
+          "default": "better-sqlite3",
+          "text": "This is how you can use the sqlite driver:",
+          "location": {
+            "file": ".env.example",
+            "line": 18
+          }
+        },
+        {
+          "name": "DB_DRIVER",
+          "kind": "env_sample",
+          "default": "node-postgres",
+          "text": "The following is an example on how to use the node-postgres driver:",
+          "location": {
+            "file": ".env.example",
+            "line": 25
+          }
+        },
+        {
+          "name": "DB_DRIVER",
+          "kind": "dockerfile",
+          "default": "better-sqlite3",
+          "location": {
+            "file": "Dockerfile",
+            "line": 56
+          }
+        },
+        {
+          "name": "DB_DRIVER",
+          "kind": "code",
+          "location": {
+            "file": "vitest.setup.node.ts",
+            "line": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "DB_URL",
+      "default": "postgres://user:password@host:port/database",
+      "description": "Set an absolute writable SQLite path so migrations and the app use the same file. Their working directories differ; do not use a relative path here. Container images use /appdata/db/db.sqlite by default instead.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DB_URL",
+          "kind": "env_sample",
+          "text": "Set an absolute writable SQLite path so migrations and the app use the same file. Their working directories differ; do not use a relative path here. Container images use /appdata/db/db.sqlite by default instead.",
+          "location": {
+            "file": ".env.example",
+            "line": 22
+          }
+        },
+        {
+          "name": "DB_URL",
+          "kind": "env_sample",
+          "default": "postgres://user:password@host:port/database",
+          "location": {
+            "file": ".env.example",
+            "line": 26
+          }
+        },
+        {
+          "name": "DB_URL",
+          "kind": "dockerfile",
+          "default": "/appdata/db/db.sqlite",
+          "location": {
+            "file": "Dockerfile",
+            "line": 54
+          }
+        },
+        {
+          "name": "DB_URL",
+          "kind": "code",
+          "location": {
+            "file": "vitest.setup.node.ts",
+            "line": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "DEMO_MODE",
+      "default": "true",
+      "description": "Enable demo mode (seeds a demo user \"demo\"/\"demo\", a sample board and a mock integration)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DEMO_MODE",
+          "kind": "env_sample",
+          "default": "true",
+          "text": "Enable demo mode (seeds a demo user \"demo\"/\"demo\", a sample board and a mock integration)",
+          "location": {
+            "file": ".env.example",
+            "line": 80
+          }
+        },
+        {
+          "name": "DEMO_MODE",
+          "kind": "code",
+          "location": {
+            "file": "packages/db/migrations/seed.ts",
+            "line": 67
+          }
+        },
+        {
+          "name": "DEMO_MODE",
+          "kind": "code",
+          "location": {
+            "file": "packages/request-handler/src/docker.ts",
+            "line": 44
+          }
+        },
+        {
+          "name": "DEMO_MODE",
+          "kind": "code",
+          "location": {
+            "file": "packages/request-handler/src/stats.ts",
+            "line": 66
+          }
+        }
+      ]
+    },
+    {
+      "name": "DEMO_READ_ONLY",
+      "default": "false",
+      "description": "Whether demo mode is read-only. Defaults to true; Assistant conversation history remains writable for canned chats. Set to false for writable preview deployments so the demo user can modify the dashboard.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DEMO_READ_ONLY",
+          "kind": "env_sample",
+          "default": "false",
+          "text": "Whether demo mode is read-only. Defaults to true; Assistant conversation history remains writable for canned chats. Set to false for writable preview deployments so the demo user can modify the dashboard.",
+          "location": {
+            "file": ".env.example",
+            "line": 84
+          }
+        }
+      ]
+    },
+    {
+      "name": "DISABLE_REDIS_LOGS",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DISABLE_REDIS_LOGS",
+          "kind": "code",
+          "location": {
+            "file": "packages/core/src/infrastructure/logs/transports/index.ts",
+            "line": 10
+          }
+        },
+        {
+          "name": "DISABLE_REDIS_LOGS",
+          "kind": "code",
+          "location": {
+            "file": "packages/redis/src/lib/connection.ts",
+            "line": 11
+          }
+        }
+      ]
+    },
+    {
+      "name": "DOCKER_HOST",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DOCKER_HOST",
+          "kind": "code",
+          "location": {
+            "file": "tools/homarr-dev/internal/docker/api.go",
+            "line": 51
+          }
+        }
+      ]
+    },
+    {
+      "name": "DOCKER_SOCKET_PATHS",
+      "default": "",
+      "description": "Comma-separated paths to Docker-compatible Unix sockets. Useful for connecting to multiple runtimes (Docker + Podman) simultaneously. When unset and no TCP hosts configured, defaults to /var/run/docker.sock. Example: DOCKER_SOCKET_PATHS=/var/run/docker.sock,/run/user/1000/podman/podman.sock",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DOCKER_SOCKET_PATHS",
+          "kind": "env_sample",
+          "text": "Comma-separated paths to Docker-compatible Unix sockets. Useful for connecting to multiple runtimes (Docker + Podman) simultaneously. When unset and no TCP hosts configured, defaults to /var/run/docker.sock. Example: DOCKER_SOCKET_PATHS=/var/run/docker.sock,/run/user/1000/podman/podman.sock",
+          "location": {
+            "file": ".env.example",
+            "line": 47
+          }
+        }
+      ]
+    },
+    {
+      "name": "DOCS_EXPOSE_PORT",
+      "default": "3003",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DOCS_EXPOSE_PORT",
+          "kind": "compose",
+          "default": "3003",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 61
+          }
+        },
+        {
+          "name": "DOCS_EXPOSE_PORT",
+          "kind": "env_sample",
+          "default": "3003",
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "ENABLE_KUBERNETES",
+      "default": "true",
+      "description": "Enable kubernetes tool",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ENABLE_KUBERNETES",
+          "kind": "env_sample",
+          "default": "true",
+          "text": "Enable kubernetes tool",
+          "location": {
+            "file": ".env.example",
+            "line": 50
+          }
+        }
+      ]
+    },
+    {
+      "name": "EXTRA_ARGS",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "EXTRA_ARGS",
+          "kind": "code",
+          "location": {
+            "file": "tools/v2-showreel/render.mjs",
+            "line": 88
+          }
+        },
+        {
+          "name": "EXTRA_ARGS",
+          "kind": "code",
+          "location": {
+            "file": "tools/v2-showreel/render.mjs",
+            "line": 88
+          }
+        }
+      ]
+    },
+    {
+      "name": "FROM",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "FROM",
+          "kind": "code",
+          "location": {
+            "file": "tools/motion-reel/render.mjs",
+            "line": 14
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITHUB_CLIENT_ID",
+      "default": "",
+      "description": "Optional local GitHub OAuth application.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITHUB_CLIENT_ID",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 14
+          }
+        },
+        {
+          "name": "GITHUB_CLIENT_ID",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 14
+          }
+        },
+        {
+          "name": "GITHUB_CLIENT_ID",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 29
+          }
+        },
+        {
+          "name": "GITHUB_CLIENT_ID",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 29
+          }
+        },
+        {
+          "name": "GITHUB_CLIENT_ID",
+          "kind": "env_sample",
+          "text": "Optional local GitHub OAuth application.",
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 19
+          }
+        },
+        {
+          "name": "GITHUB_CLIENT_ID",
+          "kind": "env_sample",
+          "text": "Optional GitHub OAuth application for the preview hostname.",
+          "location": {
+            "file": "apps/workshop/.env.staging.example",
+            "line": 18
+          }
+        },
+        {
+          "name": "GITHUB_CLIENT_ID",
+          "kind": "code",
+          "location": {
+            "file": "apps/workshop/pb_hooks/workshop.pb.js",
+            "line": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITHUB_CLIENT_SECRET",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITHUB_CLIENT_SECRET",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 15
+          }
+        },
+        {
+          "name": "GITHUB_CLIENT_SECRET",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 15
+          }
+        },
+        {
+          "name": "GITHUB_CLIENT_SECRET",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 30
+          }
+        },
+        {
+          "name": "GITHUB_CLIENT_SECRET",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 30
+          }
+        },
+        {
+          "name": "GITHUB_CLIENT_SECRET",
+          "kind": "env_sample",
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 20
+          }
+        },
+        {
+          "name": "GITHUB_CLIENT_SECRET",
+          "kind": "env_sample",
+          "location": {
+            "file": "apps/workshop/.env.staging.example",
+            "line": 19
+          }
+        },
+        {
+          "name": "GITHUB_CLIENT_SECRET",
+          "kind": "code",
+          "location": {
+            "file": "apps/workshop/pb_hooks/workshop.pb.js",
+            "line": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITHUB_TOKEN",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITHUB_TOKEN",
+          "kind": "code",
+          "location": {
+            "file": "scripts/update-contributors.mjs",
+            "line": 13
+          }
+        }
+      ]
+    },
+    {
+      "name": "HOMARR_AI_ALLOW_INSECURE_UPSTREAM",
+      "default": "false",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "HOMARR_AI_ALLOW_INSECURE_UPSTREAM",
+          "kind": "compose",
+          "default": "false",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 35
+          }
+        },
+        {
+          "name": "HOMARR_AI_ALLOW_INSECURE_UPSTREAM",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 35
+          }
+        },
+        {
+          "name": "HOMARR_AI_ALLOW_INSECURE_UPSTREAM",
+          "kind": "env_sample",
+          "default": "false",
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 16
+          }
+        },
+        {
+          "name": "HOMARR_AI_ALLOW_INSECURE_UPSTREAM",
+          "kind": "code",
+          "location": {
+            "file": "apps/workshop/homarr_provider.go",
+            "line": 142
+          }
+        }
+      ]
+    },
+    {
+      "name": "HOMARR_AI_DAILY_REQUEST_LIMIT",
+      "default": "50",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "HOMARR_AI_DAILY_REQUEST_LIMIT",
+          "kind": "compose",
+          "default": "50",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 16
+          }
+        },
+        {
+          "name": "HOMARR_AI_DAILY_REQUEST_LIMIT",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 16
+          }
+        },
+        {
+          "name": "HOMARR_AI_DAILY_REQUEST_LIMIT",
+          "kind": "compose",
+          "default": "50",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 31
+          }
+        },
+        {
+          "name": "HOMARR_AI_DAILY_REQUEST_LIMIT",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 31
+          }
+        },
+        {
+          "name": "HOMARR_AI_DAILY_REQUEST_LIMIT",
+          "kind": "env_sample",
+          "default": "50",
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 12
+          }
+        },
+        {
+          "name": "HOMARR_AI_DAILY_REQUEST_LIMIT",
+          "kind": "env_sample",
+          "default": "50",
+          "location": {
+            "file": "apps/workshop/.env.staging.example",
+            "line": 12
+          }
+        },
+        {
+          "name": "HOMARR_AI_DAILY_REQUEST_LIMIT",
+          "kind": "code",
+          "location": {
+            "file": "apps/workshop/homarr_provider.go",
+            "line": 157
+          }
+        }
+      ]
+    },
+    {
+      "name": "HOMARR_AI_GLOBAL_DAILY_REQUEST_LIMIT",
+      "default": "10000",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "HOMARR_AI_GLOBAL_DAILY_REQUEST_LIMIT",
+          "kind": "compose",
+          "default": "10000",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 17
+          }
+        },
+        {
+          "name": "HOMARR_AI_GLOBAL_DAILY_REQUEST_LIMIT",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 17
+          }
+        },
+        {
+          "name": "HOMARR_AI_GLOBAL_DAILY_REQUEST_LIMIT",
+          "kind": "compose",
+          "default": "10000",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 32
+          }
+        },
+        {
+          "name": "HOMARR_AI_GLOBAL_DAILY_REQUEST_LIMIT",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 32
+          }
+        },
+        {
+          "name": "HOMARR_AI_GLOBAL_DAILY_REQUEST_LIMIT",
+          "kind": "env_sample",
+          "default": "10000",
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 13
+          }
+        },
+        {
+          "name": "HOMARR_AI_GLOBAL_DAILY_REQUEST_LIMIT",
+          "kind": "env_sample",
+          "default": "10000",
+          "location": {
+            "file": "apps/workshop/.env.staging.example",
+            "line": 13
+          }
+        },
+        {
+          "name": "HOMARR_AI_GLOBAL_DAILY_REQUEST_LIMIT",
+          "kind": "code",
+          "location": {
+            "file": "apps/workshop/homarr_provider.go",
+            "line": 165
+          }
+        }
+      ]
+    },
+    {
+      "name": "HOMARR_AI_OPENROUTER_BASE_URL",
+      "default": "https://openrouter.ai/api/v1",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "HOMARR_AI_OPENROUTER_BASE_URL",
+          "kind": "compose",
+          "default": "https://openrouter.ai/api/v1",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 18
+          }
+        },
+        {
+          "name": "HOMARR_AI_OPENROUTER_BASE_URL",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 18
+          }
+        },
+        {
+          "name": "HOMARR_AI_OPENROUTER_BASE_URL",
+          "kind": "compose",
+          "default": "https://openrouter.ai/api/v1",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 33
+          }
+        },
+        {
+          "name": "HOMARR_AI_OPENROUTER_BASE_URL",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 33
+          }
+        },
+        {
+          "name": "HOMARR_AI_OPENROUTER_BASE_URL",
+          "kind": "env_sample",
+          "default": "https://openrouter.ai/api/v1",
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 14
+          }
+        },
+        {
+          "name": "HOMARR_AI_OPENROUTER_BASE_URL",
+          "kind": "env_sample",
+          "default": "https://openrouter.ai/api/v1",
+          "location": {
+            "file": "apps/workshop/.env.staging.example",
+            "line": 14
+          }
+        },
+        {
+          "name": "HOMARR_AI_OPENROUTER_BASE_URL",
+          "kind": "code",
+          "location": {
+            "file": "apps/workshop/homarr_provider.go",
+            "line": 133
+          }
+        }
+      ]
+    },
+    {
+      "name": "HOMARR_AI_OPENROUTER_MODEL",
+      "default": "openai/gpt-6-luna",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "HOMARR_AI_OPENROUTER_MODEL",
+          "kind": "compose",
+          "default": "openai/gpt-6-luna",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 19
+          }
+        },
+        {
+          "name": "HOMARR_AI_OPENROUTER_MODEL",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 19
+          }
+        },
+        {
+          "name": "HOMARR_AI_OPENROUTER_MODEL",
+          "kind": "compose",
+          "default": "openai/gpt-6-luna",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 34
+          }
+        },
+        {
+          "name": "HOMARR_AI_OPENROUTER_MODEL",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 34
+          }
+        },
+        {
+          "name": "HOMARR_AI_OPENROUTER_MODEL",
+          "kind": "env_sample",
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 15
+          }
+        },
+        {
+          "name": "HOMARR_AI_OPENROUTER_MODEL",
+          "kind": "env_sample",
+          "location": {
+            "file": "apps/workshop/.env.staging.example",
+            "line": 15
+          }
+        },
+        {
+          "name": "HOMARR_AI_OPENROUTER_MODEL",
+          "kind": "code",
+          "location": {
+            "file": "apps/workshop/homarr_provider.go",
+            "line": 146
+          }
+        }
+      ]
+    },
+    {
+      "name": "HOMARR_HARNESS_CONFIG_DIR",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "HOMARR_HARNESS_CONFIG_DIR",
+          "kind": "code",
+          "location": {
+            "file": "packages/cli/src/commands/harness.ts",
+            "line": 161
+          }
+        }
+      ]
+    },
+    {
+      "name": "HOMARR_VERSION",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "HOMARR_VERSION",
+          "kind": "code",
+          "location": {
+            "file": "apps/nextjs/next.config.ts",
+            "line": 34
+          }
+        },
+        {
+          "name": "HOMARR_VERSION",
+          "kind": "code",
+          "location": {
+            "file": "apps/nextjs/src/app/api/backup/export/route.ts",
+            "line": 40
+          }
+        }
+      ]
+    },
+    {
+      "name": "HOMARR_WEBSITE_URL",
+      "default": "http://localhost:3003",
+      "description": "Local Workshop stack:",
+      "required": true,
+      "mentions": [
+        {
+          "name": "HOMARR_WEBSITE_URL",
+          "kind": "compose",
+          "required": true,
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 8
+          }
+        },
+        {
+          "name": "HOMARR_WEBSITE_URL",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 8
+          }
+        },
+        {
+          "name": "HOMARR_WEBSITE_URL",
+          "kind": "compose",
+          "default": "http://localhost:3003",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 24
+          }
+        },
+        {
+          "name": "HOMARR_WEBSITE_URL",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 24
+          }
+        },
+        {
+          "name": "HOMARR_WEBSITE_URL",
+          "kind": "env_sample",
+          "default": "https://homarr.dev",
+          "location": {
+            "file": ".env.example",
+            "line": 59
+          }
+        },
+        {
+          "name": "HOMARR_WEBSITE_URL",
+          "kind": "env_sample",
+          "default": "http://127.0.0.1:3003",
+          "text": "Local Workshop stack:",
+          "location": {
+            "file": ".env.example",
+            "line": 72
+          }
+        },
+        {
+          "name": "HOMARR_WEBSITE_URL",
+          "kind": "env_sample",
+          "default": "http://127.0.0.1:3003",
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 6
+          }
+        },
+        {
+          "name": "HOMARR_WEBSITE_URL",
+          "kind": "env_sample",
+          "default": "https://v2.preview.homarr.dev",
+          "location": {
+            "file": "apps/workshop/.env.staging.example",
+            "line": 4
+          }
+        },
+        {
+          "name": "HOMARR_WEBSITE_URL",
+          "kind": "dockerfile",
+          "default": "$HOMARR_WEBSITE_URL",
+          "location": {
+            "file": "apps/workshop/Dockerfile",
+            "line": 91
+          }
+        },
+        {
+          "name": "HOMARR_WEBSITE_URL",
+          "kind": "code",
+          "location": {
+            "file": "apps/docs/scripts/verify-seo.ts",
+            "line": 7
+          }
+        },
+        {
+          "name": "HOMARR_WEBSITE_URL",
+          "kind": "code",
+          "location": {
+            "file": "apps/docs/src/app/blog/rss.xml/route.ts",
+            "line": 8
+          }
+        },
+        {
+          "name": "HOMARR_WEBSITE_URL",
+          "kind": "code",
+          "location": {
+            "file": "apps/docs/src/lib/metadata.ts",
+            "line": 3
+          }
+        },
+        {
+          "name": "HOMARR_WEBSITE_URL",
+          "kind": "code",
+          "location": {
+            "file": "apps/workshop/pb_hooks/workshop.pb.js",
+            "line": 56
+          }
+        },
+        {
+          "name": "HOMARR_WEBSITE_URL",
+          "kind": "code",
+          "location": {
+            "file": "packages/definitions/src/docs/index.ts",
+            "line": 10
+          }
+        }
+      ]
+    },
+    {
+      "name": "KUBECONFIG",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "KUBECONFIG",
+          "kind": "code",
+          "location": {
+            "file": "packages/api/src/router/kubernetes/kubernetes-client.ts",
+            "line": 167
+          }
+        }
+      ]
+    },
+    {
+      "name": "LOCAL_CERTIFICATE_PATH",
+      "default": "FULL_PATH_TO_CERTIFICATES",
+      "description": "The below path can be used to store trusted certificates, it is not required and can be left empty. If it is empty, it will default to `/appdata/trusted-certificates` in production. If it is used, please use the full path to the directory where the certificates are stored.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LOCAL_CERTIFICATE_PATH",
+          "kind": "env_sample",
+          "default": "FULL_PATH_TO_CERTIFICATES",
+          "text": "The below path can be used to store trusted certificates, it is not required and can be left empty. If it is empty, it will default to `/appdata/trusted-certificates` in production. If it is used, please use the full path to the directory where the certificates are stored.",
+          "location": {
+            "file": ".env.example",
+            "line": 31
+          }
+        },
+        {
+          "name": "LOCAL_CERTIFICATE_PATH",
+          "kind": "code",
+          "location": {
+            "file": "packages/core/src/infrastructure/certificates/files/index.ts",
+            "line": 8
+          }
+        },
+        {
+          "name": "LOCAL_CERTIFICATE_PATH",
+          "kind": "code",
+          "location": {
+            "file": "packages/core/src/infrastructure/certificates/files/index.ts",
+            "line": 9
+          }
+        }
+      ]
+    },
+    {
+      "name": "LOG_LEVEL",
+      "default": "info",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LOG_LEVEL",
+          "kind": "env_sample",
+          "default": "info",
+          "location": {
+            "file": ".env.example",
+            "line": 15
+          }
+        }
+      ]
+    },
+    {
+      "name": "MAX_LOAD",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MAX_LOAD",
+          "kind": "code",
+          "location": {
+            "file": "tools/v2-showreel/render.mjs",
+            "line": 59
+          }
+        }
+      ]
+    },
+    {
+      "name": "MIN_FREE",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MIN_FREE",
+          "kind": "code",
+          "location": {
+            "file": "tools/v2-showreel/render.mjs",
+            "line": 58
+          }
+        }
+      ]
+    },
+    {
+      "name": "MYSQL_DATABASE",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MYSQL_DATABASE",
+          "kind": "code",
+          "location": {
+            "file": "tools/mysql-to-sqlite/src/cli.mjs",
+            "line": 31
+          }
+        }
+      ]
+    },
+    {
+      "name": "MYSQL_HOST",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MYSQL_HOST",
+          "kind": "code",
+          "location": {
+            "file": "tools/mysql-to-sqlite/src/cli.mjs",
+            "line": 27
+          }
+        }
+      ]
+    },
+    {
+      "name": "MYSQL_PASSWORD",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MYSQL_PASSWORD",
+          "kind": "code",
+          "location": {
+            "file": "tools/mysql-to-sqlite/src/cli.mjs",
+            "line": 30
+          }
+        }
+      ]
+    },
+    {
+      "name": "MYSQL_PORT",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MYSQL_PORT",
+          "kind": "code",
+          "location": {
+            "file": "tools/mysql-to-sqlite/src/cli.mjs",
+            "line": 23
+          }
+        }
+      ]
+    },
+    {
+      "name": "MYSQL_SSL_CA",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MYSQL_SSL_CA",
+          "kind": "code",
+          "location": {
+            "file": "tools/mysql-to-sqlite/src/cli.mjs",
+            "line": 32
+          }
+        },
+        {
+          "name": "MYSQL_SSL_CA",
+          "kind": "code",
+          "location": {
+            "file": "tools/mysql-to-sqlite/src/cli.mjs",
+            "line": 32
+          }
+        }
+      ]
+    },
+    {
+      "name": "MYSQL_USER",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MYSQL_USER",
+          "kind": "code",
+          "location": {
+            "file": "tools/mysql-to-sqlite/src/cli.mjs",
+            "line": 29
+          }
+        }
+      ]
+    },
+    {
+      "name": "NEXT_RUNTIME",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "NEXT_RUNTIME",
+          "kind": "code",
+          "location": {
+            "file": "apps/nextjs/src/instrumentation.ts",
+            "line": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "NODE_ENV",
+      "default": "production",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "NODE_ENV",
+          "kind": "dockerfile",
+          "default": "production",
+          "location": {
+            "file": "Dockerfile",
+            "line": 59
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "apps/nextjs/next.config.ts",
+            "line": 19
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "apps/nextjs/src/instrumentation.ts",
+            "line": 3
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "packages/api/src/router/custom-widget/configuration-requests.ts",
+            "line": 29
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "packages/api/src/router/custom-widget/preview-sessions.ts",
+            "line": 80
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "packages/api/src/router/custom-widget/request-limits.ts",
+            "line": 48
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "packages/api/src/router/kubernetes/kubernetes-client.ts",
+            "line": 167
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "packages/core/src/infrastructure/certificates/files/index.ts",
+            "line": 8
+          }
+        }
+      ]
+    },
+    {
+      "name": "OPENROUTER_API_KEY",
+      "default": "",
+      "description": "Optional Homarr provider. The upstream key stays only in the Workshop server.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OPENROUTER_API_KEY",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 20
+          }
+        },
+        {
+          "name": "OPENROUTER_API_KEY",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 20
+          }
+        },
+        {
+          "name": "OPENROUTER_API_KEY",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 36
+          }
+        },
+        {
+          "name": "OPENROUTER_API_KEY",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 36
+          }
+        },
+        {
+          "name": "OPENROUTER_API_KEY",
+          "kind": "env_sample",
+          "text": "Optional Homarr provider. The upstream key stays only in the Workshop server.",
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 11
+          }
+        },
+        {
+          "name": "OPENROUTER_API_KEY",
+          "kind": "env_sample",
+          "text": "Set this secret in the deployment environment to enable the Homarr provider.",
+          "location": {
+            "file": "apps/workshop/.env.staging.example",
+            "line": 11
+          }
+        },
+        {
+          "name": "OPENROUTER_API_KEY",
+          "kind": "code",
+          "location": {
+            "file": "apps/workshop/homarr_provider.go",
+            "line": 174
+          }
+        }
+      ]
+    },
+    {
+      "name": "OUT",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OUT",
+          "kind": "code",
+          "location": {
+            "file": "tools/motion-reel/render.mjs",
+            "line": 12
+          }
+        }
+      ]
+    },
+    {
+      "name": "PAGE",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PAGE",
+          "kind": "code",
+          "location": {
+            "file": "tools/motion-reel/render.mjs",
+            "line": 13
+          }
+        }
+      ]
+    },
+    {
+      "name": "PATCH",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PATCH",
+          "kind": "code",
+          "location": {
+            "file": "tools/v2-showreel/render.mjs",
+            "line": 113
+          }
+        },
+        {
+          "name": "PATCH",
+          "kind": "code",
+          "location": {
+            "file": "tools/v2-showreel/render.mjs",
+            "line": 113
+          }
+        },
+        {
+          "name": "PATCH",
+          "kind": "code",
+          "location": {
+            "file": "tools/v2-showreel/render.mjs",
+            "line": 161
+          }
+        },
+        {
+          "name": "PATCH",
+          "kind": "code",
+          "location": {
+            "file": "tools/v2-showreel/render.mjs",
+            "line": 161
+          }
+        }
+      ]
+    },
+    {
+      "name": "PB_ALLOWED_ORIGINS",
+      "default": "*",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PB_ALLOWED_ORIGINS",
+          "kind": "compose",
+          "default": "*",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 9
+          }
+        },
+        {
+          "name": "PB_ALLOWED_ORIGINS",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 9
+          }
+        },
+        {
+          "name": "PB_ALLOWED_ORIGINS",
+          "kind": "compose",
+          "default": "*",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 25
+          }
+        },
+        {
+          "name": "PB_ALLOWED_ORIGINS",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 25
+          }
+        },
+        {
+          "name": "PB_ALLOWED_ORIGINS",
+          "kind": "env_sample",
+          "default": "*",
+          "location": {
+            "file": ".env.example",
+            "line": 69
+          }
+        },
+        {
+          "name": "PB_ALLOWED_ORIGINS",
+          "kind": "env_sample",
+          "default": "*",
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 4
+          }
+        },
+        {
+          "name": "PB_ALLOWED_ORIGINS",
+          "kind": "env_sample",
+          "default": "*",
+          "location": {
+            "file": "apps/workshop/.env.staging.example",
+            "line": 8
+          }
+        }
+      ]
+    },
+    {
+      "name": "PB_EXPOSE_PORT",
+      "default": "8090",
+      "description": "Local PocketBase + Docusaurus development",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PB_EXPOSE_PORT",
+          "kind": "compose",
+          "default": "8090",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 26
+          }
+        },
+        {
+          "name": "PB_EXPOSE_PORT",
+          "kind": "env_sample",
+          "default": "8090",
+          "text": "Local PocketBase + Docusaurus development",
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "PGDATA",
+      "default": "/var/lib/postgresql/data/pgdata",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PGDATA",
+          "kind": "compose",
+          "default": "/var/lib/postgresql/data/pgdata",
+          "location": {
+            "file": "development/development.docker-compose.yml",
+            "line": 31
+          }
+        }
+      ]
+    },
+    {
+      "name": "PORT",
+      "default": "8090",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PORT",
+          "kind": "compose",
+          "default": "8090",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 10
+          }
+        },
+        {
+          "name": "PORT",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 26
+          }
+        },
+        {
+          "name": "PORT",
+          "kind": "dockerfile",
+          "default": "8090",
+          "location": {
+            "file": "apps/workshop/Dockerfile",
+            "line": 75
+          }
+        }
+      ]
+    },
+    {
+      "name": "PORTAINER_ALLOW_MUTATIONS",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PORTAINER_ALLOW_MUTATIONS",
+          "kind": "code",
+          "location": {
+            "file": "packages/custom-widgets/scripts/verify-reference-apis.ts",
+            "line": 86
+          }
+        }
+      ]
+    },
+    {
+      "name": "PORTAINER_API_KEY",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PORTAINER_API_KEY",
+          "kind": "code",
+          "location": {
+            "file": "packages/custom-widgets/scripts/verify-reference-apis.ts",
+            "line": 42
+          }
+        }
+      ]
+    },
+    {
+      "name": "PORTAINER_BASE_URL",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PORTAINER_BASE_URL",
+          "kind": "code",
+          "location": {
+            "file": "packages/custom-widgets/scripts/verify-reference-apis.ts",
+            "line": 41
+          }
+        }
+      ]
+    },
+    {
+      "name": "PORTAINER_ENDPOINT_ID",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PORTAINER_ENDPOINT_ID",
+          "kind": "code",
+          "location": {
+            "file": "packages/custom-widgets/scripts/verify-reference-apis.ts",
+            "line": 50
+          }
+        }
+      ]
+    },
+    {
+      "name": "PORTAINER_TEST_CONTAINER_ID",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PORTAINER_TEST_CONTAINER_ID",
+          "kind": "code",
+          "location": {
+            "file": "packages/custom-widgets/scripts/verify-reference-apis.ts",
+            "line": 84
+          }
+        }
+      ]
+    },
+    {
+      "name": "POSTGRES_DB",
+      "default": "homarrdb",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "POSTGRES_DB",
+          "kind": "compose",
+          "default": "homarrdb",
+          "location": {
+            "file": "development/development.docker-compose.yml",
+            "line": 30
+          }
+        }
+      ]
+    },
+    {
+      "name": "POSTGRES_PASSWORD",
+      "default": "homarr",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "POSTGRES_PASSWORD",
+          "kind": "compose",
+          "default": "homarr",
+          "location": {
+            "file": "development/development.docker-compose.yml",
+            "line": 28
+          }
+        }
+      ]
+    },
+    {
+      "name": "POSTGRES_USER",
+      "default": "homarr",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "POSTGRES_USER",
+          "kind": "compose",
+          "default": "homarr",
+          "location": {
+            "file": "development/development.docker-compose.yml",
+            "line": 29
+          }
+        }
+      ]
+    },
+    {
+      "name": "REDIS_IS_EXTERNAL",
+      "default": "false",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "REDIS_IS_EXTERNAL",
+          "kind": "dockerfile",
+          "default": "false",
+          "location": {
+            "file": "Dockerfile",
+            "line": 58
+          }
+        }
+      ]
+    },
+    {
+      "name": "SCALE",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SCALE",
+          "kind": "code",
+          "location": {
+            "file": "tools/v2-showreel/render.mjs",
+            "line": 91
+          }
+        }
+      ]
+    },
+    {
+      "name": "SECRET_ENCRYPTION_KEY",
+      "default": "",
+      "description": "The below secret is used to encrypt integration secrets in the database. Homarr will reject an empty or invalid value and print a randomly generated candidate.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SECRET_ENCRYPTION_KEY",
+          "kind": "env_sample",
+          "text": "The below secret is used to encrypt integration secrets in the database. Homarr will reject an empty or invalid value and print a randomly generated candidate.",
+          "location": {
+            "file": ".env.example",
+            "line": 13
+          }
+        },
+        {
+          "name": "SECRET_ENCRYPTION_KEY",
+          "kind": "code",
+          "location": {
+            "file": "packages/cli/src/commands/harness.ts",
+            "line": 157
+          }
+        },
+        {
+          "name": "SECRET_ENCRYPTION_KEY",
+          "kind": "code",
+          "location": {
+            "file": "packages/cli/src/commands/harness.ts",
+            "line": 158
+          }
+        },
+        {
+          "name": "SECRET_ENCRYPTION_KEY",
+          "kind": "code",
+          "location": {
+            "file": "vitest.setup.node.ts",
+            "line": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "SKIP_ENV_VALIDATION",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SKIP_ENV_VALIDATION",
+          "kind": "code",
+          "location": {
+            "file": "packages/core/src/infrastructure/env/index.ts",
+            "line": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "TAG",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TAG",
+          "kind": "code",
+          "location": {
+            "file": "tools/v2-showreel/render.mjs",
+            "line": 121
+          }
+        }
+      ]
+    },
+    {
+      "name": "TURBO_API",
+      "default": "https://your-cache-worker.workers.dev",
+      "description": "Turborepo remote cache (optional, for faster CI/local builds) Uncomment and fill in to enable remote caching locally. CI uses GitHub secrets for these values automatically.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TURBO_API",
+          "kind": "env_sample",
+          "default": "https://your-cache-worker.workers.dev",
+          "text": "Turborepo remote cache (optional, for faster CI/local builds) Uncomment and fill in to enable remote caching locally. CI uses GitHub secrets for these values automatically.",
+          "location": {
+            "file": ".env.example",
+            "line": 38
+          }
+        }
+      ]
+    },
+    {
+      "name": "TURBO_REMOTE_CACHE_SIGNATURE_KEY",
+      "default": "your-signature-key",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TURBO_REMOTE_CACHE_SIGNATURE_KEY",
+          "kind": "env_sample",
+          "default": "your-signature-key",
+          "location": {
+            "file": ".env.example",
+            "line": 41
+          }
+        }
+      ]
+    },
+    {
+      "name": "TURBO_TEAM",
+      "default": "team_your_team",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TURBO_TEAM",
+          "kind": "env_sample",
+          "default": "team_your_team",
+          "location": {
+            "file": ".env.example",
+            "line": 39
+          }
+        }
+      ]
+    },
+    {
+      "name": "TURBO_TELEMETRY_DISABLED",
+      "default": "1",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TURBO_TELEMETRY_DISABLED",
+          "kind": "env_sample",
+          "default": "1",
+          "location": {
+            "file": ".env.example",
+            "line": 33
+          }
+        }
+      ]
+    },
+    {
+      "name": "TURBO_TOKEN",
+      "default": "your-turbo-token",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TURBO_TOKEN",
+          "kind": "env_sample",
+          "default": "your-turbo-token",
+          "location": {
+            "file": ".env.example",
+            "line": 40
+          }
+        }
+      ]
+    },
+    {
+      "name": "UNSAFE_ENABLE_MOCK_INTEGRATION",
+      "default": "true",
+      "description": "Enable mock integration",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UNSAFE_ENABLE_MOCK_INTEGRATION",
+          "kind": "env_sample",
+          "default": "true",
+          "text": "Enable mock integration",
+          "location": {
+            "file": ".env.example",
+            "line": 53
+          }
+        },
+        {
+          "name": "UNSAFE_ENABLE_MOCK_INTEGRATION",
+          "kind": "code",
+          "location": {
+            "file": "packages/db/migrations/seed.ts",
+            "line": 51
+          }
+        }
+      ]
+    },
+    {
+      "name": "WARP",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "WARP",
+          "kind": "code",
+          "location": {
+            "file": "tools/motion-reel/render.mjs",
+            "line": 15
+          }
+        }
+      ]
+    },
+    {
+      "name": "WORKERS",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "WORKERS",
+          "kind": "code",
+          "location": {
+            "file": "tools/motion-reel/render.mjs",
+            "line": 10
+          }
+        }
+      ]
+    },
+    {
+      "name": "WORKSHOP_API_URL",
+      "default": "http://localhost:8090",
+      "description": "PocketBase API used by Homarr and by the standalone documentation site. Defaults to HOMARR_WEBSITE_URL.",
+      "required": true,
+      "mentions": [
+        {
+          "name": "WORKSHOP_API_URL",
+          "kind": "compose",
+          "required": true,
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 11
+          }
+        },
+        {
+          "name": "WORKSHOP_API_URL",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 11
+          }
+        },
+        {
+          "name": "WORKSHOP_API_URL",
+          "kind": "compose",
+          "default": "http://localhost:8090",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 27
+          }
+        },
+        {
+          "name": "WORKSHOP_API_URL",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 27
+          }
+        },
+        {
+          "name": "WORKSHOP_API_URL",
+          "kind": "env_sample",
+          "default": "https://homarr.dev",
+          "text": "PocketBase API used by Homarr and by the standalone documentation site. Defaults to HOMARR_WEBSITE_URL.",
+          "location": {
+            "file": ".env.example",
+            "line": 62
+          }
+        },
+        {
+          "name": "WORKSHOP_API_URL",
+          "kind": "env_sample",
+          "default": "http://127.0.0.1:8090",
+          "location": {
+            "file": ".env.example",
+            "line": 73
+          }
+        },
+        {
+          "name": "WORKSHOP_API_URL",
+          "kind": "env_sample",
+          "default": "http://127.0.0.1:8090",
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 7
+          }
+        },
+        {
+          "name": "WORKSHOP_API_URL",
+          "kind": "env_sample",
+          "default": "https://v2.preview.homarr.dev",
+          "location": {
+            "file": "apps/workshop/.env.staging.example",
+            "line": 5
+          }
+        },
+        {
+          "name": "WORKSHOP_API_URL",
+          "kind": "dockerfile",
+          "default": "$WORKSHOP_API_URL",
+          "location": {
+            "file": "apps/workshop/Dockerfile",
+            "line": 92
+          }
+        },
+        {
+          "name": "WORKSHOP_API_URL",
+          "kind": "code",
+          "location": {
+            "file": "apps/workshop/pb_hooks/workshop.pb.js",
+            "line": 55
+          }
+        }
+      ]
+    },
+    {
+      "name": "WORKSHOP_EXPOSE_PORT",
+      "default": "8090",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "WORKSHOP_EXPOSE_PORT",
+          "kind": "compose",
+          "default": "8090",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 22
+          }
+        },
+        {
+          "name": "WORKSHOP_EXPOSE_PORT",
+          "kind": "env_sample",
+          "default": "8090",
+          "location": {
+            "file": "apps/workshop/.env.staging.example",
+            "line": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "WORKSHOP_IMAGE",
+      "default": "ghcr.io/homarr-labs/workshop:latest",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "WORKSHOP_IMAGE",
+          "kind": "compose",
+          "default": "ghcr.io/homarr-labs/workshop:latest",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 5
+          }
+        },
+        {
+          "name": "WORKSHOP_IMAGE",
+          "kind": "env_sample",
+          "default": "ghcr.io/homarr-labs/workshop:latest",
+          "location": {
+            "file": "apps/workshop/.env.staging.example",
+            "line": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "WORKSHOP_PB_HOOKS_DIR",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "WORKSHOP_PB_HOOKS_DIR",
+          "kind": "code",
+          "location": {
+            "file": "apps/workshop/pb_hooks/workshop-utils.js",
+            "line": 45
+          }
+        }
+      ]
+    },
+    {
+      "name": "WORKSHOP_PUBLIC_ORIGIN",
+      "default": "http://localhost:3003",
+      "description": "Documentation and PocketBase deployment settings.",
+      "required": true,
+      "mentions": [
+        {
+          "name": "WORKSHOP_PUBLIC_ORIGIN",
+          "kind": "compose",
+          "required": true,
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 12
+          }
+        },
+        {
+          "name": "WORKSHOP_PUBLIC_ORIGIN",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 12
+          }
+        },
+        {
+          "name": "WORKSHOP_PUBLIC_ORIGIN",
+          "kind": "compose",
+          "default": "http://localhost:3003",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 37
+          }
+        },
+        {
+          "name": "WORKSHOP_PUBLIC_ORIGIN",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 37
+          }
+        },
+        {
+          "name": "WORKSHOP_PUBLIC_ORIGIN",
+          "kind": "env_sample",
+          "default": "https://homarr.dev",
+          "text": "Documentation and PocketBase deployment settings.",
+          "location": {
+            "file": ".env.example",
+            "line": 68
+          }
+        },
+        {
+          "name": "WORKSHOP_PUBLIC_ORIGIN",
+          "kind": "env_sample",
+          "default": "http://127.0.0.1:3003",
+          "location": {
+            "file": ".env.example",
+            "line": 75
+          }
+        },
+        {
+          "name": "WORKSHOP_PUBLIC_ORIGIN",
+          "kind": "env_sample",
+          "default": "http://127.0.0.1:3003",
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 5
+          }
+        },
+        {
+          "name": "WORKSHOP_PUBLIC_ORIGIN",
+          "kind": "env_sample",
+          "default": "https://v2.preview.homarr.dev",
+          "location": {
+            "file": "apps/workshop/.env.staging.example",
+            "line": 7
+          }
+        },
+        {
+          "name": "WORKSHOP_PUBLIC_ORIGIN",
+          "kind": "code",
+          "location": {
+            "file": "apps/workshop/pb_hooks/workshop.pb.js",
+            "line": 151
+          }
+        },
+        {
+          "name": "WORKSHOP_PUBLIC_ORIGIN",
+          "kind": "code",
+          "location": {
+            "file": "apps/workshop/pb_hooks/workshop.pb.js",
+            "line": 187
+          }
+        },
+        {
+          "name": "WORKSHOP_PUBLIC_ORIGIN",
+          "kind": "code",
+          "location": {
+            "file": "apps/workshop/pb_hooks/workshop.pb.js",
+            "line": 246
+          }
+        }
+      ]
+    },
+    {
+      "name": "WORKSHOP_REMOTE_API_URL",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "WORKSHOP_REMOTE_API_URL",
+          "kind": "code",
+          "location": {
+            "file": "apps/workshop/pb_hooks/workshop.pb.js",
+            "line": 25
+          }
+        }
+      ]
+    },
+    {
+      "name": "WORKSHOP_WEB_URL",
+      "default": "http://localhost:3003/workshop",
+      "description": "Public Workshop website used by links in Homarr, Custom Widgets, onboarding, and assistant context. Defaults to HOMARR_WEBSITE_URL/workshop.",
+      "required": true,
+      "mentions": [
+        {
+          "name": "WORKSHOP_WEB_URL",
+          "kind": "compose",
+          "required": true,
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 13
+          }
+        },
+        {
+          "name": "WORKSHOP_WEB_URL",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.staging.yml",
+            "line": 13
+          }
+        },
+        {
+          "name": "WORKSHOP_WEB_URL",
+          "kind": "compose",
+          "default": "http://localhost:3003/workshop",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 28
+          }
+        },
+        {
+          "name": "WORKSHOP_WEB_URL",
+          "kind": "compose",
+          "location": {
+            "file": "apps/workshop/docker-compose.yml",
+            "line": 28
+          }
+        },
+        {
+          "name": "WORKSHOP_WEB_URL",
+          "kind": "env_sample",
+          "default": "https://homarr.dev/workshop",
+          "text": "Public Workshop website used by links in Homarr, Custom Widgets, onboarding, and assistant context. Defaults to HOMARR_WEBSITE_URL/workshop.",
+          "location": {
+            "file": ".env.example",
+            "line": 65
+          }
+        },
+        {
+          "name": "WORKSHOP_WEB_URL",
+          "kind": "env_sample",
+          "default": "http://127.0.0.1:3003/workshop",
+          "location": {
+            "file": ".env.example",
+            "line": 74
+          }
+        },
+        {
+          "name": "WORKSHOP_WEB_URL",
+          "kind": "env_sample",
+          "default": "http://127.0.0.1:3003/workshop",
+          "location": {
+            "file": "apps/workshop/.env.example",
+            "line": 8
+          }
+        },
+        {
+          "name": "WORKSHOP_WEB_URL",
+          "kind": "env_sample",
+          "default": "https://v2.preview.homarr.dev/workshop",
+          "location": {
+            "file": "apps/workshop/.env.staging.example",
+            "line": 6
+          }
+        },
+        {
+          "name": "WORKSHOP_WEB_URL",
+          "kind": "dockerfile",
+          "default": "$WORKSHOP_WEB_URL",
+          "location": {
+            "file": "apps/workshop/Dockerfile",
+            "line": 93
+          }
+        },
+        {
+          "name": "WORKSHOP_WEB_URL",
+          "kind": "code",
+          "location": {
+            "file": "apps/workshop/pb_hooks/workshop.pb.js",
+            "line": 54
+          }
+        },
+        {
+          "name": "WORKSHOP_WEB_URL",
+          "kind": "code",
+          "location": {
+            "file": "apps/workshop/pb_hooks/workshop.pb.js",
+            "line": 152
+          }
+        },
+        {
+          "name": "WORKSHOP_WEB_URL",
+          "kind": "code",
+          "location": {
+            "file": "apps/workshop/pb_hooks/workshop.pb.js",
+            "line": 188
+          }
+        },
+        {
+          "name": "WORKSHOP_WEB_URL",
+          "kind": "code",
+          "location": {
+            "file": "apps/workshop/pb_hooks/workshop.pb.js",
+            "line": 247
+          }
+        }
+      ]
+    },
+    {
+      "name": "npm_lifecycle_event",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "npm_lifecycle_event",
+          "kind": "code",
+          "location": {
+            "file": "packages/core/src/infrastructure/env/index.ts",
+            "line": 6
+          }
+        }
+      ]
+    }
+  ],
+  "images": [
+    {
+      "reference": "ghcr.io/homarr-labs/workshop:latest",
+      "kind": "compose",
+      "location": {
+        "file": "apps/workshop/docker-compose.staging.yml",
+        "line": 5
+      }
+    },
+    {
+      "reference": "redis",
+      "kind": "compose",
+      "location": {
+        "file": "development/development.docker-compose.yml",
+        "line": 12
+      }
+    },
+    {
+      "reference": "postgres",
+      "kind": "compose",
+      "location": {
+        "file": "development/development.docker-compose.yml",
+        "line": 17
+      }
+    }
+  ],
+  "docker_runs": null,
+  "notes": null,
+  "suspicious": null,
+  "readmes": [
+    "apps/docs/README.md",
+    "apps/nextjs/README.md",
+    "apps/nextjs/src/components/board/layout/README.md",
+    "apps/workshop/README.md",
+    "docs/README.md",
+    "tools/assistant-benchmark/README.md",
+    "tools/homarr-dev/README.md",
+    "tools/motion-reel/README.md",
+    "tools/mysql-to-sqlite/README.md"
+  ],
+  "summary": {
+    "text": "",
+    "location": {
+      "file": "",
+      "line": 0
+    }
+  },
+  "file_mentions": [
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "apps/workshop/README.md",
+        "line": 16
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "apps/workshop/README.md",
+        "line": 29
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "apps/workshop/README.md",
+        "line": 36
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "apps/workshop/README.md",
+        "line": 37
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "apps/workshop/README.md",
+        "line": 97
+      }
+    },
+    {
+      "text": "deployment-docker-image.yml",
+      "location": {
+        "file": "docs/README.md",
+        "line": 9
+      }
+    },
+    {
+      "text": "deployment-docker-image.yml",
+      "location": {
+        "file": "docs/README.md",
+        "line": 10
+      }
+    }
+  ],
+  "stack_hints": [
+    "apps/docs/package.json",
+    "apps/nextjs/package.json",
+    "apps/tasks/package.json",
+    "apps/websocket/package.json",
+    "apps/workshop/go.mod",
+    "deployments/prebuilt-debian/package.json",
+    "package.json",
+    "packages/analytics/package.json",
+    "packages/api/package.json",
+    "packages/auth/package.json",
+    "packages/boards/package.json",
+    "packages/cli/package.json",
+    "packages/common/package.json",
+    "packages/core/package.json",
+    "packages/cron-job-status/package.json",
+    "packages/cron-jobs-core/package.json",
+    "packages/cron-jobs/package.json",
+    "packages/custom-widgets/package.json",
+    "packages/db/package.json",
+    "packages/definitions/package.json",
+    "packages/docker/package.json",
+    "packages/form/package.json",
+    "packages/forms-collection/package.json",
+    "packages/icons/package.json",
+    "packages/image-proxy/package.json",
+    "packages/integrations/package.json",
+    "packages/modals-collection/package.json",
+    "packages/modals/package.json",
+    "packages/notifications/package.json",
+    "packages/onboarding/package.json",
+    "packages/ping/package.json",
+    "packages/redis/package.json",
+    "packages/request-handler/package.json",
+    "packages/server-settings/package.json",
+    "packages/settings/package.json",
+    "packages/spotlight/package.json",
+    "packages/translation/package.json",
+    "packages/ui/package.json",
+    "packages/validation/package.json",
+    "packages/widgets/package.json",
+    "packages/workshop/package.json",
+    "tooling/github/package.json",
+    "tooling/typescript/package.json",
+    "tools/homarr-dev/go.mod",
+    "tools/mysql-to-sqlite/package.json",
+    "tools/v2-showreel/package.json"
+  ],
+  "problems": null
+}

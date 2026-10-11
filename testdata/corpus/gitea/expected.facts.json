@@ -1,0 +1,1454 @@
+{
+  "files": [
+    ".golangci.yml",
+    ".markdownlint.yaml",
+    ".spectral.yaml",
+    ".yamllint.yaml",
+    "Dockerfile",
+    "Dockerfile.rootless",
+    "README.md",
+    "build/generate-go-licenses.go",
+    "cmd/hook.go",
+    "cmd/serv.go",
+    "cmd/web.go",
+    "contrib/README",
+    "contrib/development/README.md",
+    "contrib/grafana-monitoring-mixin/README.md",
+    "contrib/sample-page/privacy.html.sample",
+    "contrib/sample-page/tos.html.sample",
+    "crowdin.yml",
+    "docker/README.md",
+    "docs/build-setup.md",
+    "docs/build-source.md",
+    "docs/community-governance.md",
+    "docs/development.md",
+    "docs/guidelines-backend.md",
+    "docs/guidelines-frontend.md",
+    "docs/guidelines-refactoring.md",
+    "docs/release-management.md",
+    "docs/testing.md",
+    "go.mod",
+    "models/unittest/mock_http.go",
+    "models/unittest/testdb.go",
+    "modules/egress/policies.go",
+    "modules/git/git.go",
+    "modules/graceful/manager_windows.go",
+    "modules/migration/file_format_testdata/issue_a.yml",
+    "modules/private/internal.go",
+    "modules/setting/setting.go",
+    "modules/setting/testenv.go",
+    "modules/user/user.go",
+    "modules/util/path.go",
+    "options/label/Advanced.yaml",
+    "package.json",
+    "pnpm-workspace.yaml",
+    "pyproject.toml",
+    "routers/api/packages/README.md",
+    "services/actions/init.go",
+    "services/auth/source/ldap/README.md",
+    "services/gitproxy/server.go",
+    "snap/snapcraft.yaml",
+    "templates/mail/org/team_invite.devtest.yml",
+    "templates/mail/repo/actions/workflow_run.devtest.yml",
+    "templates/mail/repo/collaborator.devtest.yml",
+    "templates/mail/repo/issue/assigned.devtest.yml",
+    "templates/mail/repo/issue/default.devtest.yml",
+    "templates/mail/repo/release.devtest.yml",
+    "templates/mail/repo/transfer.devtest.yml",
+    "templates/mail/user/auth/activate.devtest.yml",
+    "templates/mail/user/auth/activate_email.devtest.yml",
+    "templates/mail/user/auth/register_notify.devtest.yml",
+    "templates/mail/user/auth/reset_passwd.devtest.yml",
+    "tools/lint-go-all.go",
+    "web_src/js/webcomponents/README.md"
+  ],
+  "compose_files": null,
+  "dockerfiles": [
+    {
+      "path": "Dockerfile",
+      "base_image": "docker.io/library/alpine:3.24",
+      "exposed": [
+        {
+          "port": 22,
+          "protocol": "tcp",
+          "location": {
+            "file": "Dockerfile",
+            "line": 49
+          }
+        },
+        {
+          "port": 3000,
+          "protocol": "tcp",
+          "location": {
+            "file": "Dockerfile",
+            "line": 49
+          }
+        }
+      ],
+      "volumes": [
+        {
+          "path": "/data",
+          "location": {
+            "file": "Dockerfile",
+            "line": 82
+          }
+        }
+      ],
+      "env": [
+        {
+          "key": "USER",
+          "value": "git",
+          "location": {
+            "file": "Dockerfile",
+            "line": 79
+          }
+        },
+        {
+          "key": "GITEA_CUSTOM",
+          "value": "/data/gitea",
+          "location": {
+            "file": "Dockerfile",
+            "line": 80
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "GITEA_VERSION",
+          "value": "",
+          "location": {
+            "file": "Dockerfile",
+            "line": 14
+          }
+        },
+        {
+          "key": "TAGS",
+          "value": "",
+          "location": {
+            "file": "Dockerfile",
+            "line": 15
+          }
+        },
+        {
+          "key": "CGO_EXTRA_CFLAGS",
+          "value": "",
+          "location": {
+            "file": "Dockerfile",
+            "line": 17
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": [
+        "/usr/bin/entrypoint"
+      ],
+      "command": [
+        "/usr/bin/s6-svscan",
+        "/etc/s6"
+      ]
+    },
+    {
+      "path": "Dockerfile.rootless",
+      "base_image": "docker.io/library/alpine:3.24",
+      "exposed": [
+        {
+          "port": 2222,
+          "protocol": "tcp",
+          "location": {
+            "file": "Dockerfile.rootless",
+            "line": 44
+          }
+        },
+        {
+          "port": 3000,
+          "protocol": "tcp",
+          "location": {
+            "file": "Dockerfile.rootless",
+            "line": 44
+          }
+        }
+      ],
+      "volumes": [
+        {
+          "path": "/var/lib/gitea",
+          "location": {
+            "file": "Dockerfile.rootless",
+            "line": 83
+          }
+        },
+        {
+          "path": "/etc/gitea",
+          "location": {
+            "file": "Dockerfile.rootless",
+            "line": 83
+          }
+        }
+      ],
+      "env": [
+        {
+          "key": "GITEA_WORK_DIR",
+          "value": "/var/lib/gitea",
+          "location": {
+            "file": "Dockerfile.rootless",
+            "line": 75
+          }
+        },
+        {
+          "key": "GITEA_CUSTOM",
+          "value": "/var/lib/gitea/custom",
+          "location": {
+            "file": "Dockerfile.rootless",
+            "line": 76
+          }
+        },
+        {
+          "key": "GITEA_TEMP",
+          "value": "/tmp/gitea",
+          "location": {
+            "file": "Dockerfile.rootless",
+            "line": 77
+          }
+        },
+        {
+          "key": "TMPDIR",
+          "value": "/tmp/gitea",
+          "location": {
+            "file": "Dockerfile.rootless",
+            "line": 78
+          }
+        },
+        {
+          "key": "GITEA_APP_INI",
+          "value": "/etc/gitea/app.ini",
+          "location": {
+            "file": "Dockerfile.rootless",
+            "line": 81
+          }
+        },
+        {
+          "key": "HOME",
+          "value": "/var/lib/gitea/git",
+          "location": {
+            "file": "Dockerfile.rootless",
+            "line": 82
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "GITEA_VERSION",
+          "value": "",
+          "location": {
+            "file": "Dockerfile.rootless",
+            "line": 14
+          }
+        },
+        {
+          "key": "TAGS",
+          "value": "",
+          "location": {
+            "file": "Dockerfile.rootless",
+            "line": 15
+          }
+        },
+        {
+          "key": "CGO_EXTRA_CFLAGS",
+          "value": "",
+          "location": {
+            "file": "Dockerfile.rootless",
+            "line": 17
+          }
+        }
+      ],
+      "user": "1000:1000",
+      "user_at": {
+        "file": "Dockerfile.rootless",
+        "line": 74
+      },
+      "entrypoint": [
+        "/usr/bin/dumb-init",
+        "--",
+        "/usr/local/bin/docker-entrypoint.sh"
+      ],
+      "command": []
+    }
+  ],
+  "env_samples": null,
+  "variables": [
+    {
+      "name": "ACCEPT_EULA",
+      "default": "Y",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ACCEPT_EULA",
+          "kind": "readme",
+          "default": "Y",
+          "location": {
+            "file": "docs/testing.md",
+            "line": 90
+          }
+        }
+      ]
+    },
+    {
+      "name": "ALL_PROXY",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ALL_PROXY",
+          "kind": "code",
+          "location": {
+            "file": "modules/egress/policies.go",
+            "line": 50
+          }
+        }
+      ]
+    },
+    {
+      "name": "CI",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CI",
+          "kind": "code",
+          "location": {
+            "file": "modules/setting/testenv.go",
+            "line": 133
+          }
+        },
+        {
+          "name": "CI",
+          "kind": "code",
+          "location": {
+            "file": "tools/lint-go-all.go",
+            "line": 116
+          }
+        },
+        {
+          "name": "CI",
+          "kind": "code",
+          "location": {
+            "file": "tools/lint-go-all.go",
+            "line": 122
+          }
+        }
+      ]
+    },
+    {
+      "name": "ENABLE_SOURCEMAP",
+      "default": "",
+      "description": "true generates all source maps, the default for development builds",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ENABLE_SOURCEMAP",
+          "kind": "readme",
+          "text": "true generates all source maps, the default for development builds",
+          "location": {
+            "file": "docs/build-source.md",
+            "line": 90
+          }
+        },
+        {
+          "name": "ENABLE_SOURCEMAP",
+          "kind": "readme",
+          "text": "reduced generates limited source maps, the default for production builds",
+          "location": {
+            "file": "docs/build-source.md",
+            "line": 91
+          }
+        },
+        {
+          "name": "ENABLE_SOURCEMAP",
+          "kind": "readme",
+          "text": "false generates no source maps",
+          "location": {
+            "file": "docs/build-source.md",
+            "line": 92
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITEA_APP_INI",
+      "default": "/etc/gitea/app.ini",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITEA_APP_INI",
+          "kind": "dockerfile",
+          "default": "/etc/gitea/app.ini",
+          "location": {
+            "file": "Dockerfile.rootless",
+            "line": 81
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITEA_CUSTOM",
+      "default": "/data/gitea",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITEA_CUSTOM",
+          "kind": "dockerfile",
+          "default": "/data/gitea",
+          "location": {
+            "file": "Dockerfile",
+            "line": 80
+          }
+        },
+        {
+          "name": "GITEA_CUSTOM",
+          "kind": "dockerfile",
+          "default": "/var/lib/gitea/custom",
+          "location": {
+            "file": "Dockerfile.rootless",
+            "line": 76
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITEA_I_AM_BEING_UNSAFE_RUNNING_AS_ROOT",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITEA_I_AM_BEING_UNSAFE_RUNNING_AS_ROOT",
+          "kind": "code",
+          "location": {
+            "file": "modules/setting/setting.go",
+            "line": 196
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITEA_RUNNER_REGISTRATION_TOKEN",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITEA_RUNNER_REGISTRATION_TOKEN",
+          "kind": "code",
+          "location": {
+            "file": "services/actions/init.go",
+            "line": 24
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITEA_RUNNER_REGISTRATION_TOKEN_FILE",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITEA_RUNNER_REGISTRATION_TOKEN_FILE",
+          "kind": "code",
+          "location": {
+            "file": "services/actions/init.go",
+            "line": 25
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITEA_RUN_MODE",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITEA_RUN_MODE",
+          "kind": "code",
+          "location": {
+            "file": "modules/setting/setting.go",
+            "line": 173
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITEA_TEMP",
+      "default": "/tmp/gitea",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITEA_TEMP",
+          "kind": "dockerfile",
+          "default": "/tmp/gitea",
+          "location": {
+            "file": "Dockerfile.rootless",
+            "line": 77
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITEA_TEST_CONF",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITEA_TEST_CONF",
+          "kind": "code",
+          "location": {
+            "file": "modules/setting/testenv.go",
+            "line": 74
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITEA_TEST_DATABASE",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITEA_TEST_DATABASE",
+          "kind": "code",
+          "location": {
+            "file": "modules/setting/testenv.go",
+            "line": 134
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITEA_TEST_E2E",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITEA_TEST_E2E",
+          "kind": "code",
+          "location": {
+            "file": "modules/setting/setting.go",
+            "line": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITEA_TEST_E2E_DEBUG",
+      "default": "",
+      "description": "When set, show the Gitea server output.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITEA_TEST_E2E_DEBUG",
+          "kind": "readme",
+          "text": "When set, show the Gitea server output.",
+          "location": {
+            "file": "docs/testing.md",
+            "line": 139
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITEA_TEST_E2E_FLAGS",
+      "default": "",
+      "description": "Additional flags passed to Playwright, e.g. --ui.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITEA_TEST_E2E_FLAGS",
+          "kind": "readme",
+          "text": "Additional flags passed to Playwright, e.g. --ui.",
+          "location": {
+            "file": "docs/testing.md",
+            "line": 140
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITEA_TEST_E2E_TIMEOUT_FACTOR",
+      "default": "",
+      "description": "Timeout multiplier (default: 4 on CI, 1 locally).",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITEA_TEST_E2E_TIMEOUT_FACTOR",
+          "kind": "readme",
+          "text": "Timeout multiplier (default: 4 on CI, 1 locally).",
+          "location": {
+            "file": "docs/testing.md",
+            "line": 141
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITEA_TEST_LOG_SQL",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITEA_TEST_LOG_SQL",
+          "kind": "code",
+          "location": {
+            "file": "models/unittest/testdb.go",
+            "line": 223
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITEA_TEST_ROOT",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITEA_TEST_ROOT",
+          "kind": "code",
+          "location": {
+            "file": "modules/setting/testenv.go",
+            "line": 55
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITEA_TOKEN",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITEA_TOKEN",
+          "kind": "code",
+          "location": {
+            "file": "models/unittest/mock_http.go",
+            "line": 50
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITEA_WORK_DIR",
+      "default": "/var/lib/gitea",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITEA_WORK_DIR",
+          "kind": "dockerfile",
+          "default": "/var/lib/gitea",
+          "location": {
+            "file": "Dockerfile.rootless",
+            "line": 75
+          }
+        }
+      ]
+    },
+    {
+      "name": "GIT_CONFIG_PARAMETERS",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GIT_CONFIG_PARAMETERS",
+          "kind": "code",
+          "location": {
+            "file": "services/gitproxy/server.go",
+            "line": 110
+          }
+        }
+      ]
+    },
+    {
+      "name": "GNUPGHOME",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GNUPGHOME",
+          "kind": "code",
+          "location": {
+            "file": "modules/git/git.go",
+            "line": 173
+          }
+        }
+      ]
+    },
+    {
+      "name": "GO",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GO",
+          "kind": "code",
+          "location": {
+            "file": "build/generate-go-licenses.go",
+            "line": 206
+          }
+        },
+        {
+          "name": "GO",
+          "kind": "code",
+          "location": {
+            "file": "tools/lint-go-all.go",
+            "line": 102
+          }
+        }
+      ]
+    },
+    {
+      "name": "GOLANGCI_LINT_PACKAGE",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GOLANGCI_LINT_PACKAGE",
+          "kind": "code",
+          "location": {
+            "file": "tools/lint-go-all.go",
+            "line": 101
+          }
+        }
+      ]
+    },
+    {
+      "name": "HOME",
+      "default": "/var/lib/gitea/git",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "HOME",
+          "kind": "dockerfile",
+          "default": "/var/lib/gitea/git",
+          "location": {
+            "file": "Dockerfile.rootless",
+            "line": 82
+          }
+        },
+        {
+          "name": "HOME",
+          "kind": "code",
+          "location": {
+            "file": "modules/util/path.go",
+            "line": 302
+          }
+        }
+      ]
+    },
+    {
+      "name": "HOMEDRIVE",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "HOMEDRIVE",
+          "kind": "code",
+          "location": {
+            "file": "modules/util/path.go",
+            "line": 299
+          }
+        }
+      ]
+    },
+    {
+      "name": "HOMEPATH",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "HOMEPATH",
+          "kind": "code",
+          "location": {
+            "file": "modules/util/path.go",
+            "line": 299
+          }
+        }
+      ]
+    },
+    {
+      "name": "LISTEN_FDS",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LISTEN_FDS",
+          "kind": "code",
+          "location": {
+            "file": "cmd/web.go",
+            "line": 270
+          }
+        }
+      ]
+    },
+    {
+      "name": "MAKEFILE_VARS",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MAKEFILE_VARS",
+          "kind": "code",
+          "location": {
+            "file": "modules/setting/testenv.go",
+            "line": 158
+          }
+        }
+      ]
+    },
+    {
+      "name": "MINIO_ROOT_PASSWORD",
+      "default": "12345678",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MINIO_ROOT_PASSWORD",
+          "kind": "readme",
+          "default": "12345678",
+          "location": {
+            "file": "docs/testing.md",
+            "line": 80
+          }
+        }
+      ]
+    },
+    {
+      "name": "MINIO_ROOT_USER",
+      "default": "123456",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MINIO_ROOT_USER",
+          "kind": "readme",
+          "default": "123456",
+          "location": {
+            "file": "docs/testing.md",
+            "line": 80
+          }
+        }
+      ]
+    },
+    {
+      "name": "MSSQL_PID",
+      "default": "Standard",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MSSQL_PID",
+          "kind": "readme",
+          "default": "Standard",
+          "location": {
+            "file": "docs/testing.md",
+            "line": 90
+          }
+        }
+      ]
+    },
+    {
+      "name": "MYSQL_ALLOW_EMPTY_PASSWORD",
+      "default": "yes",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MYSQL_ALLOW_EMPTY_PASSWORD",
+          "kind": "readme",
+          "default": "yes",
+          "location": {
+            "file": "docs/testing.md",
+            "line": 67
+          }
+        }
+      ]
+    },
+    {
+      "name": "MYSQL_DATABASE",
+      "default": "test",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MYSQL_DATABASE",
+          "kind": "readme",
+          "default": "test",
+          "location": {
+            "file": "docs/testing.md",
+            "line": 67
+          }
+        }
+      ]
+    },
+    {
+      "name": "POSTGRES_DB",
+      "default": "test",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "POSTGRES_DB",
+          "kind": "readme",
+          "default": "test",
+          "location": {
+            "file": "docs/testing.md",
+            "line": 79
+          }
+        }
+      ]
+    },
+    {
+      "name": "POSTGRES_PASSWORD",
+      "default": "postgres",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "POSTGRES_PASSWORD",
+          "kind": "readme",
+          "default": "postgres",
+          "location": {
+            "file": "docs/testing.md",
+            "line": 79
+          }
+        }
+      ]
+    },
+    {
+      "name": "POSTGRES_USER",
+      "default": "postgres",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "POSTGRES_USER",
+          "kind": "readme",
+          "default": "postgres",
+          "location": {
+            "file": "docs/testing.md",
+            "line": 79
+          }
+        }
+      ]
+    },
+    {
+      "name": "SA_PASSWORD",
+      "default": "MwantsaSecurePassword1",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SA_PASSWORD",
+          "kind": "readme",
+          "default": "MwantsaSecurePassword1",
+          "location": {
+            "file": "docs/testing.md",
+            "line": 90
+          }
+        }
+      ]
+    },
+    {
+      "name": "SKIP_MINWINSVC",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SKIP_MINWINSVC",
+          "kind": "code",
+          "location": {
+            "file": "modules/graceful/manager_windows.go",
+            "line": 37
+          }
+        }
+      ]
+    },
+    {
+      "name": "SNAP",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SNAP",
+          "kind": "code",
+          "location": {
+            "file": "modules/setting/setting.go",
+            "line": 188
+          }
+        }
+      ]
+    },
+    {
+      "name": "SNAP_NAME",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SNAP_NAME",
+          "kind": "code",
+          "location": {
+            "file": "modules/setting/setting.go",
+            "line": 188
+          }
+        }
+      ]
+    },
+    {
+      "name": "SSH_CONNECTION",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SSH_CONNECTION",
+          "kind": "code",
+          "location": {
+            "file": "modules/private/internal.go",
+            "line": 31
+          }
+        }
+      ]
+    },
+    {
+      "name": "SSH_ORIGINAL_COMMAND",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SSH_ORIGINAL_COMMAND",
+          "kind": "code",
+          "location": {
+            "file": "cmd/hook.go",
+            "line": 178
+          }
+        },
+        {
+          "name": "SSH_ORIGINAL_COMMAND",
+          "kind": "code",
+          "location": {
+            "file": "cmd/hook.go",
+            "line": 331
+          }
+        },
+        {
+          "name": "SSH_ORIGINAL_COMMAND",
+          "kind": "code",
+          "location": {
+            "file": "cmd/hook.go",
+            "line": 469
+          }
+        },
+        {
+          "name": "SSH_ORIGINAL_COMMAND",
+          "kind": "code",
+          "location": {
+            "file": "cmd/serv.go",
+            "line": 168
+          }
+        },
+        {
+          "name": "SSH_ORIGINAL_COMMAND",
+          "kind": "code",
+          "location": {
+            "file": "cmd/serv.go",
+            "line": 189
+          }
+        }
+      ]
+    },
+    {
+      "name": "TAGS",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TAGS",
+          "kind": "code",
+          "location": {
+            "file": "tools/lint-go-all.go",
+            "line": 116
+          }
+        }
+      ]
+    },
+    {
+      "name": "TMPDIR",
+      "default": "/tmp/gitea",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TMPDIR",
+          "kind": "dockerfile",
+          "default": "/tmp/gitea",
+          "location": {
+            "file": "Dockerfile.rootless",
+            "line": 78
+          }
+        }
+      ]
+    },
+    {
+      "name": "USER",
+      "default": "git",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "USER",
+          "kind": "dockerfile",
+          "default": "git",
+          "location": {
+            "file": "Dockerfile",
+            "line": 79
+          }
+        },
+        {
+          "name": "USER",
+          "kind": "code",
+          "location": {
+            "file": "modules/user/user.go",
+            "line": 29
+          }
+        }
+      ]
+    },
+    {
+      "name": "USERNAME",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "USERNAME",
+          "kind": "code",
+          "location": {
+            "file": "modules/user/user.go",
+            "line": 34
+          }
+        }
+      ]
+    },
+    {
+      "name": "USERPROFILE",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "USERPROFILE",
+          "kind": "code",
+          "location": {
+            "file": "modules/util/path.go",
+            "line": 297
+          }
+        }
+      ]
+    },
+    {
+      "name": "all_proxy",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "all_proxy",
+          "kind": "code",
+          "location": {
+            "file": "modules/egress/policies.go",
+            "line": 50
+          }
+        }
+      ]
+    }
+  ],
+  "images": [
+    {
+      "reference": "mysql:latest",
+      "kind": "readme",
+      "location": {
+        "file": "docs/testing.md",
+        "line": 67
+      }
+    },
+    {
+      "reference": "postgres:latest",
+      "kind": "readme",
+      "location": {
+        "file": "docs/testing.md",
+        "line": 79
+      }
+    },
+    {
+      "reference": "bitnamilegacy/minio:2023.8.31",
+      "kind": "readme",
+      "location": {
+        "file": "docs/testing.md",
+        "line": 80
+      }
+    },
+    {
+      "reference": "microsoft/mssql-server-linux:latest",
+      "kind": "readme",
+      "location": {
+        "file": "docs/testing.md",
+        "line": 90
+      }
+    }
+  ],
+  "docker_runs": [
+    {
+      "image": "mysql:latest",
+      "ports": [
+        "3306:3306"
+      ],
+      "volumes": null,
+      "env": [
+        {
+          "key": "MYSQL_DATABASE",
+          "value": "test",
+          "location": {
+            "file": "docs/testing.md",
+            "line": 67
+          }
+        },
+        {
+          "key": "MYSQL_ALLOW_EMPTY_PASSWORD",
+          "value": "yes",
+          "location": {
+            "file": "docs/testing.md",
+            "line": 67
+          }
+        }
+      ],
+      "location": {
+        "file": "docs/testing.md",
+        "line": 67
+      }
+    },
+    {
+      "image": "postgres:latest",
+      "ports": [
+        "5432:5432"
+      ],
+      "volumes": null,
+      "env": [
+        {
+          "key": "POSTGRES_DB",
+          "value": "test",
+          "location": {
+            "file": "docs/testing.md",
+            "line": 79
+          }
+        },
+        {
+          "key": "POSTGRES_USER",
+          "value": "postgres",
+          "location": {
+            "file": "docs/testing.md",
+            "line": 79
+          }
+        },
+        {
+          "key": "POSTGRES_PASSWORD",
+          "value": "postgres",
+          "location": {
+            "file": "docs/testing.md",
+            "line": 79
+          }
+        }
+      ],
+      "location": {
+        "file": "docs/testing.md",
+        "line": 79
+      }
+    },
+    {
+      "image": "bitnamilegacy/minio:2023.8.31",
+      "ports": [
+        "9000:9000"
+      ],
+      "volumes": null,
+      "env": [
+        {
+          "key": "MINIO_ROOT_USER",
+          "value": "123456",
+          "location": {
+            "file": "docs/testing.md",
+            "line": 80
+          }
+        },
+        {
+          "key": "MINIO_ROOT_PASSWORD",
+          "value": "12345678",
+          "location": {
+            "file": "docs/testing.md",
+            "line": 80
+          }
+        }
+      ],
+      "location": {
+        "file": "docs/testing.md",
+        "line": 80
+      }
+    },
+    {
+      "image": "microsoft/mssql-server-linux:latest",
+      "ports": [
+        "1433:1433"
+      ],
+      "volumes": null,
+      "env": [
+        {
+          "key": "ACCEPT_EULA",
+          "value": "Y",
+          "location": {
+            "file": "docs/testing.md",
+            "line": 90
+          }
+        },
+        {
+          "key": "MSSQL_PID",
+          "value": "Standard",
+          "location": {
+            "file": "docs/testing.md",
+            "line": 90
+          }
+        },
+        {
+          "key": "SA_PASSWORD",
+          "value": "MwantsaSecurePassword1",
+          "location": {
+            "file": "docs/testing.md",
+            "line": 90
+          }
+        }
+      ],
+      "location": {
+        "file": "docs/testing.md",
+        "line": 90
+      }
+    }
+  ],
+  "notes": null,
+  "suspicious": null,
+  "readmes": [
+    "README.md",
+    "contrib/README",
+    "contrib/development/README.md",
+    "contrib/grafana-monitoring-mixin/README.md",
+    "docker/README.md",
+    "routers/api/packages/README.md",
+    "services/auth/source/ldap/README.md",
+    "web_src/js/webcomponents/README.md"
+  ],
+  "summary": {
+    "text": "The goal of Gitea is to make the easiest, fastest, and most painless way of",
+    "location": {
+      "file": "README.md",
+      "line": 16
+    }
+  },
+  "file_mentions": [
+    {
+      "text": "release-nightly.yml",
+      "location": {
+        "file": "README.md",
+        "line": 3
+      }
+    },
+    {
+      "text": "release-nightly.yml",
+      "location": {
+        "file": "README.md",
+        "line": 3
+      }
+    },
+    {
+      "text": "giteabot.yml",
+      "location": {
+        "file": "docs/community-governance.md",
+        "line": 81
+      }
+    },
+    {
+      "text": "pnpm-lock.yaml",
+      "location": {
+        "file": "docs/guidelines-frontend.md",
+        "line": 23
+      }
+    },
+    {
+      "text": "release.yaml",
+      "location": {
+        "file": "docs/release-management.md",
+        "line": 90
+      }
+    },
+    {
+      "text": "pull-db-tests.yml",
+      "location": {
+        "file": "docs/testing.md",
+        "line": 104
+      }
+    },
+    {
+      "text": "pull-db-tests.yml",
+      "location": {
+        "file": "docs/testing.md",
+        "line": 110
+      }
+    },
+    {
+      "text": "pull-db-tests.yml",
+      "location": {
+        "file": "docs/testing.md",
+        "line": 111
+      }
+    }
+  ],
+  "stack_hints": [
+    "go.mod",
+    "package.json",
+    "pyproject.toml"
+  ],
+  "problems": null
+}

@@ -1,0 +1,18 @@
+preserve_hierarchy: false
+pull_request_title: "chore(l10n): New Crowdin updates"
+pull_request_labels: [
+  "l10n"
+]
+files:
+  - source: /frontend/app/lang/messages/en-US.json
+    translation: /frontend/app/lang/messages/%locale%.json
+  - source: /mealie/lang/messages/en-US.json
+    translation: /mealie/lang/messages/%locale%.json
+  - source: /mealie/repos/seed/resources/foods/locales/en-US.json
+    translation: /mealie/repos/seed/resources/foods/locales/%locale%.json
+  - source: /mealie/repos/seed/resources/units/locales/en-US.json
+    translation: /mealie/repos/seed/resources/units/locales/%locale%.json
+
+# New commit messages use [skip ci] causing our ci not to run on automatic PRs
+commit_message: "New translations %original_file_name% (%language%)"
+append_commit_message: false

@@ -1,0 +1,19 @@
+{{define "content"}}
+<section class="auth-card" aria-labelledby="login-title">
+  <h1 id="login-title">Sign in</h1>
+  <p class="auth-intro">Use your composewright admin account.</p>
+  <p class="muted small" data-insecure-context hidden>This connection is plain HTTP, so your password crosses the network unencrypted. That is fine on a network you trust; put HTTPS in front before exposing composewright further.</p>
+  <form class="auth-form" method="post" action="/login">
+    <input type="hidden" name="next" value="{{.Data.Next}}">
+    <div class="auth-field">
+      <label for="username">Username</label>
+      <span class="input-icon">{{template "icon-user"}}<input id="username" name="username" type="text" autocomplete="username" required value="{{.Data.Username}}" autofocus></span>
+    </div>
+    <div class="auth-field">
+      <span class="auth-label-row"><label for="password">Password</label><a href="/login/forgot">Forgot password?</a></span>
+      <span class="input-icon">{{template "icon-lock"}}<input id="password" name="password" type="password" autocomplete="current-password" required>{{template "password-reveal" "password"}}</span>
+    </div>
+    <button class="button button-primary button-large" type="submit">Sign in{{template "icon-arrow"}}</button>
+  </form>
+</section>
+{{end}}

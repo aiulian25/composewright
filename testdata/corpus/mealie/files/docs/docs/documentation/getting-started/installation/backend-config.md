@@ -1,0 +1,381 @@
+# Backend Configuration
+
+## API Environment Variables
+
+### General
+
+| Variables                     |        Default        | Description                                                                                                                                             |
+| ----------------------------- | :-------------------: | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PUID                          |          911          | UserID permissions between host OS and container                                                                                                        |
+| PGID                          |          911          | GroupID permissions between host OS and container                                                                                                       |
+| DEFAULT_GROUP                 |         Home          | The default group for users                                                                                                                             |
+| DEFAULT_HOUSEHOLD             |        Family         | The default household for users in each group                                                                                                           |
+| BASE_URL                      | http://localhost:8080 | Used for notifications and the OIDC callback url                                                                                                        |
+| TOKEN_TIME                    |          48           | The time in hours a login session lasts. Must be <= 9600 (400 days, in hours).                                                                          |
+| API_PORT                      |         9000          | The port exposed by backend API. **Do not change this if you're running in Docker**                                                                     |
+| API_DOCS                      |         True          | Turns on/off access to the API documentation locally                                                                                                    |
+| TZ                            |          UTC          | Must be set to get correct date/time on the server                                                                                                      |
+| ALLOW_SIGNUP<super>\*</super> |         false         | Allow user sign-up without token                                                                                                                        |
+| ALLOW_PASSWORD_LOGIN          |         true          | Whether or not to display the username+password input fields. Keep set to true unless you use OIDC authentication                                       |
+| LOG_CONFIG_OVERRIDE           |                       | Override the config for logging with a custom path                                                                                                      |
+| LOG_LEVEL                     |         info          | Logging level (e.g. critical, error, warning, info, debug)                                                                                              |
+| DAILY_SCHEDULE_TIME           |         23:45         | The time of day to run daily server tasks, in HH:MM format. Use the server's local time, *not* UTC                                                      |
+
+<super>\*</super> Starting in v1.4.0 this was changed to default to `false` as part of a security review of the application.
+
+### Security
+
+| Variables                   | Default | Description                                                                         |
+| --------------------------- | :-----: | ----------------------------------------------------------------------------------- |
+| SECURITY_MAX_LOGIN_ATTEMPTS |    5    | Maximum times a user can provide an invalid password before their account is locked |
+| SECURITY_USER_LOCKOUT_TIME  |   24    | Time in hours for how long a users account is locked                                |
+| ALLOWED_IFRAME_HOSTS        |  `""`   | Comma-separated extra hostnames allowed as `<iframe>` sources in recipe content. Extends the built-in list of trusted video providers (YouTube, Vimeo). Subdomains are included automatically. Only `https` sources are permitted. Adding hosts here opts into rendering embeds from those origins to all viewers, including the public, so add only origins you trust. |
+| HTTP_ALLOW_LIST             |  `""`   | Comma-separated hosts or CIDRs that server-initiated requests (recipe scraping, webhooks, recipe actions, OIDC profile images) may reach even when they resolve to an otherwise-blocked private/internal address. Use to allow a known internal server. |
+| HTTP_DISALLOW_LIST          |  `""`   | Comma-separated hosts or CIDRs that server-initiated requests may never reach, even if public. Takes precedence over `HTTP_ALLOW_LIST`. |
+
+### Database
+
+ | Variables                                               | Default  | Description                                                                                                                                                                                                                      |
+ |---------------------------------------------------------|:--------:|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+ | DB_ENGINE                                               |  sqlite  | Optional: 'sqlite', 'postgres'                                                                                                                                                                                                   |
+ | SQLITE_MIGRATE_JOURNAL_WAL                              |  False   | If set to true, switches SQLite's journal mode to WAL, which allows for multiple concurrent accesses. This can be useful when you have a decent amount of concurrency or when using certain remote storage systems such as Ceph. |
+ | POSTGRES_USER<super>[&dagger;][secrets]</super>         |  mealie  | Postgres database user                                                                                                                                                                                                           |
+ | POSTGRES_PASSWORD<super>[&dagger;][secrets]</super>     |  mealie  | Postgres database password                                                                                                                                                                                                       |
+ | POSTGRES_SERVER<super>[&dagger;][secrets]</super>       | postgres | Postgres database server address                                                                                                                                                                                                 |
+ | POSTGRES_PORT<super>[&dagger;][secrets]</super>         |   5432   | Postgres database port                                                                                                                                                                                                           |
+ | POSTGRES_DB<super>[&dagger;][secrets]</super>           |  mealie  | Postgres database name                                                                                                                                                                                                           |
+ | POSTGRES_URL_OVERRIDE<super>[&dagger;][secrets]</super> |   None   | Optional Postgres URL override to use instead of POSTGRES\_\* variables                                                                                                                                                          |
+
+### Email
+
+| Variables                                       | Default | Description                                       |
+| ----------------------------------------------- | :-----: | ------------------------------------------------- |
+| SMTP_HOST<super>[&dagger;][secrets]</super>     |  None   | Required For email                                |
+| SMTP_PORT<super>[&dagger;][secrets]</super>     |   587   | Required For email                                |
+| SMTP_FROM_NAME                                  | Mealie  | Required For email                                |
+| SMTP_AUTH_STRATEGY                              |   TLS   | Required For email, Options: 'TLS', 'SSL', 'NONE' |
+| SMTP_FROM_EMAIL                                 |  None   | Required For email                                |
+| SMTP_USER<super>[&dagger;][secrets]</super>     |  None   | Optional; must be set together with SMTP_PASSWORD |
+| SMTP_PASSWORD<super>[&dagger;][secrets]</super> |  None   | Optional; must be set together with SMTP_USER     |
+
+### Webworker
+
+Changing the webworker settings may cause unforeseen memory leak issues with Mealie. It's best to leave these at the defaults unless you begin to experience issues with multiple users. Exercise caution when changing these settings
+
+| Variables       | Default | Description                                                                      |
+| --------------- | :-----: | -------------------------------------------------------------------------------- |
+| UVICORN_WORKERS |    1    | Sets the number of workers for the web server. [More info here][unicorn_workers] |
+
+### TLS
+
+Use this only when mealie is run without a webserver or reverse proxy.
+
+| Variables            | Default | Description              |
+| -------------------- | :-----: | ------------------------ |
+| TLS_CERTIFICATE_PATH |  None   | File path to Certificate |
+| TLS_PRIVATE_KEY_PATH |  None   | File path to private key |
+
+### LDAP
+
+| Variables                                             | Default | Description                                                                                                                         |
+| ----------------------------------------------------- | :-----: | ----------------------------------------------------------------------------------------------------------------------------------- |
+| LDAP_AUTH_ENABLED                                     |  False  | Authenticate via an external LDAP server in addidion to built-in Mealie auth                                                        |
+| LDAP_SERVER_URL<super>[&dagger;][secrets]</super>     |  None   | LDAP server URL (e.g. ldap://ldap.example.com)                                                                                      |
+| LDAP_TLS_INSECURE                                     |  False  | Do not verify server certificate when using secure LDAP                                                                             |
+| LDAP_TLS_CACERTFILE                                   |  None   | File path to Certificate Authority used to verify server certificate (e.g. `/path/to/ca.crt`)                                       |
+| LDAP_ENABLE_STARTTLS                                  |  False  | Optional. Use STARTTLS to connect to the server                                                                                     |
+| LDAP_BASE_DN                                          |  None   | Starting point when searching for users authentication (e.g. `CN=Users,DC=xx,DC=yy,DC=de`)                                          |
+| LDAP_QUERY_BIND                                       |  None   | Optional bind user for LDAP search queries (e.g. `cn=admin,cn=users,dc=example,dc=com`). If `None` then anonymous bind will be used |
+| LDAP_QUERY_PASSWORD<super>[&dagger;][secrets]</super> |  None   | Optional password for the bind user used in LDAP_QUERY_BIND                                                                         |
+| LDAP_USER_FILTER                                      |  None   | Optional LDAP filter to narrow down eligible users (e.g. `(memberOf=cn=mealie_user,dc=example,dc=com)`)                             |
+| LDAP_ADMIN_FILTER                                     |  None   | Optional LDAP filter, which tells Mealie the LDAP user is an admin (e.g. `(memberOf=cn=admins,dc=example,dc=com)`)                  |
+| LDAP_ID_ATTRIBUTE                                     |   uid   | The LDAP attribute that maps to the user's id                                                                                       |
+| LDAP_NAME_ATTRIBUTE                                   |  name   | The LDAP attribute that maps to the user's name                                                                                     |
+| LDAP_MAIL_ATTRIBUTE                                   |  mail   | The LDAP attribute that maps to the user's email                                                                                    |
+
+### OpenID Connect (OIDC)
+
+:octicons-tag-24: v1.4.0
+
+For usage, see [Usage - OpenID Connect](../authentication/oidc-v2.md)
+
+| Variables                                                                           | Default | Description                                                                                                                                                                                                                                                                                            |
+| ----------------------------------------------------------------------------------- | :-----: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| OIDC_AUTH_ENABLED                                                                   |  False  | Enables authentication via OpenID Connect                                                                                                                                                                                                                                                              |
+| OIDC_SIGNUP_ENABLED                                                                 |  True   | Enables new users to be created when signing in for the first time with OIDC                                                                                                                                                                                                                           |
+| OIDC_REQUIRES_EMAIL_VERIFICATION <br/> :octicons-tag-24: v3.21.0                    |  True   | Requires the `email_verified` claim to be true before a user can sign in. This prevents an unverified email from being used to match an existing account. Only disable this if your identity provider does not emit the `email_verified` claim. For more information see [this page](../authentication/oidc-v2.md#email-verification)                    |
+| OIDC_CONFIGURATION_URL<super>[&dagger;][secrets]</super>                            |  None   | The URL to the OIDC configuration of your provider. This is usually something like https://auth.example.com/.well-known/openid-configuration                                                                                                                                                           |
+| OIDC_CLIENT_ID<super>[&dagger;][secrets]</super>                                    |  None   | The client id of your configured client in your provider                                                                                                                                                                                                                                               |
+| OIDC_CLIENT_SECRET<super>[&dagger;][secrets]</super> <br/> :octicons-tag-24: v2.0.0 |  None   | The client secret of your configured client in your provider                                                                                                                                                                                                                                           |
+| OIDC_USER_GROUP                                                                     |  None   | If specified, only users belonging to this group will be able to successfully authenticate, regardless of the `OIDC_ADMIN_GROUP`. For more information see [this page](../authentication/oidc.md#groups)                                                                                               |
+| OIDC_ADMIN_GROUP                                                                    |  None   | If specified, users belonging to this group will be made an admin. For more information see [this page](../authentication/oidc.md#groups)                                                                                                                                                              |
+| OIDC_AUTO_REDIRECT                                                                  |  False  | If `True`, then the login page will be bypassed an you will be sent directly to your Identity Provider. You can still get to the login page by adding `?direct=1` to the login URL                                                                                                                     |
+| OIDC_PROVIDER_NAME                                                                  |  OAuth  | The provider name is shown in SSO login button. "Login with <OIDC_PROVIDER_NAME\>"                                                                                                                                                                                                                     |
+| OIDC_REMEMBER_ME                                                                    |  False  | Because redirects bypass the login screen, you can't tick the "Remember Me" checkbox. Setting this to true treats an OIDC login as if it had been checked, so the session survives closing the browser                                                                                              |
+| OIDC_SIGNING_ALGORITHM                                                              |  RS256  | The algorithm used to sign the id token (examples: RS256, HS256)                                                                                                                                                                                                                                       |
+| OIDC_USER_CLAIM                                                                     |  email  | This is the claim which Mealie will use to look up an existing user by (e.g. "email", "preferred_username")                                                                                                                                                                                            |
+| OIDC_NAME_CLAIM                                                                     |  name   | This is the claim which Mealie will use for the users Full Name                                                                                                                                                                                                                                        |
+| OIDC_GROUPS_CLAIM                                                                   | groups  | Optional if not using `OIDC_USER_GROUP` or `OIDC_ADMIN_GROUP`. This is the claim Mealie will request from your IdP and will use to compare to `OIDC_USER_GROUP` or `OIDC_ADMIN_GROUP` to allow the user to log in to Mealie or is set as an admin. **Your IdP must be configured to grant this claim** |
+| OIDC_SCOPES_OVERRIDE                                                                |  None   | Advanced configuration used to override the scopes requested from the IdP. **Most users won't need to change this**. At a minimum, 'openid profile email' are required.                                                                                                                                |
+| OIDC_TLS_CACERTFILE                                                                 |  None   | File path to Certificate Authority used to verify server certificate (e.g. `/path/to/ca.crt`)                                                                                                                                                                                                          |
+| OIDC_CLIENT_TIMEOUT                                                                 | default | Configures the timeout value of the httpx client used for OIDC communications. If set to the string `default`, does not configure the value (uses the library's default of 5.0s). If set to the string `None`, disables the timeout entirely. If set to a numeric value, uses that as the timeout.     |
+
+### OpenAI
+
+:octicons-tag-24: v1.7.0
+
+Mealie supports various integrations using OpenAI. For more information, check out our [OpenAI documentation](./ai-providers.md).
+
+| Variables                                                               | Default     | Description                                                                                                                                                                                                                                                                                                            |
+|-------------------------------------------------------------------------|:-----------:|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| OPENAI_CUSTOM_PROMPT_DIR <br/> :octicons-tag-24: v3.10.0                |    None.    | Path to custom prompt files. Only existing files in your custom directory will override the defaults; any missing or empty custom files will automatically fall back to the system defaults. See https://github.com/mealie-recipes/mealie/tree/mealie-next/mealie/services/openai/prompts for expected file names.     |
+
+Recipe import can also transcribe a video's audio with AI (e.g. to import a recipe from a cooking video). This uses yt-dlp to download the video, which you can configure with the env variables below:
+
+| Variables | Default | Description |
+|-------------------------------------------------------------------------|:-----------:|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| YTDLP_COOKIEFILE | None | Cookiefile for yt-dlp to use when downloading a video, needed for content that requires sign-in |
+
+### Recipe Scraper
+
+When you import a recipe from a URL, Mealie fetches the page (and its image) before parsing it. Many
+sites sit behind bot-protection (e.g. Cloudflare) that can block these requests. Out of the box Mealie
+mitigates this by impersonating real browsers' TLS fingerprints and rotating between several of them,
+which is enough for most sites and requires no configuration. If you still run into sites that block
+imports, the **opt-in** settings below add two further layers.
+
+| Variables                    | Default | Description                                                                                                                                                                                                                                                             |
+| ---------------------------- | :-----: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SCRAPER_PROXY_URL            |  None   | Optional proxy for all outbound scraping and image requests (e.g. `http://user:pass@host:port`). Routing through an IP with a better reputation helps bypass IP-based blocks. Unset disables it.                                                                        |
+| SCRAPER_PROXY_MODE           | always  | How the proxy is used (when `SCRAPER_PROXY_URL` is set): `always` routes every request through it; `fallback` tries a direct request first and only retries through the proxy when a block is detected. Any unrecognized value falls back to `always`.                   |
+| SCRAPER_FLARESOLVERR_URL     |  None   | Optional base URL of a self-hosted [FlareSolverr](https://github.com/FlareSolverr/FlareSolverr) instance (e.g. `http://flaresolverr:8191`). Used only as a last resort to solve JS/Cloudflare challenges. Unset disables it.                                            |
+| SCRAPER_FLARESOLVERR_TIMEOUT |   60    | Maximum seconds FlareSolverr may spend solving a single challenge before giving up.                                                                                                                                                                                    |
+
+#### How Mealie fetches a page
+
+For each import Mealie escalates only as far as it needs to, stopping at the first step that succeeds:
+
+1. **Direct fetch** with rotating browser TLS impersonations — always on, no configuration.
+2. **Proxy** — if `SCRAPER_PROXY_URL` is set (see modes below).
+3. **FlareSolverr** — if `SCRAPER_FLARESOLVERR_URL` is set, and only when the page is still blocked.
+
+Steps 2 and 3 are opt-in, so a default install uses only step 1. Genuine "not found" responses (e.g.
+`404`) are treated as real errors and are never retried through the later steps.
+
+#### Proxy
+
+Most IP-based blocks trigger on the very first request, so `always` mode (the default when a proxy is
+set) is recommended — it routes every request through the proxy from the start. Use `fallback` mode if
+you're on a **metered proxy** and want to avoid paying for requests that would have succeeded directly;
+Mealie will then only route through the proxy after a direct attempt is blocked. The proxy applies to
+both the recipe page and its image download.
+
+#### FlareSolverr
+
+FlareSolverr runs a real headless browser to solve challenges that TLS impersonation alone can't.
+**Mealie neither ships nor manages it** — you host it yourself and point Mealie at it. Because it
+returns rendered **HTML**, it is only used for the recipe page; **image downloads never use
+FlareSolverr** and continue to rely on the direct/proxy path.
+
+Run it as a sidecar container and set `SCRAPER_FLARESOLVERR_URL` to its address:
+
+```yaml
+services:
+  mealie:
+    image: ghcr.io/mealie-recipes/mealie:latest
+    environment:
+      SCRAPER_FLARESOLVERR_URL: http://flaresolverr:8191
+      # optional; default shown
+      # SCRAPER_FLARESOLVERR_TIMEOUT: 60
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    restart: unless-stopped
+    # No ports need to be published — Mealie reaches it over the internal Docker network.
+```
+
+Because FlareSolverr drives a browser, requests through it are much slower (seconds) and far more
+resource-intensive than a direct fetch. That's why Mealie only falls back to it when a page is actually
+blocked, rather than using it for every import.
+
+### Theming
+
+Setting the following environmental variables will change the theme of the frontend. Note that the themes are the same for all users. This is a break-change when migration from v0.x.x -> 1.x.x.
+
+!!! info
+    If you're setting these variables but not seeing these changes persist, try removing the `#` character. Also, depending on which syntax you're using, double-check you're using quotes correctly.
+
+    If using YAML mapping syntax, be sure to include quotes around these values, otherwise they will be treated as comments in your YAML file:<br>`THEME_LIGHT_PRIMARY: '#E58325'` or  `THEME_LIGHT_PRIMARY: 'E58325'`
+
+    If using YAML sequence syntax, don't include any quotes:<br>`THEME_LIGHT_PRIMARY=#E58325` or `THEME_LIGHT_PRIMARY=E58325`
+
+| Variables             | Default | Description                        |
+| --------------------- | :-----: | ---------------------------------- |
+| THEME_LIGHT_PRIMARY   | #E58325 | Main brand color and headers       |
+| THEME_LIGHT_ACCENT    | #007A99 | Buttons and interactive elements   |
+| THEME_LIGHT_SECONDARY | #973542 | Secondary UI elements and interactive accents |
+| THEME_LIGHT_SUCCESS   | #43A047 | Success messages and confirmations |
+| THEME_LIGHT_INFO      | #1976D2 | Information alerts and tooltips    |
+| THEME_LIGHT_WARNING   | #FF6D00 | Warning notifications              |
+| THEME_LIGHT_ERROR     | #EF5350 | Error messages and alerts          |
+| THEME_DARK_PRIMARY    | #E58325 | Main brand color and headers       |
+| THEME_DARK_ACCENT     | #007A99 | Buttons and interactive elements   |
+| THEME_DARK_SECONDARY  | #973542 | Secondary UI elements and interactive accents |
+| THEME_DARK_SUCCESS    | #43A047 | Success messages and confirmations |
+| THEME_DARK_INFO       | #1976D2 | Information alerts and tooltips    |
+| THEME_DARK_WARNING    | #FF6D00 | Warning notifications              |
+| THEME_DARK_ERROR      | #EF5350 | Error messages and alerts          |
+
+#### Theming Examples
+
+The examples below provide copy-ready Docker Compose environment configurations for three different color palettes. Copy and paste the desired theme into your `docker-compose.yml` file's environment section.
+
+!!! info
+    These themes are functional and ready to use, but they are provided primarily as examples. The color palettes can be adjusted or refined to better suit your preferences.
+
+=== "Blue Theme"
+
+    ```yaml
+    environment:
+      # Light mode colors
+      THEME_LIGHT_PRIMARY: '#5E9BD1'
+      THEME_LIGHT_ACCENT: '#A3C9E8'
+      THEME_LIGHT_SECONDARY: '#4F89BA'
+      THEME_LIGHT_SUCCESS: '#4CAF50'
+      THEME_LIGHT_INFO: '#4A9ED8'
+      THEME_LIGHT_WARNING: '#EAC46B'
+      THEME_LIGHT_ERROR: '#E57373'
+      # Dark mode colors
+      THEME_DARK_PRIMARY: '#5A8FBF'
+      THEME_DARK_ACCENT: '#90B8D9'
+      THEME_DARK_SECONDARY: '#406D96'
+      THEME_DARK_SUCCESS: '#81C784'
+      THEME_DARK_INFO: '#78B2C0'
+      THEME_DARK_WARNING: '#EBC86E'
+      THEME_DARK_ERROR: '#E57373'
+    ```
+
+=== "Green Theme"
+
+    ```yaml
+    environment:
+      # Light mode colors
+      THEME_LIGHT_PRIMARY: '#75A86C'
+      THEME_LIGHT_ACCENT: '#A8D0A6'
+      THEME_LIGHT_SECONDARY: '#638E5E'
+      THEME_LIGHT_SUCCESS: '#4CAF50'
+      THEME_LIGHT_INFO: '#4A9ED8'
+      THEME_LIGHT_WARNING: '#EAC46B'
+      THEME_LIGHT_ERROR: '#E57373'
+      # Dark mode colors
+      THEME_DARK_PRIMARY: '#739B7A'
+      THEME_DARK_ACCENT: '#9FBE9D'
+      THEME_DARK_SECONDARY: '#56775E'
+      THEME_DARK_SUCCESS: '#81C784'
+      THEME_DARK_INFO: '#78B2C0'
+      THEME_DARK_WARNING: '#EBC86E'
+      THEME_DARK_ERROR: '#E57373'
+    ```
+
+=== "Pink Theme"
+
+    ```yaml
+    environment:
+      # Light mode colors
+      THEME_LIGHT_PRIMARY: '#D97C96'
+      THEME_LIGHT_ACCENT: '#E891A7'
+      THEME_LIGHT_SECONDARY: '#C86C88'
+      THEME_LIGHT_SUCCESS: '#4CAF50'
+      THEME_LIGHT_INFO: '#2196F3'
+      THEME_LIGHT_WARNING: '#FFC107'
+      THEME_LIGHT_ERROR: '#E57373'
+      # Dark mode colors
+      THEME_DARK_PRIMARY: '#C2185B'
+      THEME_DARK_ACCENT: '#FF80AB'
+      THEME_DARK_SECONDARY: '#AD1457'
+      THEME_DARK_SUCCESS: '#81C784'
+      THEME_DARK_INFO: '#64B5F6'
+      THEME_DARK_WARNING: '#FFD54F'
+      THEME_DARK_ERROR: '#E57373'
+    ```
+
+!!! info
+    Browser cookies may cause the client to keep outdated settings.
+    Clearing the cookies can be required for the change to take effect.
+
+### Docker Secrets
+
+> <super>&dagger;</super> Starting in version `2.4.2`, any environment variable in the preceding lists with a dagger
+> symbol next to them support the Docker Compose secrets pattern, below.
+[Docker Compose secrets][docker-secrets] can be used to secure sensitive information regarding the Mealie implementation
+by managing control of each secret independently from the single `.env` file. This is helpful for users that may need
+different levels of access for various, sensitive environment variables, such as differentiating between hardening
+operations (e.g., server endpoints and ports) and user access control (e.g., usernames, passwords, and API keys).
+
+To convert any of these environment variables to a Docker Compose secret, append `_FILE` to the environment variable and
+connect it with a Docker Compose secret, per the [Docker documentation][docker-secrets].
+
+If both the base environment variable and the secret pattern of the environment variable are set, the secret will always
+take precedence.
+
+For example, a user that wishes to harden their operations by only giving some access to their database URL, but who
+wish to place additional security around their user access control, may have a Docker Compose configuration similar to:
+
+
+```yaml
+services:
+  mealie:
+    secrets:
+      # These secrets will be loaded by Docker into the `/run/secrets` folder within the container.
+      - postgres-host
+      - postgres-port
+      - postgres-db-name
+      - postgres-user
+      - postgres-password
+
+    environment:
+      DB_ENGINE: postgres
+      POSTGRES_SERVER: duplicate.entry.tld # This will be ignored, due to the secret defined, below.
+      POSTGRES_SERVER_FILE: /run/secrets/postgres-host
+      POSTGRES_PORT_FILE: /run/secrets/postgres-port
+      POSTGRES_DB_FILE: /run/secrets/postgres-db-name
+      POSTGRES_USER_FILE: /run/secrets/postgres-user
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres-password
+
+# Each of these secrets are loaded via these local files. Different patterns are available. See the Docker Compose
+# documentation for more information.
+secrets:
+  postgres-host:
+    file: ./secrets/postgres-host.txt
+  postgres-port:
+    file: ./secrets/postgres-port.txt
+  postgres-db-name:
+    file: ./secrets/sensitive/postgres-db-name.txt
+  postgres-user:
+    file: ./secrets/sensitive/postgres-user.txt
+  postgres-password:
+    file: ./secrets/sensitive/postgres-password.txt
+```
+In the example above, a directory organization and access pattern may look like the following:
+```text
+.
+├── docker-compose.yml
+└── secrets                     # Access restricted to anyone that can manage secrets
+    ├── postgres-host.txt
+    ├── postgres-port.txt
+    └── sensitive               # Access further-restricted to anyone managing service accounts
+        ├── postgres-db-name.txt
+        ├── postgres-password.txt
+        └── postgres-user.txt
+```
+
+How you organize your secrets is ultimately up to you. At minimum, it's highly recommended to use secret patterns for
+at least these sensitive environment variables when working within shared environments:
+
+- `POSTGRES_PASSWORD`
+- `SMTP_PASSWORD`
+- `LDAP_QUERY_PASSWORD`
+
+[docker-secrets]: https://docs.docker.com/compose/use-secrets/
+[secrets]: #docker-secrets
+[unicorn_workers]: https://www.uvicorn.org/deployment/#built-in

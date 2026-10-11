@@ -1,0 +1,1871 @@
+{
+  "files": [
+    ".claude/skills/review-actual-pr/references/highlight-element.js",
+    ".coderabbit.yaml",
+    ".yarnrc.yml",
+    "Dockerfile",
+    "README.md",
+    "docker-compose.yml",
+    "package.json",
+    "packages/api/README.md",
+    "packages/api/browser-worker.ts",
+    "packages/api/package.json",
+    "packages/api/playwright.config.ts",
+    "packages/ci-actions/bin/get-next-package-version.ts",
+    "packages/ci-actions/bin/release-notes-check.mjs",
+    "packages/ci-actions/bin/release-notes-generate.mjs",
+    "packages/ci-actions/bin/update-bundle-stats-comment.mjs",
+    "packages/ci-actions/package.json",
+    "packages/cli/README.md",
+    "packages/cli/package.json",
+    "packages/cli/src/config.ts",
+    "packages/component-library/package.json",
+    "packages/component-library/vitest.web.config.ts",
+    "packages/crdt/README.md",
+    "packages/crdt/package.json",
+    "packages/desktop-client/README.md",
+    "packages/desktop-client/bin/serve-build.mjs",
+    "packages/desktop-client/package.json",
+    "packages/desktop-client/playwright.config.ts",
+    "packages/desktop-electron/afterSignHook.ts",
+    "packages/desktop-electron/beforePackHook.ts",
+    "packages/desktop-electron/index.ts",
+    "packages/desktop-electron/package.json",
+    "packages/desktop-electron/playwright.config.ts",
+    "packages/desktop-electron/server.ts",
+    "packages/desktop-electron/window-state.ts",
+    "packages/docs/README.md",
+    "packages/docs/blog/authors.yml",
+    "packages/docs/package.json",
+    "packages/eslint-plugin-actual/package.json",
+    "packages/loot-core/migrations/README.md",
+    "packages/loot-core/package.json",
+    "packages/loot-core/src/mocks/setup.ts",
+    "packages/loot-core/src/platform/client/connection/README.md",
+    "packages/loot-core/src/platform/server/connection/README.md",
+    "packages/loot-core/src/platform/server/fs/index.electron.ts",
+    "packages/loot-core/src/platform/server/fs/index.ts",
+    "packages/loot-core/src/platform/server/sqlite/index.ts",
+    "packages/loot-core/src/server/aql/compiler.ts",
+    "packages/loot-core/src/server/budgetfiles/app.ts",
+    "packages/loot-core/src/server/main.ts",
+    "packages/loot-core/src/server/mutators.ts",
+    "packages/loot-core/src/server/prefs.ts",
+    "packages/loot-core/src/server/sheet.ts",
+    "packages/loot-core/src/server/sync/index.ts",
+    "packages/loot-core/src/shared/environment.ts",
+    "packages/loot-core/vitest.config.ts",
+    "packages/loot-core/vitest.web.config.ts",
+    "packages/mobile-client/capacitor.config.ts",
+    "packages/mobile-client/package.json",
+    "packages/plugins-service/package.json",
+    "packages/sync-server/README.md",
+    "packages/sync-server/bin/actual-server.js",
+    "packages/sync-server/docker-compose.yml",
+    "packages/sync-server/docker/alpine.Dockerfile",
+    "packages/sync-server/docker/ubuntu.Dockerfile",
+    "packages/sync-server/package.json",
+    "packages/sync-server/src/app-gocardless/README.md",
+    "packages/sync-server/src/app.ts",
+    "packages/sync-server/src/load-config.js",
+    "packages/sync-server/vitest.config.ts",
+    "packages/vite-plugin-peggy/package.json",
+    "sync-server.Dockerfile",
+    "upcoming-release-notes/README.md"
+  ],
+  "compose_files": [
+    {
+      "path": "docker-compose.yml",
+      "services": [
+        {
+          "name": "actual-development",
+          "location": {
+            "file": "docker-compose.yml",
+            "line": 8
+          },
+          "image": "actual-development",
+          "image_at": {
+            "file": "docker-compose.yml",
+            "line": 10
+          },
+          "build": true,
+          "ports": [
+            {
+              "target": 3001,
+              "published": "3001",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docker-compose.yml",
+                "line": 14
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "bind",
+              "source": ".",
+              "target": "/app",
+              "read_only": false,
+              "location": {
+                "file": "docker-compose.yml",
+                "line": 16
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "HTTPS",
+              "raw": "",
+              "has_value": false,
+              "location": {
+                "file": "docker-compose.yml",
+                "line": 12
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": []
+    },
+    {
+      "path": "packages/sync-server/docker-compose.yml",
+      "services": [
+        {
+          "name": "actual_server",
+          "location": {
+            "file": "packages/sync-server/docker-compose.yml",
+            "line": 2
+          },
+          "image": "docker.io/actualbudget/actual-server:latest",
+          "image_at": {
+            "file": "packages/sync-server/docker-compose.yml",
+            "line": 3
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 5006,
+              "published": "5006",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "packages/sync-server/docker-compose.yml",
+                "line": 7
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "./actual-data",
+              "target": "/data",
+              "read_only": false,
+              "location": {
+                "file": "packages/sync-server/docker-compose.yml",
+                "line": 21
+              }
+            }
+          ],
+          "environment": null,
+          "env_files": null,
+          "depends_on": null,
+          "healthcheck": {
+            "test": [
+              "CMD-SHELL",
+              "node scripts/health-check.js"
+            ],
+            "interval": "1m0s",
+            "timeout": "10s",
+            "start_period": "20s",
+            "retries": 3,
+            "disabled": false,
+            "location": {
+              "file": "packages/sync-server/docker-compose.yml",
+              "line": 22
+            }
+          },
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": []
+    }
+  ],
+  "dockerfiles": [
+    {
+      "path": "Dockerfile",
+      "base_image": "node:24-bookworm",
+      "exposed": null,
+      "volumes": null,
+      "env": null,
+      "args": null,
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": null,
+      "command": [
+        "sh",
+        "./bin/docker-start"
+      ]
+    },
+    {
+      "path": "packages/sync-server/docker/alpine.Dockerfile",
+      "base_image": "alpine:3.23",
+      "exposed": [
+        {
+          "port": 5006,
+          "protocol": "tcp",
+          "location": {
+            "file": "packages/sync-server/docker/alpine.Dockerfile",
+            "line": 62
+          }
+        }
+      ],
+      "volumes": null,
+      "env": [
+        {
+          "key": "NODE_ENV",
+          "value": "production",
+          "location": {
+            "file": "packages/sync-server/docker/alpine.Dockerfile",
+            "line": 51
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "USERNAME",
+          "value": "actual",
+          "location": {
+            "file": "packages/sync-server/docker/alpine.Dockerfile",
+            "line": 44
+          }
+        },
+        {
+          "key": "USER_UID",
+          "value": "1001",
+          "location": {
+            "file": "packages/sync-server/docker/alpine.Dockerfile",
+            "line": 45
+          }
+        },
+        {
+          "key": "USER_GID",
+          "value": "$USER_UID",
+          "location": {
+            "file": "packages/sync-server/docker/alpine.Dockerfile",
+            "line": 46
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": [
+        "/sbin/tini",
+        "-g",
+        "--"
+      ],
+      "command": [
+        "node",
+        "app.js"
+      ]
+    },
+    {
+      "path": "packages/sync-server/docker/ubuntu.Dockerfile",
+      "base_image": "node:24-bookworm-slim",
+      "exposed": [
+        {
+          "port": 5006,
+          "protocol": "tcp",
+          "location": {
+            "file": "packages/sync-server/docker/ubuntu.Dockerfile",
+            "line": 53
+          }
+        }
+      ],
+      "volumes": null,
+      "env": [
+        {
+          "key": "NODE_ENV",
+          "value": "production",
+          "location": {
+            "file": "packages/sync-server/docker/ubuntu.Dockerfile",
+            "line": 42
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "USERNAME",
+          "value": "actual",
+          "location": {
+            "file": "packages/sync-server/docker/ubuntu.Dockerfile",
+            "line": 34
+          }
+        },
+        {
+          "key": "USER_UID",
+          "value": "1001",
+          "location": {
+            "file": "packages/sync-server/docker/ubuntu.Dockerfile",
+            "line": 35
+          }
+        },
+        {
+          "key": "USER_GID",
+          "value": "$USER_UID",
+          "location": {
+            "file": "packages/sync-server/docker/ubuntu.Dockerfile",
+            "line": 36
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": [
+        "/usr/bin/tini",
+        "-g",
+        "--"
+      ],
+      "command": [
+        "node",
+        "app.js"
+      ]
+    },
+    {
+      "path": "sync-server.Dockerfile",
+      "base_image": "node:24-bookworm-slim",
+      "exposed": [
+        {
+          "port": 5006,
+          "protocol": "tcp",
+          "location": {
+            "file": "sync-server.Dockerfile",
+            "line": 76
+          }
+        }
+      ],
+      "volumes": null,
+      "env": [
+        {
+          "key": "NODE_ENV",
+          "value": "production",
+          "location": {
+            "file": "sync-server.Dockerfile",
+            "line": 68
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "USERNAME",
+          "value": "actual",
+          "location": {
+            "file": "sync-server.Dockerfile",
+            "line": 60
+          }
+        },
+        {
+          "key": "USER_UID",
+          "value": "1001",
+          "location": {
+            "file": "sync-server.Dockerfile",
+            "line": 61
+          }
+        },
+        {
+          "key": "USER_GID",
+          "value": "$USER_UID",
+          "location": {
+            "file": "sync-server.Dockerfile",
+            "line": 62
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": [
+        "/usr/bin/tini",
+        "-g",
+        "--"
+      ],
+      "command": [
+        "node",
+        "build/app.js"
+      ]
+    }
+  ],
+  "env_samples": null,
+  "variables": [
+    {
+      "name": "ACTUAL_CACHE_TTL",
+      "default": "",
+      "description": "Cache TTL in seconds (default: 60)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ACTUAL_CACHE_TTL",
+          "kind": "readme",
+          "text": "Cache TTL in seconds (default: 60)",
+          "location": {
+            "file": "packages/cli/README.md",
+            "line": 51
+          }
+        },
+        {
+          "name": "ACTUAL_CACHE_TTL",
+          "kind": "code",
+          "location": {
+            "file": "packages/cli/src/config.ts",
+            "line": 220
+          }
+        }
+      ]
+    },
+    {
+      "name": "ACTUAL_CONFIG_PATH",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ACTUAL_CONFIG_PATH",
+          "kind": "code",
+          "location": {
+            "file": "packages/sync-server/bin/actual-server.js",
+            "line": 96
+          }
+        },
+        {
+          "name": "ACTUAL_CONFIG_PATH",
+          "kind": "code",
+          "location": {
+            "file": "packages/sync-server/bin/actual-server.js",
+            "line": 107
+          }
+        },
+        {
+          "name": "ACTUAL_CONFIG_PATH",
+          "kind": "code",
+          "location": {
+            "file": "packages/sync-server/src/load-config.js",
+            "line": 305
+          }
+        },
+        {
+          "name": "ACTUAL_CONFIG_PATH",
+          "kind": "code",
+          "location": {
+            "file": "packages/sync-server/src/load-config.js",
+            "line": 307
+          }
+        },
+        {
+          "name": "ACTUAL_CONFIG_PATH",
+          "kind": "code",
+          "location": {
+            "file": "packages/sync-server/src/load-config.js",
+            "line": 309
+          }
+        }
+      ]
+    },
+    {
+      "name": "ACTUAL_DATA_DIR",
+      "default": "",
+      "description": "Local directory for cached budget data",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ACTUAL_DATA_DIR",
+          "kind": "readme",
+          "text": "Local directory for cached budget data",
+          "location": {
+            "file": "packages/cli/README.md",
+            "line": 50
+          }
+        },
+        {
+          "name": "ACTUAL_DATA_DIR",
+          "kind": "code",
+          "location": {
+            "file": "packages/cli/src/config.ts",
+            "line": 195
+          }
+        },
+        {
+          "name": "ACTUAL_DATA_DIR",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-electron/index.ts",
+            "line": 61
+          }
+        },
+        {
+          "name": "ACTUAL_DATA_DIR",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-electron/index.ts",
+            "line": 71
+          }
+        },
+        {
+          "name": "ACTUAL_DATA_DIR",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-electron/index.ts",
+            "line": 72
+          }
+        },
+        {
+          "name": "ACTUAL_DATA_DIR",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-electron/index.ts",
+            "line": 161
+          }
+        },
+        {
+          "name": "ACTUAL_DATA_DIR",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-electron/index.ts",
+            "line": 320
+          }
+        },
+        {
+          "name": "ACTUAL_DATA_DIR",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-electron/index.ts",
+            "line": 324
+          }
+        },
+        {
+          "name": "ACTUAL_DATA_DIR",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-electron/index.ts",
+            "line": 329
+          }
+        },
+        {
+          "name": "ACTUAL_DATA_DIR",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-electron/window-state.ts",
+            "line": 14
+          }
+        },
+        {
+          "name": "ACTUAL_DATA_DIR",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-electron/window-state.ts",
+            "line": 18
+          }
+        },
+        {
+          "name": "ACTUAL_DATA_DIR",
+          "kind": "code",
+          "location": {
+            "file": "packages/loot-core/src/platform/server/fs/index.electron.ts",
+            "line": 27
+          }
+        },
+        {
+          "name": "ACTUAL_DATA_DIR",
+          "kind": "code",
+          "location": {
+            "file": "packages/loot-core/src/platform/server/fs/index.electron.ts",
+            "line": 30
+          }
+        },
+        {
+          "name": "ACTUAL_DATA_DIR",
+          "kind": "code",
+          "location": {
+            "file": "packages/loot-core/src/platform/server/fs/index.ts",
+            "line": 23
+          }
+        },
+        {
+          "name": "ACTUAL_DATA_DIR",
+          "kind": "code",
+          "location": {
+            "file": "packages/loot-core/src/server/main.ts",
+            "line": 307
+          }
+        },
+        {
+          "name": "ACTUAL_DATA_DIR",
+          "kind": "code",
+          "location": {
+            "file": "packages/sync-server/bin/actual-server.js",
+            "line": 61
+          }
+        },
+        {
+          "name": "ACTUAL_DATA_DIR",
+          "kind": "code",
+          "location": {
+            "file": "packages/sync-server/bin/actual-server.js",
+            "line": 66
+          }
+        },
+        {
+          "name": "ACTUAL_DATA_DIR",
+          "kind": "code",
+          "location": {
+            "file": "packages/sync-server/bin/actual-server.js",
+            "line": 72
+          }
+        },
+        {
+          "name": "ACTUAL_DATA_DIR",
+          "kind": "code",
+          "location": {
+            "file": "packages/sync-server/bin/actual-server.js",
+            "line": 77
+          }
+        },
+        {
+          "name": "ACTUAL_DATA_DIR",
+          "kind": "code",
+          "location": {
+            "file": "packages/sync-server/bin/actual-server.js",
+            "line": 80
+          }
+        },
+        {
+          "name": "ACTUAL_DATA_DIR",
+          "kind": "code",
+          "location": {
+            "file": "packages/sync-server/src/load-config.js",
+            "line": 18
+          }
+        },
+        {
+          "name": "ACTUAL_DATA_DIR",
+          "kind": "code",
+          "location": {
+            "file": "packages/sync-server/src/load-config.js",
+            "line": 19
+          }
+        }
+      ]
+    },
+    {
+      "name": "ACTUAL_DOCUMENT_DIR",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ACTUAL_DOCUMENT_DIR",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-electron/index.ts",
+            "line": 61
+          }
+        },
+        {
+          "name": "ACTUAL_DOCUMENT_DIR",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-electron/index.ts",
+            "line": 67
+          }
+        },
+        {
+          "name": "ACTUAL_DOCUMENT_DIR",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-electron/index.ts",
+            "line": 68
+          }
+        },
+        {
+          "name": "ACTUAL_DOCUMENT_DIR",
+          "kind": "code",
+          "location": {
+            "file": "packages/loot-core/src/server/main.ts",
+            "line": 158
+          }
+        }
+      ]
+    },
+    {
+      "name": "ACTUAL_ENCRYPTION_PASSWORD",
+      "default": "",
+      "description": "Password for end-to-end encrypted budget files",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ACTUAL_ENCRYPTION_PASSWORD",
+          "kind": "readme",
+          "text": "Password for end-to-end encrypted budget files",
+          "location": {
+            "file": "packages/cli/README.md",
+            "line": 54
+          }
+        },
+        {
+          "name": "ACTUAL_ENCRYPTION_PASSWORD",
+          "kind": "code",
+          "location": {
+            "file": "packages/cli/src/config.ts",
+            "line": 202
+          }
+        }
+      ]
+    },
+    {
+      "name": "ACTUAL_LOCK_TIMEOUT",
+      "default": "",
+      "description": "Budget-dir lock wait timeout in seconds (default: 10)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ACTUAL_LOCK_TIMEOUT",
+          "kind": "readme",
+          "text": "Budget-dir lock wait timeout in seconds (default: 10)",
+          "location": {
+            "file": "packages/cli/README.md",
+            "line": 52
+          }
+        },
+        {
+          "name": "ACTUAL_LOCK_TIMEOUT",
+          "kind": "code",
+          "location": {
+            "file": "packages/cli/src/config.ts",
+            "line": 231
+          }
+        }
+      ]
+    },
+    {
+      "name": "ACTUAL_NO_LOCK",
+      "default": "",
+      "description": "Set to 1 to disable budget-dir locking",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ACTUAL_NO_LOCK",
+          "kind": "readme",
+          "text": "Set to 1 to disable budget-dir locking",
+          "location": {
+            "file": "packages/cli/README.md",
+            "line": 53
+          }
+        },
+        {
+          "name": "ACTUAL_NO_LOCK",
+          "kind": "code",
+          "location": {
+            "file": "packages/cli/src/config.ts",
+            "line": 244
+          }
+        }
+      ]
+    },
+    {
+      "name": "ACTUAL_PASSWORD",
+      "default": "",
+      "description": "Server password (required unless using token)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ACTUAL_PASSWORD",
+          "kind": "readme",
+          "text": "Server password (required unless using token)",
+          "location": {
+            "file": "packages/cli/README.md",
+            "line": 47
+          }
+        },
+        {
+          "name": "ACTUAL_PASSWORD",
+          "kind": "code",
+          "location": {
+            "file": "packages/cli/src/config.ts",
+            "line": 181
+          }
+        }
+      ]
+    },
+    {
+      "name": "ACTUAL_SERVER_URL",
+      "default": "",
+      "description": "URL of the Actual sync server (required)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ACTUAL_SERVER_URL",
+          "kind": "readme",
+          "text": "URL of the Actual sync server (required)",
+          "location": {
+            "file": "packages/cli/README.md",
+            "line": 46
+          }
+        },
+        {
+          "name": "ACTUAL_SERVER_URL",
+          "kind": "code",
+          "location": {
+            "file": "packages/cli/src/config.ts",
+            "line": 174
+          }
+        },
+        {
+          "name": "ACTUAL_SERVER_URL",
+          "kind": "code",
+          "location": {
+            "file": "packages/loot-core/src/server/main.ts",
+            "line": 308
+          }
+        }
+      ]
+    },
+    {
+      "name": "ACTUAL_SESSION_TOKEN",
+      "default": "",
+      "description": "Session token (alternative to password)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ACTUAL_SESSION_TOKEN",
+          "kind": "readme",
+          "text": "Session token (alternative to password)",
+          "location": {
+            "file": "packages/cli/README.md",
+            "line": 48
+          }
+        },
+        {
+          "name": "ACTUAL_SESSION_TOKEN",
+          "kind": "code",
+          "location": {
+            "file": "packages/cli/src/config.ts",
+            "line": 187
+          }
+        }
+      ]
+    },
+    {
+      "name": "ACTUAL_SYNC_ID",
+      "default": "",
+      "description": "Budget Sync ID (required for most commands)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ACTUAL_SYNC_ID",
+          "kind": "readme",
+          "text": "Budget Sync ID (required for most commands)",
+          "location": {
+            "file": "packages/cli/README.md",
+            "line": 49
+          }
+        },
+        {
+          "name": "ACTUAL_SYNC_ID",
+          "kind": "code",
+          "location": {
+            "file": "packages/cli/src/config.ts",
+            "line": 191
+          }
+        }
+      ]
+    },
+    {
+      "name": "BASE_REF",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "BASE_REF",
+          "kind": "code",
+          "location": {
+            "file": "packages/ci-actions/bin/release-notes-check.mjs",
+            "line": 18
+          }
+        }
+      ]
+    },
+    {
+      "name": "CC_target",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CC_target",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-electron/beforePackHook.ts",
+            "line": 24
+          }
+        },
+        {
+          "name": "CC_target",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-electron/beforePackHook.ts",
+            "line": 27
+          }
+        }
+      ]
+    },
+    {
+      "name": "CI",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CI",
+          "kind": "code",
+          "location": {
+            "file": "packages/api/playwright.config.ts",
+            "line": 5
+          }
+        },
+        {
+          "name": "CI",
+          "kind": "code",
+          "location": {
+            "file": "packages/api/playwright.config.ts",
+            "line": 18
+          }
+        },
+        {
+          "name": "CI",
+          "kind": "code",
+          "location": {
+            "file": "packages/component-library/vitest.web.config.ts",
+            "line": 16
+          }
+        },
+        {
+          "name": "CI",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-client/playwright.config.ts",
+            "line": 11
+          }
+        },
+        {
+          "name": "CI",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-client/playwright.config.ts",
+            "line": 13
+          }
+        },
+        {
+          "name": "CI",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-client/playwright.config.ts",
+            "line": 47
+          }
+        },
+        {
+          "name": "CI",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-electron/playwright.config.ts",
+            "line": 8
+          }
+        },
+        {
+          "name": "CI",
+          "kind": "code",
+          "location": {
+            "file": "packages/loot-core/vitest.config.ts",
+            "line": 18
+          }
+        },
+        {
+          "name": "CI",
+          "kind": "code",
+          "location": {
+            "file": "packages/loot-core/vitest.web.config.ts",
+            "line": 13
+          }
+        },
+        {
+          "name": "CI",
+          "kind": "code",
+          "location": {
+            "file": "packages/sync-server/vitest.config.ts",
+            "line": 13
+          }
+        }
+      ]
+    },
+    {
+      "name": "CSC_LINK",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CSC_LINK",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-electron/afterSignHook.ts",
+            "line": 9
+          }
+        }
+      ]
+    },
+    {
+      "name": "CXX_target",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CXX_target",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-electron/beforePackHook.ts",
+            "line": 25
+          }
+        },
+        {
+          "name": "CXX_target",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-electron/beforePackHook.ts",
+            "line": 28
+          }
+        }
+      ]
+    },
+    {
+      "name": "E2E_PORT",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "E2E_PORT",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-client/playwright.config.ts",
+            "line": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "E2E_START_URL",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "E2E_START_URL",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-client/playwright.config.ts",
+            "line": 20
+          }
+        },
+        {
+          "name": "E2E_START_URL",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-client/playwright.config.ts",
+            "line": 39
+          }
+        }
+      ]
+    },
+    {
+      "name": "E2E_USE_BUILD",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "E2E_USE_BUILD",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-client/playwright.config.ts",
+            "line": 43
+          }
+        }
+      ]
+    },
+    {
+      "name": "E2E_WORKERS",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "E2E_WORKERS",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-client/playwright.config.ts",
+            "line": 11
+          }
+        }
+      ]
+    },
+    {
+      "name": "EXECUTION_CONTEXT",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "EXECUTION_CONTEXT",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-electron/index.ts",
+            "line": 47
+          }
+        },
+        {
+          "name": "EXECUTION_CONTEXT",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-electron/window-state.ts",
+            "line": 134
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITHUB_ACTOR",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITHUB_ACTOR",
+          "kind": "code",
+          "location": {
+            "file": "packages/ci-actions/bin/release-notes-generate.mjs",
+            "line": 80
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITHUB_OUTPUT",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITHUB_OUTPUT",
+          "kind": "code",
+          "location": {
+            "file": "packages/ci-actions/bin/get-next-package-version.ts",
+            "line": 83
+          }
+        },
+        {
+          "name": "GITHUB_OUTPUT",
+          "kind": "code",
+          "location": {
+            "file": "packages/ci-actions/bin/get-next-package-version.ts",
+            "line": 90
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITHUB_REPOSITORY",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITHUB_REPOSITORY",
+          "kind": "code",
+          "location": {
+            "file": "packages/ci-actions/bin/release-notes-generate.mjs",
+            "line": 10
+          }
+        },
+        {
+          "name": "GITHUB_REPOSITORY",
+          "kind": "code",
+          "location": {
+            "file": "packages/ci-actions/bin/release-notes-generate.mjs",
+            "line": 13
+          }
+        },
+        {
+          "name": "GITHUB_REPOSITORY",
+          "kind": "code",
+          "location": {
+            "file": "packages/ci-actions/bin/update-bundle-stats-comment.mjs",
+            "line": 79
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITHUB_STEP_SUMMARY",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITHUB_STEP_SUMMARY",
+          "kind": "code",
+          "location": {
+            "file": "packages/ci-actions/bin/release-notes-check.mjs",
+            "line": 31
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITHUB_TOKEN",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITHUB_TOKEN",
+          "kind": "code",
+          "location": {
+            "file": "packages/ci-actions/bin/release-notes-generate.mjs",
+            "line": 30
+          }
+        },
+        {
+          "name": "GITHUB_TOKEN",
+          "kind": "code",
+          "location": {
+            "file": "packages/ci-actions/bin/update-bundle-stats-comment.mjs",
+            "line": 106
+          }
+        }
+      ]
+    },
+    {
+      "name": "HTTPS",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "HTTPS",
+          "kind": "compose",
+          "location": {
+            "file": "docker-compose.yml",
+            "line": 12
+          }
+        }
+      ]
+    },
+    {
+      "name": "LABEL",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LABEL",
+          "kind": "code",
+          "location": {
+            "file": ".claude/skills/review-actual-pr/references/highlight-element.js",
+            "line": 12
+          }
+        }
+      ]
+    },
+    {
+      "name": "NODE_ENV",
+      "default": "production",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "NODE_ENV",
+          "kind": "dockerfile",
+          "default": "production",
+          "location": {
+            "file": "packages/sync-server/docker/alpine.Dockerfile",
+            "line": 51
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "dockerfile",
+          "default": "production",
+          "location": {
+            "file": "packages/sync-server/docker/ubuntu.Dockerfile",
+            "line": 42
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "dockerfile",
+          "default": "production",
+          "location": {
+            "file": "sync-server.Dockerfile",
+            "line": 68
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "packages/loot-core/src/platform/server/fs/index.ts",
+            "line": 342
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "packages/loot-core/src/server/aql/compiler.ts",
+            "line": 447
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "packages/loot-core/src/server/budgetfiles/app.ts",
+            "line": 633
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "packages/loot-core/src/server/budgetfiles/app.ts",
+            "line": 663
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "packages/loot-core/src/server/mutators.ts",
+            "line": 77
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "packages/loot-core/src/server/mutators.ts",
+            "line": 83
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "packages/loot-core/src/server/prefs.ts",
+            "line": 25
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "packages/loot-core/src/server/prefs.ts",
+            "line": 75
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "packages/loot-core/src/server/sheet.ts",
+            "line": 106
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "packages/loot-core/src/server/sync/index.ts",
+            "line": 761
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "packages/loot-core/src/shared/environment.ts",
+            "line": 6
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "packages/mobile-client/capacitor.config.ts",
+            "line": 36
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "packages/sync-server/src/app.ts",
+            "line": 32
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "packages/sync-server/src/app.ts",
+            "line": 136
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "packages/sync-server/src/load-config.js",
+            "line": 74
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "packages/sync-server/src/load-config.js",
+            "line": 84
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "packages/sync-server/src/load-config.js",
+            "line": 103
+          }
+        },
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "packages/sync-server/src/load-config.js",
+            "line": 112
+          }
+        }
+      ]
+    },
+    {
+      "name": "NOTES_BRANCH",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "NOTES_BRANCH",
+          "kind": "code",
+          "location": {
+            "file": "packages/ci-actions/bin/release-notes-generate.mjs",
+            "line": 16
+          }
+        }
+      ]
+    },
+    {
+      "name": "PORT",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PORT",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-client/bin/serve-build.mjs",
+            "line": 15
+          }
+        },
+        {
+          "name": "PORT",
+          "kind": "code",
+          "location": {
+            "file": "packages/sync-server/src/load-config.js",
+            "line": 90
+          }
+        },
+        {
+          "name": "PORT",
+          "kind": "code",
+          "location": {
+            "file": "packages/sync-server/src/load-config.js",
+            "line": 90
+          }
+        }
+      ]
+    },
+    {
+      "name": "PR_NUMBER",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PR_NUMBER",
+          "kind": "code",
+          "location": {
+            "file": "packages/ci-actions/bin/update-bundle-stats-comment.mjs",
+            "line": 93
+          }
+        }
+      ]
+    },
+    {
+      "name": "PUBLIC_URL",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PUBLIC_URL",
+          "kind": "code",
+          "location": {
+            "file": "packages/api/browser-worker.ts",
+            "line": 36
+          }
+        },
+        {
+          "name": "PUBLIC_URL",
+          "kind": "code",
+          "location": {
+            "file": "packages/loot-core/src/mocks/setup.ts",
+            "line": 128
+          }
+        },
+        {
+          "name": "PUBLIC_URL",
+          "kind": "code",
+          "location": {
+            "file": "packages/loot-core/src/platform/server/fs/index.ts",
+            "line": 282
+          }
+        },
+        {
+          "name": "PUBLIC_URL",
+          "kind": "code",
+          "location": {
+            "file": "packages/loot-core/src/platform/server/fs/index.ts",
+            "line": 298
+          }
+        },
+        {
+          "name": "PUBLIC_URL",
+          "kind": "code",
+          "location": {
+            "file": "packages/loot-core/src/platform/server/sqlite/index.ts",
+            "line": 48
+          }
+        }
+      ]
+    },
+    {
+      "name": "REACT_APP_NETLIFY",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "REACT_APP_NETLIFY",
+          "kind": "code",
+          "location": {
+            "file": "packages/loot-core/src/shared/environment.ts",
+            "line": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "RELEASE_BRANCH",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "RELEASE_BRANCH",
+          "kind": "code",
+          "location": {
+            "file": "packages/ci-actions/bin/release-notes-generate.mjs",
+            "line": 15
+          }
+        }
+      ]
+    },
+    {
+      "name": "RUNNER_TEMP",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "RUNNER_TEMP",
+          "kind": "code",
+          "location": {
+            "file": "packages/ci-actions/bin/release-notes-generate.mjs",
+            "line": 111
+          }
+        }
+      ]
+    },
+    {
+      "name": "SELECTOR",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SELECTOR",
+          "kind": "code",
+          "location": {
+            "file": ".claude/skills/review-actual-pr/references/highlight-element.js",
+            "line": 11
+          }
+        }
+      ]
+    },
+    {
+      "name": "VERSION",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "VERSION",
+          "kind": "code",
+          "location": {
+            "file": "packages/ci-actions/bin/release-notes-generate.mjs",
+            "line": 17
+          }
+        }
+      ]
+    },
+    {
+      "name": "lootCoreScript",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "lootCoreScript",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-electron/index.ts",
+            "line": 50
+          }
+        },
+        {
+          "name": "lootCoreScript",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-electron/server.ts",
+            "line": 60
+          }
+        },
+        {
+          "name": "lootCoreScript",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-electron/server.ts",
+            "line": 73
+          }
+        }
+      ]
+    },
+    {
+      "name": "npm_config_force_build",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "npm_config_force_build",
+          "kind": "code",
+          "location": {
+            "file": "packages/desktop-electron/beforePackHook.ts",
+            "line": 33
+          }
+        }
+      ]
+    }
+  ],
+  "images": [
+    {
+      "reference": "actual-development",
+      "kind": "compose",
+      "location": {
+        "file": "docker-compose.yml",
+        "line": 10
+      }
+    },
+    {
+      "reference": "mcr.microsoft.com/playwright:v1.61.1-jammy",
+      "kind": "readme",
+      "location": {
+        "file": "packages/desktop-client/README.md",
+        "line": 68
+      }
+    },
+    {
+      "reference": "docker.io/actualbudget/actual-server:latest",
+      "kind": "compose",
+      "location": {
+        "file": "packages/sync-server/docker-compose.yml",
+        "line": 3
+      }
+    }
+  ],
+  "docker_runs": [
+    {
+      "image": "mcr.microsoft.com/playwright:v1.61.1-jammy",
+      "ports": null,
+      "volumes": [
+        "$(pwd):/work/"
+      ],
+      "env": null,
+      "location": {
+        "file": "packages/desktop-client/README.md",
+        "line": 68
+      }
+    },
+    {
+      "image": "mcr.microsoft.com/playwright:v1.61.1-jammy",
+      "ports": null,
+      "volumes": [
+        "${pwd}:/work/"
+      ],
+      "env": null,
+      "location": {
+        "file": "packages/desktop-client/README.md",
+        "line": 71
+      }
+    }
+  ],
+  "notes": null,
+  "suspicious": null,
+  "readmes": [
+    "README.md",
+    "packages/api/README.md",
+    "packages/cli/README.md",
+    "packages/crdt/README.md",
+    "packages/desktop-client/README.md",
+    "packages/docs/README.md",
+    "packages/loot-core/migrations/README.md",
+    "packages/loot-core/src/platform/client/connection/README.md",
+    "packages/loot-core/src/platform/server/connection/README.md",
+    "packages/sync-server/README.md",
+    "packages/sync-server/src/app-gocardless/README.md",
+    "upcoming-release-notes/README.md"
+  ],
+  "summary": {
+    "text": "Actual is a local-first personal finance tool. It is 100% free and open-source, written in NodeJS, it has a synchronization element so that all your changes can move between devices without any heavy lifting.",
+    "location": {
+      "file": "README.md",
+      "line": 7
+    }
+  },
+  "file_mentions": [
+    {
+      "text": ".actualrc.yaml",
+      "location": {
+        "file": "packages/cli/README.md",
+        "line": 65
+      }
+    },
+    {
+      "text": ".actualrc.yml",
+      "location": {
+        "file": "packages/cli/README.md",
+        "line": 65
+      }
+    },
+    {
+      "text": "actual.config.yaml",
+      "location": {
+        "file": "packages/cli/README.md",
+        "line": 66
+      }
+    },
+    {
+      "text": "actual.config.yml",
+      "location": {
+        "file": "packages/cli/README.md",
+        "line": 66
+      }
+    },
+    {
+      "text": "config.yaml",
+      "location": {
+        "file": "packages/cli/README.md",
+        "line": 73
+      }
+    },
+    {
+      "text": "config.yml",
+      "location": {
+        "file": "packages/cli/README.md",
+        "line": 74
+      }
+    },
+    {
+      "text": "documentation.yml",
+      "location": {
+        "file": "packages/docs/README.md",
+        "line": 34
+      }
+    }
+  ],
+  "stack_hints": [
+    "package.json",
+    "packages/api/package.json",
+    "packages/ci-actions/package.json",
+    "packages/cli/package.json",
+    "packages/component-library/package.json",
+    "packages/crdt/package.json",
+    "packages/desktop-client/package.json",
+    "packages/desktop-electron/package.json",
+    "packages/docs/package.json",
+    "packages/eslint-plugin-actual/package.json",
+    "packages/loot-core/package.json",
+    "packages/mobile-client/package.json",
+    "packages/plugins-service/package.json",
+    "packages/sync-server/package.json",
+    "packages/vite-plugin-peggy/package.json"
+  ],
+  "problems": null
+}

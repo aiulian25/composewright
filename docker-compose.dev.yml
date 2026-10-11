@@ -1,0 +1,56 @@
+# Development container: the binary from `make build`, on port 8484 of this
+# machine for every device on the network.
+#
+#   make dev     build, then start or restart the container
+#   docker compose -f docker-compose.dev.yml logs -f
+#
+# Open http://<this machine's address>:8484 and create the account; the first
+# 15 minutes after a start are open for that. State (config, database, key)
+# lives in ./.dev; delete it to start over. Machine-specific values come from
+# .env next to this file.
+
+name: composewright-dev
+
+services:
+  composewright:
+    image: docker.io/library/docker:29.9.0-cli
+    user: "${DEV_UID:-1000}:${DEV_GID:-1000}"
+    group_add: ["${DOCKER_GID:?set DOCKER_GID in .env (stat -c %g /var/run/docker.sock)}"]
+    command:
+      - sh
+      - -ec
+      - |
+        if [ ! -f "$$COMPOSEWRIGHT_CONFIG" ]; then
+          composewright init
+          composewright config set llm.base_url "$$LLM_BASE_URL"
+          composewright config set llm.model "$$LLM_MODEL"
+        fi
+        exec composewright --log-level info serve --listen 0.0.0.0:8484
+    environment:
+      PATH: /opt/composewright:/usr/local/bin:/usr/bin:/bin
+      HOME: /tmp
+      COMPOSEWRIGHT_CONFIG: /state/config/config.yaml
+      COMPOSEWRIGHT_DATA_DIR: /state/data
+      LLM_BASE_URL: ${LLM_BASE_URL:-http://127.0.0.1:11434}
+      LLM_MODEL: ${LLM_MODEL:-qwen2.5-coder:7b}
+    volumes:
+      - ./bin:/opt/composewright:ro
+      # Created by `make dev` as you; Docker would create it as root.
+      - type: bind
+        source: ./.dev
+        target: /state
+        bind: {create_host_path: false}
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "${PORT:-8484}:8484"
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8484/login"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped

@@ -1,0 +1,7 @@
+{
+  "url": "https://github.com/nextcloud/docker",
+  "owner": "nextcloud",
+  "commit": "701b437d6796550d8efacd132dfcfd5b135ee914",
+  "allow_registries": "-",
+  "verdict": "pass"
+}

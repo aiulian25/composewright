@@ -1,0 +1,468 @@
+{
+  "files": [
+    "README.md",
+    "cli.js",
+    "data/configuration.example.yaml",
+    "docker/Dockerfile",
+    "index.js",
+    "lib/util/data.ts",
+    "lib/util/onboarding.ts",
+    "lib/util/sd-notify.ts",
+    "lib/util/settings.ts",
+    "lib/util/settingsMigration.ts",
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    "scripts/generateChangelog.mjs"
+  ],
+  "compose_files": null,
+  "dockerfiles": [
+    {
+      "path": "docker/Dockerfile",
+      "base_image": "alpine:3.24",
+      "exposed": [
+        {
+          "port": 8080,
+          "protocol": "tcp",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 58
+          }
+        }
+      ],
+      "volumes": null,
+      "env": [
+        {
+          "key": "NODE_ENV",
+          "value": "production",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 5
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "TARGETPLATFORM",
+          "value": "",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 1
+          }
+        },
+        {
+          "key": "DATE",
+          "value": "",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 33
+          }
+        },
+        {
+          "key": "VERSION",
+          "value": "",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 34
+          }
+        },
+        {
+          "key": "COMMIT",
+          "value": "",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 54
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": [
+        "docker-entrypoint.sh"
+      ],
+      "command": [
+        "/sbin/tini",
+        "--",
+        "node",
+        "index.js"
+      ]
+    }
+  ],
+  "env_samples": null,
+  "variables": [
+    {
+      "name": "DEBUG",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DEBUG",
+          "kind": "code",
+          "location": {
+            "file": "lib/util/settings.ts",
+            "line": 97
+          }
+        }
+      ]
+    },
+    {
+      "name": "GH_TOKEN",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GH_TOKEN",
+          "kind": "code",
+          "location": {
+            "file": "scripts/generateChangelog.mjs",
+            "line": 13
+          }
+        }
+      ]
+    },
+    {
+      "name": "HOME",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "HOME",
+          "kind": "code",
+          "location": {
+            "file": "cli.js",
+            "line": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "NODE_ENV",
+      "default": "production",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "NODE_ENV",
+          "kind": "dockerfile",
+          "default": "production",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "NOTIFY_SOCKET",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "NOTIFY_SOCKET",
+          "kind": "code",
+          "location": {
+            "file": "lib/util/sd-notify.ts",
+            "line": 12
+          }
+        },
+        {
+          "name": "NOTIFY_SOCKET",
+          "kind": "code",
+          "location": {
+            "file": "lib/util/sd-notify.ts",
+            "line": 39
+          }
+        }
+      ]
+    },
+    {
+      "name": "VITEST_WORKER_ID",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "VITEST_WORKER_ID",
+          "kind": "code",
+          "location": {
+            "file": "lib/util/settingsMigration.ts",
+            "line": 553
+          }
+        }
+      ]
+    },
+    {
+      "name": "WATCHDOG_USEC",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "WATCHDOG_USEC",
+          "kind": "code",
+          "location": {
+            "file": "lib/util/sd-notify.ts",
+            "line": 51
+          }
+        },
+        {
+          "name": "WATCHDOG_USEC",
+          "kind": "code",
+          "location": {
+            "file": "lib/util/sd-notify.ts",
+            "line": 51
+          }
+        },
+        {
+          "name": "WATCHDOG_USEC",
+          "kind": "code",
+          "location": {
+            "file": "lib/util/sd-notify.ts",
+            "line": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "WSL_DISTRO_NAME",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "WSL_DISTRO_NAME",
+          "kind": "code",
+          "location": {
+            "file": "lib/util/sd-notify.ts",
+            "line": 22
+          }
+        }
+      ]
+    },
+    {
+      "name": "Z2M_ONBOARD_FORCE_RUN",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "Z2M_ONBOARD_FORCE_RUN",
+          "kind": "code",
+          "location": {
+            "file": "lib/util/onboarding.ts",
+            "line": 304
+          }
+        }
+      ]
+    },
+    {
+      "name": "Z2M_ONBOARD_NO_FAILURE_PAGE",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "Z2M_ONBOARD_NO_FAILURE_PAGE",
+          "kind": "code",
+          "location": {
+            "file": "lib/util/onboarding.ts",
+            "line": 255
+          }
+        }
+      ]
+    },
+    {
+      "name": "Z2M_ONBOARD_NO_REDIRECT",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "Z2M_ONBOARD_NO_REDIRECT",
+          "kind": "code",
+          "location": {
+            "file": "lib/util/onboarding.ts",
+            "line": 96
+          }
+        }
+      ]
+    },
+    {
+      "name": "Z2M_ONBOARD_NO_SERVER",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "Z2M_ONBOARD_NO_SERVER",
+          "kind": "code",
+          "location": {
+            "file": "lib/util/onboarding.ts",
+            "line": 255
+          }
+        },
+        {
+          "name": "Z2M_ONBOARD_NO_SERVER",
+          "kind": "code",
+          "location": {
+            "file": "lib/util/onboarding.ts",
+            "line": 304
+          }
+        }
+      ]
+    },
+    {
+      "name": "Z2M_ONBOARD_URL",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "Z2M_ONBOARD_URL",
+          "kind": "code",
+          "location": {
+            "file": "lib/util/onboarding.ts",
+            "line": 14
+          }
+        }
+      ]
+    },
+    {
+      "name": "Z2M_WATCHDOG",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "Z2M_WATCHDOG",
+          "kind": "code",
+          "location": {
+            "file": "index.js",
+            "line": 14
+          }
+        },
+        {
+          "name": "Z2M_WATCHDOG",
+          "kind": "code",
+          "location": {
+            "file": "index.js",
+            "line": 14
+          }
+        },
+        {
+          "name": "Z2M_WATCHDOG",
+          "kind": "code",
+          "location": {
+            "file": "index.js",
+            "line": 15
+          }
+        },
+        {
+          "name": "Z2M_WATCHDOG",
+          "kind": "code",
+          "location": {
+            "file": "index.js",
+            "line": 16
+          }
+        },
+        {
+          "name": "Z2M_WATCHDOG",
+          "kind": "code",
+          "location": {
+            "file": "index.js",
+            "line": 51
+          }
+        },
+        {
+          "name": "Z2M_WATCHDOG",
+          "kind": "code",
+          "location": {
+            "file": "index.js",
+            "line": 130
+          }
+        }
+      ]
+    },
+    {
+      "name": "ZIGBEE2MQTT_DATA",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ZIGBEE2MQTT_DATA",
+          "kind": "code",
+          "location": {
+            "file": "cli.js",
+            "line": 3
+          }
+        },
+        {
+          "name": "ZIGBEE2MQTT_DATA",
+          "kind": "code",
+          "location": {
+            "file": "cli.js",
+            "line": 3
+          }
+        },
+        {
+          "name": "ZIGBEE2MQTT_DATA",
+          "kind": "code",
+          "location": {
+            "file": "lib/util/data.ts",
+            "line": 4
+          }
+        },
+        {
+          "name": "ZIGBEE2MQTT_DATA",
+          "kind": "code",
+          "location": {
+            "file": "lib/util/data.ts",
+            "line": 4
+          }
+        }
+      ]
+    }
+  ],
+  "images": null,
+  "docker_runs": null,
+  "notes": null,
+  "suspicious": null,
+  "readmes": [
+    "README.md"
+  ],
+  "summary": {
+    "text": "Allows you to use your Zigbee devices \u003cb\u003ewithout\u003c/b\u003e the vendor's bridge or gateway.",
+    "location": {
+      "file": "README.md",
+      "line": 32
+    }
+  },
+  "file_mentions": [
+    {
+      "text": "ci.yml",
+      "location": {
+        "file": "README.md",
+        "line": 14
+      }
+    },
+    {
+      "text": "ci.yml",
+      "location": {
+        "file": "README.md",
+        "line": 15
+      }
+    }
+  ],
+  "stack_hints": [
+    "package.json"
+  ],
+  "problems": null
+}

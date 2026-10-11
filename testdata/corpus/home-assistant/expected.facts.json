@@ -1,0 +1,2548 @@
+{
+  "files": [
+    ".core_files.yaml",
+    ".hadolint.yaml",
+    ".pre-commit-config.yaml",
+    "Dockerfile",
+    "Dockerfile.dev",
+    "README.rst",
+    "codecov.yml",
+    "homeassistant/backports/README",
+    "homeassistant/components/abode/services.yaml",
+    "homeassistant/components/acaia/quality_scale.yaml",
+    "homeassistant/components/actron_air/quality_scale.yaml",
+    "homeassistant/components/adguard/services.yaml",
+    "homeassistant/components/ads/services.yaml",
+    "homeassistant/components/advantage_air/quality_scale.yaml",
+    "homeassistant/components/advantage_air/services.yaml",
+    "homeassistant/components/aftership/services.yaml",
+    "homeassistant/components/agent_dvr/services.yaml",
+    "homeassistant/components/ai_task/services.yaml",
+    "homeassistant/components/aidot/quality_scale.yaml",
+    "homeassistant/components/air_quality/conditions.yaml",
+    "homeassistant/components/air_quality/triggers.yaml",
+    "homeassistant/components/airgradient/quality_scale.yaml",
+    "homeassistant/components/airly/quality_scale.yaml",
+    "homeassistant/components/airnow/quality_scale.yaml",
+    "homeassistant/components/airobot/quality_scale.yaml",
+    "homeassistant/components/airos/quality_scale.yaml",
+    "homeassistant/components/airpatrol/quality_scale.yaml",
+    "homeassistant/components/aladdin_connect/quality_scale.yaml",
+    "homeassistant/components/alarm_control_panel/conditions.yaml",
+    "homeassistant/components/alarm_control_panel/services.yaml",
+    "homeassistant/components/alarm_control_panel/triggers.yaml",
+    "homeassistant/components/alarmdecoder/services.yaml",
+    "homeassistant/components/alert/services.yaml",
+    "homeassistant/components/alexa/services.yaml",
+    "homeassistant/components/alexa_devices/quality_scale.yaml",
+    "homeassistant/components/alexa_devices/services.yaml",
+    "homeassistant/components/altruist/quality_scale.yaml",
+    "homeassistant/components/amberelectric/services.yaml",
+    "homeassistant/components/amcrest/services.yaml",
+    "homeassistant/components/analytics_insights/quality_scale.yaml",
+    "homeassistant/components/androidtv/services.yaml",
+    "homeassistant/components/androidtv_remote/quality_scale.yaml",
+    "homeassistant/components/anglian_water/quality_scale.yaml",
+    "homeassistant/components/anthropic/quality_scale.yaml",
+    "homeassistant/components/apcupsd/quality_scale.yaml",
+    "homeassistant/components/api/services.yaml",
+    "homeassistant/components/apple_tv/services.yaml",
+    "homeassistant/components/aqvify/quality_scale.yaml",
+    "homeassistant/components/assist_satellite/conditions.yaml",
+    "homeassistant/components/assist_satellite/services.yaml",
+    "homeassistant/components/assist_satellite/triggers.yaml",
+    "homeassistant/components/autarco/quality_scale.yaml",
+    "homeassistant/components/automation/blueprints/motion_light.yaml",
+    "homeassistant/components/automation/blueprints/notify_leaving_zone.yaml",
+    "homeassistant/components/automation/services.yaml",
+    "homeassistant/components/autoskope/quality_scale.yaml",
+    "homeassistant/components/awair/quality_scale.yaml",
+    "homeassistant/components/aws_s3/quality_scale.yaml",
+    "homeassistant/components/axle_energy/quality_scale.yaml",
+    "homeassistant/components/azure_storage/quality_scale.yaml",
+    "homeassistant/components/backblaze_b2/quality_scale.yaml",
+    "homeassistant/components/backup/services.yaml",
+    "homeassistant/components/bang_olufsen/services.yaml",
+    "homeassistant/components/battery/conditions.yaml",
+    "homeassistant/components/battery/triggers.yaml",
+    "homeassistant/components/bayesian/services.yaml",
+    "homeassistant/components/besen/quality_scale.yaml",
+    "homeassistant/components/bitvis/quality_scale.yaml",
+    "homeassistant/components/blackbird/services.yaml",
+    "homeassistant/components/blebox/quality_scale.yaml",
+    "homeassistant/components/blink/services.yaml",
+    "homeassistant/components/blue_current/services.yaml",
+    "homeassistant/components/bluesound/services.yaml",
+    "homeassistant/components/bond/services.yaml",
+    "homeassistant/components/bosch_alarm/quality_scale.yaml",
+    "homeassistant/components/bosch_alarm/services.yaml",
+    "homeassistant/components/bring/quality_scale.yaml",
+    "homeassistant/components/bring/services.yaml",
+    "homeassistant/components/brother/quality_scale.yaml",
+    "homeassistant/components/browser/services.yaml",
+    "homeassistant/components/bsblan/quality_scale.yaml",
+    "homeassistant/components/bsblan/services.yaml",
+    "homeassistant/components/button/services.yaml",
+    "homeassistant/components/button/triggers.yaml",
+    "homeassistant/components/calendar/conditions.yaml",
+    "homeassistant/components/calendar/services.yaml",
+    "homeassistant/components/calendar/triggers.yaml",
+    "homeassistant/components/cambridge_audio/quality_scale.yaml",
+    "homeassistant/components/camera/services.yaml",
+    "homeassistant/components/casper_glow/quality_scale.yaml",
+    "homeassistant/components/cast/services.yaml",
+    "homeassistant/components/ccm15/quality_scale.yaml",
+    "homeassistant/components/centriconnect/quality_scale.yaml",
+    "homeassistant/components/cert_expiry/quality_scale.yaml",
+    "homeassistant/components/channels/services.yaml",
+    "homeassistant/components/chef_iq/quality_scale.yaml",
+    "homeassistant/components/chess_com/quality_scale.yaml",
+    "homeassistant/components/cielo_home/quality_scale.yaml",
+    "homeassistant/components/climate/conditions.yaml",
+    "homeassistant/components/climate/services.yaml",
+    "homeassistant/components/climate/triggers.yaml",
+    "homeassistant/components/cloud/services.yaml",
+    "homeassistant/components/cloudflare/services.yaml",
+    "homeassistant/components/cloudflare_r2/quality_scale.yaml",
+    "homeassistant/components/co2signal/quality_scale.yaml",
+    "homeassistant/components/collection_image/quality_scale.yaml",
+    "homeassistant/components/collection_image/services.yaml",
+    "homeassistant/components/color_extractor/services.yaml",
+    "homeassistant/components/comelit/quality_scale.yaml",
+    "homeassistant/components/command_line/services.yaml",
+    "homeassistant/components/compit/quality_scale.yaml",
+    "homeassistant/components/config/services.yaml",
+    "homeassistant/components/configurator/services.yaml",
+    "homeassistant/components/conversation/services.yaml",
+    "homeassistant/components/cookidoo/quality_scale.yaml",
+    "homeassistant/components/coolmaster/quality_scale.yaml",
+    "homeassistant/components/counter/conditions.yaml",
+    "homeassistant/components/counter/services.yaml",
+    "homeassistant/components/counter/triggers.yaml",
+    "homeassistant/components/cover/conditions.yaml",
+    "homeassistant/components/cover/services.yaml",
+    "homeassistant/components/cover/triggers.yaml",
+    "homeassistant/components/cync/quality_scale.yaml",
+    "homeassistant/components/data_grand_lyon/quality_scale.yaml",
+    "homeassistant/components/date/services.yaml",
+    "homeassistant/components/datetime/services.yaml",
+    "homeassistant/components/debugpy/services.yaml",
+    "homeassistant/components/deconz/services.yaml",
+    "homeassistant/components/demo/services.yaml",
+    "homeassistant/components/denon_rs232/quality_scale.yaml",
+    "homeassistant/components/denonavr/services.yaml",
+    "homeassistant/components/derivative/services.yaml",
+    "homeassistant/components/device_sun_light_trigger/services.yaml",
+    "homeassistant/components/device_tracker/services.yaml",
+    "homeassistant/components/devolo_home_control/quality_scale.yaml",
+    "homeassistant/components/devolo_home_network/quality_scale.yaml",
+    "homeassistant/components/discovergy/quality_scale.yaml",
+    "homeassistant/components/dnsip/quality_scale.yaml",
+    "homeassistant/components/door/conditions.yaml",
+    "homeassistant/components/door/triggers.yaml",
+    "homeassistant/components/doorbell/triggers.yaml",
+    "homeassistant/components/downloader/services.yaml",
+    "homeassistant/components/dropbox/quality_scale.yaml",
+    "homeassistant/components/droplet/quality_scale.yaml",
+    "homeassistant/components/duckdns/quality_scale.yaml",
+    "homeassistant/components/duckdns/services.yaml",
+    "homeassistant/components/duco/quality_scale.yaml",
+    "homeassistant/components/dynalite/services.yaml",
+    "homeassistant/components/dyson_infrared/quality_scale.yaml",
+    "homeassistant/components/earn_e_p1/quality_scale.yaml",
+    "homeassistant/components/easyenergy/quality_scale.yaml",
+    "homeassistant/components/easyenergy/services.yaml",
+    "homeassistant/components/ebusd/services.yaml",
+    "homeassistant/components/ecobee/services.yaml",
+    "homeassistant/components/ecovacs/services.yaml",
+    "homeassistant/components/edifier_infrared/quality_scale.yaml",
+    "homeassistant/components/egauge/quality_scale.yaml",
+    "homeassistant/components/eheimdigital/quality_scale.yaml",
+    "homeassistant/components/ekeybionyx/quality_scale.yaml",
+    "homeassistant/components/electric_kiwi/quality_scale.yaml",
+    "homeassistant/components/elevenlabs/quality_scale.yaml",
+    "homeassistant/components/elgato/quality_scale.yaml",
+    "homeassistant/components/elgato/services.yaml",
+    "homeassistant/components/elkm1/services.yaml",
+    "homeassistant/components/emoncms/quality_scale.yaml",
+    "homeassistant/components/emulated_hue/services.yaml",
+    "homeassistant/components/energieleser/quality_scale.yaml",
+    "homeassistant/components/energyid/quality_scale.yaml",
+    "homeassistant/components/energyzero/services.yaml",
+    "homeassistant/components/enphase_envoy/quality_scale.yaml",
+    "homeassistant/components/envertech_evt800/quality_scale.yaml",
+    "homeassistant/components/environment_canada/services.yaml",
+    "homeassistant/components/envisalink/services.yaml",
+    "homeassistant/components/epson/services.yaml",
+    "homeassistant/components/esphome/quality_scale.yaml",
+    "homeassistant/components/esphome/services.yaml",
+    "homeassistant/components/essent/quality_scale.yaml",
+    "homeassistant/components/eurotronic_cometblue/quality_scale.yaml",
+    "homeassistant/components/eurotronic_cometblue/services.yaml",
+    "homeassistant/components/event/triggers.yaml",
+    "homeassistant/components/evohome/services.yaml",
+    "homeassistant/components/ezviz/services.yaml",
+    "homeassistant/components/fan/conditions.yaml",
+    "homeassistant/components/fan/services.yaml",
+    "homeassistant/components/fan/triggers.yaml",
+    "homeassistant/components/feedreader/quality_scale.yaml",
+    "homeassistant/components/ffmpeg/services.yaml",
+    "homeassistant/components/file/services.yaml",
+    "homeassistant/components/filter/services.yaml",
+    "homeassistant/components/fing/quality_scale.yaml",
+    "homeassistant/components/firefly_iii/quality_scale.yaml",
+    "homeassistant/components/fish_audio/quality_scale.yaml",
+    "homeassistant/components/fitbit/quality_scale.yaml",
+    "homeassistant/components/flexit_bacnet/quality_scale.yaml",
+    "homeassistant/components/flo/services.yaml",
+    "homeassistant/components/flow_it/quality_scale.yaml",
+    "homeassistant/components/flume/services.yaml",
+    "homeassistant/components/fluss/quality_scale.yaml",
+    "homeassistant/components/flux/services.yaml",
+    "homeassistant/components/flux_led/services.yaml",
+    "homeassistant/components/forecast_solar/services.yaml",
+    "homeassistant/components/foscam/services.yaml",
+    "homeassistant/components/foursquare/services.yaml",
+    "homeassistant/components/freshr/quality_scale.yaml",
+    "homeassistant/components/fressnapf_tracker/quality_scale.yaml",
+    "homeassistant/components/fritz/quality_scale.yaml",
+    "homeassistant/components/fritz/services.yaml",
+    "homeassistant/components/fronius/quality_scale.yaml",
+    "homeassistant/components/frontend/services.yaml",
+    "homeassistant/components/fuelprices_dk/quality_scale.yaml",
+    "homeassistant/components/fully_kiosk/quality_scale.yaml",
+    "homeassistant/components/fully_kiosk/services.yaml",
+    "homeassistant/components/fumis/quality_scale.yaml",
+    "homeassistant/components/fyta/quality_scale.yaml",
+    "homeassistant/components/garage_door/conditions.yaml",
+    "homeassistant/components/garage_door/triggers.yaml",
+    "homeassistant/components/gate/conditions.yaml",
+    "homeassistant/components/gate/triggers.yaml",
+    "homeassistant/components/gatus/quality_scale.yaml",
+    "homeassistant/components/generic/services.yaml",
+    "homeassistant/components/generic_hygrostat/services.yaml",
+    "homeassistant/components/generic_thermostat/services.yaml",
+    "homeassistant/components/geniushub/services.yaml",
+    "homeassistant/components/gentex_homelink/quality_scale.yaml",
+    "homeassistant/components/geosphere_austria_warnings/quality_scale.yaml",
+    "homeassistant/components/ghost/quality_scale.yaml",
+    "homeassistant/components/gios/quality_scale.yaml",
+    "homeassistant/components/google/quality_scale.yaml",
+    "homeassistant/components/google/services.yaml",
+    "homeassistant/components/google_air_quality/quality_scale.yaml",
+    "homeassistant/components/google_air_quality/services.yaml",
+    "homeassistant/components/google_assistant/services.yaml",
+    "homeassistant/components/google_assistant_sdk/quality_scale.yaml",
+    "homeassistant/components/google_assistant_sdk/services.yaml",
+    "homeassistant/components/google_drive/quality_scale.yaml",
+    "homeassistant/components/google_health/quality_scale.yaml",
+    "homeassistant/components/google_mail/services.yaml",
+    "homeassistant/components/google_photos/quality_scale.yaml",
+    "homeassistant/components/google_photos/services.yaml",
+    "homeassistant/components/google_sheets/services.yaml",
+    "homeassistant/components/google_tasks/quality_scale.yaml",
+    "homeassistant/components/google_travel_time/services.yaml",
+    "homeassistant/components/google_weather/quality_scale.yaml",
+    "homeassistant/components/gree_infrared/quality_scale.yaml",
+    "homeassistant/components/green_planet_energy/quality_scale.yaml",
+    "homeassistant/components/green_planet_energy/services.yaml",
+    "homeassistant/components/greencell/quality_scale.yaml",
+    "homeassistant/components/group/services.yaml",
+    "homeassistant/components/growatt_server/quality_scale.yaml",
+    "homeassistant/components/growatt_server/services.yaml",
+    "homeassistant/components/guardian/services.yaml",
+    "homeassistant/components/guntamatic/quality_scale.yaml",
+    "homeassistant/components/habitica/quality_scale.yaml",
+    "homeassistant/components/habitica/services.yaml",
+    "homeassistant/components/hanna/quality_scale.yaml",
+    "homeassistant/components/harbor/quality_scale.yaml",
+    "homeassistant/components/harman_luxury/quality_scale.yaml",
+    "homeassistant/components/harmony/services.yaml",
+    "homeassistant/components/hassio/__init__.py",
+    "homeassistant/components/hassio/auth.py",
+    "homeassistant/components/hassio/handler.py",
+    "homeassistant/components/hassio/http.py",
+    "homeassistant/components/hassio/services.yaml",
+    "homeassistant/components/hassio/system_health.py",
+    "homeassistant/components/hdfury/quality_scale.yaml",
+    "homeassistant/components/hdmi_cec/services.yaml",
+    "homeassistant/components/hegel/quality_scale.yaml",
+    "homeassistant/components/helty/quality_scale.yaml",
+    "homeassistant/components/heos/quality_scale.yaml",
+    "homeassistant/components/heos/services.yaml",
+    "homeassistant/components/hikvision/quality_scale.yaml",
+    "homeassistant/components/history_stats/services.yaml",
+    "homeassistant/components/hive/services.yaml",
+    "homeassistant/components/home_connect/quality_scale.yaml",
+    "homeassistant/components/home_connect/services.yaml",
+    "homeassistant/components/homeassistant/services.yaml",
+    "homeassistant/components/homeassistant_connect_zbt2/quality_scale.yaml",
+    "homeassistant/components/homee/quality_scale.yaml",
+    "homeassistant/components/homekit/services.yaml",
+    "homeassistant/components/homematic/services.yaml",
+    "homeassistant/components/homematicip_cloud/services.yaml",
+    "homeassistant/components/homevolt/quality_scale.yaml",
+    "homeassistant/components/homewizard/quality_scale.yaml",
+    "homeassistant/components/homeworks/services.yaml",
+    "homeassistant/components/honeywell_string_lights/quality_scale.yaml",
+    "homeassistant/components/hortimax/quality_scale.yaml",
+    "homeassistant/components/hotspring/quality_scale.yaml",
+    "homeassistant/components/hr_energy_qube/quality_scale.yaml",
+    "homeassistant/components/html5/quality_scale.yaml",
+    "homeassistant/components/html5/services.yaml",
+    "homeassistant/components/http/__init__.py",
+    "homeassistant/components/huawei_lte/quality_scale.yaml",
+    "homeassistant/components/huawei_lte/services.yaml",
+    "homeassistant/components/hue/services.yaml",
+    "homeassistant/components/hue_ble/quality_scale.yaml",
+    "homeassistant/components/humidifier/conditions.yaml",
+    "homeassistant/components/humidifier/services.yaml",
+    "homeassistant/components/humidifier/triggers.yaml",
+    "homeassistant/components/humidity/conditions.yaml",
+    "homeassistant/components/humidity/triggers.yaml",
+    "homeassistant/components/husqvarna_automower/quality_scale.yaml",
+    "homeassistant/components/husqvarna_automower/services.yaml",
+    "homeassistant/components/huum/quality_scale.yaml",
+    "homeassistant/components/hvv_departures/quality_scale.yaml",
+    "homeassistant/components/hydrawise/services.yaml",
+    "homeassistant/components/hypontech/quality_scale.yaml",
+    "homeassistant/components/iaqualink/quality_scale.yaml",
+    "homeassistant/components/icloud/services.yaml",
+    "homeassistant/components/idasen_desk/quality_scale.yaml",
+    "homeassistant/components/idrive_e2/quality_scale.yaml",
+    "homeassistant/components/ifttt/services.yaml",
+    "homeassistant/components/igloohome/quality_scale.yaml",
+    "homeassistant/components/ihc/ihc_auto_setup.yaml",
+    "homeassistant/components/ihc/services.yaml",
+    "homeassistant/components/illuminance/conditions.yaml",
+    "homeassistant/components/illuminance/triggers.yaml",
+    "homeassistant/components/image/services.yaml",
+    "homeassistant/components/image_processing/services.yaml",
+    "homeassistant/components/imap/quality_scale.yaml",
+    "homeassistant/components/imap/services.yaml",
+    "homeassistant/components/imeon_inverter/quality_scale.yaml",
+    "homeassistant/components/imgw_pib/quality_scale.yaml",
+    "homeassistant/components/immich/quality_scale.yaml",
+    "homeassistant/components/immich/services.yaml",
+    "homeassistant/components/imou/quality_scale.yaml",
+    "homeassistant/components/incomfort/quality_scale.yaml",
+    "homeassistant/components/indevolt/quality_scale.yaml",
+    "homeassistant/components/indevolt/services.yaml",
+    "homeassistant/components/indi_allsky/quality_scale.yaml",
+    "homeassistant/components/inels/quality_scale.yaml",
+    "homeassistant/components/input_boolean/services.yaml",
+    "homeassistant/components/input_button/services.yaml",
+    "homeassistant/components/input_datetime/services.yaml",
+    "homeassistant/components/input_number/services.yaml",
+    "homeassistant/components/input_select/services.yaml",
+    "homeassistant/components/input_text/services.yaml",
+    "homeassistant/components/insteon/services.yaml",
+    "homeassistant/components/intelliclima/quality_scale.yaml",
+    "homeassistant/components/intent_script/services.yaml",
+    "homeassistant/components/iometer/quality_scale.yaml",
+    "homeassistant/components/iperf3/services.yaml",
+    "homeassistant/components/irm_kmi/quality_scale.yaml",
+    "homeassistant/components/iron_os/quality_scale.yaml",
+    "homeassistant/components/iseo_argo_ble/quality_scale.yaml",
+    "homeassistant/components/ista_ecotrend/quality_scale.yaml",
+    "homeassistant/components/isy994/services.yaml",
+    "homeassistant/components/ituran/quality_scale.yaml",
+    "homeassistant/components/izone/services.yaml",
+    "homeassistant/components/jellyfin/services.yaml",
+    "homeassistant/components/jewish_calendar/quality_scale.yaml",
+    "homeassistant/components/jewish_calendar/services.yaml",
+    "homeassistant/components/joaoapps_join/services.yaml",
+    "homeassistant/components/kaco_modbus/quality_scale.yaml",
+    "homeassistant/components/karakeep/quality_scale.yaml",
+    "homeassistant/components/keba/services.yaml",
+    "homeassistant/components/kef/services.yaml",
+    "homeassistant/components/keymitt_ble/services.yaml",
+    "homeassistant/components/kiosker/quality_scale.yaml",
+    "homeassistant/components/kiosker/services.yaml",
+    "homeassistant/components/kitchen_sink/services.yaml",
+    "homeassistant/components/klik_aan_klik_uit/quality_scale.yaml",
+    "homeassistant/components/knocki/quality_scale.yaml",
+    "homeassistant/components/knx/quality_scale.yaml",
+    "homeassistant/components/knx/services.yaml",
+    "homeassistant/components/knx/triggers.yaml",
+    "homeassistant/components/kodi/services.yaml",
+    "homeassistant/components/lamarzocco/quality_scale.yaml",
+    "homeassistant/components/lametric/quality_scale.yaml",
+    "homeassistant/components/lametric/services.yaml",
+    "homeassistant/components/lawn_mower/conditions.yaml",
+    "homeassistant/components/lawn_mower/services.yaml",
+    "homeassistant/components/lawn_mower/triggers.yaml",
+    "homeassistant/components/lcn/quality_scale.yaml",
+    "homeassistant/components/lcn/services.yaml",
+    "homeassistant/components/led_infrared/quality_scale.yaml",
+    "homeassistant/components/letpot/quality_scale.yaml",
+    "homeassistant/components/lg_infrared/quality_scale.yaml",
+    "homeassistant/components/lg_tv_rs232/quality_scale.yaml",
+    "homeassistant/components/libre_hardware_monitor/quality_scale.yaml",
+    "homeassistant/components/librenms/quality_scale.yaml",
+    "homeassistant/components/lichess/quality_scale.yaml",
+    "homeassistant/components/liebherr/quality_scale.yaml",
+    "homeassistant/components/lifx/services.yaml",
+    "homeassistant/components/light/conditions.yaml",
+    "homeassistant/components/light/services.yaml",
+    "homeassistant/components/light/triggers.yaml",
+    "homeassistant/components/linkplay/services.yaml",
+    "homeassistant/components/litellm/quality_scale.yaml",
+    "homeassistant/components/litterrobot/quality_scale.yaml",
+    "homeassistant/components/litterrobot/services.yaml",
+    "homeassistant/components/llama_cpp/quality_scale.yaml",
+    "homeassistant/components/local_file/services.yaml",
+    "homeassistant/components/lock/conditions.yaml",
+    "homeassistant/components/lock/services.yaml",
+    "homeassistant/components/lock/triggers.yaml",
+    "homeassistant/components/logbook/services.yaml",
+    "homeassistant/components/logger/services.yaml",
+    "homeassistant/components/lojack/quality_scale.yaml",
+    "homeassistant/components/lovelace/services.yaml",
+    "homeassistant/components/luci/quality_scale.yaml",
+    "homeassistant/components/lunatone/quality_scale.yaml",
+    "homeassistant/components/lyngdorf/quality_scale.yaml",
+    "homeassistant/components/lyric/services.yaml",
+    "homeassistant/components/marantz_infrared/quality_scale.yaml",
+    "homeassistant/components/mastodon/quality_scale.yaml",
+    "homeassistant/components/mastodon/services.yaml",
+    "homeassistant/components/matrix/services.yaml",
+    "homeassistant/components/matter/services.yaml",
+    "homeassistant/components/mcp/quality_scale.yaml",
+    "homeassistant/components/mcp_server/quality_scale.yaml",
+    "homeassistant/components/mealie/quality_scale.yaml",
+    "homeassistant/components/mealie/services.yaml",
+    "homeassistant/components/media_extractor/services.yaml",
+    "homeassistant/components/media_player/conditions.yaml",
+    "homeassistant/components/media_player/services.yaml",
+    "homeassistant/components/media_player/triggers.yaml",
+    "homeassistant/components/melcloud/services.yaml",
+    "homeassistant/components/melcloud_home/quality_scale.yaml",
+    "homeassistant/components/meteo_lt/quality_scale.yaml",
+    "homeassistant/components/metoffice/quality_scale.yaml",
+    "homeassistant/components/midea/quality_scale.yaml",
+    "homeassistant/components/miele/quality_scale.yaml",
+    "homeassistant/components/miele/services.yaml",
+    "homeassistant/components/mikrotik/quality_scale.yaml",
+    "homeassistant/components/mill/services.yaml",
+    "homeassistant/components/min_max/services.yaml",
+    "homeassistant/components/minecraft_server/quality_scale.yaml",
+    "homeassistant/components/minio/services.yaml",
+    "homeassistant/components/mitsubishi_comfort/quality_scale.yaml",
+    "homeassistant/components/mobile_app/services.yaml",
+    "homeassistant/components/modbus/services.yaml",
+    "homeassistant/components/modern_forms/services.yaml",
+    "homeassistant/components/moisture/conditions.yaml",
+    "homeassistant/components/moisture/triggers.yaml",
+    "homeassistant/components/monarch_money/quality_scale.yaml",
+    "homeassistant/components/monoprice/services.yaml",
+    "homeassistant/components/monzo/quality_scale.yaml",
+    "homeassistant/components/monzo/services.yaml",
+    "homeassistant/components/moon/conditions.yaml",
+    "homeassistant/components/moon/triggers.yaml",
+    "homeassistant/components/motion/conditions.yaml",
+    "homeassistant/components/motion/triggers.yaml",
+    "homeassistant/components/motion_blinds/services.yaml",
+    "homeassistant/components/motioneye/services.yaml",
+    "homeassistant/components/motionmount/quality_scale.yaml",
+    "homeassistant/components/mqtt/quality_scale.yaml",
+    "homeassistant/components/mqtt/services.yaml",
+    "homeassistant/components/mqtt/triggers.yaml",
+    "homeassistant/components/mta/quality_scale.yaml",
+    "homeassistant/components/music_assistant/quality_scale.yaml",
+    "homeassistant/components/music_assistant/services.yaml",
+    "homeassistant/components/my_pv/quality_scale.yaml",
+    "homeassistant/components/myneomitis/quality_scale.yaml",
+    "homeassistant/components/myuplink/quality_scale.yaml",
+    "homeassistant/components/namecheapdns/quality_scale.yaml",
+    "homeassistant/components/neato/services.yaml",
+    "homeassistant/components/neopool/quality_scale.yaml",
+    "homeassistant/components/neopool/services.yaml",
+    "homeassistant/components/ness_alarm/quality_scale.yaml",
+    "homeassistant/components/ness_alarm/services.yaml",
+    "homeassistant/components/nest/quality_scale.yaml",
+    "homeassistant/components/nest/services.yaml",
+    "homeassistant/components/netatmo/quality_scale.yaml",
+    "homeassistant/components/netatmo/services.yaml",
+    "homeassistant/components/netgear_lte/services.yaml",
+    "homeassistant/components/nexblue/quality_scale.yaml",
+    "homeassistant/components/nexia/services.yaml",
+    "homeassistant/components/nextdns/quality_scale.yaml",
+    "homeassistant/components/niko_home_control/quality_scale.yaml",
+    "homeassistant/components/nina/quality_scale.yaml",
+    "homeassistant/components/nina/services.yaml",
+    "homeassistant/components/nintendo_parental_controls/quality_scale.yaml",
+    "homeassistant/components/nintendo_parental_controls/services.yaml",
+    "homeassistant/components/nissan_leaf/services.yaml",
+    "homeassistant/components/nobo_hub/quality_scale.yaml",
+    "homeassistant/components/nordpool/quality_scale.yaml",
+    "homeassistant/components/nordpool/services.yaml",
+    "homeassistant/components/notify/services.yaml",
+    "homeassistant/components/novy_cooker_hood/quality_scale.yaml",
+    "homeassistant/components/nrgkick/quality_scale.yaml",
+    "homeassistant/components/ntfy/quality_scale.yaml",
+    "homeassistant/components/ntfy/services.yaml",
+    "homeassistant/components/nuki/services.yaml",
+    "homeassistant/components/number/services.yaml",
+    "homeassistant/components/nut/quality_scale.yaml",
+    "homeassistant/components/nws/services.yaml",
+    "homeassistant/components/nx584/services.yaml",
+    "homeassistant/components/nyt_games/quality_scale.yaml",
+    "homeassistant/components/nzbget/services.yaml",
+    "homeassistant/components/occupancy/conditions.yaml",
+    "homeassistant/components/occupancy/triggers.yaml",
+    "homeassistant/components/octoprint/services.yaml",
+    "homeassistant/components/ohme/quality_scale.yaml",
+    "homeassistant/components/ohme/services.yaml",
+    "homeassistant/components/ombi/services.yaml",
+    "homeassistant/components/omie/quality_scale.yaml",
+    "homeassistant/components/omie/services.yaml",
+    "homeassistant/components/omnilogic/services.yaml",
+    "homeassistant/components/onedrive/quality_scale.yaml",
+    "homeassistant/components/onedrive/services.yaml",
+    "homeassistant/components/onedrive_for_business/quality_scale.yaml",
+    "homeassistant/components/onewire/quality_scale.yaml",
+    "homeassistant/components/onkyo/quality_scale.yaml",
+    "homeassistant/components/onkyo/services.yaml",
+    "homeassistant/components/onvif/services.yaml",
+    "homeassistant/components/open_router/quality_scale.yaml",
+    "homeassistant/components/openai_conversation/quality_scale.yaml",
+    "homeassistant/components/opendisplay/quality_scale.yaml",
+    "homeassistant/components/opendisplay/services.yaml",
+    "homeassistant/components/openevse/quality_scale.yaml",
+    "homeassistant/components/openhome/services.yaml",
+    "homeassistant/components/openrgb/quality_scale.yaml",
+    "homeassistant/components/opensensemap/quality_scale.yaml",
+    "homeassistant/components/opentherm_gw/services.yaml",
+    "homeassistant/components/openweathermap/services.yaml",
+    "homeassistant/components/opower/quality_scale.yaml",
+    "homeassistant/components/osoenergy/services.yaml",
+    "homeassistant/components/osram_infrared/quality_scale.yaml",
+    "homeassistant/components/ouman_eh_800/quality_scale.yaml",
+    "homeassistant/components/overkiz/quality_scale.yaml",
+    "homeassistant/components/overkiz/services.yaml",
+    "homeassistant/components/overseerr/quality_scale.yaml",
+    "homeassistant/components/overseerr/services.yaml",
+    "homeassistant/components/ovhcloud_ai_endpoints/quality_scale.yaml",
+    "homeassistant/components/paj_gps/quality_scale.yaml",
+    "homeassistant/components/palazzetti/quality_scale.yaml",
+    "homeassistant/components/paperless_ngx/quality_scale.yaml",
+    "homeassistant/components/peblar/quality_scale.yaml",
+    "homeassistant/components/peblar/services.yaml",
+    "homeassistant/components/pegel_online/quality_scale.yaml",
+    "homeassistant/components/persang_infrared/quality_scale.yaml",
+    "homeassistant/components/persistent_notification/services.yaml",
+    "homeassistant/components/person/services.yaml",
+    "homeassistant/components/pglab/quality_scale.yaml",
+    "homeassistant/components/pi_hole/services.yaml",
+    "homeassistant/components/picnic/services.yaml",
+    "homeassistant/components/pilight/services.yaml",
+    "homeassistant/components/playstation_network/quality_scale.yaml",
+    "homeassistant/components/plex/services.yaml",
+    "homeassistant/components/plugwise/quality_scale.yaml",
+    "homeassistant/components/pooldose/quality_scale.yaml",
+    "homeassistant/components/portainer/quality_scale.yaml",
+    "homeassistant/components/portainer/services.yaml",
+    "homeassistant/components/power/conditions.yaml",
+    "homeassistant/components/power/triggers.yaml",
+    "homeassistant/components/powerfox/quality_scale.yaml",
+    "homeassistant/components/powerfox_local/quality_scale.yaml",
+    "homeassistant/components/prana/quality_scale.yaml",
+    "homeassistant/components/probe_plus/quality_scale.yaml",
+    "homeassistant/components/profiler/services.yaml",
+    "homeassistant/components/prometheus/README.md",
+    "homeassistant/components/prosegur/services.yaml",
+    "homeassistant/components/proxmoxve/quality_scale.yaml",
+    "homeassistant/components/prusalink/quality_scale.yaml",
+    "homeassistant/components/ps4/services.yaml",
+    "homeassistant/components/ptdevices/quality_scale.yaml",
+    "homeassistant/components/pterodactyl/quality_scale.yaml",
+    "homeassistant/components/pushover/services.yaml",
+    "homeassistant/components/pyload/quality_scale.yaml",
+    "homeassistant/components/python_script/services.yaml",
+    "homeassistant/components/qbittorrent/services.yaml",
+    "homeassistant/components/qbus/quality_scale.yaml",
+    "homeassistant/components/qvr_pro/services.yaml",
+    "homeassistant/components/rachio/services.yaml",
+    "homeassistant/components/radarr/services.yaml",
+    "homeassistant/components/rainbird/quality_scale.yaml",
+    "homeassistant/components/rainbird/services.yaml",
+    "homeassistant/components/rainmachine/services.yaml",
+    "homeassistant/components/recorder/services.yaml",
+    "homeassistant/components/redgtech/quality_scale.yaml",
+    "homeassistant/components/rehlko/quality_scale.yaml",
+    "homeassistant/components/remember_the_milk/services.yaml",
+    "homeassistant/components/remote/conditions.yaml",
+    "homeassistant/components/remote/services.yaml",
+    "homeassistant/components/remote/triggers.yaml",
+    "homeassistant/components/remote_calendar/quality_scale.yaml",
+    "homeassistant/components/renault/quality_scale.yaml",
+    "homeassistant/components/renault/services.yaml",
+    "homeassistant/components/renson/services.yaml",
+    "homeassistant/components/reolink/quality_scale.yaml",
+    "homeassistant/components/reolink/services.yaml",
+    "homeassistant/components/rest/services.yaml",
+    "homeassistant/components/rest_command/services.yaml",
+    "homeassistant/components/rflink/services.yaml",
+    "homeassistant/components/rfxtrx/services.yaml",
+    "homeassistant/components/ring/quality_scale.yaml",
+    "homeassistant/components/risco/services.yaml",
+    "homeassistant/components/roborock/quality_scale.yaml",
+    "homeassistant/components/roborock/services.yaml",
+    "homeassistant/components/roku/services.yaml",
+    "homeassistant/components/roon/services.yaml",
+    "homeassistant/components/route53/services.yaml",
+    "homeassistant/components/route_b_smart_meter/quality_scale.yaml",
+    "homeassistant/components/russound_rio/quality_scale.yaml",
+    "homeassistant/components/russound_rnet/quality_scale.yaml",
+    "homeassistant/components/sabnzbd/quality_scale.yaml",
+    "homeassistant/components/samsung_exlink/quality_scale.yaml",
+    "homeassistant/components/samsung_infrared/quality_scale.yaml",
+    "homeassistant/components/samsungtv/quality_scale.yaml",
+    "homeassistant/components/satel_integra/quality_scale.yaml",
+    "homeassistant/components/saunum/quality_scale.yaml",
+    "homeassistant/components/saunum/services.yaml",
+    "homeassistant/components/scene/services.yaml",
+    "homeassistant/components/scene/triggers.yaml",
+    "homeassistant/components/schedule/conditions.yaml",
+    "homeassistant/components/schedule/services.yaml",
+    "homeassistant/components/schedule/triggers.yaml",
+    "homeassistant/components/schlage/quality_scale.yaml",
+    "homeassistant/components/schlage/services.yaml",
+    "homeassistant/components/scorpiontrack/quality_scale.yaml",
+    "homeassistant/components/screenlogic/services.yaml",
+    "homeassistant/components/script/blueprints/confirmable_notification.yaml",
+    "homeassistant/components/script/services.yaml",
+    "homeassistant/components/select/conditions.yaml",
+    "homeassistant/components/select/services.yaml",
+    "homeassistant/components/select/triggers.yaml",
+    "homeassistant/components/sensibo/quality_scale.yaml",
+    "homeassistant/components/sensibo/services.yaml",
+    "homeassistant/components/sensorpush_cloud/quality_scale.yaml",
+    "homeassistant/components/seventeentrack/services.yaml",
+    "homeassistant/components/sfr_box/quality_scale.yaml",
+    "homeassistant/components/sftp_storage/quality_scale.yaml",
+    "homeassistant/components/sharkiq/services.yaml",
+    "homeassistant/components/shell_command/services.yaml",
+    "homeassistant/components/shelly/quality_scale.yaml",
+    "homeassistant/components/shelly/services.yaml",
+    "homeassistant/components/shopping_list/services.yaml",
+    "homeassistant/components/silla_prism/quality_scale.yaml",
+    "homeassistant/components/simplisafe/services.yaml",
+    "homeassistant/components/siren/conditions.yaml",
+    "homeassistant/components/siren/services.yaml",
+    "homeassistant/components/siren/triggers.yaml",
+    "homeassistant/components/sleep_as_android/quality_scale.yaml",
+    "homeassistant/components/slide_local/quality_scale.yaml",
+    "homeassistant/components/smarla/quality_scale.yaml",
+    "homeassistant/components/smartthings/quality_scale.yaml",
+    "homeassistant/components/smarttub/quality_scale.yaml",
+    "homeassistant/components/smarttub/services.yaml",
+    "homeassistant/components/smlight/quality_scale.yaml",
+    "homeassistant/components/smlight/services.yaml",
+    "homeassistant/components/smtp/services.yaml",
+    "homeassistant/components/snapcast/services.yaml",
+    "homeassistant/components/snoo/quality_scale.yaml",
+    "homeassistant/components/snooz/services.yaml",
+    "homeassistant/components/sofar/quality_scale.yaml",
+    "homeassistant/components/sofar/services.yaml",
+    "homeassistant/components/solaredge_modbus/quality_scale.yaml",
+    "homeassistant/components/solarlog/quality_scale.yaml",
+    "homeassistant/components/solarman/quality_scale.yaml",
+    "homeassistant/components/sonarr/services.yaml",
+    "homeassistant/components/songpal/services.yaml",
+    "homeassistant/components/sonos/quality_scale.yaml",
+    "homeassistant/components/sonos/services.yaml",
+    "homeassistant/components/soundtouch/services.yaml",
+    "homeassistant/components/spaceapi/quality_scale.yaml",
+    "homeassistant/components/specialized_turbo/quality_scale.yaml",
+    "homeassistant/components/speedtestdotnet/quality_scale.yaml",
+    "homeassistant/components/splunk/quality_scale.yaml",
+    "homeassistant/components/sql/services.yaml",
+    "homeassistant/components/squeezebox/quality_scale.yaml",
+    "homeassistant/components/squeezebox/services.yaml",
+    "homeassistant/components/starline/services.yaml",
+    "homeassistant/components/statistics/services.yaml",
+    "homeassistant/components/stiebel_eltron/quality_scale.yaml",
+    "homeassistant/components/stookwijzer/quality_scale.yaml",
+    "homeassistant/components/stookwijzer/services.yaml",
+    "homeassistant/components/streamlabswater/services.yaml",
+    "homeassistant/components/stt/services.yaml",
+    "homeassistant/components/subaru/quality_scale.yaml",
+    "homeassistant/components/subaru/services.yaml",
+    "homeassistant/components/suez_water/quality_scale.yaml",
+    "homeassistant/components/sun/conditions.yaml",
+    "homeassistant/components/sun/triggers.yaml",
+    "homeassistant/components/sunricher_dali/quality_scale.yaml",
+    "homeassistant/components/sunsynk/quality_scale.yaml",
+    "homeassistant/components/surepetcare/services.yaml",
+    "homeassistant/components/swiss_public_transport/quality_scale.yaml",
+    "homeassistant/components/swiss_public_transport/services.yaml",
+    "homeassistant/components/switch/conditions.yaml",
+    "homeassistant/components/switch/services.yaml",
+    "homeassistant/components/switch/triggers.yaml",
+    "homeassistant/components/switchbot/quality_scale.yaml",
+    "homeassistant/components/switchbot/services.yaml",
+    "homeassistant/components/switchbot_cloud/services.yaml",
+    "homeassistant/components/switcher_kis/quality_scale.yaml",
+    "homeassistant/components/switcher_kis/services.yaml",
+    "homeassistant/components/syncthru/quality_scale.yaml",
+    "homeassistant/components/synology_dsm/quality_scale.yaml",
+    "homeassistant/components/synology_dsm/services.yaml",
+    "homeassistant/components/system_bridge/services.yaml",
+    "homeassistant/components/system_log/services.yaml",
+    "homeassistant/components/systemnexa2/quality_scale.yaml",
+    "homeassistant/components/tado/services.yaml",
+    "homeassistant/components/tailwind/quality_scale.yaml",
+    "homeassistant/components/tankerkoenig/quality_scale.yaml",
+    "homeassistant/components/technove/quality_scale.yaml",
+    "homeassistant/components/tedee/quality_scale.yaml",
+    "homeassistant/components/telegram/services.yaml",
+    "homeassistant/components/telegram_bot/quality_scale.yaml",
+    "homeassistant/components/telegram_bot/services.yaml",
+    "homeassistant/components/teleinfo/quality_scale.yaml",
+    "homeassistant/components/teltonika/quality_scale.yaml",
+    "homeassistant/components/temperature/conditions.yaml",
+    "homeassistant/components/temperature/triggers.yaml",
+    "homeassistant/components/template/blueprints/inverted_binary_sensor.yaml",
+    "homeassistant/components/template/services.yaml",
+    "homeassistant/components/tesla_fleet/quality_scale.yaml",
+    "homeassistant/components/teslemetry/quality_scale.yaml",
+    "homeassistant/components/teslemetry/services.yaml",
+    "homeassistant/components/tessie/quality_scale.yaml",
+    "homeassistant/components/text/conditions.yaml",
+    "homeassistant/components/text/services.yaml",
+    "homeassistant/components/text/triggers.yaml",
+    "homeassistant/components/theben_conexa/quality_scale.yaml",
+    "homeassistant/components/threema/quality_scale.yaml",
+    "homeassistant/components/tibber/services.yaml",
+    "homeassistant/components/tilt_pi/quality_scale.yaml",
+    "homeassistant/components/time/services.yaml",
+    "homeassistant/components/timer/conditions.yaml",
+    "homeassistant/components/timer/services.yaml",
+    "homeassistant/components/timer/triggers.yaml",
+    "homeassistant/components/todo/conditions.yaml",
+    "homeassistant/components/todo/services.yaml",
+    "homeassistant/components/todo/triggers.yaml",
+    "homeassistant/components/todoist/services.yaml",
+    "homeassistant/components/togrill/quality_scale.yaml",
+    "homeassistant/components/tonewinner/quality_scale.yaml",
+    "homeassistant/components/totalconnect/quality_scale.yaml",
+    "homeassistant/components/totalconnect/services.yaml",
+    "homeassistant/components/tplink/README.md",
+    "homeassistant/components/tplink/quality_scale.yaml",
+    "homeassistant/components/tplink/services.yaml",
+    "homeassistant/components/tplink_omada/quality_scale.yaml",
+    "homeassistant/components/tplink_omada/services.yaml",
+    "homeassistant/components/trane/quality_scale.yaml",
+    "homeassistant/components/transmission/quality_scale.yaml",
+    "homeassistant/components/transmission/services.yaml",
+    "homeassistant/components/trend/services.yaml",
+    "homeassistant/components/trmnl/quality_scale.yaml",
+    "homeassistant/components/tts/services.yaml",
+    "homeassistant/components/tuya/services.yaml",
+    "homeassistant/components/twentemilieu/quality_scale.yaml",
+    "homeassistant/components/uhoo/quality_scale.yaml",
+    "homeassistant/components/unifi/quality_scale.yaml",
+    "homeassistant/components/unifi/services.yaml",
+    "homeassistant/components/unifi_access/quality_scale.yaml",
+    "homeassistant/components/unifi_access/services.yaml",
+    "homeassistant/components/unifiprotect/quality_scale.yaml",
+    "homeassistant/components/unifiprotect/services.yaml",
+    "homeassistant/components/universal/services.yaml",
+    "homeassistant/components/upb/services.yaml",
+    "homeassistant/components/update/conditions.yaml",
+    "homeassistant/components/update/services.yaml",
+    "homeassistant/components/update/triggers.yaml",
+    "homeassistant/components/uptime_kuma/quality_scale.yaml",
+    "homeassistant/components/uptimerobot/quality_scale.yaml",
+    "homeassistant/components/utility_meter/services.yaml",
+    "homeassistant/components/vacuum/conditions.yaml",
+    "homeassistant/components/vacuum/services.yaml",
+    "homeassistant/components/vacuum/triggers.yaml",
+    "homeassistant/components/vallox/services.yaml",
+    "homeassistant/components/valve/conditions.yaml",
+    "homeassistant/components/valve/services.yaml",
+    "homeassistant/components/valve/triggers.yaml",
+    "homeassistant/components/vegehub/quality_scale.yaml",
+    "homeassistant/components/velbus/quality_scale.yaml",
+    "homeassistant/components/velbus/services.yaml",
+    "homeassistant/components/velux/quality_scale.yaml",
+    "homeassistant/components/verisure/services.yaml",
+    "homeassistant/components/vesync/quality_scale.yaml",
+    "homeassistant/components/vesync/services.yaml",
+    "homeassistant/components/vibration/conditions.yaml",
+    "homeassistant/components/vibration/triggers.yaml",
+    "homeassistant/components/vicare/quality_scale.yaml",
+    "homeassistant/components/vicare/services.yaml",
+    "homeassistant/components/victron_ble/quality_scale.yaml",
+    "homeassistant/components/victron_gx/quality_scale.yaml",
+    "homeassistant/components/victron_remote_monitoring/quality_scale.yaml",
+    "homeassistant/components/vistapool/quality_scale.yaml",
+    "homeassistant/components/vitesy/quality_scale.yaml",
+    "homeassistant/components/vizio/quality_scale.yaml",
+    "homeassistant/components/vizio/services.yaml",
+    "homeassistant/components/vodafone_station/quality_scale.yaml",
+    "homeassistant/components/volvo/quality_scale.yaml",
+    "homeassistant/components/volvo/services.yaml",
+    "homeassistant/components/wake_on_lan/services.yaml",
+    "homeassistant/components/water_heater/conditions.yaml",
+    "homeassistant/components/water_heater/services.yaml",
+    "homeassistant/components/water_heater/triggers.yaml",
+    "homeassistant/components/waterfurnace/quality_scale.yaml",
+    "homeassistant/components/watergate/quality_scale.yaml",
+    "homeassistant/components/watts/quality_scale.yaml",
+    "homeassistant/components/watts/services.yaml",
+    "homeassistant/components/wattwaechter/quality_scale.yaml",
+    "homeassistant/components/waze_travel_time/services.yaml",
+    "homeassistant/components/weather/services.yaml",
+    "homeassistant/components/weatherflow/quality_scale.yaml",
+    "homeassistant/components/webdav/quality_scale.yaml",
+    "homeassistant/components/webostv/quality_scale.yaml",
+    "homeassistant/components/webostv/services.yaml",
+    "homeassistant/components/websocket_api/services.yaml",
+    "homeassistant/components/weheat/quality_scale.yaml",
+    "homeassistant/components/wemo/services.yaml",
+    "homeassistant/components/whirlpool/quality_scale.yaml",
+    "homeassistant/components/wiim/quality_scale.yaml",
+    "homeassistant/components/wilight/services.yaml",
+    "homeassistant/components/willow/quality_scale.yaml",
+    "homeassistant/components/window/conditions.yaml",
+    "homeassistant/components/window/triggers.yaml",
+    "homeassistant/components/wled/quality_scale.yaml",
+    "homeassistant/components/wmspro/services.yaml",
+    "homeassistant/components/wolflink/quality_scale.yaml",
+    "homeassistant/components/workday/services.yaml",
+    "homeassistant/components/xbox/quality_scale.yaml",
+    "homeassistant/components/xiaomi_aqara/services.yaml",
+    "homeassistant/components/xiaomi_miio/services.yaml",
+    "homeassistant/components/xthings_cloud/quality_scale.yaml",
+    "homeassistant/components/yamaha/services.yaml",
+    "homeassistant/components/yardian/services.yaml",
+    "homeassistant/components/yeelight/services.yaml",
+    "homeassistant/components/yolink/services.yaml",
+    "homeassistant/components/yoto/quality_scale.yaml",
+    "homeassistant/components/zeversolar/quality_scale.yaml",
+    "homeassistant/components/zha/services.yaml",
+    "homeassistant/components/zimi/quality_scale.yaml",
+    "homeassistant/components/zinvolt/quality_scale.yaml",
+    "homeassistant/components/zone/conditions.yaml",
+    "homeassistant/components/zone/services.yaml",
+    "homeassistant/components/zone/triggers.yaml",
+    "homeassistant/components/zoneminder/services.yaml",
+    "homeassistant/components/zonneplan/quality_scale.yaml",
+    "homeassistant/components/zwave_js/README.md",
+    "homeassistant/components/zwave_js/conditions.yaml",
+    "homeassistant/components/zwave_js/services.yaml",
+    "homeassistant/components/zwave_js/triggers.yaml",
+    "homeassistant/helpers/hassio.py",
+    "homeassistant/util/resource.py",
+    "pylint/plugins/README.md",
+    "pylint/plugins/pyproject.toml",
+    "pyproject.toml",
+    "requirements.txt",
+    "script/check_requirements/__main__.py",
+    "script/check_requirements/gate.py",
+    "script/check_requirements/requirements.txt",
+    "script/hassfest/docker/Dockerfile",
+    "script/hassfest/docker/Dockerfile.dockerignore",
+    "script/hassfest/requirements.py",
+    "script/scaffold/templates/integration/integration/quality_scale.yaml",
+    "script/sqlite3_vendor/pyproject.toml",
+    "script/sqlite3_vendor/setup.py"
+  ],
+  "compose_files": null,
+  "dockerfiles": [
+    {
+      "path": "Dockerfile",
+      "base_image": "${BUILD_FROM}",
+      "exposed": null,
+      "volumes": null,
+      "env": [
+        {
+          "key": "S6_SERVICES_GRACETIME",
+          "value": "240000",
+          "location": {
+            "file": "Dockerfile",
+            "line": 18
+          }
+        },
+        {
+          "key": "UV_SYSTEM_PYTHON",
+          "value": "true",
+          "location": {
+            "file": "Dockerfile",
+            "line": 18
+          }
+        },
+        {
+          "key": "UV_NO_CACHE",
+          "value": "true",
+          "location": {
+            "file": "Dockerfile",
+            "line": 18
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "BUILD_FROM",
+          "value": "",
+          "location": {
+            "file": "Dockerfile",
+            "line": 5
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": null,
+      "command": null
+    },
+    {
+      "path": "Dockerfile.dev",
+      "base_image": "mcr.microsoft.com/vscode/devcontainers/base:debian",
+      "exposed": null,
+      "volumes": null,
+      "env": [
+        {
+          "key": "VIRTUAL_ENV",
+          "value": "/home/vscode/.local/ha-venv",
+          "location": {
+            "file": "Dockerfile.dev",
+            "line": 40
+          }
+        },
+        {
+          "key": "UV_PROJECT_ENVIRONMENT",
+          "value": "$VIRTUAL_ENV",
+          "location": {
+            "file": "Dockerfile.dev",
+            "line": 44
+          }
+        },
+        {
+          "key": "PATH",
+          "value": "$VIRTUAL_ENV/bin:$PATH",
+          "location": {
+            "file": "Dockerfile.dev",
+            "line": 48
+          }
+        },
+        {
+          "key": "SHELL",
+          "value": "/bin/bash",
+          "location": {
+            "file": "Dockerfile.dev",
+            "line": 67
+          }
+        }
+      ],
+      "args": null,
+      "user": "vscode",
+      "user_at": {
+        "file": "Dockerfile.dev",
+        "line": 38
+      },
+      "entrypoint": null,
+      "command": null
+    },
+    {
+      "path": "script/hassfest/docker/Dockerfile",
+      "base_image": "python:3.14.5-alpine",
+      "exposed": null,
+      "volumes": null,
+      "env": [
+        {
+          "key": "UV_SYSTEM_PYTHON",
+          "value": "true",
+          "location": {
+            "file": "script/hassfest/docker/Dockerfile",
+            "line": 7
+          }
+        },
+        {
+          "key": "UV_EXTRA_INDEX_URL",
+          "value": "https://wheels.home-assistant.io/musllinux-index/",
+          "location": {
+            "file": "script/hassfest/docker/Dockerfile",
+            "line": 7
+          }
+        }
+      ],
+      "args": null,
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": [
+        "/usr/src/homeassistant/script/hassfest/docker/entrypoint.sh"
+      ],
+      "command": null
+    },
+    {
+      "path": "script/hassfest/docker/Dockerfile.dockerignore",
+      "base_image": "",
+      "exposed": null,
+      "volumes": null,
+      "env": null,
+      "args": null,
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": null,
+      "command": null
+    }
+  ],
+  "env_samples": null,
+  "variables": [
+    {
+      "name": "C7401",
+      "default": "",
+      "description": "Logger messages must not end with a period",
+      "required": false,
+      "mentions": [
+        {
+          "name": "C7401",
+          "kind": "readme",
+          "text": "Logger messages must not end with a period",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 77
+          }
+        }
+      ]
+    },
+    {
+      "name": "C7402",
+      "default": "",
+      "description": "Logger messages must start with a capital letter or use debug level",
+      "required": false,
+      "mentions": [
+        {
+          "name": "C7402",
+          "kind": "readme",
+          "text": "Logger messages must start with a capital letter or use debug level",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 78
+          }
+        }
+      ]
+    },
+    {
+      "name": "C7403",
+      "default": "",
+      "description": "Use relative imports within an integration",
+      "required": false,
+      "mentions": [
+        {
+          "name": "C7403",
+          "kind": "readme",
+          "text": "Use relative imports within an integration",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 79
+          }
+        }
+      ]
+    },
+    {
+      "name": "C7404",
+      "default": "",
+      "description": "Use absolute imports for cross-integration references",
+      "required": false,
+      "mentions": [
+        {
+          "name": "C7404",
+          "kind": "readme",
+          "text": "Use absolute imports for cross-integration references",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 80
+          }
+        }
+      ]
+    },
+    {
+      "name": "C7405",
+      "default": "",
+      "description": "Do not import from another integration's internals",
+      "required": false,
+      "mentions": [
+        {
+          "name": "C7405",
+          "kind": "readme",
+          "text": "Do not import from another integration's internals",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 81
+          }
+        }
+      ]
+    },
+    {
+      "name": "C7406",
+      "default": "",
+      "description": "Use the helper namespace import pattern",
+      "required": false,
+      "mentions": [
+        {
+          "name": "C7406",
+          "kind": "readme",
+          "text": "Use the helper namespace import pattern",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 82
+          }
+        }
+      ]
+    },
+    {
+      "name": "C7407",
+      "default": "",
+      "description": "Aliased DOMAIN import needs a descriptive alias",
+      "required": false,
+      "mentions": [
+        {
+          "name": "C7407",
+          "kind": "readme",
+          "text": "Aliased DOMAIN import needs a descriptive alias",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 83
+          }
+        }
+      ]
+    },
+    {
+      "name": "C7408",
+      "default": "",
+      "description": "Unnecessary alias when importing DOMAIN within the same integration",
+      "required": false,
+      "mentions": [
+        {
+          "name": "C7408",
+          "kind": "readme",
+          "text": "Unnecessary alias when importing DOMAIN within the same integration",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 84
+          }
+        }
+      ]
+    },
+    {
+      "name": "C7409",
+      "default": "",
+      "description": "PLATFORMS list must be sorted alphabetically",
+      "required": false,
+      "mentions": [
+        {
+          "name": "C7409",
+          "kind": "readme",
+          "text": "PLATFORMS list must be sorted alphabetically",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 85
+          }
+        }
+      ]
+    },
+    {
+      "name": "C7410",
+      "default": "",
+      "description": "Use Greek mu (U+03BC), not ANSI micro sign (U+00B5)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "C7410",
+          "kind": "readme",
+          "text": "Use Greek mu (U+03BC), not ANSI micro sign (U+00B5)",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 86
+          }
+        }
+      ]
+    },
+    {
+      "name": "C7411",
+      "default": "",
+      "description": "Entity class should be in the correct platform module",
+      "required": false,
+      "mentions": [
+        {
+          "name": "C7411",
+          "kind": "readme",
+          "text": "Entity class should be in the correct platform module",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 87
+          }
+        }
+      ]
+    },
+    {
+      "name": "C7412",
+      "default": "",
+      "description": "Setting an EntityDescription field to its default value is redundant",
+      "required": false,
+      "mentions": [
+        {
+          "name": "C7412",
+          "kind": "readme",
+          "text": "Setting an EntityDescription field to its default value is redundant",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 88
+          }
+        }
+      ]
+    },
+    {
+      "name": "C7413",
+      "default": "",
+      "description": "Constant duplicates one in homeassistant.const with the same value",
+      "required": false,
+      "mentions": [
+        {
+          "name": "C7413",
+          "kind": "readme",
+          "text": "Constant duplicates one in homeassistant.const with the same value",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 89
+          }
+        }
+      ]
+    },
+    {
+      "name": "C7414",
+      "default": "",
+      "description": "Use homeassistant.util.dt.utcnow instead of datetime.now(UTC)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "C7414",
+          "kind": "readme",
+          "text": "Use homeassistant.util.dt.utcnow instead of datetime.now(UTC)",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 90
+          }
+        }
+      ]
+    },
+    {
+      "name": "C7415",
+      "default": "",
+      "description": "Domain argument in tests should be a domain constant or variable",
+      "required": false,
+      "mentions": [
+        {
+          "name": "C7415",
+          "kind": "readme",
+          "text": "Domain argument in tests should be a domain constant or variable",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 91
+          }
+        }
+      ]
+    },
+    {
+      "name": "C7425",
+      "default": "",
+      "description": "Use homeassistant.util.dt.now instead of datetime.now(\u003ctz\u003e)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "C7425",
+          "kind": "readme",
+          "text": "Use homeassistant.util.dt.now instead of datetime.now(\u003ctz\u003e)",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 92
+          }
+        }
+      ]
+    },
+    {
+      "name": "C7427",
+      "default": "",
+      "description": "Use homeassistant.util.dt.naive_now instead of datetime.now()",
+      "required": false,
+      "mentions": [
+        {
+          "name": "C7427",
+          "kind": "readme",
+          "text": "Use homeassistant.util.dt.naive_now instead of datetime.now()",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 93
+          }
+        }
+      ]
+    },
+    {
+      "name": "CI",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CI",
+          "kind": "code",
+          "location": {
+            "file": "script/hassfest/requirements.py",
+            "line": 392
+          }
+        }
+      ]
+    },
+    {
+      "name": "E7401",
+      "default": "",
+      "description": "Invalid entity class inheritance chain",
+      "required": false,
+      "mentions": [
+        {
+          "name": "E7401",
+          "kind": "readme",
+          "text": "Invalid entity class inheritance chain",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 94
+          }
+        }
+      ]
+    },
+    {
+      "name": "E7402",
+      "default": "",
+      "description": "Function argument should have the specified type hint",
+      "required": false,
+      "mentions": [
+        {
+          "name": "E7402",
+          "kind": "readme",
+          "text": "Function argument should have the specified type hint",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 95
+          }
+        }
+      ]
+    },
+    {
+      "name": "E7403",
+      "default": "",
+      "description": "Function should have the specified return type hint",
+      "required": false,
+      "mentions": [
+        {
+          "name": "E7403",
+          "kind": "readme",
+          "text": "Function should have the specified return type hint",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 96
+          }
+        }
+      ]
+    },
+    {
+      "name": "E7404",
+      "default": "",
+      "description": "Method must call its parent via super()",
+      "required": false,
+      "mentions": [
+        {
+          "name": "E7404",
+          "kind": "readme",
+          "text": "Method must call its parent via super()",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 97
+          }
+        }
+      ]
+    },
+    {
+      "name": "E7405",
+      "default": "",
+      "description": "Action handler must not swallow exceptions",
+      "required": false,
+      "mentions": [
+        {
+          "name": "E7405",
+          "kind": "readme",
+          "text": "Action handler must not swallow exceptions",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 98
+          }
+        }
+      ]
+    },
+    {
+      "name": "E7406",
+      "default": "",
+      "description": "Translation key not found in strings.json exceptions section",
+      "required": false,
+      "mentions": [
+        {
+          "name": "E7406",
+          "kind": "readme",
+          "text": "Translation key not found in strings.json exceptions section",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 99
+          }
+        }
+      ]
+    },
+    {
+      "name": "E7408",
+      "default": "",
+      "description": "Only one of translation_key / translation_domain is set",
+      "required": false,
+      "mentions": [
+        {
+          "name": "E7408",
+          "kind": "readme",
+          "text": "Only one of translation_key / translation_domain is set",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 100
+          }
+        }
+      ]
+    },
+    {
+      "name": "E7409",
+      "default": "",
+      "description": "MDI icon string does not exist in the Material Design Icons set",
+      "required": false,
+      "mentions": [
+        {
+          "name": "E7409",
+          "kind": "readme",
+          "text": "MDI icon string does not exist in the Material Design Icons set",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 101
+          }
+        }
+      ]
+    },
+    {
+      "name": "E7410",
+      "default": "",
+      "description": "MDI icon in icons.json does not exist in the Material Design Icons set",
+      "required": false,
+      "mentions": [
+        {
+          "name": "E7410",
+          "kind": "readme",
+          "text": "MDI icon in icons.json does not exist in the Material Design Icons set",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 102
+          }
+        }
+      ]
+    },
+    {
+      "name": "E7418",
+      "default": "",
+      "description": "Translation placeholders in code don't match strings.json",
+      "required": false,
+      "mentions": [
+        {
+          "name": "E7418",
+          "kind": "readme",
+          "text": "Translation placeholders in code don't match strings.json",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 103
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITHUB_API_URL",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITHUB_API_URL",
+          "kind": "code",
+          "location": {
+            "file": "script/check_requirements/gate.py",
+            "line": 44
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITHUB_REPOSITORY",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITHUB_REPOSITORY",
+          "kind": "code",
+          "location": {
+            "file": "script/check_requirements/__main__.py",
+            "line": 20
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITHUB_TOKEN",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITHUB_TOKEN",
+          "kind": "code",
+          "location": {
+            "file": "script/check_requirements/__main__.py",
+            "line": 21
+          }
+        }
+      ]
+    },
+    {
+      "name": "PATH",
+      "default": "$VIRTUAL_ENV/bin:$PATH",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PATH",
+          "kind": "dockerfile",
+          "default": "$VIRTUAL_ENV/bin:$PATH",
+          "location": {
+            "file": "Dockerfile.dev",
+            "line": 48
+          }
+        }
+      ]
+    },
+    {
+      "name": "R7401",
+      "default": "",
+      "description": "Use @pytest.mark.usefixtures for unused fixtures",
+      "required": false,
+      "mentions": [
+        {
+          "name": "R7401",
+          "kind": "readme",
+          "text": "Use @pytest.mark.usefixtures for unused fixtures",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 104
+          }
+        }
+      ]
+    },
+    {
+      "name": "R7402",
+      "default": "",
+      "description": "Unused test function argument should use @pytest.mark.usefixtures",
+      "required": false,
+      "mentions": [
+        {
+          "name": "R7402",
+          "kind": "readme",
+          "text": "Unused test function argument should use @pytest.mark.usefixtures",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 105
+          }
+        }
+      ]
+    },
+    {
+      "name": "R7403",
+      "default": "",
+      "description": "@pytest.mark.usefixtures redundant when pytestmark already applies it",
+      "required": false,
+      "mentions": [
+        {
+          "name": "R7403",
+          "kind": "readme",
+          "text": "@pytest.mark.usefixtures redundant when pytestmark already applies it",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 106
+          }
+        }
+      ]
+    },
+    {
+      "name": "R7404",
+      "default": "",
+      "description": "Use the registry fixture instead of calling \u003cregistry\u003e.async_get(hass) directly in tests",
+      "required": false,
+      "mentions": [
+        {
+          "name": "R7404",
+          "kind": "readme",
+          "text": "Use the registry fixture instead of calling \u003cregistry\u003e.async_get(hass) directly in tests",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 107
+          }
+        }
+      ]
+    },
+    {
+      "name": "S6_SERVICES_GRACETIME",
+      "default": "240000",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "S6_SERVICES_GRACETIME",
+          "kind": "dockerfile",
+          "default": "240000",
+          "location": {
+            "file": "Dockerfile",
+            "line": 18
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHELL",
+      "default": "/bin/bash",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHELL",
+          "kind": "dockerfile",
+          "default": "/bin/bash",
+          "location": {
+            "file": "Dockerfile.dev",
+            "line": 67
+          }
+        }
+      ]
+    },
+    {
+      "name": "SOFT_FILE_LIMIT",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SOFT_FILE_LIMIT",
+          "kind": "code",
+          "location": {
+            "file": "homeassistant/util/resource.py",
+            "line": 18
+          }
+        }
+      ]
+    },
+    {
+      "name": "SQLITE_VERSION",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SQLITE_VERSION",
+          "kind": "code",
+          "location": {
+            "file": "script/sqlite3_vendor/setup.py",
+            "line": 17
+          }
+        }
+      ]
+    },
+    {
+      "name": "SUPERVISOR",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SUPERVISOR",
+          "kind": "code",
+          "location": {
+            "file": "homeassistant/components/hassio/__init__.py",
+            "line": 329
+          }
+        },
+        {
+          "name": "SUPERVISOR",
+          "kind": "code",
+          "location": {
+            "file": "homeassistant/components/hassio/auth.py",
+            "line": 57
+          }
+        },
+        {
+          "name": "SUPERVISOR",
+          "kind": "code",
+          "location": {
+            "file": "homeassistant/components/hassio/system_health.py",
+            "line": 44
+          }
+        },
+        {
+          "name": "SUPERVISOR",
+          "kind": "code",
+          "location": {
+            "file": "homeassistant/helpers/hassio.py",
+            "line": 22
+          }
+        }
+      ]
+    },
+    {
+      "name": "SUPERVISOR_CORE_API_SOCKET",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SUPERVISOR_CORE_API_SOCKET",
+          "kind": "code",
+          "location": {
+            "file": "homeassistant/components/http/__init__.py",
+            "line": 147
+          }
+        }
+      ]
+    },
+    {
+      "name": "SUPERVISOR_TOKEN",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SUPERVISOR_TOKEN",
+          "kind": "code",
+          "location": {
+            "file": "homeassistant/components/hassio/handler.py",
+            "line": 82
+          }
+        },
+        {
+          "name": "SUPERVISOR_TOKEN",
+          "kind": "code",
+          "location": {
+            "file": "homeassistant/components/hassio/handler.py",
+            "line": 122
+          }
+        },
+        {
+          "name": "SUPERVISOR_TOKEN",
+          "kind": "code",
+          "location": {
+            "file": "homeassistant/components/hassio/http.py",
+            "line": 164
+          }
+        }
+      ]
+    },
+    {
+      "name": "UV_EXTRA_INDEX_URL",
+      "default": "https://wheels.home-assistant.io/musllinux-index/",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UV_EXTRA_INDEX_URL",
+          "kind": "dockerfile",
+          "default": "https://wheels.home-assistant.io/musllinux-index/",
+          "location": {
+            "file": "script/hassfest/docker/Dockerfile",
+            "line": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "UV_NO_CACHE",
+      "default": "true",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UV_NO_CACHE",
+          "kind": "dockerfile",
+          "default": "true",
+          "location": {
+            "file": "Dockerfile",
+            "line": 18
+          }
+        }
+      ]
+    },
+    {
+      "name": "UV_PROJECT_ENVIRONMENT",
+      "default": "$VIRTUAL_ENV",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UV_PROJECT_ENVIRONMENT",
+          "kind": "dockerfile",
+          "default": "$VIRTUAL_ENV",
+          "location": {
+            "file": "Dockerfile.dev",
+            "line": 44
+          }
+        }
+      ]
+    },
+    {
+      "name": "UV_SYSTEM_PYTHON",
+      "default": "true",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UV_SYSTEM_PYTHON",
+          "kind": "dockerfile",
+          "default": "true",
+          "location": {
+            "file": "Dockerfile",
+            "line": 18
+          }
+        },
+        {
+          "name": "UV_SYSTEM_PYTHON",
+          "kind": "dockerfile",
+          "default": "true",
+          "location": {
+            "file": "script/hassfest/docker/Dockerfile",
+            "line": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "VIRTUAL_ENV",
+      "default": "/home/vscode/.local/ha-venv",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "VIRTUAL_ENV",
+          "kind": "dockerfile",
+          "default": "/home/vscode/.local/ha-venv",
+          "location": {
+            "file": "Dockerfile.dev",
+            "line": 40
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7401",
+      "default": "",
+      "description": "Import uses a deprecated path",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7401",
+          "kind": "readme",
+          "text": "Import uses a deprecated path",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 108
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7402",
+      "default": "",
+      "description": "Coroutine should not be decorated with @callback",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7402",
+          "kind": "readme",
+          "text": "Coroutine should not be decorated with @callback",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 109
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7403",
+      "default": "",
+      "description": "Pytest fixture has invalid scope or autouse config",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7403",
+          "kind": "readme",
+          "text": "Pytest fixture has invalid scope or autouse config",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 110
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7404",
+      "default": "",
+      "description": "Test fixture files should be loaded asynchronously",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7404",
+          "kind": "readme",
+          "text": "Test fixture files should be loaded asynchronously",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 111
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7405",
+      "default": "",
+      "description": "Use entry.runtime_data instead of hass.data[DOMAIN]",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7405",
+          "kind": "readme",
+          "text": "Use entry.runtime_data instead of hass.data[DOMAIN]",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 112
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7406",
+      "default": "",
+      "description": "Unique ID should not be based on IP/hostname",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7406",
+          "kind": "readme",
+          "text": "Unique ID should not be based on IP/hostname",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 113
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7407",
+      "default": "",
+      "description": "Config flow should not include polling interval fields",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7407",
+          "kind": "readme",
+          "text": "Config flow should not include polling interval fields",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 114
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7408",
+      "default": "",
+      "description": "Config flow should not include name fields",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7408",
+          "kind": "readme",
+          "text": "Config flow should not include name fields",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 115
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7409",
+      "default": "",
+      "description": "Test contains if/match creating non-deterministic execution",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7409",
+          "kind": "readme",
+          "text": "Test contains if/match creating non-deterministic execution",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 116
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7410",
+      "default": "",
+      "description": "Config flow should implement async_step_reauth",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7410",
+          "kind": "readme",
+          "text": "Config flow should implement async_step_reauth",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 117
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7411",
+      "default": "",
+      "description": "Platform module should define PARALLEL_UPDATES",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7411",
+          "kind": "readme",
+          "text": "Platform module should define PARALLEL_UPDATES",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 118
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7412",
+      "default": "",
+      "description": "Integration diagnostics module should implement a diagnostics function",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7412",
+          "kind": "readme",
+          "text": "Integration diagnostics module should implement a diagnostics function",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 119
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7413",
+      "default": "",
+      "description": "Integration should implement async_unload_entry",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7413",
+          "kind": "readme",
+          "text": "Integration should implement async_unload_entry",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 120
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7414",
+      "default": "",
+      "description": "Services should be registered in async_setup, not async_setup_entry",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7414",
+          "kind": "readme",
+          "text": "Services should be registered in async_setup, not async_setup_entry",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 121
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7415",
+      "default": "",
+      "description": "Sequential async_add_executor_job calls should be grouped",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7415",
+          "kind": "readme",
+          "text": "Sequential async_add_executor_job calls should be grouped",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 122
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7416",
+      "default": "",
+      "description": "Entity class should set _attr_has_entity_name = True",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7416",
+          "kind": "readme",
+          "text": "Entity class should set _attr_has_entity_name = True",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 123
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7417",
+      "default": "",
+      "description": "HomeAssistantError should use translation_key/translation_domain",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7417",
+          "kind": "readme",
+          "text": "HomeAssistantError should use translation_key/translation_domain",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 124
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7418",
+      "default": "",
+      "description": "Tests should not call an integration's async_setup_entry directly",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7418",
+          "kind": "readme",
+          "text": "Tests should not call an integration's async_setup_entry directly",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 125
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7419",
+      "default": "",
+      "description": "Don't pass a positional message when translation_key is set",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7419",
+          "kind": "readme",
+          "text": "Don't pass a positional message when translation_key is set",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 126
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7420",
+      "default": "",
+      "description": "Tests should not call a platform's async_setup_entry directly",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7420",
+          "kind": "readme",
+          "text": "Tests should not call a platform's async_setup_entry directly",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 127
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7421",
+      "default": "",
+      "description": "Tests should not call an integration's async_migrate_entry directly",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7421",
+          "kind": "readme",
+          "text": "Tests should not call an integration's async_migrate_entry directly",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 128
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7422",
+      "default": "",
+      "description": "Tests should not call an integration's async_setup directly",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7422",
+          "kind": "readme",
+          "text": "Tests should not call an integration's async_setup directly",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 129
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7423",
+      "default": "",
+      "description": "Entity class does not statically guarantee a non-None unique id",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7423",
+          "kind": "readme",
+          "text": "Entity class does not statically guarantee a non-None unique id",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 130
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7424",
+      "default": "",
+      "description": "Entity class sets _attr_unique_id to a static string at class level",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7424",
+          "kind": "readme",
+          "text": "Entity class sets _attr_unique_id to a static string at class level",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 131
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7425",
+      "default": "",
+      "description": "Entity unique ID references the DOMAIN constant or includes the integration's domain as a string-literal delimited segment",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7425",
+          "kind": "readme",
+          "text": "Entity unique ID references the DOMAIN constant or includes the integration's domain as a string-literal delimited segment",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 132
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7426",
+      "default": "",
+      "description": "Tests should not call an integration's async_unload_entry directly",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7426",
+          "kind": "readme",
+          "text": "Tests should not call an integration's async_unload_entry directly",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 133
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7427",
+      "default": "",
+      "description": "Entity unique ID includes the entity platform name (e.g. sensor, light) as a delimited string-literal segment",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7427",
+          "kind": "readme",
+          "text": "Entity unique ID includes the entity platform name (e.g. sensor, light) as a delimited string-literal segment",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 134
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7428",
+      "default": "",
+      "description": "Config flow form field missing translation in strings.json",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7428",
+          "kind": "readme",
+          "text": "Config flow form field missing translation in strings.json",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 135
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7429",
+      "default": "",
+      "description": "format_mac() is unnecessary with CONNECTION_NETWORK_MAC",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7429",
+          "kind": "readme",
+          "text": "format_mac() is unnecessary with CONNECTION_NETWORK_MAC",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 136
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7430",
+      "default": "",
+      "description": "Config flow using SerialPortSelector must declare usb in dependencies",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7430",
+          "kind": "readme",
+          "text": "Config flow using SerialPortSelector must declare usb in dependencies",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 137
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7431",
+      "default": "",
+      "description": "Options flow form field missing translation in strings.json",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7431",
+          "kind": "readme",
+          "text": "Options flow form field missing translation in strings.json",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 138
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7432",
+      "default": "",
+      "description": "Subentry flow form field missing translation in strings.json",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7432",
+          "kind": "readme",
+          "text": "Subentry flow form field missing translation in strings.json",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 139
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7433",
+      "default": "",
+      "description": "Config flow should test the connection before creating an entry",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7433",
+          "kind": "readme",
+          "text": "Config flow should test the connection before creating an entry",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 140
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7434",
+      "default": "",
+      "description": "async_show_menu option has no matching async_step_* method",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7434",
+          "kind": "readme",
+          "text": "async_show_menu option has no matching async_step_* method",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 141
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7435",
+      "default": "",
+      "description": "Use a JSON fixture helper instead of parsing a loaded fixture",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7435",
+          "kind": "readme",
+          "text": "Use a JSON fixture helper instead of parsing a loaded fixture",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 142
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7436",
+      "default": "",
+      "description": "Light entity sets supported color modes but does not report a color_mode",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7436",
+          "kind": "readme",
+          "text": "Light entity sets supported color modes but does not report a color_mode",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 143
+          }
+        }
+      ]
+    },
+    {
+      "name": "W7437",
+      "default": "",
+      "description": "Light entity reports a color_mode but does not set supported color modes",
+      "required": false,
+      "mentions": [
+        {
+          "name": "W7437",
+          "kind": "readme",
+          "text": "Light entity reports a color_mode but does not set supported color modes",
+          "location": {
+            "file": "pylint/plugins/README.md",
+            "line": 144
+          }
+        }
+      ]
+    }
+  ],
+  "images": null,
+  "docker_runs": null,
+  "notes": null,
+  "suspicious": null,
+  "readmes": [
+    "README.rst",
+    "homeassistant/backports/README",
+    "homeassistant/components/prometheus/README.md",
+    "homeassistant/components/tplink/README.md",
+    "homeassistant/components/zwave_js/README.md",
+    "pylint/plugins/README.md"
+  ],
+  "summary": {
+    "text": "Home Assistant |Chat Status|",
+    "location": {
+      "file": "README.rst",
+      "line": 1
+    }
+  },
+  "file_mentions": [
+    {
+      "text": "quality_scale.yaml",
+      "location": {
+        "file": "pylint/plugins/README.md",
+        "line": 9
+      }
+    },
+    {
+      "text": "quality_scale.yaml",
+      "location": {
+        "file": "pylint/plugins/README.md",
+        "line": 31
+      }
+    },
+    {
+      "text": "quality_scale.yaml",
+      "location": {
+        "file": "pylint/plugins/README.md",
+        "line": 548
+      }
+    },
+    {
+      "text": "quality_scale.yaml",
+      "location": {
+        "file": "pylint/plugins/README.md",
+        "line": 600
+      }
+    }
+  ],
+  "stack_hints": [
+    "pylint/plugins/pyproject.toml",
+    "pyproject.toml",
+    "requirements.txt",
+    "script/check_requirements/requirements.txt",
+    "script/sqlite3_vendor/pyproject.toml"
+  ],
+  "problems": null
+}

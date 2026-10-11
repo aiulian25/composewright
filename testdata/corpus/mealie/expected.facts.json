@@ -1,0 +1,3031 @@
+{
+  "files": [
+    ".pre-commit-config.yaml",
+    "README.md",
+    "Taskfile.yml",
+    "crowdin.yml",
+    "dev/code-generation/gen_ts_locales.py",
+    "docker/Dockerfile",
+    "docker/docker-compose.dev.yml",
+    "docker/docker-compose.yml",
+    "docs/docs/contributors/developers-guide/building-packages.md",
+    "docs/docs/contributors/developers-guide/code-contributions.md",
+    "docs/docs/contributors/developers-guide/database-changes.md",
+    "docs/docs/contributors/developers-guide/maintainers.md",
+    "docs/docs/contributors/developers-guide/starting-dev-server.md",
+    "docs/docs/contributors/guides/ingredient-parser.md",
+    "docs/docs/contributors/non-coders.md",
+    "docs/docs/contributors/translating.md",
+    "docs/docs/documentation/community-guide/bring-api.md",
+    "docs/docs/documentation/community-guide/bulk-url-import.md",
+    "docs/docs/documentation/community-guide/home-assistant.md",
+    "docs/docs/documentation/community-guide/import-recipe-bookmarklet.md",
+    "docs/docs/documentation/community-guide/ios-shortcut.md",
+    "docs/docs/documentation/community-guide/n8n-backup-automation.md",
+    "docs/docs/documentation/community-guide/swag.md",
+    "docs/docs/documentation/getting-started/api-usage.md",
+    "docs/docs/documentation/getting-started/authentication/ldap.md",
+    "docs/docs/documentation/getting-started/authentication/oidc-v2.md",
+    "docs/docs/documentation/getting-started/authentication/oidc.md",
+    "docs/docs/documentation/getting-started/faq.md",
+    "docs/docs/documentation/getting-started/features.md",
+    "docs/docs/documentation/getting-started/installation/ai-providers.md",
+    "docs/docs/documentation/getting-started/installation/backend-config.md",
+    "docs/docs/documentation/getting-started/installation/installation-checklist.md",
+    "docs/docs/documentation/getting-started/installation/logs.md",
+    "docs/docs/documentation/getting-started/installation/postgres.md",
+    "docs/docs/documentation/getting-started/installation/security.md",
+    "docs/docs/documentation/getting-started/installation/sqlite.md",
+    "docs/docs/documentation/getting-started/introduction.md",
+    "docs/docs/documentation/getting-started/migrating-to-mealie-v1.md",
+    "docs/docs/documentation/getting-started/roadmap.md",
+    "docs/docs/documentation/getting-started/updating.md",
+    "docs/docs/documentation/getting-started/usage/backups-and-restoring.md",
+    "docs/docs/documentation/getting-started/usage/permissions-and-public-access.md",
+    "docs/docs/index.md",
+    "docs/docs/news/surveys/2024-october/overview.md",
+    "docs/docs/news/surveys/2024-october/q10.md",
+    "docs/docs/news/surveys/2024-october/q11.md",
+    "docs/docs/news/surveys/2024-october/q12.md",
+    "docs/docs/news/surveys/2024-october/q13.md",
+    "docs/docs/news/surveys/2024-october/q9.md",
+    "docs/mkdocs.yml",
+    "frontend/app/components/README.md",
+    "frontend/nuxt.config.ts",
+    "frontend/package.json",
+    "frontend/pnpm-workspace.yaml",
+    "frontend/template.env",
+    "mealie/alembic/README",
+    "mealie/core/config.py",
+    "mealie/db/init_db.py",
+    "mealie/services/backups_v2/alchemy_exporter.py",
+    "pyproject.toml"
+  ],
+  "compose_files": [
+    {
+      "path": "docker/docker-compose.dev.yml",
+      "services": [
+        {
+          "name": "mailpit",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 2
+          },
+          "image": "axllent/mailpit:latest",
+          "image_at": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 3
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 8025,
+              "published": "8025",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 10
+              }
+            },
+            {
+              "target": 1025,
+              "published": "1025",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 11
+              }
+            }
+          ],
+          "volumes": null,
+          "environment": [
+            {
+              "key": "MP_SMTP_AUTH_ACCEPT_ANY",
+              "raw": "true",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 7
+              }
+            },
+            {
+              "key": "MP_SMTP_AUTH_ALLOW_INSECURE",
+              "raw": "true",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 8
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "postgres",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 12
+          },
+          "image": "postgres:15",
+          "image_at": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 14
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 5432,
+              "published": "5432",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 17
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "../dev/data/postgres",
+              "target": "/var/lib/postgresql/data",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 22
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "POSTGRES_PASSWORD",
+              "raw": "mealie",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 19
+              }
+            },
+            {
+              "key": "POSTGRES_USER",
+              "raw": "mealie",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 20
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": []
+    },
+    {
+      "path": "docker/docker-compose.yml",
+      "services": [
+        {
+          "name": "mealie",
+          "location": {
+            "file": "docker/docker-compose.yml",
+            "line": 2
+          },
+          "image": "mealie:dev",
+          "image_at": {
+            "file": "docker/docker-compose.yml",
+            "line": 4
+          },
+          "build": true,
+          "ports": [
+            {
+              "target": 9000,
+              "published": "9091",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docker/docker-compose.yml",
+                "line": 13
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "mealie-data",
+              "target": "/app/data",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.yml",
+                "line": 11
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "ALLOW_SIGNUP",
+              "raw": "false",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.yml",
+                "line": 15
+              }
+            },
+            {
+              "key": "LOG_LEVEL",
+              "raw": "DEBUG",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.yml",
+                "line": 16
+              }
+            },
+            {
+              "key": "DB_ENGINE",
+              "raw": "sqlite",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.yml",
+                "line": 18
+              }
+            },
+            {
+              "key": "POSTGRES_USER",
+              "raw": "mealie",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.yml",
+                "line": 21
+              }
+            },
+            {
+              "key": "POSTGRES_PASSWORD",
+              "raw": "mealie",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.yml",
+                "line": 22
+              }
+            },
+            {
+              "key": "POSTGRES_SERVER",
+              "raw": "postgres",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.yml",
+                "line": 23
+              }
+            },
+            {
+              "key": "POSTGRES_PORT",
+              "raw": "5432",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.yml",
+                "line": 24
+              }
+            },
+            {
+              "key": "POSTGRES_DB",
+              "raw": "mealie",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.yml",
+                "line": 25
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": []
+    }
+  ],
+  "dockerfiles": [
+    {
+      "path": "docker/Dockerfile",
+      "base_image": "python:3.14-slim@sha256:caaf356f40667c496d405780745b9ac25771c189a51dfcc42430d531ea09f8a2",
+      "exposed": null,
+      "volumes": [
+        {
+          "path": "$MEALIE_HOME/data/",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 150
+          }
+        }
+      ],
+      "env": [
+        {
+          "key": "MEALIE_HOME",
+          "value": "/app",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 23
+          }
+        },
+        {
+          "key": "PYTHONUNBUFFERED",
+          "value": "1",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 25
+          }
+        },
+        {
+          "key": "PYTHONDONTWRITEBYTECODE",
+          "value": "1",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 25
+          }
+        },
+        {
+          "key": "PIP_NO_CACHE_DIR",
+          "value": "off",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 25
+          }
+        },
+        {
+          "key": "PIP_DISABLE_PIP_VERSION_CHECK",
+          "value": "on",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 25
+          }
+        },
+        {
+          "key": "PIP_DEFAULT_TIMEOUT",
+          "value": "100",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 25
+          }
+        },
+        {
+          "key": "VENV_PATH",
+          "value": "/opt/mealie",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 25
+          }
+        },
+        {
+          "key": "PATH",
+          "value": "$VENV_PATH/bin:$PATH",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 33
+          }
+        },
+        {
+          "key": "PRODUCTION",
+          "value": "true",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 122
+          }
+        },
+        {
+          "key": "TESTING",
+          "value": "false",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 123
+          }
+        },
+        {
+          "key": "GIT_COMMIT_HASH",
+          "value": "$COMMIT",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 126
+          }
+        },
+        {
+          "key": "NLTK_DATA",
+          "value": "/nltk_data/",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 146
+          }
+        },
+        {
+          "key": "APP_PORT",
+          "value": "9000",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 151
+          }
+        },
+        {
+          "key": "HOST",
+          "value": "0.0.0.0",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 159
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "COMMIT",
+          "value": "",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 125
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "$MEALIE_HOME/healthcheck.sh"
+        ],
+        "interval": "",
+        "timeout": "",
+        "start_period": "",
+        "retries": 0,
+        "disabled": false,
+        "location": {
+          "file": "docker/Dockerfile",
+          "line": 157
+        }
+      },
+      "entrypoint": [
+        "/app/run.sh"
+      ],
+      "command": null
+    }
+  ],
+  "env_samples": [
+    {
+      "path": "frontend/template.env",
+      "entries": [
+        {
+          "key": "GLOBAL_MIDDLEWARE",
+          "value": "null",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "frontend/template.env",
+            "line": 1
+          }
+        },
+        {
+          "key": "BASE_URL",
+          "value": "",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "frontend/template.env",
+            "line": 2
+          }
+        },
+        {
+          "key": "ALLOW_SIGNUP",
+          "value": "true",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "frontend/template.env",
+            "line": 3
+          }
+        },
+        {
+          "key": "THEME_LIGHT_PRIMARY",
+          "value": "#E58325",
+          "comment": "Light Mode Config",
+          "commented": false,
+          "location": {
+            "file": "frontend/template.env",
+            "line": 7
+          }
+        },
+        {
+          "key": "THEME_LIGHT_ACCENT",
+          "value": "#007A99",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "frontend/template.env",
+            "line": 8
+          }
+        },
+        {
+          "key": "THEME_LIGHT_SECONDARY",
+          "value": "#973542",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "frontend/template.env",
+            "line": 9
+          }
+        },
+        {
+          "key": "THEME_LIGHT_SUCCESS",
+          "value": "#43A047",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "frontend/template.env",
+            "line": 10
+          }
+        },
+        {
+          "key": "THEME_LIGHT_INFO",
+          "value": "#1976D2",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "frontend/template.env",
+            "line": 11
+          }
+        },
+        {
+          "key": "THEME_LIGHT_WARNING",
+          "value": "#FF6D00",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "frontend/template.env",
+            "line": 12
+          }
+        },
+        {
+          "key": "THEME_LIGHT_ERROR",
+          "value": "#EF5350",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "frontend/template.env",
+            "line": 13
+          }
+        },
+        {
+          "key": "THEME_DARK_PRIMARY",
+          "value": "#E58325",
+          "comment": "Light Mode Config",
+          "commented": false,
+          "location": {
+            "file": "frontend/template.env",
+            "line": 16
+          }
+        },
+        {
+          "key": "THEME_DARK_ACCENT",
+          "value": "#007A99",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "frontend/template.env",
+            "line": 17
+          }
+        },
+        {
+          "key": "THEME_DARK_SECONDARY",
+          "value": "#973542",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "frontend/template.env",
+            "line": 18
+          }
+        },
+        {
+          "key": "THEME_DARK_SUCCESS",
+          "value": "#43A047",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "frontend/template.env",
+            "line": 19
+          }
+        },
+        {
+          "key": "THEME_DARK_INFO",
+          "value": "#1976D2",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "frontend/template.env",
+            "line": 20
+          }
+        },
+        {
+          "key": "THEME_DARK_WARNING",
+          "value": "#FF6D00",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "frontend/template.env",
+            "line": 21
+          }
+        },
+        {
+          "key": "THEME_DARK_ERROR",
+          "value": "#EF5350",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "frontend/template.env",
+            "line": 22
+          }
+        }
+      ]
+    }
+  ],
+  "variables": [
+    {
+      "name": "ALEMBIC_CONFIG_FILE",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ALEMBIC_CONFIG_FILE",
+          "kind": "code",
+          "location": {
+            "file": "mealie/db/init_db.py",
+            "line": 108
+          }
+        },
+        {
+          "name": "ALEMBIC_CONFIG_FILE",
+          "kind": "code",
+          "location": {
+            "file": "mealie/services/backups_v2/alchemy_exporter.py",
+            "line": 207
+          }
+        }
+      ]
+    },
+    {
+      "name": "ALLOWED_IFRAME_HOSTS",
+      "default": "\"\"",
+      "description": "Comma-separated extra hostnames allowed as \u003ciframe\u003e sources in recipe content. Extends the built-in list of trusted video providers (YouTube, Vimeo). Subdomains are included automatically. Only https sources are permitted. Adding hosts here opts into rendering embeds from those origins to all viewers, including the public, so add only origins you trust.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ALLOWED_IFRAME_HOSTS",
+          "kind": "readme",
+          "default": "\"\"",
+          "text": "Comma-separated extra hostnames allowed as \u003ciframe\u003e sources in recipe content. Extends the built-in list of trusted video providers (YouTube, Vimeo). Subdomains are included automatically. Only https sources are permitted. Adding hosts here opts into rendering embeds from those origins to all viewers, including the public, so add only origins you trust.",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 32
+          }
+        }
+      ]
+    },
+    {
+      "name": "ALLOW_PASSWORD_LOGIN",
+      "default": "true",
+      "description": "Whether or not to display the username+password input fields. Keep set to true unless you use OIDC authentication",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ALLOW_PASSWORD_LOGIN",
+          "kind": "readme",
+          "default": "true",
+          "text": "Whether or not to display the username+password input fields. Keep set to true unless you use OIDC authentication",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 19
+          }
+        }
+      ]
+    },
+    {
+      "name": "ALLOW_SIGNUP",
+      "default": "false",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ALLOW_SIGNUP",
+          "kind": "compose",
+          "default": "false",
+          "location": {
+            "file": "docker/docker-compose.yml",
+            "line": 15
+          }
+        },
+        {
+          "name": "ALLOW_SIGNUP",
+          "kind": "env_sample",
+          "default": "true",
+          "location": {
+            "file": "frontend/template.env",
+            "line": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "API_DOCS",
+      "default": "True",
+      "description": "Turns on/off access to the API documentation locally",
+      "required": false,
+      "mentions": [
+        {
+          "name": "API_DOCS",
+          "kind": "readme",
+          "default": "True",
+          "text": "Turns on/off access to the API documentation locally",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 16
+          }
+        }
+      ]
+    },
+    {
+      "name": "API_PORT",
+      "default": "9000",
+      "description": "The port exposed by backend API. Do not change this if you're running in Docker",
+      "required": false,
+      "mentions": [
+        {
+          "name": "API_PORT",
+          "kind": "readme",
+          "default": "9000",
+          "text": "The port exposed by backend API. Do not change this if you're running in Docker",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 15
+          }
+        }
+      ]
+    },
+    {
+      "name": "API_URL",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "API_URL",
+          "kind": "code",
+          "location": {
+            "file": "frontend/nuxt.config.ts",
+            "line": 79
+          }
+        }
+      ]
+    },
+    {
+      "name": "APP_PORT",
+      "default": "9000",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "APP_PORT",
+          "kind": "dockerfile",
+          "default": "9000",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 151
+          }
+        }
+      ]
+    },
+    {
+      "name": "BASE_URL",
+      "default": "http://localhost:8080",
+      "description": "Used for notifications and the OIDC callback url",
+      "required": false,
+      "mentions": [
+        {
+          "name": "BASE_URL",
+          "kind": "env_sample",
+          "location": {
+            "file": "frontend/template.env",
+            "line": 2
+          }
+        },
+        {
+          "name": "BASE_URL",
+          "kind": "readme",
+          "default": "http://localhost:8080",
+          "text": "Used for notifications and the OIDC callback url",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 13
+          }
+        }
+      ]
+    },
+    {
+      "name": "CROWDIN_API_KEY",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CROWDIN_API_KEY",
+          "kind": "code",
+          "location": {
+            "file": "dev/code-generation/gen_ts_locales.py",
+            "line": 19
+          }
+        }
+      ]
+    },
+    {
+      "name": "DAILY_SCHEDULE_TIME",
+      "default": "23:45",
+      "description": "The time of day to run daily server tasks, in HH:MM format. Use the server's local time, *not* UTC",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DAILY_SCHEDULE_TIME",
+          "kind": "readme",
+          "default": "23:45",
+          "text": "The time of day to run daily server tasks, in HH:MM format. Use the server's local time, *not* UTC",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 22
+          }
+        }
+      ]
+    },
+    {
+      "name": "DATA_DIR",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DATA_DIR",
+          "kind": "code",
+          "location": {
+            "file": "mealie/core/config.py",
+            "line": 21
+          }
+        }
+      ]
+    },
+    {
+      "name": "DB_ENGINE",
+      "default": "sqlite",
+      "description": "Optional: 'sqlite', 'postgres'",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DB_ENGINE",
+          "kind": "compose",
+          "default": "sqlite",
+          "location": {
+            "file": "docker/docker-compose.yml",
+            "line": 18
+          }
+        },
+        {
+          "name": "DB_ENGINE",
+          "kind": "readme",
+          "default": "sqlite",
+          "text": "Optional: 'sqlite', 'postgres'",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 40
+          }
+        }
+      ]
+    },
+    {
+      "name": "DEFAULT_GROUP",
+      "default": "Home",
+      "description": "The default group for users",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DEFAULT_GROUP",
+          "kind": "readme",
+          "default": "Home",
+          "text": "The default group for users",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 11
+          }
+        }
+      ]
+    },
+    {
+      "name": "DEFAULT_HOUSEHOLD",
+      "default": "Family",
+      "description": "The default household for users in each group",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DEFAULT_HOUSEHOLD",
+          "kind": "readme",
+          "default": "Family",
+          "text": "The default household for users in each group",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 12
+          }
+        }
+      ]
+    },
+    {
+      "name": "GIT_COMMIT_HASH",
+      "default": "$COMMIT",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GIT_COMMIT_HASH",
+          "kind": "dockerfile",
+          "default": "$COMMIT",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 126
+          }
+        }
+      ]
+    },
+    {
+      "name": "GLOBAL_MIDDLEWARE",
+      "default": "null",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GLOBAL_MIDDLEWARE",
+          "kind": "env_sample",
+          "default": "null",
+          "location": {
+            "file": "frontend/template.env",
+            "line": 1
+          }
+        },
+        {
+          "name": "GLOBAL_MIDDLEWARE",
+          "kind": "code",
+          "location": {
+            "file": "frontend/nuxt.config.ts",
+            "line": 82
+          }
+        }
+      ]
+    },
+    {
+      "name": "HOST",
+      "default": "0.0.0.0",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "HOST",
+          "kind": "dockerfile",
+          "default": "0.0.0.0",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 159
+          }
+        }
+      ]
+    },
+    {
+      "name": "HTTP_ALLOW_LIST",
+      "default": "\"\"",
+      "description": "Comma-separated hosts or CIDRs that server-initiated requests (recipe scraping, webhooks, recipe actions, OIDC profile images) may reach even when they resolve to an otherwise-blocked private/internal address. Use to allow a known internal server.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "HTTP_ALLOW_LIST",
+          "kind": "readme",
+          "default": "\"\"",
+          "text": "Comma-separated hosts or CIDRs that server-initiated requests (recipe scraping, webhooks, recipe actions, OIDC profile images) may reach even when they resolve to an otherwise-blocked private/internal address. Use to allow a known internal server.",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 33
+          }
+        }
+      ]
+    },
+    {
+      "name": "HTTP_DISALLOW_LIST",
+      "default": "\"\"",
+      "description": "Comma-separated hosts or CIDRs that server-initiated requests may never reach, even if public. Takes precedence over HTTP_ALLOW_LIST.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "HTTP_DISALLOW_LIST",
+          "kind": "readme",
+          "default": "\"\"",
+          "text": "Comma-separated hosts or CIDRs that server-initiated requests may never reach, even if public. Takes precedence over HTTP_ALLOW_LIST.",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 34
+          }
+        }
+      ]
+    },
+    {
+      "name": "LDAP_ADMIN_FILTER",
+      "default": "None",
+      "description": "Optional LDAP filter, which tells Mealie the LDAP user is an admin (e.g. (memberOf=cn=admins,dc=example,dc=com))",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LDAP_ADMIN_FILTER",
+          "kind": "readme",
+          "default": "None",
+          "text": "Optional LDAP filter, which tells Mealie the LDAP user is an admin (e.g. (memberOf=cn=admins,dc=example,dc=com))",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 91
+          }
+        }
+      ]
+    },
+    {
+      "name": "LDAP_AUTH_ENABLED",
+      "default": "False",
+      "description": "Authenticate via an external LDAP server in addidion to built-in Mealie auth",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LDAP_AUTH_ENABLED",
+          "kind": "readme",
+          "default": "False",
+          "text": "Authenticate via an external LDAP server in addidion to built-in Mealie auth",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 82
+          }
+        }
+      ]
+    },
+    {
+      "name": "LDAP_BASE_DN",
+      "default": "None",
+      "description": "Starting point when searching for users authentication (e.g. CN=Users,DC=xx,DC=yy,DC=de)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LDAP_BASE_DN",
+          "kind": "readme",
+          "default": "None",
+          "text": "Starting point when searching for users authentication (e.g. CN=Users,DC=xx,DC=yy,DC=de)",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 87
+          }
+        }
+      ]
+    },
+    {
+      "name": "LDAP_ENABLE_STARTTLS",
+      "default": "False",
+      "description": "Optional. Use STARTTLS to connect to the server",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LDAP_ENABLE_STARTTLS",
+          "kind": "readme",
+          "default": "False",
+          "text": "Optional. Use STARTTLS to connect to the server",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 86
+          }
+        }
+      ]
+    },
+    {
+      "name": "LDAP_ID_ATTRIBUTE",
+      "default": "uid",
+      "description": "The LDAP attribute that maps to the user's id",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LDAP_ID_ATTRIBUTE",
+          "kind": "readme",
+          "default": "uid",
+          "text": "The LDAP attribute that maps to the user's id",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 92
+          }
+        }
+      ]
+    },
+    {
+      "name": "LDAP_MAIL_ATTRIBUTE",
+      "default": "mail",
+      "description": "The LDAP attribute that maps to the user's email",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LDAP_MAIL_ATTRIBUTE",
+          "kind": "readme",
+          "default": "mail",
+          "text": "The LDAP attribute that maps to the user's email",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 94
+          }
+        }
+      ]
+    },
+    {
+      "name": "LDAP_NAME_ATTRIBUTE",
+      "default": "name",
+      "description": "The LDAP attribute that maps to the user's name",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LDAP_NAME_ATTRIBUTE",
+          "kind": "readme",
+          "default": "name",
+          "text": "The LDAP attribute that maps to the user's name",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 93
+          }
+        }
+      ]
+    },
+    {
+      "name": "LDAP_QUERY_BIND",
+      "default": "None",
+      "description": "Optional bind user for LDAP search queries (e.g. cn=admin,cn=users,dc=example,dc=com). If None then anonymous bind will be used",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LDAP_QUERY_BIND",
+          "kind": "readme",
+          "default": "None",
+          "text": "Optional bind user for LDAP search queries (e.g. cn=admin,cn=users,dc=example,dc=com). If None then anonymous bind will be used",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 88
+          }
+        }
+      ]
+    },
+    {
+      "name": "LDAP_TLS_CACERTFILE",
+      "default": "None",
+      "description": "File path to Certificate Authority used to verify server certificate (e.g. /path/to/ca.crt)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LDAP_TLS_CACERTFILE",
+          "kind": "readme",
+          "default": "None",
+          "text": "File path to Certificate Authority used to verify server certificate (e.g. /path/to/ca.crt)",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 85
+          }
+        }
+      ]
+    },
+    {
+      "name": "LDAP_TLS_INSECURE",
+      "default": "False",
+      "description": "Do not verify server certificate when using secure LDAP",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LDAP_TLS_INSECURE",
+          "kind": "readme",
+          "default": "False",
+          "text": "Do not verify server certificate when using secure LDAP",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 84
+          }
+        }
+      ]
+    },
+    {
+      "name": "LDAP_USER_FILTER",
+      "default": "None",
+      "description": "Optional LDAP filter to narrow down eligible users (e.g. (memberOf=cn=mealie_user,dc=example,dc=com))",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LDAP_USER_FILTER",
+          "kind": "readme",
+          "default": "None",
+          "text": "Optional LDAP filter to narrow down eligible users (e.g. (memberOf=cn=mealie_user,dc=example,dc=com))",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 90
+          }
+        }
+      ]
+    },
+    {
+      "name": "LOG_CONFIG_OVERRIDE",
+      "default": "",
+      "description": "Override the config for logging with a custom path",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LOG_CONFIG_OVERRIDE",
+          "kind": "readme",
+          "text": "Override the config for logging with a custom path",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 20
+          }
+        }
+      ]
+    },
+    {
+      "name": "LOG_LEVEL",
+      "default": "DEBUG",
+      "description": "Logging level (e.g. critical, error, warning, info, debug)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LOG_LEVEL",
+          "kind": "compose",
+          "default": "DEBUG",
+          "location": {
+            "file": "docker/docker-compose.yml",
+            "line": 16
+          }
+        },
+        {
+          "name": "LOG_LEVEL",
+          "kind": "readme",
+          "default": "info",
+          "text": "Logging level (e.g. critical, error, warning, info, debug)",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 21
+          }
+        }
+      ]
+    },
+    {
+      "name": "MEALIE_HOME",
+      "default": "/app",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MEALIE_HOME",
+          "kind": "dockerfile",
+          "default": "/app",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 23
+          }
+        }
+      ]
+    },
+    {
+      "name": "MP_SMTP_AUTH_ACCEPT_ANY",
+      "default": "true",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MP_SMTP_AUTH_ACCEPT_ANY",
+          "kind": "compose",
+          "default": "true",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "MP_SMTP_AUTH_ALLOW_INSECURE",
+      "default": "true",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MP_SMTP_AUTH_ALLOW_INSECURE",
+          "kind": "compose",
+          "default": "true",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 8
+          }
+        }
+      ]
+    },
+    {
+      "name": "NLTK_DATA",
+      "default": "/nltk_data/",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "NLTK_DATA",
+          "kind": "dockerfile",
+          "default": "/nltk_data/",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 146
+          }
+        }
+      ]
+    },
+    {
+      "name": "NODE_ENV",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "NODE_ENV",
+          "kind": "code",
+          "location": {
+            "file": "frontend/nuxt.config.ts",
+            "line": 120
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_ADMIN_GROUP",
+      "default": "None",
+      "description": "If specified, users belonging to this group will be made an admin. For more information see [this page](../authentication/oidc.md#groups)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_ADMIN_GROUP",
+          "kind": "readme",
+          "default": "None",
+          "text": "If specified, users belonging to this group will be made an admin. For more information see [this page](../authentication/oidc.md#groups)",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 111
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_AUTH_ENABLED",
+      "default": "False",
+      "description": "Enables authentication via OpenID Connect",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_AUTH_ENABLED",
+          "kind": "readme",
+          "default": "False",
+          "text": "Enables authentication via OpenID Connect",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 104
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_AUTO_REDIRECT",
+      "default": "False",
+      "description": "If True, then the login page will be bypassed an you will be sent directly to your Identity Provider. You can still get to the login page by adding ?direct=1 to the login URL",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_AUTO_REDIRECT",
+          "kind": "readme",
+          "default": "False",
+          "text": "If True, then the login page will be bypassed an you will be sent directly to your Identity Provider. You can still get to the login page by adding ?direct=1 to the login URL",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 112
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_CLIENT_TIMEOUT",
+      "default": "default",
+      "description": "Configures the timeout value of the httpx client used for OIDC communications. If set to the string default, does not configure the value (uses the library's default of 5.0s). If set to the string None, disables the timeout entirely. If set to a numeric value, uses that as the timeout.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_CLIENT_TIMEOUT",
+          "kind": "readme",
+          "default": "default",
+          "text": "Configures the timeout value of the httpx client used for OIDC communications. If set to the string default, does not configure the value (uses the library's default of 5.0s). If set to the string None, disables the timeout entirely. If set to a numeric value, uses that as the timeout.",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 121
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_GROUPS_CLAIM",
+      "default": "groups",
+      "description": "Optional if not using OIDC_USER_GROUP or OIDC_ADMIN_GROUP. This is the claim Mealie will request from your IdP and will use to compare to OIDC_USER_GROUP or OIDC_ADMIN_GROUP to allow the user to log in to Mealie or is set as an admin. Your IdP must be configured to grant this claim",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_GROUPS_CLAIM",
+          "kind": "readme",
+          "default": "groups",
+          "text": "Optional if not using OIDC_USER_GROUP or OIDC_ADMIN_GROUP. This is the claim Mealie will request from your IdP and will use to compare to OIDC_USER_GROUP or OIDC_ADMIN_GROUP to allow the user to log in to Mealie or is set as an admin. Your IdP must be configured to grant this claim",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 118
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_NAME_CLAIM",
+      "default": "name",
+      "description": "This is the claim which Mealie will use for the users Full Name",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_NAME_CLAIM",
+          "kind": "readme",
+          "default": "name",
+          "text": "This is the claim which Mealie will use for the users Full Name",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 117
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_PROVIDER_NAME",
+      "default": "OAuth",
+      "description": "The provider name is shown in SSO login button. \"Login with \u003cOIDC_PROVIDER_NAME\\\u003e\"",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_PROVIDER_NAME",
+          "kind": "readme",
+          "default": "OAuth",
+          "text": "The provider name is shown in SSO login button. \"Login with \u003cOIDC_PROVIDER_NAME\\\u003e\"",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 113
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_REMEMBER_ME",
+      "default": "False",
+      "description": "Because redirects bypass the login screen, you can't tick the \"Remember Me\" checkbox. Setting this to true treats an OIDC login as if it had been checked, so the session survives closing the browser",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_REMEMBER_ME",
+          "kind": "readme",
+          "default": "False",
+          "text": "Because redirects bypass the login screen, you can't tick the \"Remember Me\" checkbox. Setting this to true treats an OIDC login as if it had been checked, so the session survives closing the browser",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 114
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_SCOPES_OVERRIDE",
+      "default": "None",
+      "description": "Advanced configuration used to override the scopes requested from the IdP. Most users won't need to change this. At a minimum, 'openid profile email' are required.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_SCOPES_OVERRIDE",
+          "kind": "readme",
+          "default": "None",
+          "text": "Advanced configuration used to override the scopes requested from the IdP. Most users won't need to change this. At a minimum, 'openid profile email' are required.",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 119
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_SIGNING_ALGORITHM",
+      "default": "RS256",
+      "description": "The algorithm used to sign the id token (examples: RS256, HS256)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_SIGNING_ALGORITHM",
+          "kind": "readme",
+          "default": "RS256",
+          "text": "The algorithm used to sign the id token (examples: RS256, HS256)",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 115
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_SIGNUP_ENABLED",
+      "default": "True",
+      "description": "Enables new users to be created when signing in for the first time with OIDC",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_SIGNUP_ENABLED",
+          "kind": "readme",
+          "default": "True",
+          "text": "Enables new users to be created when signing in for the first time with OIDC",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 105
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_TLS_CACERTFILE",
+      "default": "None",
+      "description": "File path to Certificate Authority used to verify server certificate (e.g. /path/to/ca.crt)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_TLS_CACERTFILE",
+          "kind": "readme",
+          "default": "None",
+          "text": "File path to Certificate Authority used to verify server certificate (e.g. /path/to/ca.crt)",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 120
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_USER_CLAIM",
+      "default": "email",
+      "description": "This is the claim which Mealie will use to look up an existing user by (e.g. \"email\", \"preferred_username\")",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_USER_CLAIM",
+          "kind": "readme",
+          "default": "email",
+          "text": "This is the claim which Mealie will use to look up an existing user by (e.g. \"email\", \"preferred_username\")",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 116
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_USER_GROUP",
+      "default": "None",
+      "description": "If specified, only users belonging to this group will be able to successfully authenticate, regardless of the OIDC_ADMIN_GROUP. For more information see [this page](../authentication/oidc.md#groups)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_USER_GROUP",
+          "kind": "readme",
+          "default": "None",
+          "text": "If specified, only users belonging to this group will be able to successfully authenticate, regardless of the OIDC_ADMIN_GROUP. For more information see [this page](../authentication/oidc.md#groups)",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 110
+          }
+        }
+      ]
+    },
+    {
+      "name": "PATH",
+      "default": "$VENV_PATH/bin:$PATH",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PATH",
+          "kind": "dockerfile",
+          "default": "$VENV_PATH/bin:$PATH",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 33
+          }
+        }
+      ]
+    },
+    {
+      "name": "PGID",
+      "default": "911",
+      "description": "GroupID permissions between host OS and container",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PGID",
+          "kind": "readme",
+          "default": "911",
+          "text": "GroupID permissions between host OS and container",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 10
+          }
+        }
+      ]
+    },
+    {
+      "name": "PIP_DEFAULT_TIMEOUT",
+      "default": "100",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PIP_DEFAULT_TIMEOUT",
+          "kind": "dockerfile",
+          "default": "100",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 25
+          }
+        }
+      ]
+    },
+    {
+      "name": "PIP_DISABLE_PIP_VERSION_CHECK",
+      "default": "on",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PIP_DISABLE_PIP_VERSION_CHECK",
+          "kind": "dockerfile",
+          "default": "on",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 25
+          }
+        }
+      ]
+    },
+    {
+      "name": "PIP_NO_CACHE_DIR",
+      "default": "off",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PIP_NO_CACHE_DIR",
+          "kind": "dockerfile",
+          "default": "off",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 25
+          }
+        }
+      ]
+    },
+    {
+      "name": "POSTGRES_DB",
+      "default": "mealie",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "POSTGRES_DB",
+          "kind": "compose",
+          "default": "mealie",
+          "location": {
+            "file": "docker/docker-compose.yml",
+            "line": 25
+          }
+        }
+      ]
+    },
+    {
+      "name": "POSTGRES_PASSWORD",
+      "default": "mealie",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "POSTGRES_PASSWORD",
+          "kind": "compose",
+          "default": "mealie",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 19
+          }
+        },
+        {
+          "name": "POSTGRES_PASSWORD",
+          "kind": "compose",
+          "default": "mealie",
+          "location": {
+            "file": "docker/docker-compose.yml",
+            "line": 22
+          }
+        }
+      ]
+    },
+    {
+      "name": "POSTGRES_PORT",
+      "default": "5432",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "POSTGRES_PORT",
+          "kind": "compose",
+          "default": "5432",
+          "location": {
+            "file": "docker/docker-compose.yml",
+            "line": 24
+          }
+        }
+      ]
+    },
+    {
+      "name": "POSTGRES_SERVER",
+      "default": "postgres",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "POSTGRES_SERVER",
+          "kind": "compose",
+          "default": "postgres",
+          "location": {
+            "file": "docker/docker-compose.yml",
+            "line": 23
+          }
+        }
+      ]
+    },
+    {
+      "name": "POSTGRES_USER",
+      "default": "mealie",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "POSTGRES_USER",
+          "kind": "compose",
+          "default": "mealie",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 20
+          }
+        },
+        {
+          "name": "POSTGRES_USER",
+          "kind": "compose",
+          "default": "mealie",
+          "location": {
+            "file": "docker/docker-compose.yml",
+            "line": 21
+          }
+        }
+      ]
+    },
+    {
+      "name": "PRODUCTION",
+      "default": "true",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PRODUCTION",
+          "kind": "dockerfile",
+          "default": "true",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 122
+          }
+        },
+        {
+          "name": "PRODUCTION",
+          "kind": "code",
+          "location": {
+            "file": "mealie/core/config.py",
+            "line": 19
+          }
+        }
+      ]
+    },
+    {
+      "name": "PUID",
+      "default": "911",
+      "description": "UserID permissions between host OS and container",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PUID",
+          "kind": "readme",
+          "default": "911",
+          "text": "UserID permissions between host OS and container",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 9
+          }
+        }
+      ]
+    },
+    {
+      "name": "PYTHONDONTWRITEBYTECODE",
+      "default": "1",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PYTHONDONTWRITEBYTECODE",
+          "kind": "dockerfile",
+          "default": "1",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 25
+          }
+        }
+      ]
+    },
+    {
+      "name": "PYTHONUNBUFFERED",
+      "default": "1",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PYTHONUNBUFFERED",
+          "kind": "dockerfile",
+          "default": "1",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 25
+          }
+        }
+      ]
+    },
+    {
+      "name": "SCRAPER_FLARESOLVERR_TIMEOUT",
+      "default": "60",
+      "description": "Maximum seconds FlareSolverr may spend solving a single challenge before giving up.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SCRAPER_FLARESOLVERR_TIMEOUT",
+          "kind": "readme",
+          "default": "60",
+          "text": "Maximum seconds FlareSolverr may spend solving a single challenge before giving up.",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 152
+          }
+        }
+      ]
+    },
+    {
+      "name": "SCRAPER_FLARESOLVERR_URL",
+      "default": "None",
+      "description": "Optional base URL of a self-hosted [FlareSolverr](https://github.com/FlareSolverr/FlareSolverr) instance (e.g. http://flaresolverr:8191). Used only as a last resort to solve JS/Cloudflare challenges. Unset disables it.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SCRAPER_FLARESOLVERR_URL",
+          "kind": "readme",
+          "default": "None",
+          "text": "Optional base URL of a self-hosted [FlareSolverr](https://github.com/FlareSolverr/FlareSolverr) instance (e.g. http://flaresolverr:8191). Used only as a last resort to solve JS/Cloudflare challenges. Unset disables it.",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 151
+          }
+        }
+      ]
+    },
+    {
+      "name": "SCRAPER_PROXY_MODE",
+      "default": "always",
+      "description": "How the proxy is used (when SCRAPER_PROXY_URL is set): always routes every request through it; fallback tries a direct request first and only retries through the proxy when a block is detected. Any unrecognized value falls back to always.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SCRAPER_PROXY_MODE",
+          "kind": "readme",
+          "default": "always",
+          "text": "How the proxy is used (when SCRAPER_PROXY_URL is set): always routes every request through it; fallback tries a direct request first and only retries through the proxy when a block is detected. Any unrecognized value falls back to always.",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 150
+          }
+        }
+      ]
+    },
+    {
+      "name": "SCRAPER_PROXY_URL",
+      "default": "None",
+      "description": "Optional proxy for all outbound scraping and image requests (e.g. http://user:pass@host:port). Routing through an IP with a better reputation helps bypass IP-based blocks. Unset disables it.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SCRAPER_PROXY_URL",
+          "kind": "readme",
+          "default": "None",
+          "text": "Optional proxy for all outbound scraping and image requests (e.g. http://user:pass@host:port). Routing through an IP with a better reputation helps bypass IP-based blocks. Unset disables it.",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 149
+          }
+        }
+      ]
+    },
+    {
+      "name": "SECURITY_MAX_LOGIN_ATTEMPTS",
+      "default": "5",
+      "description": "Maximum times a user can provide an invalid password before their account is locked",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SECURITY_MAX_LOGIN_ATTEMPTS",
+          "kind": "readme",
+          "default": "5",
+          "text": "Maximum times a user can provide an invalid password before their account is locked",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 30
+          }
+        }
+      ]
+    },
+    {
+      "name": "SECURITY_USER_LOCKOUT_TIME",
+      "default": "24",
+      "description": "Time in hours for how long a users account is locked",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SECURITY_USER_LOCKOUT_TIME",
+          "kind": "readme",
+          "default": "24",
+          "text": "Time in hours for how long a users account is locked",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 31
+          }
+        }
+      ]
+    },
+    {
+      "name": "SESSION_PASSWORD",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SESSION_PASSWORD",
+          "kind": "code",
+          "location": {
+            "file": "frontend/nuxt.config.ts",
+            "line": 78
+          }
+        }
+      ]
+    },
+    {
+      "name": "SMTP_AUTH_STRATEGY",
+      "default": "TLS",
+      "description": "Required For email, Options: 'TLS', 'SSL', 'NONE'",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SMTP_AUTH_STRATEGY",
+          "kind": "readme",
+          "default": "TLS",
+          "text": "Required For email, Options: 'TLS', 'SSL', 'NONE'",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 56
+          }
+        }
+      ]
+    },
+    {
+      "name": "SMTP_FROM_EMAIL",
+      "default": "None",
+      "description": "Required For email",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SMTP_FROM_EMAIL",
+          "kind": "readme",
+          "default": "None",
+          "text": "Required For email",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 57
+          }
+        }
+      ]
+    },
+    {
+      "name": "SMTP_FROM_NAME",
+      "default": "Mealie",
+      "description": "Required For email",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SMTP_FROM_NAME",
+          "kind": "readme",
+          "default": "Mealie",
+          "text": "Required For email",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 55
+          }
+        }
+      ]
+    },
+    {
+      "name": "SQLITE_MIGRATE_JOURNAL_WAL",
+      "default": "False",
+      "description": "If set to true, switches SQLite's journal mode to WAL, which allows for multiple concurrent accesses. This can be useful when you have a decent amount of concurrency or when using certain remote storage systems such as Ceph.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SQLITE_MIGRATE_JOURNAL_WAL",
+          "kind": "readme",
+          "default": "False",
+          "text": "If set to true, switches SQLite's journal mode to WAL, which allows for multiple concurrent accesses. This can be useful when you have a decent amount of concurrency or when using certain remote storage systems such as Ceph.",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 41
+          }
+        }
+      ]
+    },
+    {
+      "name": "SUB_PATH",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SUB_PATH",
+          "kind": "code",
+          "location": {
+            "file": "frontend/nuxt.config.ts",
+            "line": 29
+          }
+        },
+        {
+          "name": "SUB_PATH",
+          "kind": "code",
+          "location": {
+            "file": "frontend/nuxt.config.ts",
+            "line": 83
+          }
+        },
+        {
+          "name": "SUB_PATH",
+          "kind": "code",
+          "location": {
+            "file": "frontend/nuxt.config.ts",
+            "line": 129
+          }
+        }
+      ]
+    },
+    {
+      "name": "TESTING",
+      "default": "false",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TESTING",
+          "kind": "dockerfile",
+          "default": "false",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 123
+          }
+        },
+        {
+          "name": "TESTING",
+          "kind": "code",
+          "location": {
+            "file": "mealie/core/config.py",
+            "line": 20
+          }
+        }
+      ]
+    },
+    {
+      "name": "THEME_DARK_ACCENT",
+      "default": "#007A99",
+      "description": "Buttons and interactive elements",
+      "required": false,
+      "mentions": [
+        {
+          "name": "THEME_DARK_ACCENT",
+          "kind": "env_sample",
+          "default": "#007A99",
+          "location": {
+            "file": "frontend/template.env",
+            "line": 17
+          }
+        },
+        {
+          "name": "THEME_DARK_ACCENT",
+          "kind": "readme",
+          "default": "#007A99",
+          "text": "Buttons and interactive elements",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 222
+          }
+        },
+        {
+          "name": "THEME_DARK_ACCENT",
+          "kind": "code",
+          "location": {
+            "file": "frontend/nuxt.config.ts",
+            "line": 90
+          }
+        }
+      ]
+    },
+    {
+      "name": "THEME_DARK_ERROR",
+      "default": "#EF5350",
+      "description": "Error messages and alerts",
+      "required": false,
+      "mentions": [
+        {
+          "name": "THEME_DARK_ERROR",
+          "kind": "env_sample",
+          "default": "#EF5350",
+          "location": {
+            "file": "frontend/template.env",
+            "line": 22
+          }
+        },
+        {
+          "name": "THEME_DARK_ERROR",
+          "kind": "readme",
+          "default": "#EF5350",
+          "text": "Error messages and alerts",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 227
+          }
+        },
+        {
+          "name": "THEME_DARK_ERROR",
+          "kind": "code",
+          "location": {
+            "file": "frontend/nuxt.config.ts",
+            "line": 95
+          }
+        }
+      ]
+    },
+    {
+      "name": "THEME_DARK_INFO",
+      "default": "#1976D2",
+      "description": "Information alerts and tooltips",
+      "required": false,
+      "mentions": [
+        {
+          "name": "THEME_DARK_INFO",
+          "kind": "env_sample",
+          "default": "#1976D2",
+          "location": {
+            "file": "frontend/template.env",
+            "line": 20
+          }
+        },
+        {
+          "name": "THEME_DARK_INFO",
+          "kind": "readme",
+          "default": "#1976D2",
+          "text": "Information alerts and tooltips",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 225
+          }
+        },
+        {
+          "name": "THEME_DARK_INFO",
+          "kind": "code",
+          "location": {
+            "file": "frontend/nuxt.config.ts",
+            "line": 93
+          }
+        }
+      ]
+    },
+    {
+      "name": "THEME_DARK_PRIMARY",
+      "default": "#E58325",
+      "description": "Light Mode Config",
+      "required": false,
+      "mentions": [
+        {
+          "name": "THEME_DARK_PRIMARY",
+          "kind": "env_sample",
+          "default": "#E58325",
+          "text": "Light Mode Config",
+          "location": {
+            "file": "frontend/template.env",
+            "line": 16
+          }
+        },
+        {
+          "name": "THEME_DARK_PRIMARY",
+          "kind": "readme",
+          "default": "#E58325",
+          "text": "Main brand color and headers",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 221
+          }
+        },
+        {
+          "name": "THEME_DARK_PRIMARY",
+          "kind": "code",
+          "location": {
+            "file": "frontend/nuxt.config.ts",
+            "line": 89
+          }
+        }
+      ]
+    },
+    {
+      "name": "THEME_DARK_SECONDARY",
+      "default": "#973542",
+      "description": "Secondary UI elements and interactive accents",
+      "required": false,
+      "mentions": [
+        {
+          "name": "THEME_DARK_SECONDARY",
+          "kind": "env_sample",
+          "default": "#973542",
+          "location": {
+            "file": "frontend/template.env",
+            "line": 18
+          }
+        },
+        {
+          "name": "THEME_DARK_SECONDARY",
+          "kind": "readme",
+          "default": "#973542",
+          "text": "Secondary UI elements and interactive accents",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 223
+          }
+        },
+        {
+          "name": "THEME_DARK_SECONDARY",
+          "kind": "code",
+          "location": {
+            "file": "frontend/nuxt.config.ts",
+            "line": 91
+          }
+        }
+      ]
+    },
+    {
+      "name": "THEME_DARK_SUCCESS",
+      "default": "#43A047",
+      "description": "Success messages and confirmations",
+      "required": false,
+      "mentions": [
+        {
+          "name": "THEME_DARK_SUCCESS",
+          "kind": "env_sample",
+          "default": "#43A047",
+          "location": {
+            "file": "frontend/template.env",
+            "line": 19
+          }
+        },
+        {
+          "name": "THEME_DARK_SUCCESS",
+          "kind": "readme",
+          "default": "#43A047",
+          "text": "Success messages and confirmations",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 224
+          }
+        },
+        {
+          "name": "THEME_DARK_SUCCESS",
+          "kind": "code",
+          "location": {
+            "file": "frontend/nuxt.config.ts",
+            "line": 92
+          }
+        }
+      ]
+    },
+    {
+      "name": "THEME_DARK_WARNING",
+      "default": "#FF6D00",
+      "description": "Warning notifications",
+      "required": false,
+      "mentions": [
+        {
+          "name": "THEME_DARK_WARNING",
+          "kind": "env_sample",
+          "default": "#FF6D00",
+          "location": {
+            "file": "frontend/template.env",
+            "line": 21
+          }
+        },
+        {
+          "name": "THEME_DARK_WARNING",
+          "kind": "readme",
+          "default": "#FF6D00",
+          "text": "Warning notifications",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 226
+          }
+        },
+        {
+          "name": "THEME_DARK_WARNING",
+          "kind": "code",
+          "location": {
+            "file": "frontend/nuxt.config.ts",
+            "line": 94
+          }
+        }
+      ]
+    },
+    {
+      "name": "THEME_LIGHT_ACCENT",
+      "default": "#007A99",
+      "description": "Buttons and interactive elements",
+      "required": false,
+      "mentions": [
+        {
+          "name": "THEME_LIGHT_ACCENT",
+          "kind": "env_sample",
+          "default": "#007A99",
+          "location": {
+            "file": "frontend/template.env",
+            "line": 8
+          }
+        },
+        {
+          "name": "THEME_LIGHT_ACCENT",
+          "kind": "readme",
+          "default": "#007A99",
+          "text": "Buttons and interactive elements",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 215
+          }
+        },
+        {
+          "name": "THEME_LIGHT_ACCENT",
+          "kind": "code",
+          "location": {
+            "file": "frontend/nuxt.config.ts",
+            "line": 100
+          }
+        }
+      ]
+    },
+    {
+      "name": "THEME_LIGHT_ERROR",
+      "default": "#EF5350",
+      "description": "Error messages and alerts",
+      "required": false,
+      "mentions": [
+        {
+          "name": "THEME_LIGHT_ERROR",
+          "kind": "env_sample",
+          "default": "#EF5350",
+          "location": {
+            "file": "frontend/template.env",
+            "line": 13
+          }
+        },
+        {
+          "name": "THEME_LIGHT_ERROR",
+          "kind": "readme",
+          "default": "#EF5350",
+          "text": "Error messages and alerts",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 220
+          }
+        },
+        {
+          "name": "THEME_LIGHT_ERROR",
+          "kind": "code",
+          "location": {
+            "file": "frontend/nuxt.config.ts",
+            "line": 105
+          }
+        }
+      ]
+    },
+    {
+      "name": "THEME_LIGHT_INFO",
+      "default": "#1976D2",
+      "description": "Information alerts and tooltips",
+      "required": false,
+      "mentions": [
+        {
+          "name": "THEME_LIGHT_INFO",
+          "kind": "env_sample",
+          "default": "#1976D2",
+          "location": {
+            "file": "frontend/template.env",
+            "line": 11
+          }
+        },
+        {
+          "name": "THEME_LIGHT_INFO",
+          "kind": "readme",
+          "default": "#1976D2",
+          "text": "Information alerts and tooltips",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 218
+          }
+        },
+        {
+          "name": "THEME_LIGHT_INFO",
+          "kind": "code",
+          "location": {
+            "file": "frontend/nuxt.config.ts",
+            "line": 103
+          }
+        }
+      ]
+    },
+    {
+      "name": "THEME_LIGHT_PRIMARY",
+      "default": "#E58325",
+      "description": "Light Mode Config",
+      "required": false,
+      "mentions": [
+        {
+          "name": "THEME_LIGHT_PRIMARY",
+          "kind": "env_sample",
+          "default": "#E58325",
+          "text": "Light Mode Config",
+          "location": {
+            "file": "frontend/template.env",
+            "line": 7
+          }
+        },
+        {
+          "name": "THEME_LIGHT_PRIMARY",
+          "kind": "readme",
+          "default": "#E58325",
+          "text": "Main brand color and headers",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 214
+          }
+        },
+        {
+          "name": "THEME_LIGHT_PRIMARY",
+          "kind": "code",
+          "location": {
+            "file": "frontend/nuxt.config.ts",
+            "line": 99
+          }
+        }
+      ]
+    },
+    {
+      "name": "THEME_LIGHT_SECONDARY",
+      "default": "#973542",
+      "description": "Secondary UI elements and interactive accents",
+      "required": false,
+      "mentions": [
+        {
+          "name": "THEME_LIGHT_SECONDARY",
+          "kind": "env_sample",
+          "default": "#973542",
+          "location": {
+            "file": "frontend/template.env",
+            "line": 9
+          }
+        },
+        {
+          "name": "THEME_LIGHT_SECONDARY",
+          "kind": "readme",
+          "default": "#973542",
+          "text": "Secondary UI elements and interactive accents",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 216
+          }
+        },
+        {
+          "name": "THEME_LIGHT_SECONDARY",
+          "kind": "code",
+          "location": {
+            "file": "frontend/nuxt.config.ts",
+            "line": 101
+          }
+        }
+      ]
+    },
+    {
+      "name": "THEME_LIGHT_SUCCESS",
+      "default": "#43A047",
+      "description": "Success messages and confirmations",
+      "required": false,
+      "mentions": [
+        {
+          "name": "THEME_LIGHT_SUCCESS",
+          "kind": "env_sample",
+          "default": "#43A047",
+          "location": {
+            "file": "frontend/template.env",
+            "line": 10
+          }
+        },
+        {
+          "name": "THEME_LIGHT_SUCCESS",
+          "kind": "readme",
+          "default": "#43A047",
+          "text": "Success messages and confirmations",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 217
+          }
+        },
+        {
+          "name": "THEME_LIGHT_SUCCESS",
+          "kind": "code",
+          "location": {
+            "file": "frontend/nuxt.config.ts",
+            "line": 102
+          }
+        }
+      ]
+    },
+    {
+      "name": "THEME_LIGHT_WARNING",
+      "default": "#FF6D00",
+      "description": "Warning notifications",
+      "required": false,
+      "mentions": [
+        {
+          "name": "THEME_LIGHT_WARNING",
+          "kind": "env_sample",
+          "default": "#FF6D00",
+          "location": {
+            "file": "frontend/template.env",
+            "line": 12
+          }
+        },
+        {
+          "name": "THEME_LIGHT_WARNING",
+          "kind": "readme",
+          "default": "#FF6D00",
+          "text": "Warning notifications",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 219
+          }
+        },
+        {
+          "name": "THEME_LIGHT_WARNING",
+          "kind": "code",
+          "location": {
+            "file": "frontend/nuxt.config.ts",
+            "line": 104
+          }
+        }
+      ]
+    },
+    {
+      "name": "THEME_USE_DARK",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "THEME_USE_DARK",
+          "kind": "code",
+          "location": {
+            "file": "frontend/nuxt.config.ts",
+            "line": 86
+          }
+        }
+      ]
+    },
+    {
+      "name": "TLS_CERTIFICATE_PATH",
+      "default": "None",
+      "description": "File path to Certificate",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TLS_CERTIFICATE_PATH",
+          "kind": "readme",
+          "default": "None",
+          "text": "File path to Certificate",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 75
+          }
+        }
+      ]
+    },
+    {
+      "name": "TLS_PRIVATE_KEY_PATH",
+      "default": "None",
+      "description": "File path to private key",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TLS_PRIVATE_KEY_PATH",
+          "kind": "readme",
+          "default": "None",
+          "text": "File path to private key",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 76
+          }
+        }
+      ]
+    },
+    {
+      "name": "TOKEN_TIME",
+      "default": "48",
+      "description": "The time in hours a login session lasts. Must be \u003c= 9600 (400 days, in hours).",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TOKEN_TIME",
+          "kind": "readme",
+          "default": "48",
+          "text": "The time in hours a login session lasts. Must be \u003c= 9600 (400 days, in hours).",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 14
+          }
+        }
+      ]
+    },
+    {
+      "name": "TZ",
+      "default": "UTC",
+      "description": "Must be set to get correct date/time on the server",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TZ",
+          "kind": "readme",
+          "default": "UTC",
+          "text": "Must be set to get correct date/time on the server",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 17
+          }
+        }
+      ]
+    },
+    {
+      "name": "UVICORN_WORKERS",
+      "default": "1",
+      "description": "Sets the number of workers for the web server. [More info here][unicorn_workers]",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UVICORN_WORKERS",
+          "kind": "readme",
+          "default": "1",
+          "text": "Sets the number of workers for the web server. [More info here][unicorn_workers]",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 67
+          }
+        }
+      ]
+    },
+    {
+      "name": "VENV_PATH",
+      "default": "/opt/mealie",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "VENV_PATH",
+          "kind": "dockerfile",
+          "default": "/opt/mealie",
+          "location": {
+            "file": "docker/Dockerfile",
+            "line": 25
+          }
+        }
+      ]
+    },
+    {
+      "name": "YTDLP_COOKIEFILE",
+      "default": "None",
+      "description": "Cookiefile for yt-dlp to use when downloading a video, needed for content that requires sign-in",
+      "required": false,
+      "mentions": [
+        {
+          "name": "YTDLP_COOKIEFILE",
+          "kind": "readme",
+          "default": "None",
+          "text": "Cookiefile for yt-dlp to use when downloading a video, needed for content that requires sign-in",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+            "line": 137
+          }
+        }
+      ]
+    }
+  ],
+  "images": [
+    {
+      "reference": "axllent/mailpit:latest",
+      "kind": "compose",
+      "location": {
+        "file": "docker/docker-compose.dev.yml",
+        "line": 3
+      }
+    },
+    {
+      "reference": "postgres:15",
+      "kind": "compose",
+      "location": {
+        "file": "docker/docker-compose.dev.yml",
+        "line": 14
+      }
+    },
+    {
+      "reference": "mealie:dev",
+      "kind": "compose",
+      "location": {
+        "file": "docker/docker-compose.yml",
+        "line": 4
+      }
+    },
+    {
+      "reference": "ghcr.io/mealie-recipes/mealie:nightly",
+      "kind": "readme",
+      "location": {
+        "file": "docs/docs/contributors/developers-guide/maintainers.md",
+        "line": 33
+      }
+    },
+    {
+      "reference": "ghcr.io/mealie-recipes/mealie:latest",
+      "kind": "readme",
+      "location": {
+        "file": "docs/docs/contributors/developers-guide/maintainers.md",
+        "line": 36
+      }
+    },
+    {
+      "reference": "ghcr.io/mealie-recipes/mealie",
+      "kind": "readme",
+      "location": {
+        "file": "docs/docs/contributors/developers-guide/maintainers.md",
+        "line": 39
+      }
+    },
+    {
+      "reference": "ghcr.io/linuxserver/swag",
+      "kind": "readme",
+      "location": {
+        "file": "docs/docs/documentation/community-guide/swag.md",
+        "line": 24
+      }
+    },
+    {
+      "reference": "ghcr.io/flaresolverr/flaresolverr:latest",
+      "kind": "readme",
+      "location": {
+        "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+        "line": 192
+      }
+    },
+    {
+      "reference": "ghcr.io/mealie-recipes/mealie:v3.28.0",
+      "kind": "readme",
+      "location": {
+        "file": "docs/docs/documentation/getting-started/installation/installation-checklist.md",
+        "line": 34
+      }
+    },
+    {
+      "reference": "postgres:17",
+      "kind": "readme",
+      "location": {
+        "file": "docs/docs/documentation/getting-started/installation/postgres.md",
+        "line": 44
+      }
+    }
+  ],
+  "docker_runs": null,
+  "notes": [
+    {
+      "text": "!!! warning \"Default Username\"",
+      "location": {
+        "file": "docs/docs/documentation/getting-started/installation/installation-checklist.md",
+        "line": 80
+      }
+    },
+    {
+      "text": "Note that the default username (below) has been changed from previous versions",
+      "location": {
+        "file": "docs/docs/documentation/getting-started/installation/installation-checklist.md",
+        "line": 82
+      }
+    },
+    {
+      "text": "!!! tip \"Default Credentials\"",
+      "location": {
+        "file": "docs/docs/documentation/getting-started/installation/installation-checklist.md",
+        "line": 84
+      }
+    },
+    {
+      "text": "After the startup is complete, you should see a login screen. Use the default credentials above to log in and navigate to /admin/site-settings. Here, you'll find a summary of your configuration details and their respective status. Before proceeding, you should validate that the configuration is correct. For any warnings or errors the page will display an error and notify you of what you need to verify.",
+      "location": {
+        "file": "docs/docs/documentation/getting-started/installation/installation-checklist.md",
+        "line": 92
+      }
+    }
+  ],
+  "suspicious": null,
+  "readmes": [
+    "README.md",
+    "frontend/app/components/README.md",
+    "mealie/alembic/README"
+  ],
+  "summary": {
+    "text": "A Place For All Your Recipes",
+    "location": {
+      "file": "README.md",
+      "line": 21
+    }
+  },
+  "file_mentions": [
+    {
+      "text": "nightly.yml",
+      "location": {
+        "file": "docs/docs/contributors/developers-guide/maintainers.md",
+        "line": 34
+      }
+    },
+    {
+      "text": "release.yml",
+      "location": {
+        "file": "docs/docs/contributors/developers-guide/maintainers.md",
+        "line": 37
+      }
+    },
+    {
+      "text": "release.yml",
+      "location": {
+        "file": "docs/docs/contributors/developers-guide/maintainers.md",
+        "line": 40
+      }
+    },
+    {
+      "text": "partial-builder.yml",
+      "location": {
+        "file": "docs/docs/contributors/developers-guide/maintainers.md",
+        "line": 57
+      }
+    },
+    {
+      "text": "docker-compose.yaml",
+      "location": {
+        "file": "docs/docs/documentation/community-guide/swag.md",
+        "line": 16
+      }
+    },
+    {
+      "text": "docker-compose.yaml",
+      "location": {
+        "file": "docs/docs/documentation/community-guide/swag.md",
+        "line": 19
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+        "line": 231
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
+        "line": 362
+      }
+    },
+    {
+      "text": "docker-compose.yaml",
+      "location": {
+        "file": "docs/docs/documentation/getting-started/installation/installation-checklist.md",
+        "line": 58
+      }
+    },
+    {
+      "text": "docker-compose.yaml",
+      "location": {
+        "file": "docs/docs/documentation/getting-started/installation/installation-checklist.md",
+        "line": 58
+      }
+    },
+    {
+      "text": "docker-compose.yaml",
+      "location": {
+        "file": "docs/docs/documentation/getting-started/installation/installation-checklist.md",
+        "line": 59
+      }
+    },
+    {
+      "text": "docker-compose.yaml",
+      "location": {
+        "file": "docs/docs/documentation/getting-started/installation/installation-checklist.md",
+        "line": 59
+      }
+    },
+    {
+      "text": "docker-compose.yaml",
+      "location": {
+        "file": "docs/docs/documentation/getting-started/installation/installation-checklist.md",
+        "line": 61
+      }
+    },
+    {
+      "text": "docker-compose.yaml",
+      "location": {
+        "file": "docs/docs/documentation/getting-started/installation/installation-checklist.md",
+        "line": 65
+      }
+    },
+    {
+      "text": "docker-compose.yaml",
+      "location": {
+        "file": "docs/docs/documentation/getting-started/installation/installation-checklist.md",
+        "line": 72
+      }
+    },
+    {
+      "text": "docker-compose.yaml",
+      "location": {
+        "file": "docs/docs/documentation/getting-started/installation/installation-checklist.md",
+        "line": 72
+      }
+    },
+    {
+      "text": "docker-compose.yaml",
+      "location": {
+        "file": "docs/docs/documentation/getting-started/installation/sqlite.md",
+        "line": 7
+      }
+    }
+  ],
+  "stack_hints": [
+    "frontend/package.json",
+    "pyproject.toml"
+  ],
+  "problems": null
+}

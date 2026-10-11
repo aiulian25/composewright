@@ -1,0 +1,7 @@
+{
+  "url": "https://github.com/go-gitea/gitea",
+  "owner": "go-gitea",
+  "commit": "4ebd5e319b6a9e629bfd7a04292a6fe85b08dee9",
+  "allow_registries": "docker.io/gitea/*",
+  "verdict": "deny:P1"
+}

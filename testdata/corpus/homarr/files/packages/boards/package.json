@@ -1,0 +1,39 @@
+{
+  "name": "@homarr/boards",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "typesVersions": {
+    "*": {
+      "*": [
+        "src/*"
+      ]
+    }
+  },
+  "exports": {
+    "./context": "./src/context.tsx",
+    "./layout-selection": "./src/layout-selection.ts",
+    "./layout-preview": "./src/layout-preview.ts",
+    "./updater": "./src/updater.ts",
+    "./edit-mode": "./src/edit-mode.tsx",
+    "./scale": "./src/scale.ts"
+  },
+  "scripts": {
+    "clean": "rm -rf .turbo node_modules",
+    "format": "oxfmt .",
+    "lint": "oxlint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@homarr/api": "workspace:^0.1.0",
+    "@homarr/common": "workspace:^0.1.0",
+    "@homarr/definitions": "workspace:^0.1.0",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@homarr/tsconfig": "workspace:^0.1.0",
+    "typescript": "catalog:"
+  }
+}

@@ -1,0 +1,91 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  default: standard
+  enable:
+    - bodyclose
+    - depguard
+    - errorlint
+    - forbidigo
+    - gosec
+    - misspell
+    - nilerr
+    - noctx
+    - unconvert
+  settings:
+    forbidigo:
+      # internal/netguard is the only place that builds HTTP clients or
+      # dialers, so every outbound connection passes its allowlist.
+      forbid:
+        - pattern: ^http\.(Get|Head|Post|PostForm)$
+          msg: outbound connections are made only by internal/netguard
+        - pattern: ^http\.(DefaultClient|DefaultTransport)$
+          msg: outbound connections are made only by internal/netguard
+        - pattern: ^http\.(Client|Transport)$
+          msg: outbound connections are made only by internal/netguard
+        - pattern: ^net\.(Dial.*|Lookup.*|Resolver)$
+          msg: outbound connections are made only by internal/netguard
+        - pattern: ^tls\.Dial.*$
+          msg: outbound connections are made only by internal/netguard
+        - pattern: ^exec\.(Command|CommandContext|LookPath)$
+          msg: processes are started only by internal/sandbox
+    depguard:
+      rules:
+        database:
+          files:
+            - "!**/internal/store/**"
+          deny:
+            - pkg: database/sql
+              desc: only internal/store talks to the database
+            - pkg: modernc.org/sqlite
+              desc: only internal/store talks to the database
+    errcheck:
+      exclude-functions:
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln
+        # rows.Err() reports iteration failures; a failed Close of a read cursor loses nothing.
+        - (*database/sql.Rows).Close
+        # closing the database in a defer after the work is committed loses nothing either.
+        - (*github.com/aiulian25/composewright/internal/store.Store).Close
+        - (*github.com/aiulian25/composewright/internal/workspace.Workspace).Close
+        # a response body or other reader is closed after it was read; nothing is lost.
+        - (io.ReadCloser).Close
+        # read-only directory handles and temporary checkouts: nothing is lost if closing fails.
+        - (*os.Root).Close
+        - (*github.com/aiulian25/composewright/internal/fetch.Source).Close
+    gosec:
+      excludes:
+        - G304 # reading files named by the user or by the repository is the point of this tool; paths are confined with os.Root where untrusted
+  exclusions:
+    rules:
+      - path: internal/netguard/
+        linters: [forbidigo]
+        text: internal/netguard
+      - path: internal/sandbox/
+        linters: [forbidigo]
+        text: internal/sandbox
+      # The docker CLI path comes from docker.cli_path or PATH and the
+      # arguments are built by the sandbox; no shell is involved.
+      - path: internal/sandbox/runner\.go
+        linters: [gosec]
+        text: G204
+      # Tests loosen permissions, write fixtures and drop errors on purpose.
+      - path: _test\.go
+        linters: [gosec]
+      # Test fixtures (a recording proxy, fake servers) dial on purpose; test
+      # code never ships in the binary.
+      - path: _test\.go
+        linters: [forbidigo, errcheck, noctx, bodyclose]
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/aiulian25/composewright

@@ -1,0 +1,7 @@
+{
+  "url": "https://github.com/navidrome/navidrome",
+  "owner": "navidrome",
+  "commit": "497dfe25866d32e2229bcd962c38bda0e753c875",
+  "allow_registries": "docker.io/deluan/*",
+  "verdict": "pass"
+}

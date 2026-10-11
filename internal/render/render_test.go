@@ -1,0 +1,236 @@
+package render
+
+import (
+	"context"
+	"flag"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/aiulian25/composewright/internal/composefile"
+	"github.com/aiulian25/composewright/internal/config"
+	"github.com/aiulian25/composewright/internal/corpus"
+	"github.com/aiulian25/composewright/internal/ir"
+	"github.com/aiulian25/composewright/internal/policy"
+)
+
+var update = flag.Bool("update", false, "rewrite testdata/golden")
+
+const goldenDir = "../../testdata/golden"
+
+type variant struct {
+	name      string
+	exposeVia string
+	networks  []string
+	storage   string
+	profile   func(*config.Profile)
+}
+
+var variants = []variant{
+	{name: "default"},
+	{name: "bind", storage: config.StorageBind, profile: func(profile *config.Profile) { profile.Storage.BasePath = "/srv/docker" }},
+	{name: "npm", exposeVia: "npm_default", profile: func(profile *config.Profile) {
+		profile.Networks = []config.ProfileNetwork{{Name: "npm_default", Kind: "proxy", Provider: "npm"}}
+		profile.Defaults.DomainSuffix = "home.arpa"
+	}},
+	{name: "traefik", exposeVia: "traefik", profile: func(profile *config.Profile) {
+		profile.Networks = []config.ProfileNetwork{{Name: "traefik", Kind: "proxy", Provider: "traefik"}}
+		profile.Defaults.DomainSuffix = "home.arpa"
+		profile.Defaults.TZ = "Europe/London"
+	}},
+	{name: "networks", exposeVia: ExposeLocal, networks: []string{"cloudflared", "newt", "npm_default"}, profile: func(profile *config.Profile) {
+		profile.Networks = []config.ProfileNetwork{{Name: "npm_default", Kind: "proxy", Provider: "npm"}, {Name: "newt", Kind: "tunnel", Provider: "pangolin"},
+			{Name: "cloudflared", Kind: "tunnel", Provider: "cloudflare"}}
+		profile.Defaults.DomainSuffix = "home.arpa"
+	}},
+}
+
+// TestCorpusRendering renders every corpus plan that passes the policy gate in
+// every variant, compares with golden files, re-parses the YAML with
+// compose-go and runs the YAML gate on it (P9a, P13).
+func TestCorpusRendering(t *testing.T) {
+	entries, err := corpus.Load("../../testdata/corpus")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, entry := range entries {
+		if !entry.Passes() {
+			continue
+		}
+		plan := loadPlan(t, filepath.Join(filepath.Dir(entry.Directory), "expected.ir.json"))
+		for _, variant := range variants {
+			t.Run(entry.Slug+"/"+variant.name, func(t *testing.T) {
+				options := testOptions(t, variant)
+				compose, err := Compose(plan, options)
+				if err != nil {
+					t.Fatal(err)
+				}
+				project, err := composefile.Load(context.Background(), "compose.yaml", compose, nil, false)
+				if err != nil {
+					t.Fatalf("compose-go rejects the rendered file: %v\n%s", err, compose)
+				}
+				report := policy.EvaluateYAML(project, policy.Input{Plan: plan, Profile: options.Profile,
+					AllowRegistries: config.Default().Registries.Allow, ExtraRegistries: entry.AllowRegistries, RepositoryOwner: entry.Source.Owner})
+				if report.Blocked() {
+					t.Fatalf("rendered file is blocked: %+v", report.Findings)
+				}
+				golden(t, filepath.Join(goldenDir, entry.Slug, variant.name+".compose.yaml"), compose)
+				if variant.name != "default" {
+					return
+				}
+				env, err := Env(plan, fixedValues(plan), "# test header\n")
+				if err != nil {
+					t.Fatal(err)
+				}
+				golden(t, filepath.Join(goldenDir, entry.Slug, "default.env"), env)
+				golden(t, filepath.Join(goldenDir, entry.Slug, "DEPLOY.md"), Deploy(plan, options, "not validated yet"))
+			})
+		}
+	}
+}
+
+// TestLargerMemory: a plan's figure raises the profile's default memory
+// limit and never lowers it.
+func TestLargerMemory(t *testing.T) {
+	cases := []struct{ planned, profile, want string }{
+		{"2g", "512m", "2g"},
+		{"256m", "512m", "512m"},
+		{"2g", "8g", "8g"},
+		{"", "512m", "512m"},
+		{"2g", "", "2g"},
+	}
+	for _, testCase := range cases {
+		if got := largerMemory(testCase.planned, testCase.profile); got != testCase.want {
+			t.Errorf("largerMemory(%q, %q) = %q, want %q", testCase.planned, testCase.profile, got, testCase.want)
+		}
+	}
+}
+
+func TestRenderIsDeterministic(t *testing.T) {
+	plan := loadPlan(t, "../../testdata/corpus/miniflux/expected.ir.json")
+	options := testOptions(t, variants[0])
+	first, _ := Compose(plan, options)
+	second, _ := Compose(plan, options)
+	if string(first) != string(second) {
+		t.Fatal("rendering twice gives different output")
+	}
+}
+
+func TestGrantedNeedsAreRenderedWithAComment(t *testing.T) {
+	plan := loadPlan(t, "../../testdata/corpus/uptime-kuma/expected.ir.json")
+	plan.Needs = []ir.Need{{Capability: ir.NeedHostNetwork, Service: "uptime-kuma", Reason: "ping hosts on the LAN"}}
+	options := testOptions(t, variants[0])
+	ungranted, _ := Compose(plan, options)
+	if strings.Contains(string(ungranted), "network_mode") {
+		t.Fatal("an ungranted need was rendered")
+	}
+	options.GrantedNeeds = []string{ir.NeedHostNetwork}
+	granted, err := Compose(plan, options)
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := string(granted)
+	if !strings.Contains(text, "# NEED GRANTED BY USER: host_network (ping hosts on the LAN)\n    network_mode: host") || strings.Contains(text, "ports:") {
+		t.Fatalf("granted need not rendered as expected:\n%s", text)
+	}
+}
+
+func TestOptionsResolve(t *testing.T) {
+	profile := config.Default().Profile
+	resolved, err := Options{Profile: profile}.Resolve()
+	if err != nil || resolved.ExposeVia != ExposeLocal || resolved.Storage != config.StorageVolumes {
+		t.Fatalf("defaults %+v %v", resolved, err)
+	}
+	profile.Networks = []config.ProfileNetwork{{Name: "npm_default", Kind: "proxy", Provider: "npm", Default: true},
+		{Name: "newt", Kind: "tunnel", Provider: "pangolin", Default: true}, {Name: "vpn", Kind: "vpn"}}
+	cases := []struct {
+		name         string
+		chosen       Options
+		wantMode     string
+		wantNetworks []string
+	}{
+		{"profile defaults", Options{}, ExposeNone, []string{"npm_default", "newt"}},
+		{"ports only", Options{ExposeVia: ExposeLocal}, ExposeLocal, nil},
+		{"older single network", Options{ExposeVia: "vpn"}, ExposeNone, []string{"vpn"}},
+		{"networks in profile order", Options{ExposeVia: ExposeLAN, Networks: []string{"vpn", "npm_default"}}, ExposeLAN, []string{"npm_default", "vpn"}},
+	}
+	for _, chosen := range cases {
+		chosen.chosen.Profile = profile
+		resolved, err := chosen.chosen.Resolve()
+		joined := []string{}
+		for _, network := range resolved.networks() {
+			joined = append(joined, network.Name)
+		}
+		if err != nil || resolved.ExposeVia != chosen.wantMode || strings.Join(joined, ",") != strings.Join(chosen.wantNetworks, ",") {
+			t.Fatalf("%s: %s %v %v", chosen.name, resolved.ExposeVia, joined, err)
+		}
+	}
+	for _, invalid := range []Options{{ExposeVia: "invented"}, {Networks: []string{"invented"}}} {
+		invalid.Profile = profile
+		if _, err := invalid.Resolve(); err == nil {
+			t.Fatalf("a network outside the profile accepted: %+v", invalid)
+		}
+	}
+	if _, err := (Options{Profile: profile, Storage: config.StorageBind}).Resolve(); err == nil {
+		t.Fatal("bind storage without a base path accepted")
+	}
+}
+
+func testOptions(t *testing.T, variant variant) Options {
+	t.Helper()
+	profile := config.Default().Profile
+	if variant.profile != nil {
+		variant.profile(&profile)
+	}
+	options, err := Options{Profile: profile, ExposeVia: variant.exposeVia, Networks: variant.networks, Storage: variant.storage,
+		Header: " generated by composewright test"}.Resolve()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return options
+}
+
+// fixedValues replaces generated secrets with stable markers.
+func fixedValues(plan *ir.IR) map[string]string {
+	values := map[string]string{}
+	for _, entry := range plan.EnvFile {
+		values[entry.Key] = entry.Value
+		if entry.Generate != "" {
+			values[entry.Key] = "GENERATED-" + entry.Key
+		}
+	}
+	return values
+}
+
+func loadPlan(t *testing.T, path string) *ir.IR {
+	t.Helper()
+	content, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	plan, err := ir.Decode(content)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return plan
+}
+
+func golden(t *testing.T, path string, content []byte) {
+	t.Helper()
+	if *update {
+		if err := os.MkdirAll(filepath.Dir(path), 0o750); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, content, 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	want, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("%v (run go test ./internal/render -update)", err)
+	}
+	if string(want) != string(content) {
+		t.Fatalf("%s changed; inspect and rerun with -update\n--- got ---\n%s", path, content)
+	}
+}

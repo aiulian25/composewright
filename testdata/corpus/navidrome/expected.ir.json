@@ -1,0 +1,107 @@
+{
+  "ir_version": "1",
+  "app": {
+    "name": "navidrome",
+    "summary": "Navidrome is an open source web-based music collection server and streamer. It gives you freedom to listen to your",
+    "upstream_url": "https://github.com/navidrome/navidrome",
+    "docs_url": ""
+  },
+  "services": [
+    {
+      "name": "navidrome",
+      "role": "app",
+      "image": {
+        "registry": "docker.io",
+        "repository": "deluan/navidrome",
+        "tag": "latest",
+        "digest": "",
+        "provenance": {
+          "source": "compose",
+          "source_ref": "contrib/docker-compose/docker-compose.yml:10",
+          "confidence": "high"
+        }
+      },
+      "command": [],
+      "entrypoint": [],
+      "env": [],
+      "ports": [
+        {
+          "container": 4533,
+          "protocol": "tcp",
+          "publish": true,
+          "host_port": 4533,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "contrib/docker-compose/docker-compose.yml:15",
+            "confidence": "high"
+          }
+        }
+      ],
+      "volumes": [
+        {
+          "name": "navidrome_data",
+          "container_path": "/data",
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "contrib/docker-compose/docker-compose.yml:17",
+            "confidence": "high"
+          }
+        }
+      ],
+      "depends_on": [],
+      "healthcheck": {
+        "test": [],
+        "interval": "",
+        "timeout": "",
+        "retries": 0,
+        "start_period": "",
+        "omitted_reason": "",
+        "provenance": {
+          "source": "default",
+          "source_ref": "",
+          "confidence": "low"
+        }
+      },
+      "user": "",
+      "resources": {
+        "memory_limit": "",
+        "cpus": "",
+        "pids_limit": 0
+      },
+      "notes": [],
+      "provenance": {
+        "source": "compose",
+        "source_ref": "contrib/docker-compose/docker-compose.yml:8",
+        "confidence": "high"
+      }
+    }
+  ],
+  "env_file": [],
+  "needs": [],
+  "probe": {
+    "service": "navidrome",
+    "port": 4533,
+    "path": "/",
+    "expect": []
+  },
+  "post_install_notes": [],
+  "confidence": "high",
+  "evidence": [
+    {
+      "claim": "compose file contrib/docker-compose/docker-compose.yml chosen among 3 upstream compose files",
+      "file": "contrib/docker-compose/docker-compose.yml",
+      "line": 1
+    },
+    {
+      "claim": "app image docker.io/deluan/navidrome",
+      "file": "contrib/docker-compose/docker-compose.yml",
+      "line": 10
+    }
+  ],
+  "suspicious_instructions": [],
+  "unfilled": [
+    "services.0.healthcheck"
+  ]
+}

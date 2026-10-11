@@ -1,0 +1,51 @@
+{
+  "name": "@homarr/ui",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "typesVersions": {
+    "*": {
+      "*": [
+        "src/*"
+      ]
+    }
+  },
+  "exports": {
+    ".": "./index.ts",
+    "./integration-select-grid": "./src/integration-select-grid/index.ts",
+    "./widget-icons": "./src/widget-icons.ts",
+    "./styles.css": "./src/styles.css",
+    "./hooks": "./src/hooks/index.ts",
+    "./icons": "./src/icons/index.ts"
+  },
+  "scripts": {
+    "clean": "rm -rf .turbo node_modules",
+    "format": "oxfmt .",
+    "lint": "oxlint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@homarr/common": "workspace:^0.1.0",
+    "@homarr/definitions": "workspace:^0.1.0",
+    "@homarr/settings": "workspace:^0.1.0",
+    "@homarr/translation": "workspace:^0.1.0",
+    "@homarr/validation": "workspace:^0.1.0",
+    "@mantine/core": "catalog:",
+    "@mantine/dates": "catalog:",
+    "@mantine/hooks": "catalog:",
+    "@tabler/icons-react": "catalog:",
+    "crypto-js": "catalog:",
+    "mantine-react-table": "catalog:",
+    "next": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "svgson": "catalog:"
+  },
+  "devDependencies": {
+    "@homarr/tsconfig": "workspace:^0.1.0",
+    "@types/crypto-js": "catalog:",
+    "@types/css-modules": "catalog:",
+    "typescript": "catalog:"
+  }
+}

@@ -1,0 +1,89 @@
+{{define "actions"}}
+{{$csrf := .CSRF}}
+{{with .Data}}
+{{if and .Live (not .Job.Finished)}}<form method="post" action="/jobs/{{.Job.ID}}/cancel"><input type="hidden" name="csrf" value="{{$csrf}}"><button class="button" type="submit">{{template "icon-cross"}}Cancel</button></form>{{end}}
+{{if and .Live .Job.Finished}}<a class="button" href="/new">{{template "icon-restart"}}Start over</a>{{end}}
+{{if not .Live}}<a class="button button-primary" href="/projects/{{.Project}}/review">Review plan {{template "icon-arrow"}}</a>{{end}}
+{{end}}
+{{end}}
+
+{{define "content"}}
+{{with .Data}}
+<div class="page-head">
+  <h1>{{.Heading}}</h1>
+  {{if .Ref}}<span class="chip chip-mono">{{template "icon-branch"}}{{.Ref}}</span>{{end}}
+  {{if .Live}}<span class="chip"><span{{if not .Job.Finished}} data-elapsed="{{.Seconds}}"{{end}}>{{.Elapsed}}</span>&nbsp;elapsed</span>{{end}}
+  {{if .Fields}}<span class="chip chip-accent">{{.Filled}} of {{.Fields}} fields filled by rules</span>{{end}}
+  {{if .Questions}}<span class="chip">{{plural .Questions "open question" "open questions"}}</span>{{end}}
+</div>
+{{range .Job.Notices}}<p class="banner banner-warn" role="status">{{.}}</p>{{end}}
+{{if .Job.Failure}}<p class="banner banner-danger" role="alert">The analysis stopped: {{.Job.Failure}}</p>{{end}}
+
+{{if .Live}}
+<section class="card" aria-labelledby="pipeline-title" data-job="{{.Events}}?from={{.Job.Events}}" data-job-kind="generate"{{if .Job.Finished}} data-finished{{end}}>
+  <div class="card-head"><h2 id="pipeline-title">{{template "icon-activity"}}Pipeline</h2><span class="note">nothing needed from you; the review opens when it finishes</span></div>
+  <ol class="run-list">
+    {{range .Steps}}
+    <li class="run-step" data-step="{{.Name}}" data-state="{{.State}}">
+      {{template "run-mark"}}
+      <span class="run-name">{{.Title}}<span class="visually-hidden" data-step-state>{{.State}}</span></span>
+      <span class="run-detail" data-step-detail>{{.Detail}}{{if .Elapsed}} · {{.Elapsed}}{{end}}</span>
+    </li>
+    {{end}}
+  </ol>
+</section>
+{{end}}
+
+{{if .Rules}}
+<section class="card" aria-labelledby="rules-title">
+  <div class="card-head"><h2 id="rules-title">{{template "icon-engine"}}Rules</h2><span class="note">Rules run first. A model, if you use one, only sees the fields they leave below the confidence threshold.</span></div>
+  <div class="table-scroll">
+    <table class="table">
+      <thead><tr><th scope="col">Rule</th><th scope="col">Name</th><th scope="col">First source</th><th scope="col">Fields filled</th></tr></thead>
+      <tbody>
+        {{range .Rules}}
+        <tr>
+          <td><span class="badge">{{.Badge}}</span></td>
+          <th scope="row">{{.Name}}</th>
+          <td class="mono{{if not .Fields}} muted{{end}}">{{if .Result}}{{.Result}}{{else if not .Fields}}nothing for this project{{end}}</td>
+          <td><span class="meter"><meter min="0" max="{{.Most}}" value="{{.Fields}}" aria-label="{{.Name}}: {{.Fields}} fields"></meter><span class="mono">{{.Fields}}</span></span></td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+</section>
+{{end}}
+
+<section class="card" aria-labelledby="facts-title">
+  <div class="card-head"><h2 id="facts-title">{{template "icon-scan"}}Facts</h2><span class="note">each with the file and line it came from</span></div>
+  {{if .Facts}}
+  <div class="table-scroll">
+    <table class="table">
+      <thead><tr><th scope="col">Kind</th><th scope="col">Value</th><th scope="col">Source</th></tr></thead>
+      <tbody>
+        {{range .Facts}}<tr><td class="muted">{{.Kind}}{{if .Secret}} <span class="chip chip-warn">secret</span>{{end}}</td><td class="mono">{{.Value}}</td><td class="mono muted">{{.Source}}</td></tr>{{end}}
+      </tbody>
+    </table>
+  </div>
+  {{if .FactChips}}<div class="card-foot">{{range .FactChips}}<span class="chip">{{.}}</span>{{end}}</div>{{end}}
+  {{else}}
+  <p class="card-body muted">The facts appear here once the repository is read.</p>
+  {{end}}
+</section>
+{{end}}
+{{end}}
+
+{{define "context"}}
+{{with .Data}}
+<div class="tabs">
+  <h2 class="tab tab-title">{{template "icon-tree"}}Files read</h2>
+  {{if .Files}}<span class="tabs-actions"><span class="chip chip-mono">{{plural (len .Files) "file" "files"}}</span></span>{{end}}
+</div>
+{{if .Files}}
+<div class="context-section"><ul class="context-list">{{range .Files}}<li class="file-read"><span>{{.Path}}</span>{{if .Badge}}<span class="badge">{{.Badge}}</span>{{end}}</li>{{end}}</ul></div>
+{{else}}
+<p class="context-hint context-section">The files appear here once the repository is read: README, compose files, Dockerfiles, env samples and docs. Nothing else is kept.</p>
+{{end}}
+{{end}}
+{{end}}

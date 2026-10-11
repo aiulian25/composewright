@@ -1,0 +1,53 @@
+{
+  "name": "@homarr/spotlight",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "typesVersions": {
+    "*": {
+      "*": [
+        "src/*"
+      ]
+    }
+  },
+  "exports": {
+    ".": "./index.ts",
+    "./component": "./src/component.ts",
+    "./open": "./src/open.ts",
+    "./store": "./src/spotlight-store.ts",
+    "./styles.css": "./src/styles.css"
+  },
+  "scripts": {
+    "clean": "rm -rf .turbo node_modules",
+    "format": "oxfmt .",
+    "lint": "oxlint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@homarr/api": "workspace:^0.1.0",
+    "@homarr/auth": "workspace:^0.1.0",
+    "@homarr/common": "workspace:^0.1.0",
+    "@homarr/definitions": "workspace:^0.1.0",
+    "@homarr/integrations": "workspace:^0.1.0",
+    "@homarr/modals": "workspace:^0.1.0",
+    "@homarr/modals-collection": "workspace:^0.1.0",
+    "@homarr/notifications": "workspace:^0.1.0",
+    "@homarr/settings": "workspace:^0.1.0",
+    "@homarr/translation": "workspace:^0.1.0",
+    "@homarr/ui": "workspace:^0.1.0",
+    "@mantine/core": "catalog:",
+    "@mantine/hooks": "catalog:",
+    "@mantine/spotlight": "catalog:",
+    "@tabler/icons-react": "catalog:",
+    "jotai": "catalog:",
+    "next": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "use-deep-compare-effect": "catalog:"
+  },
+  "devDependencies": {
+    "@homarr/tsconfig": "workspace:^0.1.0",
+    "typescript": "catalog:"
+  }
+}

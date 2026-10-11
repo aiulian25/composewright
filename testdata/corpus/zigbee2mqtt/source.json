@@ -1,0 +1,7 @@
+{
+  "url": "https://github.com/Koenkk/zigbee2mqtt",
+  "owner": "Koenkk",
+  "commit": "5c0c1c60078e1737c5dee5f8217583bca7610e66",
+  "allow_registries": "-",
+  "verdict": "deny:P1"
+}

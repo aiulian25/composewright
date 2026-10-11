@@ -1,0 +1,5170 @@
+{
+  "files": [
+    ".env.template",
+    ".hadolint.yaml",
+    ".pre-commit-config.yaml",
+    "Cargo.toml",
+    "README.md",
+    "build.rs",
+    "docker/DockerSettings.yaml",
+    "docker/Dockerfile.alpine",
+    "docker/Dockerfile.debian",
+    "docker/Dockerfile.j2",
+    "docker/README.md",
+    "macros/Cargo.toml",
+    "src/api/admin.rs",
+    "src/auth.rs",
+    "src/main.rs",
+    "src/util.rs"
+  ],
+  "compose_files": null,
+  "dockerfiles": [
+    {
+      "path": "docker/Dockerfile.alpine",
+      "base_image": "docker.io/library/alpine:3.24",
+      "exposed": [
+        {
+          "port": 80,
+          "protocol": "tcp",
+          "location": {
+            "file": "docker/Dockerfile.alpine",
+            "line": 146
+          }
+        }
+      ],
+      "volumes": [
+        {
+          "path": "/data",
+          "location": {
+            "file": "docker/Dockerfile.alpine",
+            "line": 145
+          }
+        }
+      ],
+      "env": [
+        {
+          "key": "ROCKET_PROFILE",
+          "value": "release",
+          "location": {
+            "file": "docker/Dockerfile.alpine",
+            "line": 132
+          }
+        },
+        {
+          "key": "ROCKET_ADDRESS",
+          "value": "0.0.0.0",
+          "location": {
+            "file": "docker/Dockerfile.alpine",
+            "line": 132
+          }
+        },
+        {
+          "key": "ROCKET_PORT",
+          "value": "80",
+          "location": {
+            "file": "docker/Dockerfile.alpine",
+            "line": 132
+          }
+        },
+        {
+          "key": "SSL_CERT_DIR",
+          "value": "/etc/ssl/certs",
+          "location": {
+            "file": "docker/Dockerfile.alpine",
+            "line": 132
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "TARGETARCH",
+          "value": "",
+          "location": {
+            "file": "docker/Dockerfile.alpine",
+            "line": 43
+          }
+        },
+        {
+          "key": "TARGETVARIANT",
+          "value": "",
+          "location": {
+            "file": "docker/Dockerfile.alpine",
+            "line": 44
+          }
+        },
+        {
+          "key": "TARGETPLATFORM",
+          "value": "",
+          "location": {
+            "file": "docker/Dockerfile.alpine",
+            "line": 45
+          }
+        },
+        {
+          "key": "CARGO_PROFILE",
+          "value": "release",
+          "location": {
+            "file": "docker/Dockerfile.alpine",
+            "line": 80
+          }
+        },
+        {
+          "key": "DB",
+          "value": "sqlite,mysql,postgresql,enable_mimalloc",
+          "location": {
+            "file": "docker/Dockerfile.alpine",
+            "line": 84
+          }
+        },
+        {
+          "key": "VW_VERSION",
+          "value": "",
+          "location": {
+            "file": "docker/Dockerfile.alpine",
+            "line": 97
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "/healthcheck.sh"
+        ],
+        "interval": "60s",
+        "timeout": "10s",
+        "start_period": "",
+        "retries": 0,
+        "disabled": false,
+        "location": {
+          "file": "docker/Dockerfile.alpine",
+          "line": 157
+        }
+      },
+      "entrypoint": null,
+      "command": [
+        "/start.sh"
+      ]
+    },
+    {
+      "path": "docker/Dockerfile.debian",
+      "base_image": "docker.io/library/debian:trixie-slim",
+      "exposed": [
+        {
+          "port": 80,
+          "protocol": "tcp",
+          "location": {
+            "file": "docker/Dockerfile.debian",
+            "line": 190
+          }
+        }
+      ],
+      "volumes": [
+        {
+          "path": "/data",
+          "location": {
+            "file": "docker/Dockerfile.debian",
+            "line": 189
+          }
+        }
+      ],
+      "env": [
+        {
+          "key": "ROCKET_PROFILE",
+          "value": "release",
+          "location": {
+            "file": "docker/Dockerfile.debian",
+            "line": 172
+          }
+        },
+        {
+          "key": "ROCKET_ADDRESS",
+          "value": "0.0.0.0",
+          "location": {
+            "file": "docker/Dockerfile.debian",
+            "line": 172
+          }
+        },
+        {
+          "key": "ROCKET_PORT",
+          "value": "80",
+          "location": {
+            "file": "docker/Dockerfile.debian",
+            "line": 172
+          }
+        },
+        {
+          "key": "DEBIAN_FRONTEND",
+          "value": "noninteractive",
+          "location": {
+            "file": "docker/Dockerfile.debian",
+            "line": 172
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "TARGETARCH",
+          "value": "",
+          "location": {
+            "file": "docker/Dockerfile.debian",
+            "line": 42
+          }
+        },
+        {
+          "key": "TARGETVARIANT",
+          "value": "",
+          "location": {
+            "file": "docker/Dockerfile.debian",
+            "line": 43
+          }
+        },
+        {
+          "key": "TARGETPLATFORM",
+          "value": "",
+          "location": {
+            "file": "docker/Dockerfile.debian",
+            "line": 44
+          }
+        },
+        {
+          "key": "CARGO_PROFILE",
+          "value": "release",
+          "location": {
+            "file": "docker/Dockerfile.debian",
+            "line": 91
+          }
+        },
+        {
+          "key": "DB",
+          "value": "sqlite,mysql,postgresql",
+          "location": {
+            "file": "docker/Dockerfile.debian",
+            "line": 94
+          }
+        },
+        {
+          "key": "VW_VERSION",
+          "value": "",
+          "location": {
+            "file": "docker/Dockerfile.debian",
+            "line": 122
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "/healthcheck.sh"
+        ],
+        "interval": "60s",
+        "timeout": "10s",
+        "start_period": "",
+        "retries": 0,
+        "disabled": false,
+        "location": {
+          "file": "docker/Dockerfile.debian",
+          "line": 201
+        }
+      },
+      "entrypoint": null,
+      "command": [
+        "/start.sh"
+      ]
+    },
+    {
+      "path": "docker/Dockerfile.j2",
+      "base_image": "{{",
+      "exposed": [
+        {
+          "port": 80,
+          "protocol": "tcp",
+          "location": {
+            "file": "docker/Dockerfile.j2",
+            "line": 229
+          }
+        }
+      ],
+      "volumes": [
+        {
+          "path": "/data",
+          "location": {
+            "file": "docker/Dockerfile.j2",
+            "line": 228
+          }
+        }
+      ],
+      "env": [
+        {
+          "key": "ROCKET_PROFILE",
+          "value": "release",
+          "location": {
+            "file": "docker/Dockerfile.j2",
+            "line": 199
+          }
+        },
+        {
+          "key": "ROCKET_ADDRESS",
+          "value": "0.0.0.0",
+          "location": {
+            "file": "docker/Dockerfile.j2",
+            "line": 199
+          }
+        },
+        {
+          "key": "ROCKET_PORT",
+          "value": "80",
+          "location": {
+            "file": "docker/Dockerfile.j2",
+            "line": 199
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "TARGETARCH",
+          "value": "",
+          "location": {
+            "file": "docker/Dockerfile.j2",
+            "line": 71
+          }
+        },
+        {
+          "key": "TARGETVARIANT",
+          "value": "",
+          "location": {
+            "file": "docker/Dockerfile.j2",
+            "line": 72
+          }
+        },
+        {
+          "key": "TARGETPLATFORM",
+          "value": "",
+          "location": {
+            "file": "docker/Dockerfile.j2",
+            "line": 73
+          }
+        },
+        {
+          "key": "CARGO_PROFILE",
+          "value": "release",
+          "location": {
+            "file": "docker/Dockerfile.j2",
+            "line": 135
+          }
+        },
+        {
+          "key": "DB",
+          "value": "sqlite,mysql,postgresql",
+          "location": {
+            "file": "docker/Dockerfile.j2",
+            "line": 139
+          }
+        },
+        {
+          "key": "DB",
+          "value": "sqlite,mysql,postgresql,enable_mimalloc",
+          "location": {
+            "file": "docker/Dockerfile.j2",
+            "line": 142
+          }
+        },
+        {
+          "key": "VW_VERSION",
+          "value": "",
+          "location": {
+            "file": "docker/Dockerfile.j2",
+            "line": 160
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "/healthcheck.sh"
+        ],
+        "interval": "60s",
+        "timeout": "10s",
+        "start_period": "",
+        "retries": 0,
+        "disabled": false,
+        "location": {
+          "file": "docker/Dockerfile.j2",
+          "line": 240
+        }
+      },
+      "entrypoint": null,
+      "command": [
+        "/start.sh"
+      ]
+    }
+  ],
+  "env_samples": [
+    {
+      "path": ".env.template",
+      "entries": [
+        {
+          "key": "DATA_FOLDER",
+          "value": "data",
+          "comment": "Main data folder This can be a path to local folder or a path to an external location depending on features enabled at build time. Possible external locations: - AWS S3 Bucket (via `s3` feature): s3://bucket-name/path/to/folder When using an external location, make sure to set TMP_FOLDER, TEMPLATES_FOLDER, and DATABASE_URL to local paths and/or a remote database location.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 26
+          }
+        },
+        {
+          "key": "RSA_KEY_FILENAME",
+          "value": "data/rsa_key",
+          "comment": "Individual folders, these override %DATA_FOLDER%",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 29
+          }
+        },
+        {
+          "key": "ICON_CACHE_FOLDER",
+          "value": "data/icon_cache",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 30
+          }
+        },
+        {
+          "key": "ATTACHMENTS_FOLDER",
+          "value": "data/attachments",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 31
+          }
+        },
+        {
+          "key": "SENDS_FOLDER",
+          "value": "data/sends",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 32
+          }
+        },
+        {
+          "key": "TMP_FOLDER",
+          "value": "data/tmp",
+          "comment": "Temporary folder used for storing temporary file uploads Must be a local path.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 36
+          }
+        },
+        {
+          "key": "TEMPLATES_FOLDER",
+          "value": "data/templates",
+          "comment": "HTML template overrides data folder Must be a local path.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 40
+          }
+        },
+        {
+          "key": "RELOAD_TEMPLATES",
+          "value": "false",
+          "comment": "Automatically reload the templates for every request, slow, use only for development",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 42
+          }
+        },
+        {
+          "key": "WEB_VAULT_FOLDER",
+          "value": "web-vault/",
+          "comment": "Web vault settings",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 45
+          }
+        },
+        {
+          "key": "WEB_VAULT_ENABLED",
+          "value": "true",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 46
+          }
+        },
+        {
+          "key": "DATABASE_URL",
+          "value": "sqlite://data/db.sqlite3",
+          "comment": "Database URL When using SQLite, this should use the sqlite:// scheme followed by the path to the DB file. It defaults to sqlite://%DATA_FOLDER%/db.sqlite3. Bare paths without the sqlite:// scheme are supported for backwards compatibility, but only if the database file already exists.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 57
+          }
+        },
+        {
+          "key": "DATABASE_URL",
+          "value": "mysql://user:password@host[:port]/database_name",
+          "comment": "When using MySQL, specify an appropriate connection URI. Details: https://docs.diesel.rs/2.1.x/diesel/mysql/struct.MysqlConnection.html",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 60
+          }
+        },
+        {
+          "key": "DATABASE_URL",
+          "value": "postgresql://user:password@host[:port]/database_name",
+          "comment": "When using PostgreSQL, specify an appropriate connection URI (recommended) or keyword/value connection string. Details: - https://docs.diesel.rs/2.1.x/diesel/pg/struct.PgConnection.html - https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 66
+          }
+        },
+        {
+          "key": "ENABLE_DB_WAL",
+          "value": "true",
+          "comment": "Enable WAL for the DB Set to false to avoid enabling WAL during startup. Note that if the DB already has WAL enabled, you will also need to disable WAL in the DB, this setting only prevents Vaultwarden from automatically enabling it on start. Please read project wiki page about this setting first before changing the value as it can cause performance degradation or might render the service unable to start.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 74
+          }
+        },
+        {
+          "key": "DB_CONNECTION_RETRIES",
+          "value": "15",
+          "comment": "Database connection retries Number of times to retry the database connection during startup, with 1 second delay between each retry, set to 0 to retry indefinitely",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 78
+          }
+        },
+        {
+          "key": "DATABASE_TIMEOUT",
+          "value": "30",
+          "comment": "Database timeout Timeout when acquiring database connection",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 82
+          }
+        },
+        {
+          "key": "DATABASE_IDLE_TIMEOUT",
+          "value": "600",
+          "comment": "Database idle timeout Timeout in seconds before idle connections to the database are closed.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 86
+          }
+        },
+        {
+          "key": "DATABASE_MIN_CONNS",
+          "value": "2",
+          "comment": "Database min connections Define the minimum size of the connection pool used for connecting to the database.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 90
+          }
+        },
+        {
+          "key": "DATABASE_MAX_CONNS",
+          "value": "10",
+          "comment": "Database max connections Define the maximum size of the connection pool used for connecting to the database.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 94
+          }
+        },
+        {
+          "key": "DATABASE_CONN_INIT",
+          "value": "",
+          "comment": "Database connection initialization Allows SQL statements to be run whenever a new database connection is created. This is mainly useful for connection-scoped pragmas. If empty, a database-specific default is used: - SQLite: \"PRAGMA busy_timeout = 5000; PRAGMA synchronous = NORMAL;\" - MySQL: \"\" - PostgreSQL: \"\"",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 103
+          }
+        },
+        {
+          "key": "ENABLE_WEBSOCKET",
+          "value": "true",
+          "comment": "Enable websocket notifications",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 110
+          }
+        },
+        {
+          "key": "PUSH_ENABLED",
+          "value": "false",
+          "comment": "Enables push notifications (requires key and id from https://bitwarden.com/host) Details about mobile client push notification: - https://github.com/dani-garcia/vaultwarden/wiki/Enabling-Mobile-Client-push-notification",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 119
+          }
+        },
+        {
+          "key": "PUSH_INSTALLATION_ID",
+          "value": "CHANGEME",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 120
+          }
+        },
+        {
+          "key": "PUSH_INSTALLATION_KEY",
+          "value": "CHANGEME",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 121
+          }
+        },
+        {
+          "key": "PUSH_RELAY_URI",
+          "value": "https://push.bitwarden.com",
+          "comment": "WARNING: Do not modify the following settings unless you fully understand their implications! Default Push Relay and Identity URIs",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 125
+          }
+        },
+        {
+          "key": "PUSH_IDENTITY_URI",
+          "value": "https://identity.bitwarden.com",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 126
+          }
+        },
+        {
+          "key": "PUSH_RELAY_URI",
+          "value": "https://api.bitwarden.eu",
+          "comment": "European Union Data Region Settings If you have selected \"European Union\" as your data region, use the following URIs instead.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 129
+          }
+        },
+        {
+          "key": "PUSH_IDENTITY_URI",
+          "value": "https://identity.bitwarden.eu",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 130
+          }
+        },
+        {
+          "key": "JOB_POLL_INTERVAL_MS",
+          "value": "30000",
+          "comment": "Job scheduler settings Job schedules use a cron-like syntax (as parsed by https://crates.io/crates/cron), and are always in terms of UTC time (regardless of your local time zone settings). The schedule format is a bit different from crontab as crontab does not contains seconds. You can test the format here: https://crontab.guru, but remove the first digit! SEC  MIN   HOUR   DAY OF MONTH    MONTH   DAY OF WEEK \"0   30   9,12,15     1,15       May-Aug  Mon,Wed,Fri\" \"0   30     *          *            *          *     \" \"0   30     1          *            *          *     \" How often (in ms) the job scheduler thread checks for jobs that need running. Set to 0 to globally disable scheduled jobs.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 150
+          }
+        },
+        {
+          "key": "SEND_PURGE_SCHEDULE",
+          "value": "0 5 * * * *",
+          "comment": "Cron schedule of the job that checks for Sends past their deletion date. Defaults to hourly (5 minutes after the hour). Set blank to disable this job.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 154
+          }
+        },
+        {
+          "key": "TRASH_PURGE_SCHEDULE",
+          "value": "0 5 0 * * *",
+          "comment": "Cron schedule of the job that checks for trashed items to delete permanently. Defaults to daily (5 minutes after midnight). Set blank to disable this job.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 158
+          }
+        },
+        {
+          "key": "INCOMPLETE_2FA_SCHEDULE",
+          "value": "30 * * * * *",
+          "comment": "Cron schedule of the job that checks for incomplete 2FA logins. Defaults to once every minute. Set blank to disable this job.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 162
+          }
+        },
+        {
+          "key": "EMERGENCY_NOTIFICATION_REMINDER_SCHEDULE",
+          "value": "0 3 * * * *",
+          "comment": "Cron schedule of the job that sends expiration reminders to emergency access grantors. Defaults to hourly (3 minutes after the hour). Set blank to disable this job.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 166
+          }
+        },
+        {
+          "key": "EMERGENCY_REQUEST_TIMEOUT_SCHEDULE",
+          "value": "0 7 * * * *",
+          "comment": "Cron schedule of the job that grants emergency access requests that have met the required wait time. Defaults to hourly (7 minutes after the hour). Set blank to disable this job.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 170
+          }
+        },
+        {
+          "key": "EVENT_CLEANUP_SCHEDULE",
+          "value": "0 10 0 * * *",
+          "comment": "Cron schedule of the job that cleans old events from the event table. Defaults to daily. Set blank to disable this job. Also without EVENTS_DAYS_RETAIN set, this job will not start.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 174
+          }
+        },
+        {
+          "key": "EVENTS_DAYS_RETAIN",
+          "value": "",
+          "comment": "Number of days to retain events stored in the database. If unset (the default), events are kept indefinitely and the scheduled job is disabled!",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 177
+          }
+        },
+        {
+          "key": "AUTH_REQUEST_PURGE_SCHEDULE",
+          "value": "30 * * * * *",
+          "comment": "Cron schedule of the job that cleans old auth requests from the auth request. Defaults to every minute. Set blank to disable this job.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 181
+          }
+        },
+        {
+          "key": "DUO_CONTEXT_PURGE_SCHEDULE",
+          "value": "30 * * * * *",
+          "comment": "Cron schedule of the job that cleans expired Duo contexts from the database. Does nothing if Duo MFA is disabled. Defaults to every minute. Set blank to disable this job.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 185
+          }
+        },
+        {
+          "key": "PURGE_INCOMPLETE_SSO_AUTH",
+          "value": "0 20 0 * * *",
+          "comment": "Cron schedule of the job that cleans sso auth from incomplete flow Defaults to daily (20 minutes after midnight). Set blank to disable this job.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 189
+          }
+        },
+        {
+          "key": "DOMAIN",
+          "value": "http://localhost",
+          "comment": "Domain settings The domain must match the address from where you access the server It's recommended to configure this value, otherwise certain functionality might not work, like attachment downloads, email links and U2F. For U2F to work, the server must use HTTPS, you can use Let's Encrypt for free certs To use HTTPS, the recommended way is to put Vaultwarden behind a reverse proxy Details: - https://github.com/dani-garcia/vaultwarden/wiki/Enabling-HTTPS - https://github.com/dani-garcia/vaultwarden/wiki/Proxy-examples For development",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 205
+          }
+        },
+        {
+          "key": "DOMAIN",
+          "value": "https://vw.domain.tld",
+          "comment": "For public server",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 207
+          }
+        },
+        {
+          "key": "DOMAIN",
+          "value": "https://vw.domain.tld:8443",
+          "comment": "For public server (URL with port number)",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 209
+          }
+        },
+        {
+          "key": "DOMAIN",
+          "value": "https://domain.tld/vw",
+          "comment": "For public server (URL with path)",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 211
+          }
+        },
+        {
+          "key": "SENDS_ALLOWED",
+          "value": "true",
+          "comment": "Controls whether users are allowed to create Bitwarden Sends. This setting applies globally to all users. To control this on a per-org basis instead, use the \"Disable Send\" org policy.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 216
+          }
+        },
+        {
+          "key": "HIBP_API_KEY",
+          "value": "",
+          "comment": "HIBP Api Key HaveIBeenPwned API Key, request it here: https://haveibeenpwned.com/API/Key",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 220
+          }
+        },
+        {
+          "key": "ORG_ATTACHMENT_LIMIT",
+          "value": "",
+          "comment": "Per-organization attachment storage limit (KB) Max kilobytes of attachment storage allowed per organization. When this limit is reached, organization members will not be allowed to upload further attachments for ciphers owned by that organization.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 225
+          }
+        },
+        {
+          "key": "USER_ATTACHMENT_LIMIT",
+          "value": "",
+          "comment": "Per-user attachment storage limit (KB) Max kilobytes of attachment storage allowed per user. When this limit is reached, the user will not be allowed to upload further attachments.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 229
+          }
+        },
+        {
+          "key": "USER_SEND_LIMIT",
+          "value": "",
+          "comment": "Per-user send storage limit (KB) Max kilobytes of send storage allowed per user. When this limit is reached, the user will not be allowed to upload further sends.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 233
+          }
+        },
+        {
+          "key": "TRASH_AUTO_DELETE_DAYS",
+          "value": "",
+          "comment": "Number of days to wait before auto-deleting a trashed item. If unset (the default), trashed items are not auto-deleted. This setting applies globally, so make sure to inform all users of any changes to this setting.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 238
+          }
+        },
+        {
+          "key": "INCOMPLETE_2FA_TIME_LIMIT",
+          "value": "3",
+          "comment": "Number of minutes to wait before a 2FA-enabled login is considered incomplete, resulting in an email notification. An incomplete 2FA login is one where the correct master password was provided but the required 2FA step was not completed, which potentially indicates a master password compromise. Set to 0 to disable this check. This setting applies globally to all users.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 245
+          }
+        },
+        {
+          "key": "DISABLE_ICON_DOWNLOAD",
+          "value": "false",
+          "comment": "Disable icon downloading Set to true to disable icon downloading in the internal icon service. This still serves existing icons from $ICON_CACHE_FOLDER, without generating any external network requests. $ICON_CACHE_TTL must also be set to 0; otherwise, the existing icons will be deleted eventually, but won't be downloaded again.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 252
+          }
+        },
+        {
+          "key": "SIGNUPS_ALLOWED",
+          "value": "true",
+          "comment": "Controls if new users can register",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 255
+          }
+        },
+        {
+          "key": "SIGNUPS_VERIFY",
+          "value": "false",
+          "comment": "Controls if new users need to verify their email address upon registration On new client versions, this will require the user to verify their email at signup time. On older clients, it will require the user to verify their email before they can log in. The welcome email will include a verification link, and login attempts will periodically trigger another verification email to be sent.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 262
+          }
+        },
+        {
+          "key": "SIGNUPS_VERIFY_RESEND_TIME",
+          "value": "3600",
+          "comment": "If SIGNUPS_VERIFY is set to true, this limits how many seconds after the last time an email verification link has been sent another verification email will be sent",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 266
+          }
+        },
+        {
+          "key": "SIGNUPS_VERIFY_RESEND_LIMIT",
+          "value": "6",
+          "comment": "If SIGNUPS_VERIFY is set to true, this limits how many times an email verification email will be re-sent upon an attempted login.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 270
+          }
+        },
+        {
+          "key": "SIGNUPS_DOMAINS_WHITELIST",
+          "value": "example.com,example.net,example.org",
+          "comment": "Controls if new users from a list of comma-separated domains can register even if SIGNUPS_ALLOWED is set to false",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 274
+          }
+        },
+        {
+          "key": "ORG_EVENTS_ENABLED",
+          "value": "false",
+          "comment": "Controls whether event logging is enabled for organizations This setting applies to organizations. Disabled by default. Also check the EVENT_CLEANUP_SCHEDULE and EVENTS_DAYS_RETAIN settings.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 279
+          }
+        },
+        {
+          "key": "ORG_CREATION_USERS",
+          "value": "",
+          "comment": "Controls which users can create new orgs. Blank or 'all' means all users can create orgs (this is the default):",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 283
+          }
+        },
+        {
+          "key": "ORG_CREATION_USERS",
+          "value": "none",
+          "comment": "'none' means no users can create orgs:",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 285
+          }
+        },
+        {
+          "key": "ORG_CREATION_USERS",
+          "value": "admin1@example.com,admin2@example.com",
+          "comment": "A comma-separated list means only those users can create orgs:",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 287
+          }
+        },
+        {
+          "key": "INVITATIONS_ALLOWED",
+          "value": "true",
+          "comment": "Allows org admins to invite users, even when signups are disabled",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 290
+          }
+        },
+        {
+          "key": "INVITATION_ORG_NAME",
+          "value": "Vaultwarden",
+          "comment": "Name shown in the invitation emails that don't come from a specific organization",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 292
+          }
+        },
+        {
+          "key": "INVITATION_EXPIRATION_HOURS",
+          "value": "120",
+          "comment": "The number of hours after which an organization invite token, emergency access invite token, email verification token and deletion request token will expire (must be at least 1)",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 296
+          }
+        },
+        {
+          "key": "EMERGENCY_ACCESS_ALLOWED",
+          "value": "true",
+          "comment": "Controls whether users can enable emergency access to their accounts. This setting applies globally to all users.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 300
+          }
+        },
+        {
+          "key": "EMAIL_CHANGE_ALLOWED",
+          "value": "true",
+          "comment": "Controls whether users can change their email. This setting applies globally to all users",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 304
+          }
+        },
+        {
+          "key": "PASSWORD_ITERATIONS",
+          "value": "600000",
+          "comment": "Number of server-side passwords hashing iterations for the password hash. The default for new users. If changed, it will be updated during login for existing users.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 308
+          }
+        },
+        {
+          "key": "PASSWORD_HINTS_ALLOWED",
+          "value": "true",
+          "comment": "Controls whether users can set or show password hints. This setting applies globally to all users.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 311
+          }
+        },
+        {
+          "key": "SHOW_PASSWORD_HINT",
+          "value": "false",
+          "comment": "Controls whether a password hint should be shown directly in the web page if SMTP service is not configured and password hints are allowed. Not recommended for publicly-accessible instances because this provides unauthenticated access to potentially sensitive data.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 317
+          }
+        },
+        {
+          "key": "CLIENT_SUPPRESS_ONBOARDING",
+          "value": "false",
+          "comment": "Control whether clients onboarding interstitials are suppressed (post-login welcome dialogs, extension install prompts, setup extension redirects, and premium upsell modals)",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 325
+          }
+        },
+        {
+          "key": "IP_HEADER",
+          "value": "X-Real-IP",
+          "comment": "Client IP Header, used to identify the IP of the client, defaults to \"X-Real-IP\" Set to the string \"none\" (without quotes), to disable any headers and just use the remote IP",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 333
+          }
+        },
+        {
+          "key": "IP_HEADER_TRUSTED_PROXIES",
+          "value": "local",
+          "comment": "Which addresses the header above is accepted from, defaults to \"local\". Anyone able to reach Vaultwarden can set the header, and the client IP is used for the login and admin rate limits, so it is only trusted when the request comes from a proxy listed here. \"local\" accepts it from any non global address, which covers a reverse proxy running on the same host or container network. Use \"all\" to accept it from anywhere, or list the addresses of your proxy as IPs and CIDR ranges if it connects from a public address. For a list header like X-Forwarded-For, the client IP is the rightmost address that isn't one of these proxies, so with several proxies in a row (a CDN in front of nginx, for example) list all of them.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 343
+          }
+        },
+        {
+          "key": "ICON_SERVICE",
+          "value": "internal",
+          "comment": "Icon service The predefined icon services are: internal, bitwarden, duckduckgo, google. To specify a custom icon service, set a URL template with exactly one instance of `{}`, which is replaced with the domain. For example: `https://icon.example.com/domain/{}`. `internal` refers to Vaultwarden's built-in icon fetching implementation. If an external service is set, an icon request to Vaultwarden will return an HTTP redirect to the corresponding icon at the external service. An external service may be useful if your Vaultwarden instance has no external network connectivity, or if you are concerned that someone may probe your instance to try to detect whether icons for certain sites have been cached.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 356
+          }
+        },
+        {
+          "key": "ICON_REDIRECT_CODE",
+          "value": "302",
+          "comment": "Icon redirect code The HTTP status code to use for redirects to an external icon service. The supported codes are 301 (legacy permanent), 302 (legacy temporary), 307 (temporary), and 308 (permanent). Temporary redirects are useful while testing different icon services, but once a service has been decided on, consider using permanent redirects for cacheability. The legacy codes are currently better supported by the Bitwarden clients.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 364
+          }
+        },
+        {
+          "key": "ICON_CACHE_TTL",
+          "value": "2592000",
+          "comment": "Cache time-to-live for successfully obtained icons, in seconds (0 is \"forever\") Default: 2592000 (30 days)",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 368
+          }
+        },
+        {
+          "key": "ICON_CACHE_NEGTTL",
+          "value": "259200",
+          "comment": "Cache time-to-live for icons which weren't available, in seconds (0 is \"forever\") Default: 259200 (3 days)",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 371
+          }
+        },
+        {
+          "key": "ICON_DOWNLOAD_TIMEOUT",
+          "value": "10",
+          "comment": "Icon download timeout Configure the timeout value when downloading the favicons. The default is 10 seconds, but this could be too low on slower network connections",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 376
+          }
+        },
+        {
+          "key": "HTTP_REQUEST_BLOCK_REGEX",
+          "value": "^(192\\.168\\.0\\.[0-9]+|192\\.168\\.1\\.[0-9]+)$",
+          "comment": "Block HTTP domains/IPs by Regex Any domains or IPs that match this regex won't be fetched by the internal HTTP client. Useful to hide other servers in the local network. Check the WIKI for more details NOTE: Always enclose this regex within single quotes!",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 382
+          }
+        },
+        {
+          "key": "HTTP_REQUEST_BLOCK_NON_GLOBAL_IPS",
+          "value": "true",
+          "comment": "Enabling this will cause the internal HTTP client to refuse to connect to any non-global IP address. Useful to secure your internal environment: See https://en.wikipedia.org/wiki/Reserved_IP_addresses for a list of IPs which it will block",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 386
+          }
+        },
+        {
+          "key": "EXPERIMENTAL_CLIENT_FEATURE_FLAGS",
+          "value": "",
+          "comment": "Client Settings Enable experimental feature flags for clients. This is a comma-separated list of flags, e.g. \"flag1,flag2,flag3\". Note that clients cache the /api/config endpoint for about 1 hour and it could take some time before they are enabled or disabled! The following flags are available: - \"pm-5594-safari-account-switching\": Enable account switching in Safari. (Safari \u003e= 2026.2.0) - \"pm-32413-multi-client-password-management\": Enable changing the master password directly in the client. (Desktop/Extension \u003e= 2026.4.0) - \"ssh-agent-v2\": Enable newer SSH agent support. (Desktop \u003e= 2026.2.1) - \"windows-desktop-autotype\": Enable the autotype feature preview on Windows. (Desktop \u003e= 2025.8.0) - \"windows-desktop-autotype-ga\": Enable the new, still in development, autotype implementation on Windows. (Desktop \u003e= 2026.9.1) Only enable one of the two autotype flags, the clients disable autotype completely when both are enabled. - \"pm-30529-webauthn-related-origins\": - \"pm-32009-new-item-types\": Enable new item types: Bank Account, Driver's License, and Passport (Clients \u003e= 2026.4.0) - \"pm-34171-card-scanner\": Enable the new card scanner feature on mobile (Android \u003e= 2026.4.1, iOS \u003e= 2026.4.1) - \"enable-basic-auth-response\": Enable HTTP Basic Auth autofill in the browser extension (Browser \u003e= 2026.9.0) - \"undetermined-cipher-scenario-logic\": Enable the rewritten add/update login notification triggering logic in the browser extension (Browser \u003e= 2026.2.0) - \"biometrics-sdk-ipc\": Enable biometric unlock over the SDK IPC framework (Desktop \u003e= 2026.9.0, Browser \u003e= 2026.9.0)",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 406
+          }
+        },
+        {
+          "key": "REQUIRE_DEVICE_EMAIL",
+          "value": "false",
+          "comment": "Require new device emails. When a user logs in an email is required to be sent. If sending the email fails the login attempt will fail!!",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 410
+          }
+        },
+        {
+          "key": "EXTENDED_LOGGING",
+          "value": "true",
+          "comment": "Enable extended logging, which shows timestamps and targets in the logs",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 413
+          }
+        },
+        {
+          "key": "LOG_TIMESTAMP_FORMAT",
+          "value": "%Y-%m-%d %H:%M:%S.%3f",
+          "comment": "Timestamp format used in extended logging. Format specifiers: https://docs.rs/chrono/latest/chrono/format/strftime",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 417
+          }
+        },
+        {
+          "key": "USE_SYSLOG",
+          "value": "false",
+          "comment": "Logging to Syslog This requires extended logging",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 421
+          }
+        },
+        {
+          "key": "LOG_FILE",
+          "value": "/path/to/log",
+          "comment": "Logging to file",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 424
+          }
+        },
+        {
+          "key": "LOG_LEVEL",
+          "value": "info",
+          "comment": "Log level Change the verbosity of the log output Valid values are \"trace\", \"debug\", \"info\", \"warn\", \"error\" and \"off\" Setting it to \"trace\" or \"debug\" would also show logs for mounted routes and static file, websocket and alive requests For a specific module append a comma separated `path::to::module=log_level` For example, to only see debug logs for icons use: LOG_LEVEL=\"info,vaultwarden::api::icons=debug\"",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 432
+          }
+        },
+        {
+          "key": "ADMIN_TOKEN",
+          "value": "$argon2id$v=19$m=65540,t=3,p=4$MmeKRnGK5RW5mJS7h3TOL89GrpLPXJPAtTK8FTqj9HM$DqsstvoSAETl9YhnsXbf43WeaUwJC6JhViIvuPoig78",
+          "comment": "Token for the admin interface, preferably an Argon2 PCH string Vaultwarden has a built-in generator by calling `vaultwarden hash` For details see: https://github.com/dani-garcia/vaultwarden/wiki/Enabling-admin-page#secure-the-admin_token If not set, the admin panel is disabled New Argon2 PHC string Note that for some environments, like docker-compose you need to escape all the dollar signs `$` with an extra dollar sign like `$$` Also, use single quotes (') instead of double quotes (\") to enclose the string when needed",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 441
+          }
+        },
+        {
+          "key": "ADMIN_TOKEN",
+          "value": "Vy2VyYTTsKPv8W5aEOWUbB/Bt3DEKePbHmI4m9VcemUMS2rEviDowNAFqYi1xjmp",
+          "comment": "Old plain text string (Will generate warnings in favor of Argon2)",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 443
+          }
+        },
+        {
+          "key": "DISABLE_ADMIN_TOKEN",
+          "value": "false",
+          "comment": "Enable this to bypass the admin panel security. This option is only meant to be used with the use of a separate auth layer in front",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 447
+          }
+        },
+        {
+          "key": "ADMIN_RATELIMIT_SECONDS",
+          "value": "300",
+          "comment": "Number of seconds, on average, between admin login requests from the same IP address before rate limiting kicks in.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 450
+          }
+        },
+        {
+          "key": "ADMIN_RATELIMIT_MAX_BURST",
+          "value": "3",
+          "comment": "Allow a burst of requests of up to this size, while maintaining the average indicated by `ADMIN_RATELIMIT_SECONDS`.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 452
+          }
+        },
+        {
+          "key": "ADMIN_SESSION_LIFETIME",
+          "value": "20",
+          "comment": "Set the lifetime of admin sessions to this value (in minutes).",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 455
+          }
+        },
+        {
+          "key": "ALLOWED_IFRAME_ANCESTORS",
+          "value": "",
+          "comment": "Allowed iframe ancestors (Know the risks!) https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/frame-ancestors Allows other domains to embed the web vault into an iframe, useful for embedding into secure intranets This adds the configured value to the 'Content-Security-Policy' headers 'frame-ancestors' value. Multiple values must be separated with a whitespace.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 462
+          }
+        },
+        {
+          "key": "ALLOWED_CONNECT_SRC",
+          "value": "",
+          "comment": "Allowed connect-src (Know the risks!) https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/connect-src Allows other domains to URLs which can be loaded using script interfaces like the Forwarded email alias feature This adds the configured value to the 'Content-Security-Policy' headers 'connect-src' value. Multiple values must be separated with a whitespace. And only HTTPS values are allowed. Example: \"https://my-addy-io.domain.tld https://my-simplelogin.domain.tld\"",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 470
+          }
+        },
+        {
+          "key": "LOGIN_RATELIMIT_SECONDS",
+          "value": "60",
+          "comment": "Number of seconds, on average, between login requests from the same IP address before rate limiting kicks in.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 473
+          }
+        },
+        {
+          "key": "LOGIN_RATELIMIT_MAX_BURST",
+          "value": "10",
+          "comment": "Allow a burst of requests of up to this size, while maintaining the average indicated by `LOGIN_RATELIMIT_SECONDS`. Note that this applies to both the login and the 2FA, so it's recommended to allow a burst size of at least 2.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 476
+          }
+        },
+        {
+          "key": "UNAUTHENTICATED_RATELIMIT_SECONDS",
+          "value": "60",
+          "comment": "Number of seconds, on average, between requests from the same IP address to one of the rate limited unauthenticated endpoints, like the password hint, the account recovery mails or accessing a Send.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 480
+          }
+        },
+        {
+          "key": "UNAUTHENTICATED_RATELIMIT_MAX_BURST",
+          "value": "50",
+          "comment": "Allow a burst of requests of up to this size, while maintaining the average indicated by `UNAUTHENTICATED_RATELIMIT_SECONDS`. This budget is shared between all of those endpoints, so it is more lenient than the login one.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 483
+          }
+        },
+        {
+          "key": "ORG_GROUPS_ENABLED",
+          "value": "false",
+          "comment": "BETA FEATURE: Groups Controls whether group support is enabled for organizations This setting applies to organizations. Disabled by default because this is a beta feature, it contains known issues! KNOW WHAT YOU ARE DOING!",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 490
+          }
+        },
+        {
+          "key": "INCREASE_NOTE_SIZE_LIMIT",
+          "value": "false",
+          "comment": "Increase secure note size limit (Know the risks!) Sets the secure note size limit to 100_000 instead of the default 10_000. WARNING: This could cause issues with clients. Also exports will not work on Bitwarden servers! KNOW WHAT YOU ARE DOING!",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 496
+          }
+        },
+        {
+          "key": "ENFORCE_SINGLE_ORG_WITH_RESET_PW_POLICY",
+          "value": "false",
+          "comment": "Enforce Single Org with Reset Password Policy Enforce that the Single Org policy is enabled before setting the Reset Password policy Bitwarden enforces this by default. In Vaultwarden we encouraged to use multiple organizations because groups were not available. Setting this to true will enforce the Single Org Policy to be enabled before you can enable the Reset Password policy.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 502
+          }
+        },
+        {
+          "key": "DNS_PREFER_IPV6",
+          "value": "false",
+          "comment": "Prefer IPv6 (AAAA) resolving This settings configures the DNS resolver to resolve IPv6 first, and if not available try IPv4 This could be useful in IPv6 only environments.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 507
+          }
+        },
+        {
+          "key": "SSO_ENABLED",
+          "value": "false",
+          "comment": "Controls whether users can login using an OpenID Connect identity provider",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 514
+          }
+        },
+        {
+          "key": "SSO_ONLY",
+          "value": "false",
+          "comment": "Prevent users from logging in directly without going through SSO",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 517
+          }
+        },
+        {
+          "key": "SSO_SIGNUPS_ALLOWED",
+          "value": "true",
+          "comment": "Allow SSO flow to create account. You probably want to disable it when using a public provider.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 520
+          }
+        },
+        {
+          "key": "SSO_SIGNUPS_MATCH_EMAIL",
+          "value": "true",
+          "comment": "On SSO Signup if a user with a matching email already exists make the association",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 523
+          }
+        },
+        {
+          "key": "SSO_ALLOW_UNKNOWN_EMAIL_VERIFICATION",
+          "value": "false",
+          "comment": "Allow unknown email verification status. Allowing this with `SSO_SIGNUPS_MATCH_EMAIL=true` open potential account takeover.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 526
+          }
+        },
+        {
+          "key": "SSO_AUTHORITY",
+          "value": "https://auth.example.com",
+          "comment": "Base URL of the OIDC server (auto-discovery is used) - Should not include the `/.well-known/openid-configuration` part and no trailing `/` - ${SSO_AUTHORITY}/.well-known/openid-configuration should return a json document: https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfigurationResponse",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 531
+          }
+        },
+        {
+          "key": "SSO_SCOPES",
+          "value": "email profile",
+          "comment": "Authorization request scopes. Optional SSO scopes, override if email and profile are not enough (`openid` is implicit).",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 534
+          }
+        },
+        {
+          "key": "SSO_AUTHORIZE_EXTRA_PARAMS",
+          "value": "access_type=offline\u0026prompt=consent",
+          "comment": "Additional authorization url parameters (ex: to obtain a `refresh_token` with Google Auth).",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 537
+          }
+        },
+        {
+          "key": "SSO_PKCE",
+          "value": "true",
+          "comment": "Activate PKCE for the Auth Code flow.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 540
+          }
+        },
+        {
+          "key": "SSO_AUDIENCE_TRUSTED",
+          "value": "^$",
+          "comment": "Regex for additional trusted Id token audience (by default only the client_id is trusted).",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 543
+          }
+        },
+        {
+          "key": "SSO_CLIENT_ID",
+          "value": "11111",
+          "comment": "Set your Client ID and Client Key",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 546
+          }
+        },
+        {
+          "key": "SSO_CLIENT_SECRET",
+          "value": "AAAAAAAAAAAAAAAAAAAAAAAA",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 547
+          }
+        },
+        {
+          "key": "SSO_MASTER_PASSWORD_POLICY",
+          "value": "{\"enforceOnLogin\":false,\"minComplexity\":3,\"minLength\":12,\"requireLower\":false,\"requireNumbers\":false,\"requireSpecial\":false,\"requireUpper\":false}",
+          "comment": "Optional Master password policy (minComplexity=[0-4]), `enforceOnLogin` is not supported at the moment.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 550
+          }
+        },
+        {
+          "key": "SSO_AUTH_ONLY_NOT_SESSION",
+          "value": "false",
+          "comment": "Use sso only for authentication not the session lifecycle",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 553
+          }
+        },
+        {
+          "key": "SSO_CLIENT_CACHE_EXPIRATION",
+          "value": "0",
+          "comment": "Client cache for discovery endpoint. Duration in seconds (0 to disable).",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 556
+          }
+        },
+        {
+          "key": "SSO_DEBUG_TOKENS",
+          "value": "false",
+          "comment": "Log all the tokens, LOG_LEVEL=debug is required",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 559
+          }
+        },
+        {
+          "key": "YUBICO_CLIENT_ID",
+          "value": "11111",
+          "comment": "Yubico (Yubikey) Settings Set your Client ID and Secret Key for Yubikey OTP You can generate it here: https://upgrade.yubico.com/getapikey/ You can optionally specify a custom OTP server",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 569
+          }
+        },
+        {
+          "key": "YUBICO_SECRET_KEY",
+          "value": "AAAAAAAAAAAAAAAAAAAAAAAA",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 570
+          }
+        },
+        {
+          "key": "YUBICO_SERVER",
+          "value": "http://yourdomain.com/wsapi/2.0/verify",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 571
+          }
+        },
+        {
+          "key": "DUO_IKEY",
+          "value": "\u003cClient ID\u003e",
+          "comment": "Duo Settings You need to configure the DUO_IKEY, DUO_SKEY, and DUO_HOST options to enable global Duo support. Otherwise users will need to configure it themselves. Create an account and protect an application as mentioned in this link (only the first step, not the rest): https://help.bitwarden.com/article/setup-two-step-login-duo/#create-a-duo-security-account Then set the following options, based on the values obtained from the last step:",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 579
+          }
+        },
+        {
+          "key": "DUO_SKEY",
+          "value": "\u003cClient Secret\u003e",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 580
+          }
+        },
+        {
+          "key": "DUO_HOST",
+          "value": "\u003cAPI Hostname\u003e",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 581
+          }
+        },
+        {
+          "key": "EMAIL_TOKEN_SIZE",
+          "value": "6",
+          "comment": "Email 2FA settings Email token size Number of digits in an email 2FA token (min: 6, max: 255). Note that the Bitwarden clients are hardcoded to mention 6 digit codes regardless of this setting!",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 589
+          }
+        },
+        {
+          "key": "EMAIL_EXPIRATION_TIME",
+          "value": "600",
+          "comment": "Token expiration time Maximum time in seconds a token is valid. The time the user has to open email client and copy token.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 593
+          }
+        },
+        {
+          "key": "EMAIL_ATTEMPTS_LIMIT",
+          "value": "3",
+          "comment": "Maximum attempts before an email token is reset and a new email will need to be sent.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 596
+          }
+        },
+        {
+          "key": "EMAIL_2FA_ENFORCE_ON_VERIFIED_INVITE",
+          "value": "false",
+          "comment": "Setup email 2FA on registration regardless of any organization policy",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 599
+          }
+        },
+        {
+          "key": "EMAIL_2FA_AUTO_FALLBACK",
+          "value": "false",
+          "comment": "Automatically setup email 2FA as fallback provider when needed",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 601
+          }
+        },
+        {
+          "key": "DISABLE_2FA_REMEMBER",
+          "value": "false",
+          "comment": "Other MFA/2FA settings Disable 2FA remember Enabling this would force the users to use a second factor to login every time. Note that the checkbox would still be present, but ignored.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 607
+          }
+        },
+        {
+          "key": "AUTHENTICATOR_DISABLE_TIME_DRIFT",
+          "value": "false",
+          "comment": "Authenticator Settings Disable authenticator time drifted codes to be valid. TOTP codes of the previous and next 30 seconds will be invalid According to the RFC6238 (https://tools.ietf.org/html/rfc6238), we allow by default the TOTP code which was valid one step back and one in the future. This can however allow attackers to be a bit more lucky with their attempts because there are 3 valid codes. You can disable this, so that only the current TOTP Code is allowed. Keep in mind that when a sever drifts out of time, valid codes could be marked as invalid. In any case, if a code has been used it can not be used again, also codes which predates it will be invalid.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 619
+          }
+        },
+        {
+          "key": "SMTP_HOST",
+          "value": "smtp.domain.tld",
+          "comment": "Mail specific settings, set SMTP_FROM and either SMTP_HOST or USE_SENDMAIL to enable the mail service. To make sure the email links are pointing to the correct host, set the DOMAIN variable. Note: if SMTP_USERNAME is specified, SMTP_PASSWORD is mandatory",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 628
+          }
+        },
+        {
+          "key": "SMTP_FROM",
+          "value": "vaultwarden@domain.tld",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 629
+          }
+        },
+        {
+          "key": "SMTP_FROM_NAME",
+          "value": "Vaultwarden",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 630
+          }
+        },
+        {
+          "key": "SMTP_USERNAME",
+          "value": "username",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 631
+          }
+        },
+        {
+          "key": "SMTP_PASSWORD",
+          "value": "password",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 632
+          }
+        },
+        {
+          "key": "SMTP_TIMEOUT",
+          "value": "15",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 633
+          }
+        },
+        {
+          "key": "SMTP_SECURITY",
+          "value": "starttls",
+          "comment": "Choose the type of secure connection for SMTP. The default is \"starttls\". The available options are: - \"starttls\": The default port is 587. - \"force_tls\": The default port is 465. - \"off\": The default port is 25. Ports 587 (submission) and 25 (smtp) are standard without encryption and with encryption via STARTTLS (Explicit TLS). Port 465 (submissions) is used for encrypted submission (Implicit TLS).",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 641
+          }
+        },
+        {
+          "key": "SMTP_PORT",
+          "value": "587",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 642
+          }
+        },
+        {
+          "key": "USE_SENDMAIL",
+          "value": "false",
+          "comment": "Whether to send mail via the `sendmail` command",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 645
+          }
+        },
+        {
+          "key": "SENDMAIL_COMMAND",
+          "value": "/path/to/sendmail",
+          "comment": "Which sendmail command to use. The one found in the $PATH is used if not specified.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 647
+          }
+        },
+        {
+          "key": "SMTP_AUTH_MECHANISM",
+          "value": "",
+          "comment": "Defaults for SSL is \"Plain\" and \"Login\" and nothing for Non-SSL connections. Possible values: [\"Plain\", \"Login\", \"Xoauth2\"]. Multiple options need to be separated by a comma ','.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 652
+          }
+        },
+        {
+          "key": "HELO_NAME",
+          "value": "",
+          "comment": "Server name sent during the SMTP HELO By default this value should be the machine's hostname, but might need to be changed in case it trips some anti-spam filters",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 657
+          }
+        },
+        {
+          "key": "SMTP_EMBED_IMAGES",
+          "value": "true",
+          "comment": "Embed images as email attachments",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 660
+          }
+        },
+        {
+          "key": "SMTP_DEBUG",
+          "value": "false",
+          "comment": "SMTP debugging When set to true this will output very detailed SMTP messages. WARNING: This could contain sensitive information like passwords and usernames! Only enable this during troubleshooting!",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 665
+          }
+        },
+        {
+          "key": "SMTP_ACCEPT_INVALID_CERTS",
+          "value": "false",
+          "comment": "Accept Invalid Certificates DANGEROUS: This option introduces significant vulnerabilities to man-in-the-middle attacks! Only use this as a last resort if you are not able to use a valid certificate. If the Certificate is valid but the hostname doesn't match, please use SMTP_ACCEPT_INVALID_HOSTNAMES instead.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 671
+          }
+        },
+        {
+          "key": "SMTP_ACCEPT_INVALID_HOSTNAMES",
+          "value": "false",
+          "comment": "Accept Invalid Hostnames DANGEROUS: This option introduces significant vulnerabilities to man-in-the-middle attacks! Only use this as a last resort if you are not able to use a valid certificate.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 676
+          }
+        },
+        {
+          "key": "ROCKET_ADDRESS",
+          "value": "0.0.0.0",
+          "comment": "Rocket specific settings See https://rocket.rs/v0.5/guide/configuration/ for more details.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 684
+          }
+        },
+        {
+          "key": "ROCKET_PORT",
+          "value": "8000",
+          "comment": "The default port is 8000, unless running in a Docker container, in which case it is 80.",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 686
+          }
+        },
+        {
+          "key": "ROCKET_TLS",
+          "value": "{certs=\"/path/to/certs.pem\",key=\"/path/to/key.pem\"}",
+          "comment": "",
+          "commented": true,
+          "location": {
+            "file": ".env.template",
+            "line": 687
+          }
+        }
+      ]
+    }
+  ],
+  "variables": [
+    {
+      "name": "ADMIN_RATELIMIT_MAX_BURST",
+      "default": "3",
+      "description": "Allow a burst of requests of up to this size, while maintaining the average indicated by `ADMIN_RATELIMIT_SECONDS`.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ADMIN_RATELIMIT_MAX_BURST",
+          "kind": "env_sample",
+          "default": "3",
+          "text": "Allow a burst of requests of up to this size, while maintaining the average indicated by `ADMIN_RATELIMIT_SECONDS`.",
+          "location": {
+            "file": ".env.template",
+            "line": 452
+          }
+        }
+      ]
+    },
+    {
+      "name": "ADMIN_RATELIMIT_SECONDS",
+      "default": "300",
+      "description": "Number of seconds, on average, between admin login requests from the same IP address before rate limiting kicks in.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ADMIN_RATELIMIT_SECONDS",
+          "kind": "env_sample",
+          "default": "300",
+          "text": "Number of seconds, on average, between admin login requests from the same IP address before rate limiting kicks in.",
+          "location": {
+            "file": ".env.template",
+            "line": 450
+          }
+        }
+      ]
+    },
+    {
+      "name": "ADMIN_SESSION_LIFETIME",
+      "default": "20",
+      "description": "Set the lifetime of admin sessions to this value (in minutes).",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ADMIN_SESSION_LIFETIME",
+          "kind": "env_sample",
+          "default": "20",
+          "text": "Set the lifetime of admin sessions to this value (in minutes).",
+          "location": {
+            "file": ".env.template",
+            "line": 455
+          }
+        }
+      ]
+    },
+    {
+      "name": "ADMIN_TOKEN",
+      "default": "$argon2id$v=19$m=65540,t=3,p=4$MmeKRnGK5RW5mJS7h3TOL89GrpLPXJPAtTK8FTqj9HM$DqsstvoSAETl9YhnsXbf43WeaUwJC6JhViIvuPoig78",
+      "description": "Token for the admin interface, preferably an Argon2 PCH string Vaultwarden has a built-in generator by calling `vaultwarden hash` For details see: https://github.com/dani-garcia/vaultwarden/wiki/Enabling-admin-page#secure-the-admin_token If not set, the admin panel is disabled New Argon2 PHC string Note that for some environments, like docker-compose you need to escape all the dollar signs `$` with an extra dollar sign like `$$` Also, use single quotes (') instead of double quotes (\") to enclose the string when needed",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ADMIN_TOKEN",
+          "kind": "env_sample",
+          "default": "$argon2id$v=19$m=65540,t=3,p=4$MmeKRnGK5RW5mJS7h3TOL89GrpLPXJPAtTK8FTqj9HM$DqsstvoSAETl9YhnsXbf43WeaUwJC6JhViIvuPoig78",
+          "text": "Token for the admin interface, preferably an Argon2 PCH string Vaultwarden has a built-in generator by calling `vaultwarden hash` For details see: https://github.com/dani-garcia/vaultwarden/wiki/Enabling-admin-page#secure-the-admin_token If not set, the admin panel is disabled New Argon2 PHC string Note that for some environments, like docker-compose you need to escape all the dollar signs `$` with an extra dollar sign like `$$` Also, use single quotes (') instead of double quotes (\") to enclose the string when needed",
+          "location": {
+            "file": ".env.template",
+            "line": 441
+          }
+        },
+        {
+          "name": "ADMIN_TOKEN",
+          "kind": "env_sample",
+          "default": "Vy2VyYTTsKPv8W5aEOWUbB/Bt3DEKePbHmI4m9VcemUMS2rEviDowNAFqYi1xjmp",
+          "text": "Old plain text string (Will generate warnings in favor of Argon2)",
+          "location": {
+            "file": ".env.template",
+            "line": 443
+          }
+        }
+      ]
+    },
+    {
+      "name": "ALLOWED_CONNECT_SRC",
+      "default": "",
+      "description": "Allowed connect-src (Know the risks!) https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/connect-src Allows other domains to URLs which can be loaded using script interfaces like the Forwarded email alias feature This adds the configured value to the 'Content-Security-Policy' headers 'connect-src' value. Multiple values must be separated with a whitespace. And only HTTPS values are allowed. Example: \"https://my-addy-io.domain.tld https://my-simplelogin.domain.tld\"",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ALLOWED_CONNECT_SRC",
+          "kind": "env_sample",
+          "text": "Allowed connect-src (Know the risks!) https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/connect-src Allows other domains to URLs which can be loaded using script interfaces like the Forwarded email alias feature This adds the configured value to the 'Content-Security-Policy' headers 'connect-src' value. Multiple values must be separated with a whitespace. And only HTTPS values are allowed. Example: \"https://my-addy-io.domain.tld https://my-simplelogin.domain.tld\"",
+          "location": {
+            "file": ".env.template",
+            "line": 470
+          }
+        }
+      ]
+    },
+    {
+      "name": "ALLOWED_IFRAME_ANCESTORS",
+      "default": "",
+      "description": "Allowed iframe ancestors (Know the risks!) https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/frame-ancestors Allows other domains to embed the web vault into an iframe, useful for embedding into secure intranets This adds the configured value to the 'Content-Security-Policy' headers 'frame-ancestors' value. Multiple values must be separated with a whitespace.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ALLOWED_IFRAME_ANCESTORS",
+          "kind": "env_sample",
+          "text": "Allowed iframe ancestors (Know the risks!) https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/frame-ancestors Allows other domains to embed the web vault into an iframe, useful for embedding into secure intranets This adds the configured value to the 'Content-Security-Policy' headers 'frame-ancestors' value. Multiple values must be separated with a whitespace.",
+          "location": {
+            "file": ".env.template",
+            "line": 462
+          }
+        }
+      ]
+    },
+    {
+      "name": "ATTACHMENTS_FOLDER",
+      "default": "data/attachments",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ATTACHMENTS_FOLDER",
+          "kind": "env_sample",
+          "default": "data/attachments",
+          "location": {
+            "file": ".env.template",
+            "line": 31
+          }
+        }
+      ]
+    },
+    {
+      "name": "AUTHENTICATOR_DISABLE_TIME_DRIFT",
+      "default": "false",
+      "description": "Authenticator Settings Disable authenticator time drifted codes to be valid. TOTP codes of the previous and next 30 seconds will be invalid According to the RFC6238 (https://tools.ietf.org/html/rfc6238), we allow by default the TOTP code which was valid one step back and one in the future. This can however allow attackers to be a bit more lucky with their attempts because there are 3 valid codes. You can disable this, so that only the current TOTP Code is allowed. Keep in mind that when a sever drifts out of time, valid codes could be marked as invalid. In any case, if a code has been used it can not be used again, also codes which predates it will be invalid.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "AUTHENTICATOR_DISABLE_TIME_DRIFT",
+          "kind": "env_sample",
+          "default": "false",
+          "text": "Authenticator Settings Disable authenticator time drifted codes to be valid. TOTP codes of the previous and next 30 seconds will be invalid According to the RFC6238 (https://tools.ietf.org/html/rfc6238), we allow by default the TOTP code which was valid one step back and one in the future. This can however allow attackers to be a bit more lucky with their attempts because there are 3 valid codes. You can disable this, so that only the current TOTP Code is allowed. Keep in mind that when a sever drifts out of time, valid codes could be marked as invalid. In any case, if a code has been used it can not be used again, also codes which predates it will be invalid.",
+          "location": {
+            "file": ".env.template",
+            "line": 619
+          }
+        }
+      ]
+    },
+    {
+      "name": "AUTH_REQUEST_PURGE_SCHEDULE",
+      "default": "30 * * * * *",
+      "description": "Cron schedule of the job that cleans old auth requests from the auth request. Defaults to every minute. Set blank to disable this job.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "AUTH_REQUEST_PURGE_SCHEDULE",
+          "kind": "env_sample",
+          "default": "30 * * * * *",
+          "text": "Cron schedule of the job that cleans old auth requests from the auth request. Defaults to every minute. Set blank to disable this job.",
+          "location": {
+            "file": ".env.template",
+            "line": 181
+          }
+        }
+      ]
+    },
+    {
+      "name": "BASE_TAGS",
+      "default": "testing",
+      "description": "Tags to be used. Can be a comma separated value like \"latest,1.29.2\"",
+      "required": false,
+      "mentions": [
+        {
+          "name": "BASE_TAGS",
+          "kind": "readme",
+          "default": "testing",
+          "text": "Tags to be used. Can be a comma separated value like \"latest,1.29.2\"",
+          "location": {
+            "file": "docker/README.md",
+            "line": 186
+          }
+        }
+      ]
+    },
+    {
+      "name": "BWRS_VERSION",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "BWRS_VERSION",
+          "kind": "code",
+          "location": {
+            "file": "build.rs",
+            "line": 36
+          }
+        }
+      ]
+    },
+    {
+      "name": "CARGO_PROFILE",
+      "default": "null",
+      "description": "Which cargo profile to use. null means what is defined in the Dockerfile",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CARGO_PROFILE",
+          "kind": "readme",
+          "default": "null",
+          "text": "Which cargo profile to use. null means what is defined in the Dockerfile",
+          "location": {
+            "file": "docker/README.md",
+            "line": 181
+          }
+        }
+      ]
+    },
+    {
+      "name": "CLIENT_SUPPRESS_ONBOARDING",
+      "default": "false",
+      "description": "Control whether clients onboarding interstitials are suppressed (post-login welcome dialogs, extension install prompts, setup extension redirects, and premium upsell modals)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CLIENT_SUPPRESS_ONBOARDING",
+          "kind": "env_sample",
+          "default": "false",
+          "text": "Control whether clients onboarding interstitials are suppressed (post-login welcome dialogs, extension install prompts, setup extension redirects, and premium upsell modals)",
+          "location": {
+            "file": ".env.template",
+            "line": 325
+          }
+        }
+      ]
+    },
+    {
+      "name": "CONTAINER_REGISTRIES",
+      "default": "vaultwarden/server",
+      "description": "Comma separated value of container registries. Like ghcr.io/dani-garcia/vaultwarden,docker.io/vaultwarden/server",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CONTAINER_REGISTRIES",
+          "kind": "readme",
+          "default": "vaultwarden/server",
+          "text": "Comma separated value of container registries. Like ghcr.io/dani-garcia/vaultwarden,docker.io/vaultwarden/server",
+          "location": {
+            "file": "docker/README.md",
+            "line": 187
+          }
+        }
+      ]
+    },
+    {
+      "name": "DATABASE_CONN_INIT",
+      "default": "",
+      "description": "Database connection initialization Allows SQL statements to be run whenever a new database connection is created. This is mainly useful for connection-scoped pragmas. If empty, a database-specific default is used: - SQLite: \"PRAGMA busy_timeout = 5000; PRAGMA synchronous = NORMAL;\" - MySQL: \"\" - PostgreSQL: \"\"",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DATABASE_CONN_INIT",
+          "kind": "env_sample",
+          "text": "Database connection initialization Allows SQL statements to be run whenever a new database connection is created. This is mainly useful for connection-scoped pragmas. If empty, a database-specific default is used: - SQLite: \"PRAGMA busy_timeout = 5000; PRAGMA synchronous = NORMAL;\" - MySQL: \"\" - PostgreSQL: \"\"",
+          "location": {
+            "file": ".env.template",
+            "line": 103
+          }
+        }
+      ]
+    },
+    {
+      "name": "DATABASE_IDLE_TIMEOUT",
+      "default": "600",
+      "description": "Database idle timeout Timeout in seconds before idle connections to the database are closed.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DATABASE_IDLE_TIMEOUT",
+          "kind": "env_sample",
+          "default": "600",
+          "text": "Database idle timeout Timeout in seconds before idle connections to the database are closed.",
+          "location": {
+            "file": ".env.template",
+            "line": 86
+          }
+        }
+      ]
+    },
+    {
+      "name": "DATABASE_MAX_CONNS",
+      "default": "10",
+      "description": "Database max connections Define the maximum size of the connection pool used for connecting to the database.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DATABASE_MAX_CONNS",
+          "kind": "env_sample",
+          "default": "10",
+          "text": "Database max connections Define the maximum size of the connection pool used for connecting to the database.",
+          "location": {
+            "file": ".env.template",
+            "line": 94
+          }
+        }
+      ]
+    },
+    {
+      "name": "DATABASE_MIN_CONNS",
+      "default": "2",
+      "description": "Database min connections Define the minimum size of the connection pool used for connecting to the database.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DATABASE_MIN_CONNS",
+          "kind": "env_sample",
+          "default": "2",
+          "text": "Database min connections Define the minimum size of the connection pool used for connecting to the database.",
+          "location": {
+            "file": ".env.template",
+            "line": 90
+          }
+        }
+      ]
+    },
+    {
+      "name": "DATABASE_TIMEOUT",
+      "default": "30",
+      "description": "Database timeout Timeout when acquiring database connection",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DATABASE_TIMEOUT",
+          "kind": "env_sample",
+          "default": "30",
+          "text": "Database timeout Timeout when acquiring database connection",
+          "location": {
+            "file": ".env.template",
+            "line": 82
+          }
+        }
+      ]
+    },
+    {
+      "name": "DATABASE_URL",
+      "default": "sqlite://data/db.sqlite3",
+      "description": "Database URL When using SQLite, this should use the sqlite:// scheme followed by the path to the DB file. It defaults to sqlite://%DATA_FOLDER%/db.sqlite3. Bare paths without the sqlite:// scheme are supported for backwards compatibility, but only if the database file already exists.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DATABASE_URL",
+          "kind": "env_sample",
+          "default": "sqlite://data/db.sqlite3",
+          "text": "Database URL When using SQLite, this should use the sqlite:// scheme followed by the path to the DB file. It defaults to sqlite://%DATA_FOLDER%/db.sqlite3. Bare paths without the sqlite:// scheme are supported for backwards compatibility, but only if the database file already exists.",
+          "location": {
+            "file": ".env.template",
+            "line": 57
+          }
+        },
+        {
+          "name": "DATABASE_URL",
+          "kind": "env_sample",
+          "default": "mysql://user:password@host[:port]/database_name",
+          "text": "When using MySQL, specify an appropriate connection URI. Details: https://docs.diesel.rs/2.1.x/diesel/mysql/struct.MysqlConnection.html",
+          "location": {
+            "file": ".env.template",
+            "line": 60
+          }
+        },
+        {
+          "name": "DATABASE_URL",
+          "kind": "env_sample",
+          "default": "postgresql://user:password@host[:port]/database_name",
+          "text": "When using PostgreSQL, specify an appropriate connection URI (recommended) or keyword/value connection string. Details: - https://docs.diesel.rs/2.1.x/diesel/pg/struct.PgConnection.html - https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING",
+          "location": {
+            "file": ".env.template",
+            "line": 66
+          }
+        }
+      ]
+    },
+    {
+      "name": "DATA_FOLDER",
+      "default": "data",
+      "description": "Main data folder This can be a path to local folder or a path to an external location depending on features enabled at build time. Possible external locations: - AWS S3 Bucket (via `s3` feature): s3://bucket-name/path/to/folder When using an external location, make sure to set TMP_FOLDER, TEMPLATES_FOLDER, and DATABASE_URL to local paths and/or a remote database location.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DATA_FOLDER",
+          "kind": "env_sample",
+          "default": "data",
+          "text": "Main data folder This can be a path to local folder or a path to an external location depending on features enabled at build time. Possible external locations: - AWS S3 Bucket (via `s3` feature): s3://bucket-name/path/to/folder When using an external location, make sure to set TMP_FOLDER, TEMPLATES_FOLDER, and DATABASE_URL to local paths and/or a remote database location.",
+          "location": {
+            "file": ".env.template",
+            "line": 26
+          }
+        }
+      ]
+    },
+    {
+      "name": "DB",
+      "default": "null",
+      "description": "Which features to build. null means what is defined in the Dockerfile",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DB",
+          "kind": "readme",
+          "default": "null",
+          "text": "Which features to build. null means what is defined in the Dockerfile",
+          "location": {
+            "file": "docker/README.md",
+            "line": 182
+          }
+        }
+      ]
+    },
+    {
+      "name": "DB_CONNECTION_RETRIES",
+      "default": "15",
+      "description": "Database connection retries Number of times to retry the database connection during startup, with 1 second delay between each retry, set to 0 to retry indefinitely",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DB_CONNECTION_RETRIES",
+          "kind": "env_sample",
+          "default": "15",
+          "text": "Database connection retries Number of times to retry the database connection during startup, with 1 second delay between each retry, set to 0 to retry indefinitely",
+          "location": {
+            "file": ".env.template",
+            "line": 78
+          }
+        }
+      ]
+    },
+    {
+      "name": "DEBIAN_FRONTEND",
+      "default": "noninteractive",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DEBIAN_FRONTEND",
+          "kind": "dockerfile",
+          "default": "noninteractive",
+          "location": {
+            "file": "docker/Dockerfile.debian",
+            "line": 172
+          }
+        }
+      ]
+    },
+    {
+      "name": "DISABLE_2FA_REMEMBER",
+      "default": "false",
+      "description": "Other MFA/2FA settings Disable 2FA remember Enabling this would force the users to use a second factor to login every time. Note that the checkbox would still be present, but ignored.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DISABLE_2FA_REMEMBER",
+          "kind": "env_sample",
+          "default": "false",
+          "text": "Other MFA/2FA settings Disable 2FA remember Enabling this would force the users to use a second factor to login every time. Note that the checkbox would still be present, but ignored.",
+          "location": {
+            "file": ".env.template",
+            "line": 607
+          }
+        }
+      ]
+    },
+    {
+      "name": "DISABLE_ADMIN_TOKEN",
+      "default": "false",
+      "description": "Enable this to bypass the admin panel security. This option is only meant to be used with the use of a separate auth layer in front",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DISABLE_ADMIN_TOKEN",
+          "kind": "env_sample",
+          "default": "false",
+          "text": "Enable this to bypass the admin panel security. This option is only meant to be used with the use of a separate auth layer in front",
+          "location": {
+            "file": ".env.template",
+            "line": 447
+          }
+        },
+        {
+          "name": "DISABLE_ADMIN_TOKEN",
+          "kind": "readme",
+          "default": "true",
+          "location": {
+            "file": "docker/README.md",
+            "line": 131
+          }
+        },
+        {
+          "name": "DISABLE_ADMIN_TOKEN",
+          "kind": "readme",
+          "default": "true",
+          "location": {
+            "file": "docker/README.md",
+            "line": 170
+          }
+        }
+      ]
+    },
+    {
+      "name": "DISABLE_ICON_DOWNLOAD",
+      "default": "false",
+      "description": "Disable icon downloading Set to true to disable icon downloading in the internal icon service. This still serves existing icons from $ICON_CACHE_FOLDER, without generating any external network requests. $ICON_CACHE_TTL must also be set to 0; otherwise, the existing icons will be deleted eventually, but won't be downloaded again.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DISABLE_ICON_DOWNLOAD",
+          "kind": "env_sample",
+          "default": "false",
+          "text": "Disable icon downloading Set to true to disable icon downloading in the internal icon service. This still serves existing icons from $ICON_CACHE_FOLDER, without generating any external network requests. $ICON_CACHE_TTL must also be set to 0; otherwise, the existing icons will be deleted eventually, but won't be downloaded again.",
+          "location": {
+            "file": ".env.template",
+            "line": 252
+          }
+        }
+      ]
+    },
+    {
+      "name": "DNS_PREFER_IPV6",
+      "default": "false",
+      "description": "Prefer IPv6 (AAAA) resolving This settings configures the DNS resolver to resolve IPv6 first, and if not available try IPv4 This could be useful in IPv6 only environments.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DNS_PREFER_IPV6",
+          "kind": "env_sample",
+          "default": "false",
+          "text": "Prefer IPv6 (AAAA) resolving This settings configures the DNS resolver to resolve IPv6 first, and if not available try IPv4 This could be useful in IPv6 only environments.",
+          "location": {
+            "file": ".env.template",
+            "line": 507
+          }
+        }
+      ]
+    },
+    {
+      "name": "DOMAIN",
+      "default": "http://localhost",
+      "description": "Domain settings The domain must match the address from where you access the server It's recommended to configure this value, otherwise certain functionality might not work, like attachment downloads, email links and U2F. For U2F to work, the server must use HTTPS, you can use Let's Encrypt for free certs To use HTTPS, the recommended way is to put Vaultwarden behind a reverse proxy Details: - https://github.com/dani-garcia/vaultwarden/wiki/Enabling-HTTPS - https://github.com/dani-garcia/vaultwarden/wiki/Proxy-examples For development",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DOMAIN",
+          "kind": "env_sample",
+          "default": "http://localhost",
+          "text": "Domain settings The domain must match the address from where you access the server It's recommended to configure this value, otherwise certain functionality might not work, like attachment downloads, email links and U2F. For U2F to work, the server must use HTTPS, you can use Let's Encrypt for free certs To use HTTPS, the recommended way is to put Vaultwarden behind a reverse proxy Details: - https://github.com/dani-garcia/vaultwarden/wiki/Enabling-HTTPS - https://github.com/dani-garcia/vaultwarden/wiki/Proxy-examples For development",
+          "location": {
+            "file": ".env.template",
+            "line": 205
+          }
+        },
+        {
+          "name": "DOMAIN",
+          "kind": "env_sample",
+          "default": "https://vw.domain.tld",
+          "text": "For public server",
+          "location": {
+            "file": ".env.template",
+            "line": 207
+          }
+        },
+        {
+          "name": "DOMAIN",
+          "kind": "env_sample",
+          "default": "https://vw.domain.tld:8443",
+          "text": "For public server (URL with port number)",
+          "location": {
+            "file": ".env.template",
+            "line": 209
+          }
+        },
+        {
+          "name": "DOMAIN",
+          "kind": "env_sample",
+          "default": "https://domain.tld/vw",
+          "text": "For public server (URL with path)",
+          "location": {
+            "file": ".env.template",
+            "line": 211
+          }
+        },
+        {
+          "name": "DOMAIN",
+          "kind": "readme",
+          "default": "https://vw.domain.tld",
+          "location": {
+            "file": "README.md",
+            "line": 85
+          }
+        }
+      ]
+    },
+    {
+      "name": "DUO_CONTEXT_PURGE_SCHEDULE",
+      "default": "30 * * * * *",
+      "description": "Cron schedule of the job that cleans expired Duo contexts from the database. Does nothing if Duo MFA is disabled. Defaults to every minute. Set blank to disable this job.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DUO_CONTEXT_PURGE_SCHEDULE",
+          "kind": "env_sample",
+          "default": "30 * * * * *",
+          "text": "Cron schedule of the job that cleans expired Duo contexts from the database. Does nothing if Duo MFA is disabled. Defaults to every minute. Set blank to disable this job.",
+          "location": {
+            "file": ".env.template",
+            "line": 185
+          }
+        }
+      ]
+    },
+    {
+      "name": "DUO_HOST",
+      "default": "\u003cAPI Hostname\u003e",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DUO_HOST",
+          "kind": "env_sample",
+          "default": "\u003cAPI Hostname\u003e",
+          "location": {
+            "file": ".env.template",
+            "line": 581
+          }
+        }
+      ]
+    },
+    {
+      "name": "DUO_IKEY",
+      "default": "\u003cClient ID\u003e",
+      "description": "Duo Settings You need to configure the DUO_IKEY, DUO_SKEY, and DUO_HOST options to enable global Duo support. Otherwise users will need to configure it themselves. Create an account and protect an application as mentioned in this link (only the first step, not the rest): https://help.bitwarden.com/article/setup-two-step-login-duo/#create-a-duo-security-account Then set the following options, based on the values obtained from the last step:",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DUO_IKEY",
+          "kind": "env_sample",
+          "default": "\u003cClient ID\u003e",
+          "text": "Duo Settings You need to configure the DUO_IKEY, DUO_SKEY, and DUO_HOST options to enable global Duo support. Otherwise users will need to configure it themselves. Create an account and protect an application as mentioned in this link (only the first step, not the rest): https://help.bitwarden.com/article/setup-two-step-login-duo/#create-a-duo-security-account Then set the following options, based on the values obtained from the last step:",
+          "location": {
+            "file": ".env.template",
+            "line": 579
+          }
+        }
+      ]
+    },
+    {
+      "name": "DUO_SKEY",
+      "default": "\u003cClient Secret\u003e",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DUO_SKEY",
+          "kind": "env_sample",
+          "default": "\u003cClient Secret\u003e",
+          "location": {
+            "file": ".env.template",
+            "line": 580
+          }
+        }
+      ]
+    },
+    {
+      "name": "EMAIL_2FA_AUTO_FALLBACK",
+      "default": "false",
+      "description": "Automatically setup email 2FA as fallback provider when needed",
+      "required": false,
+      "mentions": [
+        {
+          "name": "EMAIL_2FA_AUTO_FALLBACK",
+          "kind": "env_sample",
+          "default": "false",
+          "text": "Automatically setup email 2FA as fallback provider when needed",
+          "location": {
+            "file": ".env.template",
+            "line": 601
+          }
+        }
+      ]
+    },
+    {
+      "name": "EMAIL_2FA_ENFORCE_ON_VERIFIED_INVITE",
+      "default": "false",
+      "description": "Setup email 2FA on registration regardless of any organization policy",
+      "required": false,
+      "mentions": [
+        {
+          "name": "EMAIL_2FA_ENFORCE_ON_VERIFIED_INVITE",
+          "kind": "env_sample",
+          "default": "false",
+          "text": "Setup email 2FA on registration regardless of any organization policy",
+          "location": {
+            "file": ".env.template",
+            "line": 599
+          }
+        }
+      ]
+    },
+    {
+      "name": "EMAIL_ATTEMPTS_LIMIT",
+      "default": "3",
+      "description": "Maximum attempts before an email token is reset and a new email will need to be sent.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "EMAIL_ATTEMPTS_LIMIT",
+          "kind": "env_sample",
+          "default": "3",
+          "text": "Maximum attempts before an email token is reset and a new email will need to be sent.",
+          "location": {
+            "file": ".env.template",
+            "line": 596
+          }
+        }
+      ]
+    },
+    {
+      "name": "EMAIL_CHANGE_ALLOWED",
+      "default": "true",
+      "description": "Controls whether users can change their email. This setting applies globally to all users",
+      "required": false,
+      "mentions": [
+        {
+          "name": "EMAIL_CHANGE_ALLOWED",
+          "kind": "env_sample",
+          "default": "true",
+          "text": "Controls whether users can change their email. This setting applies globally to all users",
+          "location": {
+            "file": ".env.template",
+            "line": 304
+          }
+        }
+      ]
+    },
+    {
+      "name": "EMAIL_EXPIRATION_TIME",
+      "default": "600",
+      "description": "Token expiration time Maximum time in seconds a token is valid. The time the user has to open email client and copy token.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "EMAIL_EXPIRATION_TIME",
+          "kind": "env_sample",
+          "default": "600",
+          "text": "Token expiration time Maximum time in seconds a token is valid. The time the user has to open email client and copy token.",
+          "location": {
+            "file": ".env.template",
+            "line": 593
+          }
+        }
+      ]
+    },
+    {
+      "name": "EMAIL_TOKEN_SIZE",
+      "default": "6",
+      "description": "Email 2FA settings Email token size Number of digits in an email 2FA token (min: 6, max: 255). Note that the Bitwarden clients are hardcoded to mention 6 digit codes regardless of this setting!",
+      "required": false,
+      "mentions": [
+        {
+          "name": "EMAIL_TOKEN_SIZE",
+          "kind": "env_sample",
+          "default": "6",
+          "text": "Email 2FA settings Email token size Number of digits in an email 2FA token (min: 6, max: 255). Note that the Bitwarden clients are hardcoded to mention 6 digit codes regardless of this setting!",
+          "location": {
+            "file": ".env.template",
+            "line": 589
+          }
+        }
+      ]
+    },
+    {
+      "name": "EMERGENCY_ACCESS_ALLOWED",
+      "default": "true",
+      "description": "Controls whether users can enable emergency access to their accounts. This setting applies globally to all users.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "EMERGENCY_ACCESS_ALLOWED",
+          "kind": "env_sample",
+          "default": "true",
+          "text": "Controls whether users can enable emergency access to their accounts. This setting applies globally to all users.",
+          "location": {
+            "file": ".env.template",
+            "line": 300
+          }
+        }
+      ]
+    },
+    {
+      "name": "EMERGENCY_NOTIFICATION_REMINDER_SCHEDULE",
+      "default": "0 3 * * * *",
+      "description": "Cron schedule of the job that sends expiration reminders to emergency access grantors. Defaults to hourly (3 minutes after the hour). Set blank to disable this job.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "EMERGENCY_NOTIFICATION_REMINDER_SCHEDULE",
+          "kind": "env_sample",
+          "default": "0 3 * * * *",
+          "text": "Cron schedule of the job that sends expiration reminders to emergency access grantors. Defaults to hourly (3 minutes after the hour). Set blank to disable this job.",
+          "location": {
+            "file": ".env.template",
+            "line": 166
+          }
+        }
+      ]
+    },
+    {
+      "name": "EMERGENCY_REQUEST_TIMEOUT_SCHEDULE",
+      "default": "0 7 * * * *",
+      "description": "Cron schedule of the job that grants emergency access requests that have met the required wait time. Defaults to hourly (7 minutes after the hour). Set blank to disable this job.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "EMERGENCY_REQUEST_TIMEOUT_SCHEDULE",
+          "kind": "env_sample",
+          "default": "0 7 * * * *",
+          "text": "Cron schedule of the job that grants emergency access requests that have met the required wait time. Defaults to hourly (7 minutes after the hour). Set blank to disable this job.",
+          "location": {
+            "file": ".env.template",
+            "line": 170
+          }
+        }
+      ]
+    },
+    {
+      "name": "ENABLE_DB_WAL",
+      "default": "true",
+      "description": "Enable WAL for the DB Set to false to avoid enabling WAL during startup. Note that if the DB already has WAL enabled, you will also need to disable WAL in the DB, this setting only prevents Vaultwarden from automatically enabling it on start. Please read project wiki page about this setting first before changing the value as it can cause performance degradation or might render the service unable to start.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ENABLE_DB_WAL",
+          "kind": "env_sample",
+          "default": "true",
+          "text": "Enable WAL for the DB Set to false to avoid enabling WAL during startup. Note that if the DB already has WAL enabled, you will also need to disable WAL in the DB, this setting only prevents Vaultwarden from automatically enabling it on start. Please read project wiki page about this setting first before changing the value as it can cause performance degradation or might render the service unable to start.",
+          "location": {
+            "file": ".env.template",
+            "line": 74
+          }
+        }
+      ]
+    },
+    {
+      "name": "ENABLE_WEBSOCKET",
+      "default": "true",
+      "description": "Enable websocket notifications",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ENABLE_WEBSOCKET",
+          "kind": "env_sample",
+          "default": "true",
+          "text": "Enable websocket notifications",
+          "location": {
+            "file": ".env.template",
+            "line": 110
+          }
+        }
+      ]
+    },
+    {
+      "name": "ENFORCE_SINGLE_ORG_WITH_RESET_PW_POLICY",
+      "default": "false",
+      "description": "Enforce Single Org with Reset Password Policy Enforce that the Single Org policy is enabled before setting the Reset Password policy Bitwarden enforces this by default. In Vaultwarden we encouraged to use multiple organizations because groups were not available. Setting this to true will enforce the Single Org Policy to be enabled before you can enable the Reset Password policy.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ENFORCE_SINGLE_ORG_WITH_RESET_PW_POLICY",
+          "kind": "env_sample",
+          "default": "false",
+          "text": "Enforce Single Org with Reset Password Policy Enforce that the Single Org policy is enabled before setting the Reset Password policy Bitwarden enforces this by default. In Vaultwarden we encouraged to use multiple organizations because groups were not available. Setting this to true will enforce the Single Org Policy to be enabled before you can enable the Reset Password policy.",
+          "location": {
+            "file": ".env.template",
+            "line": 502
+          }
+        }
+      ]
+    },
+    {
+      "name": "EVENTS_DAYS_RETAIN",
+      "default": "",
+      "description": "Number of days to retain events stored in the database. If unset (the default), events are kept indefinitely and the scheduled job is disabled!",
+      "required": false,
+      "mentions": [
+        {
+          "name": "EVENTS_DAYS_RETAIN",
+          "kind": "env_sample",
+          "text": "Number of days to retain events stored in the database. If unset (the default), events are kept indefinitely and the scheduled job is disabled!",
+          "location": {
+            "file": ".env.template",
+            "line": 177
+          }
+        }
+      ]
+    },
+    {
+      "name": "EVENT_CLEANUP_SCHEDULE",
+      "default": "0 10 0 * * *",
+      "description": "Cron schedule of the job that cleans old events from the event table. Defaults to daily. Set blank to disable this job. Also without EVENTS_DAYS_RETAIN set, this job will not start.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "EVENT_CLEANUP_SCHEDULE",
+          "kind": "env_sample",
+          "default": "0 10 0 * * *",
+          "text": "Cron schedule of the job that cleans old events from the event table. Defaults to daily. Set blank to disable this job. Also without EVENTS_DAYS_RETAIN set, this job will not start.",
+          "location": {
+            "file": ".env.template",
+            "line": 174
+          }
+        }
+      ]
+    },
+    {
+      "name": "EXPERIMENTAL_CLIENT_FEATURE_FLAGS",
+      "default": "",
+      "description": "Client Settings Enable experimental feature flags for clients. This is a comma-separated list of flags, e.g. \"flag1,flag2,flag3\". Note that clients cache the /api/config endpoint for about 1 hour and it could take some time before they are enabled or disabled! The following flags are available: - \"pm-5594-safari-account-switching\": Enable account switching in Safari. (Safari \u003e= 2026.2.0) - \"pm-32413-multi-client-password-management\": Enable changing the master password directly in the client. (Desktop/Extension \u003e= 2026.4.0) - \"ssh-agent-v2\": Enable newer SSH agent support. (Desktop \u003e= 2026.2.1) - \"windows-desktop-autotype\": Enable the autotype feature preview on Windows. (Desktop \u003e= 2025.8.0) - \"windows-desktop-autotype-ga\": Enable the new, still in development, autotype implementation on Windows. (Desktop \u003e= 2026.9.1) Only enable one of the two autotype flags, the clients disable autotype completely when both are enabled. - \"pm-30529-webauthn-related-origins\": - \"pm-32009-new-item-types\": Enable new item types: Bank Account, Driver's License, and Passport (Clients \u003e= 2026.4.0) - \"pm-34171-card-scanner\": Enable the new card scanner feature on mobile (Android \u003e= 2026.4.1, iOS \u003e= 2026.4.1) - \"enable-basic-auth-response\": Enable HTTP Basic Auth autofill in the browser extension (Browser \u003e= 2026.9.0) - \"undetermined-cipher-scenario-logic\": Enable the rewritten add/update login notification triggering logic in the browser extension (Browser \u003e= 2026.2.0) - \"biometrics-sdk-ipc\": Enable biometric unlock over the SDK IPC framework (Desktop \u003e= 2026.9.0, Browser \u003e= 2026.9.0)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "EXPERIMENTAL_CLIENT_FEATURE_FLAGS",
+          "kind": "env_sample",
+          "text": "Client Settings Enable experimental feature flags for clients. This is a comma-separated list of flags, e.g. \"flag1,flag2,flag3\". Note that clients cache the /api/config endpoint for about 1 hour and it could take some time before they are enabled or disabled! The following flags are available: - \"pm-5594-safari-account-switching\": Enable account switching in Safari. (Safari \u003e= 2026.2.0) - \"pm-32413-multi-client-password-management\": Enable changing the master password directly in the client. (Desktop/Extension \u003e= 2026.4.0) - \"ssh-agent-v2\": Enable newer SSH agent support. (Desktop \u003e= 2026.2.1) - \"windows-desktop-autotype\": Enable the autotype feature preview on Windows. (Desktop \u003e= 2025.8.0) - \"windows-desktop-autotype-ga\": Enable the new, still in development, autotype implementation on Windows. (Desktop \u003e= 2026.9.1) Only enable one of the two autotype flags, the clients disable autotype completely when both are enabled. - \"pm-30529-webauthn-related-origins\": - \"pm-32009-new-item-types\": Enable new item types: Bank Account, Driver's License, and Passport (Clients \u003e= 2026.4.0) - \"pm-34171-card-scanner\": Enable the new card scanner feature on mobile (Android \u003e= 2026.4.1, iOS \u003e= 2026.4.1) - \"enable-basic-auth-response\": Enable HTTP Basic Auth autofill in the browser extension (Browser \u003e= 2026.9.0) - \"undetermined-cipher-scenario-logic\": Enable the rewritten add/update login notification triggering logic in the browser extension (Browser \u003e= 2026.2.0) - \"biometrics-sdk-ipc\": Enable biometric unlock over the SDK IPC framework (Desktop \u003e= 2026.9.0, Browser \u003e= 2026.9.0)",
+          "location": {
+            "file": ".env.template",
+            "line": 406
+          }
+        }
+      ]
+    },
+    {
+      "name": "EXTENDED_LOGGING",
+      "default": "true",
+      "description": "Enable extended logging, which shows timestamps and targets in the logs",
+      "required": false,
+      "mentions": [
+        {
+          "name": "EXTENDED_LOGGING",
+          "kind": "env_sample",
+          "default": "true",
+          "text": "Enable extended logging, which shows timestamps and targets in the logs",
+          "location": {
+            "file": ".env.template",
+            "line": 413
+          }
+        }
+      ]
+    },
+    {
+      "name": "HELO_NAME",
+      "default": "",
+      "description": "Server name sent during the SMTP HELO By default this value should be the machine's hostname, but might need to be changed in case it trips some anti-spam filters",
+      "required": false,
+      "mentions": [
+        {
+          "name": "HELO_NAME",
+          "kind": "env_sample",
+          "text": "Server name sent during the SMTP HELO By default this value should be the machine's hostname, but might need to be changed in case it trips some anti-spam filters",
+          "location": {
+            "file": ".env.template",
+            "line": 657
+          }
+        }
+      ]
+    },
+    {
+      "name": "HIBP_API_KEY",
+      "default": "",
+      "description": "HIBP Api Key HaveIBeenPwned API Key, request it here: https://haveibeenpwned.com/API/Key",
+      "required": false,
+      "mentions": [
+        {
+          "name": "HIBP_API_KEY",
+          "kind": "env_sample",
+          "text": "HIBP Api Key HaveIBeenPwned API Key, request it here: https://haveibeenpwned.com/API/Key",
+          "location": {
+            "file": ".env.template",
+            "line": 220
+          }
+        }
+      ]
+    },
+    {
+      "name": "HTTPS_PROXY",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "HTTPS_PROXY",
+          "kind": "code",
+          "location": {
+            "file": "src/api/admin.rs",
+            "line": 760
+          }
+        }
+      ]
+    },
+    {
+      "name": "HTTP_PROXY",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "HTTP_PROXY",
+          "kind": "code",
+          "location": {
+            "file": "src/api/admin.rs",
+            "line": 758
+          }
+        }
+      ]
+    },
+    {
+      "name": "HTTP_REQUEST_BLOCK_NON_GLOBAL_IPS",
+      "default": "true",
+      "description": "Enabling this will cause the internal HTTP client to refuse to connect to any non-global IP address. Useful to secure your internal environment: See https://en.wikipedia.org/wiki/Reserved_IP_addresses for a list of IPs which it will block",
+      "required": false,
+      "mentions": [
+        {
+          "name": "HTTP_REQUEST_BLOCK_NON_GLOBAL_IPS",
+          "kind": "env_sample",
+          "default": "true",
+          "text": "Enabling this will cause the internal HTTP client to refuse to connect to any non-global IP address. Useful to secure your internal environment: See https://en.wikipedia.org/wiki/Reserved_IP_addresses for a list of IPs which it will block",
+          "location": {
+            "file": ".env.template",
+            "line": 386
+          }
+        }
+      ]
+    },
+    {
+      "name": "HTTP_REQUEST_BLOCK_REGEX",
+      "default": "^(192\\.168\\.0\\.[0-9]+|192\\.168\\.1\\.[0-9]+)$",
+      "description": "Block HTTP domains/IPs by Regex Any domains or IPs that match this regex won't be fetched by the internal HTTP client. Useful to hide other servers in the local network. Check the WIKI for more details NOTE: Always enclose this regex within single quotes!",
+      "required": false,
+      "mentions": [
+        {
+          "name": "HTTP_REQUEST_BLOCK_REGEX",
+          "kind": "env_sample",
+          "default": "^(192\\.168\\.0\\.[0-9]+|192\\.168\\.1\\.[0-9]+)$",
+          "text": "Block HTTP domains/IPs by Regex Any domains or IPs that match this regex won't be fetched by the internal HTTP client. Useful to hide other servers in the local network. Check the WIKI for more details NOTE: Always enclose this regex within single quotes!",
+          "location": {
+            "file": ".env.template",
+            "line": 382
+          }
+        }
+      ]
+    },
+    {
+      "name": "ICON_CACHE_FOLDER",
+      "default": "data/icon_cache",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ICON_CACHE_FOLDER",
+          "kind": "env_sample",
+          "default": "data/icon_cache",
+          "location": {
+            "file": ".env.template",
+            "line": 30
+          }
+        }
+      ]
+    },
+    {
+      "name": "ICON_CACHE_NEGTTL",
+      "default": "259200",
+      "description": "Cache time-to-live for icons which weren't available, in seconds (0 is \"forever\") Default: 259200 (3 days)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ICON_CACHE_NEGTTL",
+          "kind": "env_sample",
+          "default": "259200",
+          "text": "Cache time-to-live for icons which weren't available, in seconds (0 is \"forever\") Default: 259200 (3 days)",
+          "location": {
+            "file": ".env.template",
+            "line": 371
+          }
+        }
+      ]
+    },
+    {
+      "name": "ICON_CACHE_TTL",
+      "default": "2592000",
+      "description": "Cache time-to-live for successfully obtained icons, in seconds (0 is \"forever\") Default: 2592000 (30 days)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ICON_CACHE_TTL",
+          "kind": "env_sample",
+          "default": "2592000",
+          "text": "Cache time-to-live for successfully obtained icons, in seconds (0 is \"forever\") Default: 2592000 (30 days)",
+          "location": {
+            "file": ".env.template",
+            "line": 368
+          }
+        }
+      ]
+    },
+    {
+      "name": "ICON_DOWNLOAD_TIMEOUT",
+      "default": "10",
+      "description": "Icon download timeout Configure the timeout value when downloading the favicons. The default is 10 seconds, but this could be too low on slower network connections",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ICON_DOWNLOAD_TIMEOUT",
+          "kind": "env_sample",
+          "default": "10",
+          "text": "Icon download timeout Configure the timeout value when downloading the favicons. The default is 10 seconds, but this could be too low on slower network connections",
+          "location": {
+            "file": ".env.template",
+            "line": 376
+          }
+        }
+      ]
+    },
+    {
+      "name": "ICON_REDIRECT_CODE",
+      "default": "302",
+      "description": "Icon redirect code The HTTP status code to use for redirects to an external icon service. The supported codes are 301 (legacy permanent), 302 (legacy temporary), 307 (temporary), and 308 (permanent). Temporary redirects are useful while testing different icon services, but once a service has been decided on, consider using permanent redirects for cacheability. The legacy codes are currently better supported by the Bitwarden clients.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ICON_REDIRECT_CODE",
+          "kind": "env_sample",
+          "default": "302",
+          "text": "Icon redirect code The HTTP status code to use for redirects to an external icon service. The supported codes are 301 (legacy permanent), 302 (legacy temporary), 307 (temporary), and 308 (permanent). Temporary redirects are useful while testing different icon services, but once a service has been decided on, consider using permanent redirects for cacheability. The legacy codes are currently better supported by the Bitwarden clients.",
+          "location": {
+            "file": ".env.template",
+            "line": 364
+          }
+        }
+      ]
+    },
+    {
+      "name": "ICON_SERVICE",
+      "default": "internal",
+      "description": "Icon service The predefined icon services are: internal, bitwarden, duckduckgo, google. To specify a custom icon service, set a URL template with exactly one instance of `{}`, which is replaced with the domain. For example: `https://icon.example.com/domain/{}`. `internal` refers to Vaultwarden's built-in icon fetching implementation. If an external service is set, an icon request to Vaultwarden will return an HTTP redirect to the corresponding icon at the external service. An external service may be useful if your Vaultwarden instance has no external network connectivity, or if you are concerned that someone may probe your instance to try to detect whether icons for certain sites have been cached.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ICON_SERVICE",
+          "kind": "env_sample",
+          "default": "internal",
+          "text": "Icon service The predefined icon services are: internal, bitwarden, duckduckgo, google. To specify a custom icon service, set a URL template with exactly one instance of `{}`, which is replaced with the domain. For example: `https://icon.example.com/domain/{}`. `internal` refers to Vaultwarden's built-in icon fetching implementation. If an external service is set, an icon request to Vaultwarden will return an HTTP redirect to the corresponding icon at the external service. An external service may be useful if your Vaultwarden instance has no external network connectivity, or if you are concerned that someone may probe your instance to try to detect whether icons for certain sites have been cached.",
+          "location": {
+            "file": ".env.template",
+            "line": 356
+          }
+        }
+      ]
+    },
+    {
+      "name": "INCOMPLETE_2FA_SCHEDULE",
+      "default": "30 * * * * *",
+      "description": "Cron schedule of the job that checks for incomplete 2FA logins. Defaults to once every minute. Set blank to disable this job.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "INCOMPLETE_2FA_SCHEDULE",
+          "kind": "env_sample",
+          "default": "30 * * * * *",
+          "text": "Cron schedule of the job that checks for incomplete 2FA logins. Defaults to once every minute. Set blank to disable this job.",
+          "location": {
+            "file": ".env.template",
+            "line": 162
+          }
+        }
+      ]
+    },
+    {
+      "name": "INCOMPLETE_2FA_TIME_LIMIT",
+      "default": "3",
+      "description": "Number of minutes to wait before a 2FA-enabled login is considered incomplete, resulting in an email notification. An incomplete 2FA login is one where the correct master password was provided but the required 2FA step was not completed, which potentially indicates a master password compromise. Set to 0 to disable this check. This setting applies globally to all users.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "INCOMPLETE_2FA_TIME_LIMIT",
+          "kind": "env_sample",
+          "default": "3",
+          "text": "Number of minutes to wait before a 2FA-enabled login is considered incomplete, resulting in an email notification. An incomplete 2FA login is one where the correct master password was provided but the required 2FA step was not completed, which potentially indicates a master password compromise. Set to 0 to disable this check. This setting applies globally to all users.",
+          "location": {
+            "file": ".env.template",
+            "line": 245
+          }
+        }
+      ]
+    },
+    {
+      "name": "INCREASE_NOTE_SIZE_LIMIT",
+      "default": "false",
+      "description": "Increase secure note size limit (Know the risks!) Sets the secure note size limit to 100_000 instead of the default 10_000. WARNING: This could cause issues with clients. Also exports will not work on Bitwarden servers! KNOW WHAT YOU ARE DOING!",
+      "required": false,
+      "mentions": [
+        {
+          "name": "INCREASE_NOTE_SIZE_LIMIT",
+          "kind": "env_sample",
+          "default": "false",
+          "text": "Increase secure note size limit (Know the risks!) Sets the secure note size limit to 100_000 instead of the default 10_000. WARNING: This could cause issues with clients. Also exports will not work on Bitwarden servers! KNOW WHAT YOU ARE DOING!",
+          "location": {
+            "file": ".env.template",
+            "line": 496
+          }
+        }
+      ]
+    },
+    {
+      "name": "INVITATIONS_ALLOWED",
+      "default": "true",
+      "description": "Allows org admins to invite users, even when signups are disabled",
+      "required": false,
+      "mentions": [
+        {
+          "name": "INVITATIONS_ALLOWED",
+          "kind": "env_sample",
+          "default": "true",
+          "text": "Allows org admins to invite users, even when signups are disabled",
+          "location": {
+            "file": ".env.template",
+            "line": 290
+          }
+        }
+      ]
+    },
+    {
+      "name": "INVITATION_EXPIRATION_HOURS",
+      "default": "120",
+      "description": "The number of hours after which an organization invite token, emergency access invite token, email verification token and deletion request token will expire (must be at least 1)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "INVITATION_EXPIRATION_HOURS",
+          "kind": "env_sample",
+          "default": "120",
+          "text": "The number of hours after which an organization invite token, emergency access invite token, email verification token and deletion request token will expire (must be at least 1)",
+          "location": {
+            "file": ".env.template",
+            "line": 296
+          }
+        }
+      ]
+    },
+    {
+      "name": "INVITATION_ORG_NAME",
+      "default": "Vaultwarden",
+      "description": "Name shown in the invitation emails that don't come from a specific organization",
+      "required": false,
+      "mentions": [
+        {
+          "name": "INVITATION_ORG_NAME",
+          "kind": "env_sample",
+          "default": "Vaultwarden",
+          "text": "Name shown in the invitation emails that don't come from a specific organization",
+          "location": {
+            "file": ".env.template",
+            "line": 292
+          }
+        }
+      ]
+    },
+    {
+      "name": "IP_HEADER",
+      "default": "X-Real-IP",
+      "description": "Client IP Header, used to identify the IP of the client, defaults to \"X-Real-IP\" Set to the string \"none\" (without quotes), to disable any headers and just use the remote IP",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IP_HEADER",
+          "kind": "env_sample",
+          "default": "X-Real-IP",
+          "text": "Client IP Header, used to identify the IP of the client, defaults to \"X-Real-IP\" Set to the string \"none\" (without quotes), to disable any headers and just use the remote IP",
+          "location": {
+            "file": ".env.template",
+            "line": 333
+          }
+        }
+      ]
+    },
+    {
+      "name": "IP_HEADER_TRUSTED_PROXIES",
+      "default": "local",
+      "description": "Which addresses the header above is accepted from, defaults to \"local\". Anyone able to reach Vaultwarden can set the header, and the client IP is used for the login and admin rate limits, so it is only trusted when the request comes from a proxy listed here. \"local\" accepts it from any non global address, which covers a reverse proxy running on the same host or container network. Use \"all\" to accept it from anywhere, or list the addresses of your proxy as IPs and CIDR ranges if it connects from a public address. For a list header like X-Forwarded-For, the client IP is the rightmost address that isn't one of these proxies, so with several proxies in a row (a CDN in front of nginx, for example) list all of them.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IP_HEADER_TRUSTED_PROXIES",
+          "kind": "env_sample",
+          "default": "local",
+          "text": "Which addresses the header above is accepted from, defaults to \"local\". Anyone able to reach Vaultwarden can set the header, and the client IP is used for the login and admin rate limits, so it is only trusted when the request comes from a proxy listed here. \"local\" accepts it from any non global address, which covers a reverse proxy running on the same host or container network. Use \"all\" to accept it from anywhere, or list the addresses of your proxy as IPs and CIDR ranges if it connects from a public address. For a list header like X-Forwarded-For, the client IP is the rightmost address that isn't one of these proxies, so with several proxies in a row (a CDN in front of nginx, for example) list all of them.",
+          "location": {
+            "file": ".env.template",
+            "line": 343
+          }
+        }
+      ]
+    },
+    {
+      "name": "I_REALLY_WANT_VOLATILE_STORAGE",
+      "default": "true",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "I_REALLY_WANT_VOLATILE_STORAGE",
+          "kind": "readme",
+          "default": "true",
+          "location": {
+            "file": "docker/README.md",
+            "line": 131
+          }
+        },
+        {
+          "name": "I_REALLY_WANT_VOLATILE_STORAGE",
+          "kind": "readme",
+          "default": "true",
+          "location": {
+            "file": "docker/README.md",
+            "line": 170
+          }
+        },
+        {
+          "name": "I_REALLY_WANT_VOLATILE_STORAGE",
+          "kind": "code",
+          "location": {
+            "file": "src/main.rs",
+            "line": 488
+          }
+        }
+      ]
+    },
+    {
+      "name": "JOB_POLL_INTERVAL_MS",
+      "default": "30000",
+      "description": "Job scheduler settings Job schedules use a cron-like syntax (as parsed by https://crates.io/crates/cron), and are always in terms of UTC time (regardless of your local time zone settings). The schedule format is a bit different from crontab as crontab does not contains seconds. You can test the format here: https://crontab.guru, but remove the first digit! SEC  MIN   HOUR   DAY OF MONTH    MONTH   DAY OF WEEK \"0   30   9,12,15     1,15       May-Aug  Mon,Wed,Fri\" \"0   30     *          *            *          *     \" \"0   30     1          *            *          *     \" How often (in ms) the job scheduler thread checks for jobs that need running. Set to 0 to globally disable scheduled jobs.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "JOB_POLL_INTERVAL_MS",
+          "kind": "env_sample",
+          "default": "30000",
+          "text": "Job scheduler settings Job schedules use a cron-like syntax (as parsed by https://crates.io/crates/cron), and are always in terms of UTC time (regardless of your local time zone settings). The schedule format is a bit different from crontab as crontab does not contains seconds. You can test the format here: https://crontab.guru, but remove the first digit! SEC  MIN   HOUR   DAY OF MONTH    MONTH   DAY OF WEEK \"0   30   9,12,15     1,15       May-Aug  Mon,Wed,Fri\" \"0   30     *          *            *          *     \" \"0   30     1          *            *          *     \" How often (in ms) the job scheduler thread checks for jobs that need running. Set to 0 to globally disable scheduled jobs.",
+          "location": {
+            "file": ".env.template",
+            "line": 150
+          }
+        }
+      ]
+    },
+    {
+      "name": "LOGIN_RATELIMIT_MAX_BURST",
+      "default": "10",
+      "description": "Allow a burst of requests of up to this size, while maintaining the average indicated by `LOGIN_RATELIMIT_SECONDS`. Note that this applies to both the login and the 2FA, so it's recommended to allow a burst size of at least 2.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LOGIN_RATELIMIT_MAX_BURST",
+          "kind": "env_sample",
+          "default": "10",
+          "text": "Allow a burst of requests of up to this size, while maintaining the average indicated by `LOGIN_RATELIMIT_SECONDS`. Note that this applies to both the login and the 2FA, so it's recommended to allow a burst size of at least 2.",
+          "location": {
+            "file": ".env.template",
+            "line": 476
+          }
+        }
+      ]
+    },
+    {
+      "name": "LOGIN_RATELIMIT_SECONDS",
+      "default": "60",
+      "description": "Number of seconds, on average, between login requests from the same IP address before rate limiting kicks in.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LOGIN_RATELIMIT_SECONDS",
+          "kind": "env_sample",
+          "default": "60",
+          "text": "Number of seconds, on average, between login requests from the same IP address before rate limiting kicks in.",
+          "location": {
+            "file": ".env.template",
+            "line": 473
+          }
+        }
+      ]
+    },
+    {
+      "name": "LOG_FILE",
+      "default": "/path/to/log",
+      "description": "Logging to file",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LOG_FILE",
+          "kind": "env_sample",
+          "default": "/path/to/log",
+          "text": "Logging to file",
+          "location": {
+            "file": ".env.template",
+            "line": 424
+          }
+        }
+      ]
+    },
+    {
+      "name": "LOG_LEVEL",
+      "default": "info",
+      "description": "Log level Change the verbosity of the log output Valid values are \"trace\", \"debug\", \"info\", \"warn\", \"error\" and \"off\" Setting it to \"trace\" or \"debug\" would also show logs for mounted routes and static file, websocket and alive requests For a specific module append a comma separated `path::to::module=log_level` For example, to only see debug logs for icons use: LOG_LEVEL=\"info,vaultwarden::api::icons=debug\"",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LOG_LEVEL",
+          "kind": "env_sample",
+          "default": "info",
+          "text": "Log level Change the verbosity of the log output Valid values are \"trace\", \"debug\", \"info\", \"warn\", \"error\" and \"off\" Setting it to \"trace\" or \"debug\" would also show logs for mounted routes and static file, websocket and alive requests For a specific module append a comma separated `path::to::module=log_level` For example, to only see debug logs for icons use: LOG_LEVEL=\"info,vaultwarden::api::icons=debug\"",
+          "location": {
+            "file": ".env.template",
+            "line": 432
+          }
+        }
+      ]
+    },
+    {
+      "name": "LOG_TIMESTAMP_FORMAT",
+      "default": "%Y-%m-%d %H:%M:%S.%3f",
+      "description": "Timestamp format used in extended logging. Format specifiers: https://docs.rs/chrono/latest/chrono/format/strftime",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LOG_TIMESTAMP_FORMAT",
+          "kind": "env_sample",
+          "default": "%Y-%m-%d %H:%M:%S.%3f",
+          "text": "Timestamp format used in extended logging. Format specifiers: https://docs.rs/chrono/latest/chrono/format/strftime",
+          "location": {
+            "file": ".env.template",
+            "line": 417
+          }
+        }
+      ]
+    },
+    {
+      "name": "ORG_ATTACHMENT_LIMIT",
+      "default": "",
+      "description": "Per-organization attachment storage limit (KB) Max kilobytes of attachment storage allowed per organization. When this limit is reached, organization members will not be allowed to upload further attachments for ciphers owned by that organization.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ORG_ATTACHMENT_LIMIT",
+          "kind": "env_sample",
+          "text": "Per-organization attachment storage limit (KB) Max kilobytes of attachment storage allowed per organization. When this limit is reached, organization members will not be allowed to upload further attachments for ciphers owned by that organization.",
+          "location": {
+            "file": ".env.template",
+            "line": 225
+          }
+        }
+      ]
+    },
+    {
+      "name": "ORG_CREATION_USERS",
+      "default": "none",
+      "description": "Controls which users can create new orgs. Blank or 'all' means all users can create orgs (this is the default):",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ORG_CREATION_USERS",
+          "kind": "env_sample",
+          "text": "Controls which users can create new orgs. Blank or 'all' means all users can create orgs (this is the default):",
+          "location": {
+            "file": ".env.template",
+            "line": 283
+          }
+        },
+        {
+          "name": "ORG_CREATION_USERS",
+          "kind": "env_sample",
+          "default": "none",
+          "text": "'none' means no users can create orgs:",
+          "location": {
+            "file": ".env.template",
+            "line": 285
+          }
+        },
+        {
+          "name": "ORG_CREATION_USERS",
+          "kind": "env_sample",
+          "default": "admin1@example.com,admin2@example.com",
+          "text": "A comma-separated list means only those users can create orgs:",
+          "location": {
+            "file": ".env.template",
+            "line": 287
+          }
+        }
+      ]
+    },
+    {
+      "name": "ORG_EVENTS_ENABLED",
+      "default": "false",
+      "description": "Controls whether event logging is enabled for organizations This setting applies to organizations. Disabled by default. Also check the EVENT_CLEANUP_SCHEDULE and EVENTS_DAYS_RETAIN settings.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ORG_EVENTS_ENABLED",
+          "kind": "env_sample",
+          "default": "false",
+          "text": "Controls whether event logging is enabled for organizations This setting applies to organizations. Disabled by default. Also check the EVENT_CLEANUP_SCHEDULE and EVENTS_DAYS_RETAIN settings.",
+          "location": {
+            "file": ".env.template",
+            "line": 279
+          }
+        }
+      ]
+    },
+    {
+      "name": "ORG_GROUPS_ENABLED",
+      "default": "false",
+      "description": "BETA FEATURE: Groups Controls whether group support is enabled for organizations This setting applies to organizations. Disabled by default because this is a beta feature, it contains known issues! KNOW WHAT YOU ARE DOING!",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ORG_GROUPS_ENABLED",
+          "kind": "env_sample",
+          "default": "false",
+          "text": "BETA FEATURE: Groups Controls whether group support is enabled for organizations This setting applies to organizations. Disabled by default because this is a beta feature, it contains known issues! KNOW WHAT YOU ARE DOING!",
+          "location": {
+            "file": ".env.template",
+            "line": 490
+          }
+        }
+      ]
+    },
+    {
+      "name": "PASSWORD_HINTS_ALLOWED",
+      "default": "true",
+      "description": "Controls whether users can set or show password hints. This setting applies globally to all users.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PASSWORD_HINTS_ALLOWED",
+          "kind": "env_sample",
+          "default": "true",
+          "text": "Controls whether users can set or show password hints. This setting applies globally to all users.",
+          "location": {
+            "file": ".env.template",
+            "line": 311
+          }
+        }
+      ]
+    },
+    {
+      "name": "PASSWORD_ITERATIONS",
+      "default": "600000",
+      "description": "Number of server-side passwords hashing iterations for the password hash. The default for new users. If changed, it will be updated during login for existing users.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PASSWORD_ITERATIONS",
+          "kind": "env_sample",
+          "default": "600000",
+          "text": "Number of server-side passwords hashing iterations for the password hash. The default for new users. If changed, it will be updated during login for existing users.",
+          "location": {
+            "file": ".env.template",
+            "line": 308
+          }
+        }
+      ]
+    },
+    {
+      "name": "PURGE_INCOMPLETE_SSO_AUTH",
+      "default": "0 20 0 * * *",
+      "description": "Cron schedule of the job that cleans sso auth from incomplete flow Defaults to daily (20 minutes after midnight). Set blank to disable this job.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PURGE_INCOMPLETE_SSO_AUTH",
+          "kind": "env_sample",
+          "default": "0 20 0 * * *",
+          "text": "Cron schedule of the job that cleans sso auth from incomplete flow Defaults to daily (20 minutes after midnight). Set blank to disable this job.",
+          "location": {
+            "file": ".env.template",
+            "line": 189
+          }
+        }
+      ]
+    },
+    {
+      "name": "PUSH_ENABLED",
+      "default": "false",
+      "description": "Enables push notifications (requires key and id from https://bitwarden.com/host) Details about mobile client push notification: - https://github.com/dani-garcia/vaultwarden/wiki/Enabling-Mobile-Client-push-notification",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PUSH_ENABLED",
+          "kind": "env_sample",
+          "default": "false",
+          "text": "Enables push notifications (requires key and id from https://bitwarden.com/host) Details about mobile client push notification: - https://github.com/dani-garcia/vaultwarden/wiki/Enabling-Mobile-Client-push-notification",
+          "location": {
+            "file": ".env.template",
+            "line": 119
+          }
+        }
+      ]
+    },
+    {
+      "name": "PUSH_IDENTITY_URI",
+      "default": "https://identity.bitwarden.com",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PUSH_IDENTITY_URI",
+          "kind": "env_sample",
+          "default": "https://identity.bitwarden.com",
+          "location": {
+            "file": ".env.template",
+            "line": 126
+          }
+        },
+        {
+          "name": "PUSH_IDENTITY_URI",
+          "kind": "env_sample",
+          "default": "https://identity.bitwarden.eu",
+          "location": {
+            "file": ".env.template",
+            "line": 130
+          }
+        }
+      ]
+    },
+    {
+      "name": "PUSH_INSTALLATION_ID",
+      "default": "CHANGEME",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PUSH_INSTALLATION_ID",
+          "kind": "env_sample",
+          "default": "CHANGEME",
+          "location": {
+            "file": ".env.template",
+            "line": 120
+          }
+        }
+      ]
+    },
+    {
+      "name": "PUSH_INSTALLATION_KEY",
+      "default": "CHANGEME",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PUSH_INSTALLATION_KEY",
+          "kind": "env_sample",
+          "default": "CHANGEME",
+          "location": {
+            "file": ".env.template",
+            "line": 121
+          }
+        }
+      ]
+    },
+    {
+      "name": "PUSH_RELAY_URI",
+      "default": "https://push.bitwarden.com",
+      "description": "WARNING: Do not modify the following settings unless you fully understand their implications! Default Push Relay and Identity URIs",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PUSH_RELAY_URI",
+          "kind": "env_sample",
+          "default": "https://push.bitwarden.com",
+          "text": "WARNING: Do not modify the following settings unless you fully understand their implications! Default Push Relay and Identity URIs",
+          "location": {
+            "file": ".env.template",
+            "line": 125
+          }
+        },
+        {
+          "name": "PUSH_RELAY_URI",
+          "kind": "env_sample",
+          "default": "https://api.bitwarden.eu",
+          "text": "European Union Data Region Settings If you have selected \"European Union\" as your data region, use the following URIs instead.",
+          "location": {
+            "file": ".env.template",
+            "line": 129
+          }
+        }
+      ]
+    },
+    {
+      "name": "RELOAD_TEMPLATES",
+      "default": "false",
+      "description": "Automatically reload the templates for every request, slow, use only for development",
+      "required": false,
+      "mentions": [
+        {
+          "name": "RELOAD_TEMPLATES",
+          "kind": "env_sample",
+          "default": "false",
+          "text": "Automatically reload the templates for every request, slow, use only for development",
+          "location": {
+            "file": ".env.template",
+            "line": 42
+          }
+        }
+      ]
+    },
+    {
+      "name": "REQUIRE_DEVICE_EMAIL",
+      "default": "false",
+      "description": "Require new device emails. When a user logs in an email is required to be sent. If sending the email fails the login attempt will fail!!",
+      "required": false,
+      "mentions": [
+        {
+          "name": "REQUIRE_DEVICE_EMAIL",
+          "kind": "env_sample",
+          "default": "false",
+          "text": "Require new device emails. When a user logs in an email is required to be sent. If sending the email fails the login attempt will fail!!",
+          "location": {
+            "file": ".env.template",
+            "line": 410
+          }
+        }
+      ]
+    },
+    {
+      "name": "ROCKET_ADDRESS",
+      "default": "0.0.0.0",
+      "description": "Rocket specific settings See https://rocket.rs/v0.5/guide/configuration/ for more details.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ROCKET_ADDRESS",
+          "kind": "env_sample",
+          "default": "0.0.0.0",
+          "text": "Rocket specific settings See https://rocket.rs/v0.5/guide/configuration/ for more details.",
+          "location": {
+            "file": ".env.template",
+            "line": 684
+          }
+        },
+        {
+          "name": "ROCKET_ADDRESS",
+          "kind": "dockerfile",
+          "default": "0.0.0.0",
+          "location": {
+            "file": "docker/Dockerfile.alpine",
+            "line": 132
+          }
+        },
+        {
+          "name": "ROCKET_ADDRESS",
+          "kind": "dockerfile",
+          "default": "0.0.0.0",
+          "location": {
+            "file": "docker/Dockerfile.debian",
+            "line": 172
+          }
+        },
+        {
+          "name": "ROCKET_ADDRESS",
+          "kind": "dockerfile",
+          "default": "0.0.0.0",
+          "location": {
+            "file": "docker/Dockerfile.j2",
+            "line": 199
+          }
+        }
+      ]
+    },
+    {
+      "name": "ROCKET_PORT",
+      "default": "8000",
+      "description": "The default port is 8000, unless running in a Docker container, in which case it is 80.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ROCKET_PORT",
+          "kind": "env_sample",
+          "default": "8000",
+          "text": "The default port is 8000, unless running in a Docker container, in which case it is 80.",
+          "location": {
+            "file": ".env.template",
+            "line": 686
+          }
+        },
+        {
+          "name": "ROCKET_PORT",
+          "kind": "dockerfile",
+          "default": "80",
+          "location": {
+            "file": "docker/Dockerfile.alpine",
+            "line": 132
+          }
+        },
+        {
+          "name": "ROCKET_PORT",
+          "kind": "dockerfile",
+          "default": "80",
+          "location": {
+            "file": "docker/Dockerfile.debian",
+            "line": 172
+          }
+        },
+        {
+          "name": "ROCKET_PORT",
+          "kind": "dockerfile",
+          "default": "80",
+          "location": {
+            "file": "docker/Dockerfile.j2",
+            "line": 199
+          }
+        }
+      ]
+    },
+    {
+      "name": "ROCKET_PROFILE",
+      "default": "release",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ROCKET_PROFILE",
+          "kind": "dockerfile",
+          "default": "release",
+          "location": {
+            "file": "docker/Dockerfile.alpine",
+            "line": 132
+          }
+        },
+        {
+          "name": "ROCKET_PROFILE",
+          "kind": "dockerfile",
+          "default": "release",
+          "location": {
+            "file": "docker/Dockerfile.debian",
+            "line": 172
+          }
+        },
+        {
+          "name": "ROCKET_PROFILE",
+          "kind": "dockerfile",
+          "default": "release",
+          "location": {
+            "file": "docker/Dockerfile.j2",
+            "line": 199
+          }
+        }
+      ]
+    },
+    {
+      "name": "ROCKET_TLS",
+      "default": "{certs=\"/path/to/certs.pem\",key=\"/path/to/key.pem\"}",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ROCKET_TLS",
+          "kind": "env_sample",
+          "default": "{certs=\"/path/to/certs.pem\",key=\"/path/to/key.pem\"}",
+          "location": {
+            "file": ".env.template",
+            "line": 687
+          }
+        },
+        {
+          "name": "ROCKET_TLS",
+          "kind": "code",
+          "location": {
+            "file": "src/auth.rs",
+            "line": 589
+          }
+        },
+        {
+          "name": "ROCKET_TLS",
+          "kind": "code",
+          "location": {
+            "file": "src/auth.rs",
+            "line": 1179
+          }
+        }
+      ]
+    },
+    {
+      "name": "RSA_KEY_FILENAME",
+      "default": "data/rsa_key",
+      "description": "Individual folders, these override %DATA_FOLDER%",
+      "required": false,
+      "mentions": [
+        {
+          "name": "RSA_KEY_FILENAME",
+          "kind": "env_sample",
+          "default": "data/rsa_key",
+          "text": "Individual folders, these override %DATA_FOLDER%",
+          "location": {
+            "file": ".env.template",
+            "line": 29
+          }
+        }
+      ]
+    },
+    {
+      "name": "SENDMAIL_COMMAND",
+      "default": "/path/to/sendmail",
+      "description": "Which sendmail command to use. The one found in the $PATH is used if not specified.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SENDMAIL_COMMAND",
+          "kind": "env_sample",
+          "default": "/path/to/sendmail",
+          "text": "Which sendmail command to use. The one found in the $PATH is used if not specified.",
+          "location": {
+            "file": ".env.template",
+            "line": 647
+          }
+        }
+      ]
+    },
+    {
+      "name": "SENDS_ALLOWED",
+      "default": "true",
+      "description": "Controls whether users are allowed to create Bitwarden Sends. This setting applies globally to all users. To control this on a per-org basis instead, use the \"Disable Send\" org policy.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SENDS_ALLOWED",
+          "kind": "env_sample",
+          "default": "true",
+          "text": "Controls whether users are allowed to create Bitwarden Sends. This setting applies globally to all users. To control this on a per-org basis instead, use the \"Disable Send\" org policy.",
+          "location": {
+            "file": ".env.template",
+            "line": 216
+          }
+        }
+      ]
+    },
+    {
+      "name": "SENDS_FOLDER",
+      "default": "data/sends",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SENDS_FOLDER",
+          "kind": "env_sample",
+          "default": "data/sends",
+          "location": {
+            "file": ".env.template",
+            "line": 32
+          }
+        }
+      ]
+    },
+    {
+      "name": "SEND_PURGE_SCHEDULE",
+      "default": "0 5 * * * *",
+      "description": "Cron schedule of the job that checks for Sends past their deletion date. Defaults to hourly (5 minutes after the hour). Set blank to disable this job.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SEND_PURGE_SCHEDULE",
+          "kind": "env_sample",
+          "default": "0 5 * * * *",
+          "text": "Cron schedule of the job that checks for Sends past their deletion date. Defaults to hourly (5 minutes after the hour). Set blank to disable this job.",
+          "location": {
+            "file": ".env.template",
+            "line": 154
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHOW_PASSWORD_HINT",
+      "default": "false",
+      "description": "Controls whether a password hint should be shown directly in the web page if SMTP service is not configured and password hints are allowed. Not recommended for publicly-accessible instances because this provides unauthenticated access to potentially sensitive data.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SHOW_PASSWORD_HINT",
+          "kind": "env_sample",
+          "default": "false",
+          "text": "Controls whether a password hint should be shown directly in the web page if SMTP service is not configured and password hints are allowed. Not recommended for publicly-accessible instances because this provides unauthenticated access to potentially sensitive data.",
+          "location": {
+            "file": ".env.template",
+            "line": 317
+          }
+        }
+      ]
+    },
+    {
+      "name": "SIGNUPS_ALLOWED",
+      "default": "true",
+      "description": "Controls if new users can register",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SIGNUPS_ALLOWED",
+          "kind": "env_sample",
+          "default": "true",
+          "text": "Controls if new users can register",
+          "location": {
+            "file": ".env.template",
+            "line": 255
+          }
+        }
+      ]
+    },
+    {
+      "name": "SIGNUPS_DOMAINS_WHITELIST",
+      "default": "example.com,example.net,example.org",
+      "description": "Controls if new users from a list of comma-separated domains can register even if SIGNUPS_ALLOWED is set to false",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SIGNUPS_DOMAINS_WHITELIST",
+          "kind": "env_sample",
+          "default": "example.com,example.net,example.org",
+          "text": "Controls if new users from a list of comma-separated domains can register even if SIGNUPS_ALLOWED is set to false",
+          "location": {
+            "file": ".env.template",
+            "line": 274
+          }
+        }
+      ]
+    },
+    {
+      "name": "SIGNUPS_VERIFY",
+      "default": "false",
+      "description": "Controls if new users need to verify their email address upon registration On new client versions, this will require the user to verify their email at signup time. On older clients, it will require the user to verify their email before they can log in. The welcome email will include a verification link, and login attempts will periodically trigger another verification email to be sent.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SIGNUPS_VERIFY",
+          "kind": "env_sample",
+          "default": "false",
+          "text": "Controls if new users need to verify their email address upon registration On new client versions, this will require the user to verify their email at signup time. On older clients, it will require the user to verify their email before they can log in. The welcome email will include a verification link, and login attempts will periodically trigger another verification email to be sent.",
+          "location": {
+            "file": ".env.template",
+            "line": 262
+          }
+        }
+      ]
+    },
+    {
+      "name": "SIGNUPS_VERIFY_RESEND_LIMIT",
+      "default": "6",
+      "description": "If SIGNUPS_VERIFY is set to true, this limits how many times an email verification email will be re-sent upon an attempted login.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SIGNUPS_VERIFY_RESEND_LIMIT",
+          "kind": "env_sample",
+          "default": "6",
+          "text": "If SIGNUPS_VERIFY is set to true, this limits how many times an email verification email will be re-sent upon an attempted login.",
+          "location": {
+            "file": ".env.template",
+            "line": 270
+          }
+        }
+      ]
+    },
+    {
+      "name": "SIGNUPS_VERIFY_RESEND_TIME",
+      "default": "3600",
+      "description": "If SIGNUPS_VERIFY is set to true, this limits how many seconds after the last time an email verification link has been sent another verification email will be sent",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SIGNUPS_VERIFY_RESEND_TIME",
+          "kind": "env_sample",
+          "default": "3600",
+          "text": "If SIGNUPS_VERIFY is set to true, this limits how many seconds after the last time an email verification link has been sent another verification email will be sent",
+          "location": {
+            "file": ".env.template",
+            "line": 266
+          }
+        }
+      ]
+    },
+    {
+      "name": "SMTP_ACCEPT_INVALID_CERTS",
+      "default": "false",
+      "description": "Accept Invalid Certificates DANGEROUS: This option introduces significant vulnerabilities to man-in-the-middle attacks! Only use this as a last resort if you are not able to use a valid certificate. If the Certificate is valid but the hostname doesn't match, please use SMTP_ACCEPT_INVALID_HOSTNAMES instead.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SMTP_ACCEPT_INVALID_CERTS",
+          "kind": "env_sample",
+          "default": "false",
+          "text": "Accept Invalid Certificates DANGEROUS: This option introduces significant vulnerabilities to man-in-the-middle attacks! Only use this as a last resort if you are not able to use a valid certificate. If the Certificate is valid but the hostname doesn't match, please use SMTP_ACCEPT_INVALID_HOSTNAMES instead.",
+          "location": {
+            "file": ".env.template",
+            "line": 671
+          }
+        }
+      ]
+    },
+    {
+      "name": "SMTP_ACCEPT_INVALID_HOSTNAMES",
+      "default": "false",
+      "description": "Accept Invalid Hostnames DANGEROUS: This option introduces significant vulnerabilities to man-in-the-middle attacks! Only use this as a last resort if you are not able to use a valid certificate.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SMTP_ACCEPT_INVALID_HOSTNAMES",
+          "kind": "env_sample",
+          "default": "false",
+          "text": "Accept Invalid Hostnames DANGEROUS: This option introduces significant vulnerabilities to man-in-the-middle attacks! Only use this as a last resort if you are not able to use a valid certificate.",
+          "location": {
+            "file": ".env.template",
+            "line": 676
+          }
+        }
+      ]
+    },
+    {
+      "name": "SMTP_AUTH_MECHANISM",
+      "default": "",
+      "description": "Defaults for SSL is \"Plain\" and \"Login\" and nothing for Non-SSL connections. Possible values: [\"Plain\", \"Login\", \"Xoauth2\"]. Multiple options need to be separated by a comma ','.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SMTP_AUTH_MECHANISM",
+          "kind": "env_sample",
+          "text": "Defaults for SSL is \"Plain\" and \"Login\" and nothing for Non-SSL connections. Possible values: [\"Plain\", \"Login\", \"Xoauth2\"]. Multiple options need to be separated by a comma ','.",
+          "location": {
+            "file": ".env.template",
+            "line": 652
+          }
+        }
+      ]
+    },
+    {
+      "name": "SMTP_DEBUG",
+      "default": "false",
+      "description": "SMTP debugging When set to true this will output very detailed SMTP messages. WARNING: This could contain sensitive information like passwords and usernames! Only enable this during troubleshooting!",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SMTP_DEBUG",
+          "kind": "env_sample",
+          "default": "false",
+          "text": "SMTP debugging When set to true this will output very detailed SMTP messages. WARNING: This could contain sensitive information like passwords and usernames! Only enable this during troubleshooting!",
+          "location": {
+            "file": ".env.template",
+            "line": 665
+          }
+        }
+      ]
+    },
+    {
+      "name": "SMTP_EMBED_IMAGES",
+      "default": "true",
+      "description": "Embed images as email attachments",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SMTP_EMBED_IMAGES",
+          "kind": "env_sample",
+          "default": "true",
+          "text": "Embed images as email attachments",
+          "location": {
+            "file": ".env.template",
+            "line": 660
+          }
+        }
+      ]
+    },
+    {
+      "name": "SMTP_FROM",
+      "default": "vaultwarden@domain.tld",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SMTP_FROM",
+          "kind": "env_sample",
+          "default": "vaultwarden@domain.tld",
+          "location": {
+            "file": ".env.template",
+            "line": 629
+          }
+        }
+      ]
+    },
+    {
+      "name": "SMTP_FROM_NAME",
+      "default": "Vaultwarden",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SMTP_FROM_NAME",
+          "kind": "env_sample",
+          "default": "Vaultwarden",
+          "location": {
+            "file": ".env.template",
+            "line": 630
+          }
+        }
+      ]
+    },
+    {
+      "name": "SMTP_HOST",
+      "default": "smtp.domain.tld",
+      "description": "Mail specific settings, set SMTP_FROM and either SMTP_HOST or USE_SENDMAIL to enable the mail service. To make sure the email links are pointing to the correct host, set the DOMAIN variable. Note: if SMTP_USERNAME is specified, SMTP_PASSWORD is mandatory",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SMTP_HOST",
+          "kind": "env_sample",
+          "default": "smtp.domain.tld",
+          "text": "Mail specific settings, set SMTP_FROM and either SMTP_HOST or USE_SENDMAIL to enable the mail service. To make sure the email links are pointing to the correct host, set the DOMAIN variable. Note: if SMTP_USERNAME is specified, SMTP_PASSWORD is mandatory",
+          "location": {
+            "file": ".env.template",
+            "line": 628
+          }
+        }
+      ]
+    },
+    {
+      "name": "SMTP_PASSWORD",
+      "default": "password",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SMTP_PASSWORD",
+          "kind": "env_sample",
+          "default": "password",
+          "location": {
+            "file": ".env.template",
+            "line": 632
+          }
+        }
+      ]
+    },
+    {
+      "name": "SMTP_PORT",
+      "default": "587",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SMTP_PORT",
+          "kind": "env_sample",
+          "default": "587",
+          "location": {
+            "file": ".env.template",
+            "line": 642
+          }
+        }
+      ]
+    },
+    {
+      "name": "SMTP_SECURITY",
+      "default": "starttls",
+      "description": "Choose the type of secure connection for SMTP. The default is \"starttls\". The available options are: - \"starttls\": The default port is 587. - \"force_tls\": The default port is 465. - \"off\": The default port is 25. Ports 587 (submission) and 25 (smtp) are standard without encryption and with encryption via STARTTLS (Explicit TLS). Port 465 (submissions) is used for encrypted submission (Implicit TLS).",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SMTP_SECURITY",
+          "kind": "env_sample",
+          "default": "starttls",
+          "text": "Choose the type of secure connection for SMTP. The default is \"starttls\". The available options are: - \"starttls\": The default port is 587. - \"force_tls\": The default port is 465. - \"off\": The default port is 25. Ports 587 (submission) and 25 (smtp) are standard without encryption and with encryption via STARTTLS (Explicit TLS). Port 465 (submissions) is used for encrypted submission (Implicit TLS).",
+          "location": {
+            "file": ".env.template",
+            "line": 641
+          }
+        }
+      ]
+    },
+    {
+      "name": "SMTP_TIMEOUT",
+      "default": "15",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SMTP_TIMEOUT",
+          "kind": "env_sample",
+          "default": "15",
+          "location": {
+            "file": ".env.template",
+            "line": 633
+          }
+        }
+      ]
+    },
+    {
+      "name": "SMTP_USERNAME",
+      "default": "username",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SMTP_USERNAME",
+          "kind": "env_sample",
+          "default": "username",
+          "location": {
+            "file": ".env.template",
+            "line": 631
+          }
+        }
+      ]
+    },
+    {
+      "name": "SOURCE_COMMIT",
+      "default": "null",
+      "description": "The commit hash of the current commit for this build",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SOURCE_COMMIT",
+          "kind": "readme",
+          "default": "null",
+          "text": "The commit hash of the current commit for this build",
+          "location": {
+            "file": "docker/README.md",
+            "line": 184
+          }
+        }
+      ]
+    },
+    {
+      "name": "SOURCE_REPOSITORY_URL",
+      "default": "null",
+      "description": "The source repository form where this build is triggered",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SOURCE_REPOSITORY_URL",
+          "kind": "readme",
+          "default": "null",
+          "text": "The source repository form where this build is triggered",
+          "location": {
+            "file": "docker/README.md",
+            "line": 183
+          }
+        }
+      ]
+    },
+    {
+      "name": "SOURCE_VERSION",
+      "default": "null",
+      "description": "The current exact tag of this commit, else the last tag and the first 8 chars of the source commit",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SOURCE_VERSION",
+          "kind": "readme",
+          "default": "null",
+          "text": "The current exact tag of this commit, else the last tag and the first 8 chars of the source commit",
+          "location": {
+            "file": "docker/README.md",
+            "line": 185
+          }
+        }
+      ]
+    },
+    {
+      "name": "SSL_CERT_DIR",
+      "default": "/etc/ssl/certs",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SSL_CERT_DIR",
+          "kind": "dockerfile",
+          "default": "/etc/ssl/certs",
+          "location": {
+            "file": "docker/Dockerfile.alpine",
+            "line": 132
+          }
+        }
+      ]
+    },
+    {
+      "name": "SSO_ALLOW_UNKNOWN_EMAIL_VERIFICATION",
+      "default": "false",
+      "description": "Allow unknown email verification status. Allowing this with `SSO_SIGNUPS_MATCH_EMAIL=true` open potential account takeover.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SSO_ALLOW_UNKNOWN_EMAIL_VERIFICATION",
+          "kind": "env_sample",
+          "default": "false",
+          "text": "Allow unknown email verification status. Allowing this with `SSO_SIGNUPS_MATCH_EMAIL=true` open potential account takeover.",
+          "location": {
+            "file": ".env.template",
+            "line": 526
+          }
+        }
+      ]
+    },
+    {
+      "name": "SSO_AUDIENCE_TRUSTED",
+      "default": "^$",
+      "description": "Regex for additional trusted Id token audience (by default only the client_id is trusted).",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SSO_AUDIENCE_TRUSTED",
+          "kind": "env_sample",
+          "default": "^$",
+          "text": "Regex for additional trusted Id token audience (by default only the client_id is trusted).",
+          "location": {
+            "file": ".env.template",
+            "line": 543
+          }
+        }
+      ]
+    },
+    {
+      "name": "SSO_AUTHORITY",
+      "default": "https://auth.example.com",
+      "description": "Base URL of the OIDC server (auto-discovery is used) - Should not include the `/.well-known/openid-configuration` part and no trailing `/` - ${SSO_AUTHORITY}/.well-known/openid-configuration should return a json document: https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfigurationResponse",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SSO_AUTHORITY",
+          "kind": "env_sample",
+          "default": "https://auth.example.com",
+          "text": "Base URL of the OIDC server (auto-discovery is used) - Should not include the `/.well-known/openid-configuration` part and no trailing `/` - ${SSO_AUTHORITY}/.well-known/openid-configuration should return a json document: https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfigurationResponse",
+          "location": {
+            "file": ".env.template",
+            "line": 531
+          }
+        }
+      ]
+    },
+    {
+      "name": "SSO_AUTHORIZE_EXTRA_PARAMS",
+      "default": "access_type=offline\u0026prompt=consent",
+      "description": "Additional authorization url parameters (ex: to obtain a `refresh_token` with Google Auth).",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SSO_AUTHORIZE_EXTRA_PARAMS",
+          "kind": "env_sample",
+          "default": "access_type=offline\u0026prompt=consent",
+          "text": "Additional authorization url parameters (ex: to obtain a `refresh_token` with Google Auth).",
+          "location": {
+            "file": ".env.template",
+            "line": 537
+          }
+        }
+      ]
+    },
+    {
+      "name": "SSO_AUTH_ONLY_NOT_SESSION",
+      "default": "false",
+      "description": "Use sso only for authentication not the session lifecycle",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SSO_AUTH_ONLY_NOT_SESSION",
+          "kind": "env_sample",
+          "default": "false",
+          "text": "Use sso only for authentication not the session lifecycle",
+          "location": {
+            "file": ".env.template",
+            "line": 553
+          }
+        }
+      ]
+    },
+    {
+      "name": "SSO_CLIENT_CACHE_EXPIRATION",
+      "default": "0",
+      "description": "Client cache for discovery endpoint. Duration in seconds (0 to disable).",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SSO_CLIENT_CACHE_EXPIRATION",
+          "kind": "env_sample",
+          "default": "0",
+          "text": "Client cache for discovery endpoint. Duration in seconds (0 to disable).",
+          "location": {
+            "file": ".env.template",
+            "line": 556
+          }
+        }
+      ]
+    },
+    {
+      "name": "SSO_CLIENT_ID",
+      "default": "11111",
+      "description": "Set your Client ID and Client Key",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SSO_CLIENT_ID",
+          "kind": "env_sample",
+          "default": "11111",
+          "text": "Set your Client ID and Client Key",
+          "location": {
+            "file": ".env.template",
+            "line": 546
+          }
+        }
+      ]
+    },
+    {
+      "name": "SSO_CLIENT_SECRET",
+      "default": "AAAAAAAAAAAAAAAAAAAAAAAA",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SSO_CLIENT_SECRET",
+          "kind": "env_sample",
+          "default": "AAAAAAAAAAAAAAAAAAAAAAAA",
+          "location": {
+            "file": ".env.template",
+            "line": 547
+          }
+        }
+      ]
+    },
+    {
+      "name": "SSO_DEBUG_TOKENS",
+      "default": "false",
+      "description": "Log all the tokens, LOG_LEVEL=debug is required",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SSO_DEBUG_TOKENS",
+          "kind": "env_sample",
+          "default": "false",
+          "text": "Log all the tokens, LOG_LEVEL=debug is required",
+          "location": {
+            "file": ".env.template",
+            "line": 559
+          }
+        }
+      ]
+    },
+    {
+      "name": "SSO_ENABLED",
+      "default": "false",
+      "description": "Controls whether users can login using an OpenID Connect identity provider",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SSO_ENABLED",
+          "kind": "env_sample",
+          "default": "false",
+          "text": "Controls whether users can login using an OpenID Connect identity provider",
+          "location": {
+            "file": ".env.template",
+            "line": 514
+          }
+        }
+      ]
+    },
+    {
+      "name": "SSO_MASTER_PASSWORD_POLICY",
+      "default": "{\"enforceOnLogin\":false,\"minComplexity\":3,\"minLength\":12,\"requireLower\":false,\"requireNumbers\":false,\"requireSpecial\":false,\"requireUpper\":false}",
+      "description": "Optional Master password policy (minComplexity=[0-4]), `enforceOnLogin` is not supported at the moment.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SSO_MASTER_PASSWORD_POLICY",
+          "kind": "env_sample",
+          "default": "{\"enforceOnLogin\":false,\"minComplexity\":3,\"minLength\":12,\"requireLower\":false,\"requireNumbers\":false,\"requireSpecial\":false,\"requireUpper\":false}",
+          "text": "Optional Master password policy (minComplexity=[0-4]), `enforceOnLogin` is not supported at the moment.",
+          "location": {
+            "file": ".env.template",
+            "line": 550
+          }
+        }
+      ]
+    },
+    {
+      "name": "SSO_ONLY",
+      "default": "false",
+      "description": "Prevent users from logging in directly without going through SSO",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SSO_ONLY",
+          "kind": "env_sample",
+          "default": "false",
+          "text": "Prevent users from logging in directly without going through SSO",
+          "location": {
+            "file": ".env.template",
+            "line": 517
+          }
+        }
+      ]
+    },
+    {
+      "name": "SSO_PKCE",
+      "default": "true",
+      "description": "Activate PKCE for the Auth Code flow.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SSO_PKCE",
+          "kind": "env_sample",
+          "default": "true",
+          "text": "Activate PKCE for the Auth Code flow.",
+          "location": {
+            "file": ".env.template",
+            "line": 540
+          }
+        }
+      ]
+    },
+    {
+      "name": "SSO_SCOPES",
+      "default": "email profile",
+      "description": "Authorization request scopes. Optional SSO scopes, override if email and profile are not enough (`openid` is implicit).",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SSO_SCOPES",
+          "kind": "env_sample",
+          "default": "email profile",
+          "text": "Authorization request scopes. Optional SSO scopes, override if email and profile are not enough (`openid` is implicit).",
+          "location": {
+            "file": ".env.template",
+            "line": 534
+          }
+        }
+      ]
+    },
+    {
+      "name": "SSO_SIGNUPS_ALLOWED",
+      "default": "true",
+      "description": "Allow SSO flow to create account. You probably want to disable it when using a public provider.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SSO_SIGNUPS_ALLOWED",
+          "kind": "env_sample",
+          "default": "true",
+          "text": "Allow SSO flow to create account. You probably want to disable it when using a public provider.",
+          "location": {
+            "file": ".env.template",
+            "line": 520
+          }
+        }
+      ]
+    },
+    {
+      "name": "SSO_SIGNUPS_MATCH_EMAIL",
+      "default": "true",
+      "description": "On SSO Signup if a user with a matching email already exists make the association",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SSO_SIGNUPS_MATCH_EMAIL",
+          "kind": "env_sample",
+          "default": "true",
+          "text": "On SSO Signup if a user with a matching email already exists make the association",
+          "location": {
+            "file": ".env.template",
+            "line": 523
+          }
+        }
+      ]
+    },
+    {
+      "name": "TEMPLATES_FOLDER",
+      "default": "data/templates",
+      "description": "HTML template overrides data folder Must be a local path.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TEMPLATES_FOLDER",
+          "kind": "env_sample",
+          "default": "data/templates",
+          "text": "HTML template overrides data folder Must be a local path.",
+          "location": {
+            "file": ".env.template",
+            "line": 40
+          }
+        }
+      ]
+    },
+    {
+      "name": "TMP_FOLDER",
+      "default": "data/tmp",
+      "description": "Temporary folder used for storing temporary file uploads Must be a local path.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TMP_FOLDER",
+          "kind": "env_sample",
+          "default": "data/tmp",
+          "text": "Temporary folder used for storing temporary file uploads Must be a local path.",
+          "location": {
+            "file": ".env.template",
+            "line": 36
+          }
+        }
+      ]
+    },
+    {
+      "name": "TRASH_AUTO_DELETE_DAYS",
+      "default": "",
+      "description": "Number of days to wait before auto-deleting a trashed item. If unset (the default), trashed items are not auto-deleted. This setting applies globally, so make sure to inform all users of any changes to this setting.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TRASH_AUTO_DELETE_DAYS",
+          "kind": "env_sample",
+          "text": "Number of days to wait before auto-deleting a trashed item. If unset (the default), trashed items are not auto-deleted. This setting applies globally, so make sure to inform all users of any changes to this setting.",
+          "location": {
+            "file": ".env.template",
+            "line": 238
+          }
+        }
+      ]
+    },
+    {
+      "name": "TRASH_PURGE_SCHEDULE",
+      "default": "0 5 0 * * *",
+      "description": "Cron schedule of the job that checks for trashed items to delete permanently. Defaults to daily (5 minutes after midnight). Set blank to disable this job.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TRASH_PURGE_SCHEDULE",
+          "kind": "env_sample",
+          "default": "0 5 0 * * *",
+          "text": "Cron schedule of the job that checks for trashed items to delete permanently. Defaults to daily (5 minutes after midnight). Set blank to disable this job.",
+          "location": {
+            "file": ".env.template",
+            "line": 158
+          }
+        }
+      ]
+    },
+    {
+      "name": "TZ",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TZ",
+          "kind": "code",
+          "location": {
+            "file": "src/api/admin.rs",
+            "line": 808
+          }
+        },
+        {
+          "name": "TZ",
+          "kind": "code",
+          "location": {
+            "file": "src/util.rs",
+            "line": 496
+          }
+        }
+      ]
+    },
+    {
+      "name": "UNAUTHENTICATED_RATELIMIT_MAX_BURST",
+      "default": "50",
+      "description": "Allow a burst of requests of up to this size, while maintaining the average indicated by `UNAUTHENTICATED_RATELIMIT_SECONDS`. This budget is shared between all of those endpoints, so it is more lenient than the login one.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UNAUTHENTICATED_RATELIMIT_MAX_BURST",
+          "kind": "env_sample",
+          "default": "50",
+          "text": "Allow a burst of requests of up to this size, while maintaining the average indicated by `UNAUTHENTICATED_RATELIMIT_SECONDS`. This budget is shared between all of those endpoints, so it is more lenient than the login one.",
+          "location": {
+            "file": ".env.template",
+            "line": 483
+          }
+        }
+      ]
+    },
+    {
+      "name": "UNAUTHENTICATED_RATELIMIT_SECONDS",
+      "default": "60",
+      "description": "Number of seconds, on average, between requests from the same IP address to one of the rate limited unauthenticated endpoints, like the password hint, the account recovery mails or accessing a Send.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UNAUTHENTICATED_RATELIMIT_SECONDS",
+          "kind": "env_sample",
+          "default": "60",
+          "text": "Number of seconds, on average, between requests from the same IP address to one of the rate limited unauthenticated endpoints, like the password hint, the account recovery mails or accessing a Send.",
+          "location": {
+            "file": ".env.template",
+            "line": 480
+          }
+        }
+      ]
+    },
+    {
+      "name": "USER_ATTACHMENT_LIMIT",
+      "default": "",
+      "description": "Per-user attachment storage limit (KB) Max kilobytes of attachment storage allowed per user. When this limit is reached, the user will not be allowed to upload further attachments.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "USER_ATTACHMENT_LIMIT",
+          "kind": "env_sample",
+          "text": "Per-user attachment storage limit (KB) Max kilobytes of attachment storage allowed per user. When this limit is reached, the user will not be allowed to upload further attachments.",
+          "location": {
+            "file": ".env.template",
+            "line": 229
+          }
+        }
+      ]
+    },
+    {
+      "name": "USER_SEND_LIMIT",
+      "default": "",
+      "description": "Per-user send storage limit (KB) Max kilobytes of send storage allowed per user. When this limit is reached, the user will not be allowed to upload further sends.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "USER_SEND_LIMIT",
+          "kind": "env_sample",
+          "text": "Per-user send storage limit (KB) Max kilobytes of send storage allowed per user. When this limit is reached, the user will not be allowed to upload further sends.",
+          "location": {
+            "file": ".env.template",
+            "line": 233
+          }
+        }
+      ]
+    },
+    {
+      "name": "USE_SENDMAIL",
+      "default": "false",
+      "description": "Whether to send mail via the `sendmail` command",
+      "required": false,
+      "mentions": [
+        {
+          "name": "USE_SENDMAIL",
+          "kind": "env_sample",
+          "default": "false",
+          "text": "Whether to send mail via the `sendmail` command",
+          "location": {
+            "file": ".env.template",
+            "line": 645
+          }
+        }
+      ]
+    },
+    {
+      "name": "USE_SYSLOG",
+      "default": "false",
+      "description": "Logging to Syslog This requires extended logging",
+      "required": false,
+      "mentions": [
+        {
+          "name": "USE_SYSLOG",
+          "kind": "env_sample",
+          "default": "false",
+          "text": "Logging to Syslog This requires extended logging",
+          "location": {
+            "file": ".env.template",
+            "line": 421
+          }
+        }
+      ]
+    },
+    {
+      "name": "VW_VERSION",
+      "default": "null",
+      "description": "To override the SOURCE_VERSION value. This is also used by the build.rs code for example",
+      "required": false,
+      "mentions": [
+        {
+          "name": "VW_VERSION",
+          "kind": "readme",
+          "default": "null",
+          "text": "To override the SOURCE_VERSION value. This is also used by the build.rs code for example",
+          "location": {
+            "file": "docker/README.md",
+            "line": 188
+          }
+        },
+        {
+          "name": "VW_VERSION",
+          "kind": "code",
+          "location": {
+            "file": "build.rs",
+            "line": 36
+          }
+        }
+      ]
+    },
+    {
+      "name": "WEB_VAULT_ENABLED",
+      "default": "true",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "WEB_VAULT_ENABLED",
+          "kind": "env_sample",
+          "default": "true",
+          "location": {
+            "file": ".env.template",
+            "line": 46
+          }
+        }
+      ]
+    },
+    {
+      "name": "WEB_VAULT_FOLDER",
+      "default": "web-vault/",
+      "description": "Web vault settings",
+      "required": false,
+      "mentions": [
+        {
+          "name": "WEB_VAULT_FOLDER",
+          "kind": "env_sample",
+          "default": "web-vault/",
+          "text": "Web vault settings",
+          "location": {
+            "file": ".env.template",
+            "line": 45
+          }
+        }
+      ]
+    },
+    {
+      "name": "YUBICO_CLIENT_ID",
+      "default": "11111",
+      "description": "Yubico (Yubikey) Settings Set your Client ID and Secret Key for Yubikey OTP You can generate it here: https://upgrade.yubico.com/getapikey/ You can optionally specify a custom OTP server",
+      "required": false,
+      "mentions": [
+        {
+          "name": "YUBICO_CLIENT_ID",
+          "kind": "env_sample",
+          "default": "11111",
+          "text": "Yubico (Yubikey) Settings Set your Client ID and Secret Key for Yubikey OTP You can generate it here: https://upgrade.yubico.com/getapikey/ You can optionally specify a custom OTP server",
+          "location": {
+            "file": ".env.template",
+            "line": 569
+          }
+        }
+      ]
+    },
+    {
+      "name": "YUBICO_SECRET_KEY",
+      "default": "AAAAAAAAAAAAAAAAAAAAAAAA",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "YUBICO_SECRET_KEY",
+          "kind": "env_sample",
+          "default": "AAAAAAAAAAAAAAAAAAAAAAAA",
+          "location": {
+            "file": ".env.template",
+            "line": 570
+          }
+        }
+      ]
+    },
+    {
+      "name": "YUBICO_SERVER",
+      "default": "http://yourdomain.com/wsapi/2.0/verify",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "YUBICO_SERVER",
+          "kind": "env_sample",
+          "default": "http://yourdomain.com/wsapi/2.0/verify",
+          "location": {
+            "file": ".env.template",
+            "line": 571
+          }
+        }
+      ]
+    },
+    {
+      "name": "http_proxy",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "http_proxy",
+          "kind": "code",
+          "location": {
+            "file": "src/api/admin.rs",
+            "line": 759
+          }
+        }
+      ]
+    },
+    {
+      "name": "https_proxy",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "https_proxy",
+          "kind": "code",
+          "location": {
+            "file": "src/api/admin.rs",
+            "line": 761
+          }
+        }
+      ]
+    }
+  ],
+  "images": [
+    {
+      "reference": "quay.io/repository/vaultwarden/server",
+      "kind": "readme",
+      "location": {
+        "file": "README.md",
+        "line": 10
+      }
+    },
+    {
+      "reference": "vaultwarden/server:latest",
+      "kind": "readme",
+      "location": {
+        "file": "README.md",
+        "line": 84
+      }
+    },
+    {
+      "reference": "tonistiigi/binfmt",
+      "kind": "readme",
+      "location": {
+        "file": "docker/README.md",
+        "line": 48
+      }
+    },
+    {
+      "reference": "registry:2",
+      "kind": "readme",
+      "location": {
+        "file": "docker/README.md",
+        "line": 85
+      }
+    },
+    {
+      "reference": "vaultwarden/server:testing-arm64",
+      "kind": "readme",
+      "location": {
+        "file": "docker/README.md",
+        "line": 131
+      }
+    },
+    {
+      "reference": "localhost/vaultwarden/server:testing-arm64",
+      "kind": "readme",
+      "location": {
+        "file": "docker/README.md",
+        "line": 170
+      }
+    },
+    {
+      "reference": "ghcr.io/dani-garcia/vaultwarden",
+      "kind": "readme",
+      "location": {
+        "file": "docker/README.md",
+        "line": 187
+      }
+    },
+    {
+      "reference": "docker.io/vaultwarden/server",
+      "kind": "readme",
+      "location": {
+        "file": "docker/README.md",
+        "line": 187
+      }
+    }
+  ],
+  "docker_runs": [
+    {
+      "image": "vaultwarden/server:latest",
+      "ports": [
+        "127.0.0.1:8000:80"
+      ],
+      "volumes": [
+        "/vw-data/:/data/"
+      ],
+      "env": [
+        {
+          "key": "DOMAIN",
+          "value": "https://vw.domain.tld",
+          "location": {
+            "file": "README.md",
+            "line": 85
+          }
+        }
+      ],
+      "location": {
+        "file": "README.md",
+        "line": 85
+      }
+    },
+    {
+      "image": "tonistiigi/binfmt",
+      "ports": null,
+      "volumes": null,
+      "env": null,
+      "location": {
+        "file": "docker/README.md",
+        "line": 48
+      }
+    },
+    {
+      "image": "tonistiigi/binfmt",
+      "ports": null,
+      "volumes": null,
+      "env": null,
+      "location": {
+        "file": "docker/README.md",
+        "line": 50
+      }
+    },
+    {
+      "image": "registry:2",
+      "ports": null,
+      "volumes": null,
+      "env": null,
+      "location": {
+        "file": "docker/README.md",
+        "line": 85
+      }
+    },
+    {
+      "image": "vaultwarden/server:testing-arm64",
+      "ports": null,
+      "volumes": null,
+      "env": [
+        {
+          "key": "DISABLE_ADMIN_TOKEN",
+          "value": "true",
+          "location": {
+            "file": "docker/README.md",
+            "line": 131
+          }
+        },
+        {
+          "key": "I_REALLY_WANT_VOLATILE_STORAGE",
+          "value": "true",
+          "location": {
+            "file": "docker/README.md",
+            "line": 131
+          }
+        }
+      ],
+      "location": {
+        "file": "docker/README.md",
+        "line": 131
+      }
+    },
+    {
+      "image": "localhost/vaultwarden/server:testing-arm64",
+      "ports": null,
+      "volumes": null,
+      "env": [
+        {
+          "key": "DISABLE_ADMIN_TOKEN",
+          "value": "true",
+          "location": {
+            "file": "docker/README.md",
+            "line": 170
+          }
+        },
+        {
+          "key": "I_REALLY_WANT_VOLATILE_STORAGE",
+          "value": "true",
+          "location": {
+            "file": "docker/README.md",
+            "line": 170
+          }
+        }
+      ],
+      "location": {
+        "file": "docker/README.md",
+        "line": 170
+      }
+    }
+  ],
+  "notes": null,
+  "suspicious": null,
+  "readmes": [
+    "README.md",
+    "docker/README.md"
+  ],
+  "summary": {
+    "text": "An alternative server implementation of the Bitwarden Client API, written in Rust and compatible with official Bitwarden clients disclaimer, perfect for self-hosted deployment where running the official resource-heavy service might not be ideal.",
+    "location": {
+      "file": "README.md",
+      "line": 3
+    }
+  },
+  "file_mentions": [
+    {
+      "text": "release.yml",
+      "location": {
+        "file": "README.md",
+        "line": 18
+      }
+    },
+    {
+      "text": "release.yml",
+      "location": {
+        "file": "README.md",
+        "line": 18
+      }
+    },
+    {
+      "text": "build.yml",
+      "location": {
+        "file": "README.md",
+        "line": 19
+      }
+    },
+    {
+      "text": "build.yml",
+      "location": {
+        "file": "README.md",
+        "line": 19
+      }
+    },
+    {
+      "text": "compose.yaml",
+      "location": {
+        "file": "README.md",
+        "line": 97
+      }
+    }
+  ],
+  "stack_hints": [
+    "Cargo.toml",
+    "macros/Cargo.toml"
+  ],
+  "problems": null
+}

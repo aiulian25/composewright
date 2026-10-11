@@ -1,0 +1,41 @@
+name: 'Push'
+
+on:
+  push:
+    branches:
+      - "master"
+    tags:
+      - "v*"
+
+concurrency:
+  group: ci-tests-${{ github.ref }}-1
+  cancel-in-progress: true
+
+jobs:
+  call-lint:
+    uses: ./.github/workflows/_golangci-lint.yml
+  call-test:
+    uses: ./.github/workflows/_test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN}}
+  call-e2e:
+    uses: ./.github/workflows/_e2e.yml
+  call-gorelease:
+    needs: [call-lint, call-test, call-e2e]
+    uses: ./.github/workflows/_gorelease.yml
+  call-buildx:
+    needs: call-gorelease
+    uses: ./.github/workflows/_buildx.yml
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+  call-buildx-alpine:
+    needs: call-gorelease
+    # only build on pull requests from the same repo for now
+    uses: ./.github/workflows/_buildx.yml
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+    with:
+      tag_prefix: alpine-
+      dockerfile: Dockerfile.alpine

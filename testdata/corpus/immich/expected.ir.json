@@ -1,0 +1,495 @@
+{
+  "ir_version": "1",
+  "app": {
+    "name": "immich-server",
+    "summary": "Access the demo here. For the mobile app, you can use https://demo.immich.app for the Server Endpoint URL.",
+    "upstream_url": "https://github.com/immich-app/immich",
+    "docs_url": ""
+  },
+  "services": [
+    {
+      "name": "immich-server",
+      "role": "app",
+      "image": {
+        "registry": "ghcr.io",
+        "repository": "immich-app/immich-server",
+        "tag": "v3",
+        "digest": "",
+        "provenance": {
+          "source": "compose",
+          "source_ref": "docker/docker-compose.yml:15",
+          "confidence": "high"
+        }
+      },
+      "command": [],
+      "entrypoint": [],
+      "env": [
+        {
+          "key": "DB_PASSWORD",
+          "ref": "DB_PASSWORD",
+          "literal": "",
+          "required": false,
+          "secret": true,
+          "description": "Connection secret for postgres. You should change it to a random password Please use only the characters `A-Za-z0-9`, without special characters or spaces",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": "docker/example.env:17",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "DB_USERNAME",
+          "ref": "DB_USERNAME",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "The values below this line do not need to be changed",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": "docker/example.env:21",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "DB_DATABASE_NAME",
+          "ref": "DB_DATABASE_NAME",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "Database name",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": "docker/example.env:22",
+            "confidence": "medium"
+          }
+        }
+      ],
+      "ports": [
+        {
+          "container": 2283,
+          "protocol": "tcp",
+          "publish": true,
+          "host_port": 2283,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker/docker-compose.yml:26",
+            "confidence": "high"
+          }
+        }
+      ],
+      "volumes": [
+        {
+          "name": "library",
+          "container_path": "/data",
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker/docker-compose.yml:21",
+            "confidence": "high"
+          }
+        }
+      ],
+      "depends_on": [
+        {
+          "service": "database",
+          "condition": "service_started"
+        },
+        {
+          "service": "redis",
+          "condition": "service_healthy"
+        }
+      ],
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "immich-healthcheck"
+        ],
+        "interval": "",
+        "timeout": "",
+        "retries": 0,
+        "start_period": "",
+        "omitted_reason": "",
+        "provenance": {
+          "source": "dockerfile",
+          "source_ref": "server/Dockerfile:127",
+          "confidence": "medium"
+        }
+      },
+      "user": "",
+      "resources": {
+        "memory_limit": "2g",
+        "cpus": "",
+        "pids_limit": 0
+      },
+      "notes": [
+        "upstream bind mount ./library:/data is a named volume here (use --storage bind for a host folder)",
+        "upstream mounts the host path /etc/localtime; it is left out"
+      ],
+      "provenance": {
+        "source": "compose",
+        "source_ref": "docker/docker-compose.yml:13",
+        "confidence": "high"
+      }
+    },
+    {
+      "name": "immich-machine-learning",
+      "role": "worker",
+      "image": {
+        "registry": "ghcr.io",
+        "repository": "immich-app/immich-machine-learning",
+        "tag": "v3",
+        "digest": "",
+        "provenance": {
+          "source": "compose",
+          "source_ref": "docker/docker-compose.yml:38",
+          "confidence": "high"
+        }
+      },
+      "command": [],
+      "entrypoint": [],
+      "env": [
+        {
+          "key": "DB_PASSWORD",
+          "ref": "DB_PASSWORD",
+          "literal": "",
+          "required": false,
+          "secret": true,
+          "description": "Connection secret for postgres. You should change it to a random password Please use only the characters `A-Za-z0-9`, without special characters or spaces",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": "docker/example.env:17",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "DB_USERNAME",
+          "ref": "DB_USERNAME",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "The values below this line do not need to be changed",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": "docker/example.env:21",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "DB_DATABASE_NAME",
+          "ref": "DB_DATABASE_NAME",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "Database name",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": "docker/example.env:22",
+            "confidence": "medium"
+          }
+        }
+      ],
+      "ports": [],
+      "volumes": [
+        {
+          "name": "model-cache",
+          "container_path": "/cache",
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker/docker-compose.yml:43",
+            "confidence": "high"
+          }
+        }
+      ],
+      "depends_on": [],
+      "healthcheck": {
+        "test": [],
+        "interval": "",
+        "timeout": "",
+        "retries": 0,
+        "start_period": "",
+        "omitted_reason": "",
+        "provenance": {
+          "source": "compose",
+          "source_ref": "docker/docker-compose.yml:47",
+          "confidence": "high"
+        }
+      },
+      "user": "",
+      "resources": {
+        "memory_limit": "2g",
+        "cpus": "",
+        "pids_limit": 0
+      },
+      "notes": [],
+      "provenance": {
+        "source": "compose",
+        "source_ref": "docker/docker-compose.yml:34",
+        "confidence": "high"
+      }
+    },
+    {
+      "name": "redis",
+      "role": "cache",
+      "image": {
+        "registry": "docker.io",
+        "repository": "valkey/valkey",
+        "tag": "9",
+        "digest": "sha256:c123e3715db63d06d4ad6964884037aa0d5d4d703939b9929954112889708e1d",
+        "provenance": {
+          "source": "compose",
+          "source_ref": "docker/docker-compose.yml:52",
+          "confidence": "high"
+        }
+      },
+      "command": [],
+      "entrypoint": [],
+      "env": [],
+      "ports": [],
+      "volumes": [
+        {
+          "name": "redis-data",
+          "container_path": "/data",
+          "description": "valkey data",
+          "provenance": {
+            "source": "sidecar_rule",
+            "source_ref": "",
+            "confidence": "medium"
+          }
+        }
+      ],
+      "depends_on": [],
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "redis-cli ping | grep -q PONG || exit 1"
+        ],
+        "interval": "",
+        "timeout": "",
+        "retries": 0,
+        "start_period": "",
+        "omitted_reason": "",
+        "provenance": {
+          "source": "compose",
+          "source_ref": "docker/docker-compose.yml:53",
+          "confidence": "high"
+        }
+      },
+      "user": "",
+      "resources": {
+        "memory_limit": "",
+        "cpus": "",
+        "pids_limit": 0
+      },
+      "notes": [],
+      "provenance": {
+        "source": "compose",
+        "source_ref": "docker/docker-compose.yml:50",
+        "confidence": "high"
+      }
+    },
+    {
+      "name": "database",
+      "role": "worker",
+      "image": {
+        "registry": "ghcr.io",
+        "repository": "immich-app/postgres",
+        "tag": "14-vectorchord0.4.3-pgvectors0.2.0",
+        "digest": "sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23",
+        "provenance": {
+          "source": "compose",
+          "source_ref": "docker/docker-compose.yml:59",
+          "confidence": "high"
+        }
+      },
+      "command": [],
+      "entrypoint": [],
+      "env": [
+        {
+          "key": "POSTGRES_PASSWORD",
+          "ref": "DB_PASSWORD",
+          "literal": "",
+          "required": false,
+          "secret": true,
+          "description": "Connection secret for postgres. You should change it to a random password Please use only the characters `A-Za-z0-9`, without special characters or spaces",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker/docker-compose.yml:61",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "POSTGRES_USER",
+          "ref": "DB_USERNAME",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "The values below this line do not need to be changed",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker/docker-compose.yml:62",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "POSTGRES_DB",
+          "ref": "DB_DATABASE_NAME",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "Database name",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker/docker-compose.yml:63",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "POSTGRES_INITDB_ARGS",
+          "ref": "POSTGRES_INITDB_ARGS",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker/docker-compose.yml:64",
+            "confidence": "high"
+          }
+        }
+      ],
+      "ports": [],
+      "volumes": [
+        {
+          "name": "postgres",
+          "container_path": "/var/lib/postgresql/data",
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker/docker-compose.yml:69",
+            "confidence": "high"
+          }
+        }
+      ],
+      "depends_on": [],
+      "healthcheck": {
+        "test": [],
+        "interval": "",
+        "timeout": "",
+        "retries": 0,
+        "start_period": "",
+        "omitted_reason": "",
+        "provenance": {
+          "source": "compose",
+          "source_ref": "docker/docker-compose.yml:72",
+          "confidence": "high"
+        }
+      },
+      "user": "",
+      "resources": {
+        "memory_limit": "2g",
+        "cpus": "",
+        "pids_limit": 0
+      },
+      "notes": [
+        "upstream bind mount ./postgres:/var/lib/postgresql/data is a named volume here (use --storage bind for a host folder)"
+      ],
+      "provenance": {
+        "source": "compose",
+        "source_ref": "docker/docker-compose.yml:57",
+        "confidence": "high"
+      }
+    }
+  ],
+  "env_file": [
+    {
+      "key": "DB_PASSWORD",
+      "value": "",
+      "generate": "hex32",
+      "secret": true,
+      "required": false,
+      "description": "Connection secret for postgres. You should change it to a random password Please use only the characters `A-Za-z0-9`, without special characters or spaces",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "docker/example.env:17",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "DB_USERNAME",
+      "value": "postgres",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "The values below this line do not need to be changed",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "docker/example.env:21",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "DB_DATABASE_NAME",
+      "value": "immich",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "Database name",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": "docker/example.env:22",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "POSTGRES_INITDB_ARGS",
+      "value": "--data-checksums",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "docker/docker-compose.yml:64",
+        "confidence": "high"
+      }
+    }
+  ],
+  "needs": [],
+  "probe": {
+    "service": "immich-server",
+    "port": 2283,
+    "path": "/",
+    "expect": []
+  },
+  "post_install_notes": [
+    "Open [localhost:8888](http://localhost:8888) and login with the default credentials from above. (docs/docs/guides/database-gui.md:35)",
+    "- The default admin user must be enabled to run containers. (docs/docs/install/qnap.md:17)",
+    "Since TrueNAS Community Edition 24.10.2.2 and later, Immich can be run as any user and group, the default user being apps (UID 568) and the default group being apps (GID 568). This user, either apps or another user you choose, must have _modify_ permissions on the data dataset. (docs/docs/install/truenas.md:51)",
+    "Application in TrueNAS runs as a specific user and group. Immich uses the default user apps (UID 568) and the default group apps (GID 568). (docs/docs/install/truenas.md:171)",
+    "2. Update the datasets permissions: Ensure that the datasets used for Immich data storage (library, upload, thumbs, profile, video, backups) have the correct permissions set for the user who will run Immich. The user should have _modify_ permissions on these datasets. The default user for Immich is apps (UID 568) and the default group is apps (GID 568). If you are using a different user, make sure to set the permissions accordingly. You can do this from the TrueNAS web interface by going to the Datasets screen, selecting each dataset, clicking on the Edit button next to Permissions, and adding the user with _modify_ permissions. (docs/docs/install/truenas.md:463)",
+    "DB_PASSWORD was generated for you; it is in .env"
+  ],
+  "confidence": "high",
+  "evidence": [
+    {
+      "claim": "compose file docker/docker-compose.yml chosen among 4 upstream compose files",
+      "file": "docker/docker-compose.yml",
+      "line": 1
+    },
+    {
+      "claim": "app image ghcr.io/immich-app/immich-server",
+      "file": "docker/docker-compose.yml",
+      "line": 15
+    }
+  ],
+  "suspicious_instructions": [],
+  "unfilled": [
+    "env_file.POSTGRES_INITDB_ARGS.description"
+  ]
+}

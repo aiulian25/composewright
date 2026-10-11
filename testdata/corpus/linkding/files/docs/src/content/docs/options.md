@@ -1,0 +1,395 @@
+---
+title: "Options"
+description: "Options for configuring linkding"
+---
+
+This document lists the options that linkding can be configured with and explains how to use them in the individual install scenarios.
+
+## Using options
+
+### Docker
+
+Options are passed as environment variables to the Docker container by using the `-e` argument when using `docker run`. For example:
+
+```
+docker run --name linkding -p 9090:9090 -d -e LD_DISABLE_URL_VALIDATION=True sissbruecker/linkding:latest
+```
+
+For multiple options, use one `-e` argument per option.
+
+### Docker-compose
+
+For docker-compose options are configured using an `.env` file.
+Follow the docker-compose setup in the README and copy `.env.sample` to `.env`. Then modify the options in `.env`.
+
+## List of options
+
+### `LD_SUPERUSER_NAME`
+
+Values: `String` | Default = None
+
+When set, creates an initial superuser with the specified username when starting the container.
+Does nothing if the user already exists.
+
+See [`LD_SUPERUSER_PASSWORD`](#ld_superuser_password) on how to configure the respective password.
+
+### `LD_SUPERUSER_PASSWORD`
+
+Values: `String` | Default = None
+
+The password for the initial superuser.
+When left undefined, the superuser will be created without a usable password, which means the user can not authenticate using credentials / through the login form, and can only be authenticated using proxy authentication (see [`LD_ENABLE_AUTH_PROXY`](#ld_enable_auth_proxy)).
+
+### `LD_DISABLE_BACKGROUND_TASKS`
+
+Values: `True`, `False` | Default = `False`
+
+Disables background tasks, such as creating snapshots for bookmarks on the [the Internet Archive Wayback Machine](https://archive.org/web/).
+Enabling this flag will prevent the background task processor from starting up, and prevents scheduling tasks.
+This might be useful if you are experiencing performance issues or other problematic behaviour due to background task processing.
+
+### `LD_SUPERVISOR_MANAGED` (Experimental)
+
+Values: `True`, `False` | Default = `False`
+
+Changes how processes are managed within the container.
+When enabled, supervisor manages both the background task processor and the web server (uwsgi).
+This enables background task logs to appear in the container output (visible via `docker logs`).
+At the moment, supervisor will automatically restart crashed processes and the `LD_DISABLE_BACKGROUND_TASKS` setting is ignored.
+
+When disabled (default), the background task processor runs as a daemon and uwsgi runs as the main process.
+Background task logs are written to a file (`background_tasks.log`) instead of the container output.
+
+### `LD_DISABLE_URL_VALIDATION`
+
+Values: `True`, `False` | Default = `False`
+
+Completely disables URL validation for bookmarks.
+This can be useful if you intend to store non fully qualified domain name URLs, such as network paths, or you want to store URLs that use another protocol than `http` or `https`.
+
+### `LD_ALLOWED_INTERNAL_HOSTS`
+
+Values: `String` | Default = None
+
+By default, linkding refuses to load data from URLs that point to hosts on internal networks, such as the server linkding runs on, other Docker containers, hosts on your local network, or cloud provider metadata services.
+This protects against server-side request forgery (SSRF), where a user of a linkding instance could otherwise use it to access services on the internal network that are not reachable from the outside.
+The protection covers loading website metadata (title, description), preview images and PDF snapshots.
+For HTML snapshots, the bookmark URL and any redirects are checked before the snapshot is created, but the browser process that creates the snapshot is not restricted, so it can still load embedded resources from internal hosts.
+
+If you want to bookmark URLs on your local network and have linkding load metadata for them, you can allow specific hosts with this option.
+The value is a comma-separated list of hostnames, IP addresses, or IP ranges in CIDR notation.
+A hostname starting with a dot allows the domain and all of its subdomains.
+Use `*` to disable the protection completely and allow all hosts.
+
+Examples:
+- `nas.local,192.168.1.20` - allow a specific host by name and another one by IP address
+- `192.168.1.0/24,.home.arpa` - allow a whole IP range and all hosts under a domain
+- `*` - allow all hosts
+
+Blocked requests are logged as warnings.
+Note that configuring an HTTP proxy for linkding through the `HTTP_PROXY` / `HTTPS_PROXY` environment variables circumvents this protection, as all connections are then made to the proxy, which in turn connects to the actual host.
+
+### `LD_REQUEST_MAX_CONTENT_LENGTH`
+
+Values: `Integer` as bytes | Default = `None`
+
+Configures the maximum content length for POST requests in the uwsgi application server. This can be used to prevent uploading large files that might cause the server to run out of memory. By default, the server does not limit the content length.
+
+### `LD_REQUEST_TIMEOUT`
+
+Values: `Integer` as seconds | Default = `60`
+
+Configures the request timeout in the uwsgi application server. This can be useful if you want to import a bookmark file with a high number of bookmarks and run into request timeouts.
+
+### `LD_SERVER_HOST`
+
+Values: Valid address for socket to bind to | Default = `[::]`
+
+Allows to set a custom host for the UWSGI server running in the container. The default creates a dual stack socket, which will respond to IPv4 and IPv6 requests. IPv4 requests are logged as IPv4-mapped IPv6 addresses, such as "::ffff:127.0.0.1". If reverting to an IPv4-only socket is desired, this can be set to "0.0.0.0".
+
+### `LD_SERVER_PORT`
+
+Values: Valid port number | Default = `9090`
+
+Allows to set a custom port for the UWSGI server running in the container. While Docker containers have their own IP address namespace and port collisions are impossible to achieve, there are other container solutions that share one. Podman, for example, runs all containers in a pod under one namespace, which results in every port only being allowed to be assigned once. This option allows to set a custom port in order to avoid collisions with other containers.
+
+### `LD_CONTEXT_PATH`
+
+Values: `String` | Default = None
+
+Allows configuring the context path of the website. Useful for setting up Nginx reverse proxy.
+The context path must end with a slash. For example: `linkding/`
+
+### `LD_ENABLE_AUTH_PROXY`
+
+Values: `True`, `False` | Default = `False`
+
+Enables support for authentication proxies such as Authelia.
+This effectively disables credentials-based authentication and instead authenticates users if a specific request header contains a known username.
+You must make sure that your proxy (nginx, Traefik, Caddy, ...) forwards this header from your auth proxy to linkding. Check the documentation of your auth proxy and your reverse proxy on how to correctly set this up.
+
+Note that this automatically creates new users in the database if they do not already exist.
+
+Enabling this setting also requires configuring the following options:
+- `LD_AUTH_PROXY_USERNAME_HEADER` - The name of the request header that the auth proxy passes to the proxied application (linkding in this case), so that the application can identify the user.
+Check the documentation of your auth proxy to get this information.
+Note that the request headers are rewritten in linkding: all HTTP headers are prefixed with `HTTP_`, all letters are in uppercase, and dashes are replaced with underscores.
+For example, for Authelia, which passes the `Remote-User` HTTP header, the `LD_AUTH_PROXY_USERNAME_HEADER` needs to be configured as `HTTP_REMOTE_USER`.
+- `LD_AUTH_PROXY_LOGOUT_URL` - The URL that linkding should redirect to after a logout.
+By default, the logout redirects to the login URL, which means the user will be automatically authenticated again.
+Instead, you might want to configure the logout URL of the auth proxy here.
+
+:::note[Using REST API clients]
+
+If you intend to use any API client (e.g. the browser extension, a mobile app, or anything that requires you to configure an API token) you need to bypass the authentication proxy for API requests. These clients can not complete the authentication flow you would use when accessing linkding in the browser and authenticate with an API token instead. You must take care to not over-match your routes when doing this, as API calls are also made in-page by linkding and these should pass through the authentication proxy.
+
+<details>
+
+<summary>Example using Caddy and Authelia</summary>
+
+```
+linkding.example.com {
+  # Requests for /api/* with an API token may skip the authentication proxy.
+  @external_api_call {
+    path /api/*
+    header Authorization *
+  }
+  handle @external_api_call {
+    reverse_proxy linkding:9090
+  }
+
+  # otherwise pass all requests through the authentication proxy.
+  handle {
+    forward_auth authelia:9091 {
+      uri /api/authz/forward-auth
+      copy_headers Remote-User
+    }
+    reverse_proxy linkding:9090
+  }
+}
+```
+
+</details>
+:::
+
+### `LD_ENABLE_OIDC`
+
+Values: `True`, `False` | Default = `False`
+
+Enables support for OpenID Connect (OIDC) authentication, allowing to use single sign-on (SSO) with OIDC providers.
+When enabled, this shows a button on the login page that allows users to authenticate using an OIDC provider.
+Users are associated by the email address provided from the OIDC provider, which is by default also used as username in linkding. You can configure a custom claim to be used as username with `OIDC_USERNAME_CLAIM`.
+If there is no user with that email address as username, a new user is created automatically.
+
+This requires configuring a number of options, which of those you need depends on which OIDC provider you use and how it is configured.
+In general, you should find the required information in the UI of your OIDC provider, or its documentation.
+
+The options are adopted from the [mozilla-django-oidc](https://mozilla-django-oidc.readthedocs.io/en/stable/) library, which is used by linkding for OIDC support.
+Please check their documentation for more information on the options.
+
+The following options can be configured:
+- `OIDC_OP_AUTHORIZATION_ENDPOINT` - The authorization endpoint of the OIDC provider.
+- `OIDC_OP_TOKEN_ENDPOINT` - The token endpoint of the OIDC provider.
+- `OIDC_OP_USER_ENDPOINT` - The user info endpoint of the OIDC provider.
+- `OIDC_OP_JWKS_ENDPOINT` - The JWKS endpoint of the OIDC provider.
+- `OIDC_RP_CLIENT_ID` - The client ID of the application.
+- `OIDC_RP_CLIENT_SECRET` - The client secret of the application.
+- `OIDC_RP_SIGN_ALGO` - The algorithm the OIDC provider uses to sign ID tokens. Default is `RS256`.
+- `OIDC_USE_PKCE` - Whether to use PKCE for the OIDC flow. Default is `True`.
+- `OIDC_VERIFY_SSL` - Whether to verify the SSL certificate of the OIDC provider. Set to `False` if using self-signed certificates or custom certificate authority. Default is `True`.
+- `OIDC_RP_SCOPES` - Scopes asked for on the authorization flow. Default is `oidc email profile`.
+- `OIDC_USERNAME_CLAIM` - A custom claim to used as username for new accounts, for example `preferred_username`. If the configured claim does not exist or is empty, the email claim is used as fallback. Default is `email`.
+
+#### `OIDC` and `LD_SUPERUSER_NAME`
+
+As noted above, OIDC matches users by email address, but `LD_SUPERUSER_NAME` will only set the username.
+Instead of setting `LD_SUPERUSER_NAME` it is recommended that you use the method described in [User setup](/installation#user-setup) to configure a superuser with both username and email address.
+This way when OIDC searches for a matching user it will find the superuser account you created.
+Note that you should create the superuser **before** logging in with OIDC for the first time.
+
+<details>
+
+<summary>Authelia Example</summary>
+
+#### Linkding Configuration
+
+```bash
+LD_ENABLE_OIDC=True
+OIDC_OP_AUTHORIZATION_ENDPOINT=https://auth.example.com/api/oidc/authorization
+OIDC_OP_TOKEN_ENDPOINT=https://auth.example.com/api/oidc/token
+OIDC_OP_USER_ENDPOINT=https://auth.example.com/api/oidc/userinfo
+OIDC_OP_JWKS_ENDPOINT=https://auth.example.com/jwks.json
+OIDC_RP_CLIENT_ID=linkding
+OIDC_RP_CLIENT_SECRET=myClientSecret
+```
+#### Authelia Configuration
+
+```yaml
+identity_providers:
+  oidc:
+    # --- more OIDC provider configuration ---
+
+    clients:
+      - id: linkding
+        description: Linkding
+        # docker run --rm authelia/authelia:latest authelia crypto rand --length 64 --charset alphanumeric
+        secret: myClientSecret
+        public: false
+        token_endpoint_auth_method: client_secret_post
+        scopes:
+          - openid
+          - email
+          - profile
+        redirect_uris:
+          - https://linkding.example.com/oidc/callback/
+```
+
+</details>
+
+### `LD_DISABLE_LOGIN_FORM`
+
+Values: `True`, `False` | Default = `False`
+
+Disables the login form on the login page.
+This is useful when you want to enforce authentication through OIDC only.
+When enabled, users will not be able to log in using their username and password, and only the "Login with OIDC" button will be shown on the login page.
+
+### `LD_SESSION_COOKIE_AGE`
+
+Values: `Integer` as seconds | Default = `1209600`
+
+Set the lifetime of the session cookie, in seconds. This value determines how long a browser will stay logged in to the web interface. The default value is 2 weeks.
+
+### `LD_CORS_ALLOWED_ORIGINS`
+
+Values: `String` | Default = None
+
+Comma-separated list of origins that are allowed to call the REST API from a browser, for example when running an alternative web frontend on a different domain.
+Setting this option enables CORS headers for the API endpoints (`/api/*`) only. No other part of the application is affected.
+
+For example, to allow a frontend hosted at https://frontend.mydomain.com, configure the setting to `https://frontend.mydomain.com`.
+Note that origins **must** include the correct protocol (`https` or `http`), and **must not** include a path, query string, fragment or user credentials.
+Origins are compared exactly as sent by the browser, so use lowercase and omit default ports (`:80` and `:443`).
+Multiple origins can be specified by separating them with a comma (`,`). Wildcards (`*`) are not supported, each origin must be listed explicitly.
+
+Cross-origin requests must authenticate using an API token in the `Authorization` header.
+If you need more control over CORS headers, configure them in your reverse proxy instead.
+
+### `LD_CSRF_TRUSTED_ORIGINS`
+
+Values: `String` | Default = None
+
+List of trusted origins / host names to allow for `POST` requests, for example when logging in, or saving bookmarks.
+For these type of requests, the `Origin` header must match the `Host` header, otherwise the request will fail with a `403` status code, and the message `CSRF verification failed.`
+
+This option allows to declare a list of trusted origins that will be accepted even if the headers do not match. This can be the case when using a reverse proxy that rewrites the `Host` header, such as Nginx.
+
+For example, to allow requests to https://linkding.mydomain.com, configure the setting to `https://linkding.mydomain.com`.
+Note that the setting **must** include the correct protocol (`https` or `http`), and **must not** include the application / context path.
+Multiple origins can be specified by separating them with a comma (`,`).
+
+This setting is adopted from the Django framework used by linkding, more information on the setting is available in the [Django documentation](https://docs.djangoproject.com/en/4.0/ref/settings/#std-setting-CSRF_TRUSTED_ORIGINS).
+
+### `LD_USE_X_FORWARDED_HOST`
+
+Values: `true` or `false` | Default =  `false`
+
+If enabled the server will trust the `X-Forwarded-Host` header over the `Host` header to determine the hostname of the server. This should only be enabled if a proxy which sets this header is in use.
+
+This setting is adopted from the Django framework used by linkding, more information on the setting is available in the [Django documentation](https://docs.djangoproject.com/en/6.0/ref/settings/#std-setting-USE_X_FORWARDED_HOST).
+
+### `LD_LOG_X_FORWARDED_FOR`
+
+Values: `true` or `false` | Default =  `false`
+
+Set uWSGI [log-x-forwarded-for](https://uwsgi-docs.readthedocs.io/en/latest/Options.html?#log-x-forwarded-for) parameter allowing to keep the real IP of clients in logs when using a reverse proxy.
+
+### `LD_DB_ENGINE`
+
+Values: `postgres` or `sqlite` | Default = `sqlite`
+
+Database engine used by linkding to store data.
+Currently, linkding supports SQLite and PostgreSQL.
+By default, linkding uses SQLite, for which you don't need to configure anything.
+All the other database variables below are only required for configured PostgresSQL.
+
+### `LD_DB_DATABASE`
+
+Values: `String` | Default =  `linkding`
+
+The name of the database.
+
+### `LD_DB_USER`
+
+Values: `String` | Default =  `linkding`
+
+The name of the user to connect to the database server.
+
+### `LD_DB_PASSWORD`
+
+Values: `String` | Default =  None
+
+The password of the user to connect to the database server.
+The password must be configured when using a database other than SQLite, there is no default value.
+
+### `LD_DB_HOST`
+
+Values: `String` | Default =  `localhost`
+
+The hostname or IP of the database server.
+
+### `LD_DB_PORT`
+
+Values: `Integer` | Default =  None
+
+The port of the database server.
+Should use the default port if left empty, for example `5432` for PostgresSQL.
+
+### `LD_DB_OPTIONS`
+
+Values: `String` | Default = `{}`
+
+A json string with additional options for the database. Passed directly to OPTIONS.
+
+### `LD_FAVICON_PROVIDER`
+
+Values: `String` | Default =  `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url={url}&size=32`
+
+The favicon provider used for downloading icons if they are enabled in the user profile settings.
+The default provider is a Google service that automatically detects the correct favicon for a website, and provides icons in consistent image format (PNG) and in a consistent image size.
+
+This setting allows to configure a custom provider in form of a URL.
+When calling the provider with the URL of a website, it must return the image data for the favicon of that website.
+The configured favicon provider URL must contain a placeholder that will be replaced with the URL of the website for which to download the favicon.
+The available placeholders are:
+- `{url}` - Includes the scheme and hostname of the website, for example `https://example.com`
+- `{domain}` - Includes only the hostname of the website, for example `example.com`
+
+Which placeholder you need to use depends on the respective favicon provider, please check their documentation or usage examples.
+See the default URL for how to insert the placeholder to the favicon provider URL.
+
+Alternative favicon providers:
+- DuckDuckGo: `https://icons.duckduckgo.com/ip3/{domain}.ico`
+
+
+### `LD_SINGLEFILE_TIMEOUT_SEC`
+
+Values: `Float` | Default =  60.0
+
+When creating HTML archive snapshots, control the timeout for how long to wait for the snapshot to complete, in `seconds`.
+Defaults to 60 seconds; on lower-powered hardware you may need to increase this value.
+
+### `LD_SINGLEFILE_OPTIONS`
+
+Values: `String` | Default = None
+
+When creating HTML archive snapshots, pass additional options to the `single-file` application that is used to create snapshots.
+See `single-file --help` for complete list of arguments, or browse source: https://github.com/gildas-lormeau/single-file-cli/blob/master/options.js
+
+Example: `LD_SINGLEFILE_OPTIONS=--user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:124.0) Gecko/20100101 Firefox/124.0"`
+
+### `LD_DISABLE_REQUEST_LOGS`
+
+Values: `true` or `false` | Default =  `false`
+
+Set uWSGI [disable-logging](https://uwsgi-docs.readthedocs.io/en/latest/Options.html#disable-logging) parameter to disable request logs, except for requests with a client (4xx) or server (5xx) error response.

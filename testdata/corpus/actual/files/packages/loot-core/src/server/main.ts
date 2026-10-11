@@ -1,0 +1,385 @@
+// @ts-strict-ignore
+import * as asyncStorage from '#platform/server/asyncStorage';
+import * as connection from '#platform/server/connection';
+import * as fs from '#platform/server/fs';
+import { logger, setVerboseMode } from '#platform/server/log';
+import * as sqlite from '#platform/server/sqlite';
+import { q } from '#shared/query';
+import { amountToInteger, integerToAmount } from '#shared/util';
+import type { Handlers } from '#types/handlers';
+
+import { app as accountGroupsApp } from './account-groups/app';
+import { app as accountsApp } from './accounts/app';
+import { app as adminApp } from './admin/app';
+import { installAPI } from './api';
+import { aqlQuery } from './aql';
+import { app as authApp } from './auth/app';
+import { app as budgetApp } from './budget/app';
+import { app as budgetFilesApp } from './budgetfiles/app';
+import { app as dashboardApp } from './dashboard/app';
+import * as db from './db';
+import * as encryption from './encryption';
+import { app as encryptionApp } from './encryption/app';
+import { DocumentDirError, withErrorCode } from './errors';
+import { app as filtersApp } from './filters/app';
+import { app as forecastApp } from './forecast/app';
+import { app as formulasApp } from './formulas/app';
+import { app } from './main-app';
+import { mutator, runHandler } from './mutators';
+import { app as notesApp } from './notes/app';
+import { app as payeesApp } from './payees/app';
+import { get } from './post';
+import { app as preferencesApp } from './preferences/app';
+import * as prefs from './prefs';
+import { app as reportsApp } from './reports/app';
+import { app as rulesApp } from './rules/app';
+import { app as schedulesApp } from './schedules/app';
+import { getServer, setServer } from './server-config';
+import { app as spreadsheetApp } from './spreadsheet/app';
+import { fullSync, setSyncingMode } from './sync';
+import { app as syncApp } from './sync/app';
+import { app as tagsApp } from './tags/app';
+import { app as toolsApp } from './tools/app';
+import { app as transactionsApp } from './transactions/app';
+import * as rules from './transactions/transaction-rules';
+import { redo, undo } from './undo';
+
+// handlers
+
+// need to work around the type system here because the object
+// is /currently/ empty but we promise to fill it in later
+export let handlers = {} as unknown as Handlers;
+
+handlers['undo'] = mutator(async function () {
+  return undo();
+});
+
+handlers['redo'] = mutator(function () {
+  return redo();
+});
+
+handlers['make-filters-from-conditions'] = async function ({
+  conditions,
+  applySpecialCases,
+}) {
+  return rules.conditionsToAQL(conditions, { applySpecialCases });
+};
+
+handlers['query'] = async function (query) {
+  if (query['table'] == null) {
+    throw new Error('query has no table, did you forgot to call `.serialize`?');
+  }
+
+  return aqlQuery(query);
+};
+
+handlers['get-server-version'] = async function () {
+  if (!getServer()) {
+    return { error: 'no-server' };
+  }
+
+  let version;
+  try {
+    const res = await get(getServer().BASE_SERVER + '/info');
+
+    const info = JSON.parse(res);
+    version = info.build.version;
+  } catch {
+    return { error: 'network-failure' };
+  }
+
+  return { version };
+};
+
+handlers['get-server-url'] = async function () {
+  return getServer() && getServer().BASE_SERVER;
+};
+
+handlers['set-server-url'] = async function ({ url, validate = true }) {
+  if (url == null) {
+    await asyncStorage.removeItem('user-token');
+  } else {
+    url = url.replace(/\/+$/, '');
+
+    if (validate) {
+      // Validate the server is running
+      const result = await runHandler(handlers['subscribe-needs-bootstrap'], {
+        url,
+      });
+      if ('error' in result) {
+        return { error: result.error };
+      }
+    }
+  }
+
+  await asyncStorage.setItem('server-url', url);
+  await asyncStorage.setItem('did-bootstrap', true);
+  setServer(url);
+  return {};
+};
+
+handlers['app-focused'] = async function () {
+  if (prefs.getPrefs() && prefs.getPrefs().id) {
+    // First we sync
+    void fullSync();
+  }
+};
+
+handlers = installAPI(handlers) as Handlers;
+
+// A hack for now until we clean up everything
+app.handlers = handlers;
+app.combine(
+  authApp,
+  schedulesApp,
+  budgetApp,
+  dashboardApp,
+  notesApp,
+  preferencesApp,
+  toolsApp,
+  filtersApp,
+  formulasApp,
+  forecastApp,
+  reportsApp,
+  rulesApp,
+  adminApp,
+  transactionsApp,
+  accountsApp,
+  accountGroupsApp,
+  payeesApp,
+  spreadsheetApp,
+  syncApp,
+  budgetFilesApp,
+  encryptionApp,
+  tagsApp,
+);
+
+export function getDefaultDocumentDir() {
+  return fs.join(process.env.ACTUAL_DOCUMENT_DIR, 'Actual');
+}
+
+async function setupDocumentsDir() {
+  async function ensureExists(dir) {
+    // Make sure the document folder exists
+    if (!(await fs.exists(dir))) {
+      await fs.mkdir(dir);
+    }
+  }
+
+  let documentDir = await asyncStorage.getItem('document-dir');
+
+  // Test the existing documents directory to make sure it's a valid
+  // path that exists, and if it errors fallback to the default one
+  if (documentDir) {
+    try {
+      await ensureExists(documentDir);
+    } catch {
+      documentDir = null;
+    }
+  }
+
+  if (!documentDir) {
+    documentDir = getDefaultDocumentDir();
+  }
+
+  try {
+    await ensureExists(documentDir);
+    await ensureUsable(documentDir);
+  } catch (error) {
+    // Surface the exact folder and the filesystem error so the desktop app
+    // can show the user what is blocking startup (e.g. Windows Controlled
+    // Folder Access) instead of hanging on the loading screen.
+    throw new DocumentDirError(documentDir, error);
+  }
+  fs._setDocumentDir(documentDir);
+}
+
+// Existence alone isn't enough: the folder may be there but unreadable (no
+// permissions) or unwritable (Windows Controlled Folder Access blocks writes
+// without changing permissions). Fail fast here rather than half-way through
+// loading budgets.
+async function ensureUsable(dir) {
+  await fs.listDir(dir);
+
+  // Unique per run so we never touch (let alone delete) something the user
+  // put there; only the directory this call created is removed.
+  const probeName = `.actual-write-test-${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2)}`;
+  const probeDir = fs.join(dir, probeName);
+  await fs.mkdir(probeDir);
+  await fs.removeDir(probeDir);
+}
+
+export async function initApp(isDev, socketName) {
+  await sqlite.init();
+  asyncStorage.init();
+  await fs.init();
+  await setupDocumentsDir();
+
+  const keysStr = await asyncStorage.getItem('encrypt-keys');
+  if (keysStr) {
+    try {
+      const keys = JSON.parse(keysStr);
+
+      // Load all the keys
+      await Promise.all(
+        Object.keys(keys).map(fileId => {
+          return encryption.loadKey(keys[fileId]);
+        }),
+      );
+    } catch (e) {
+      logger.log('Error loading key', e);
+      throw new Error('load-key-error');
+    }
+  }
+
+  const url = await asyncStorage.getItem('server-url');
+
+  if (!url) {
+    await asyncStorage.removeItem('user-token');
+  }
+  setServer(url);
+
+  connection.init(socketName, app.handlers);
+
+  // Allow running DB queries locally
+  global.$query = aqlQuery;
+  global.$q = q;
+
+  if (isDev) {
+    global.$send = (name, args) => runHandler(app.handlers[name], args);
+    global.$db = db;
+    global.$setSyncingMode = setSyncingMode;
+  }
+}
+
+type BaseInitConfig = {
+  /**
+   * Directory where budget data is stored. In Node this is a directory on
+   * disk (defaults to the current working directory) and must already exist.
+   * In the browser build it is a path inside the worker's virtual filesystem
+   * (persisted to IndexedDB); it defaults to `/documents` and is created
+   * automatically if missing.
+   */
+  dataDir?: string;
+  verbose?: boolean;
+};
+
+type ServerInitConfig = BaseInitConfig & {
+  serverURL: string;
+};
+
+type PasswordAuthConfig = ServerInitConfig & {
+  password: string;
+  sessionToken?: never;
+};
+
+type SessionTokenAuthConfig = ServerInitConfig & {
+  sessionToken: string;
+  password?: never;
+};
+
+type NoServerConfig = BaseInitConfig & {
+  serverURL?: undefined;
+  password?: never;
+  sessionToken?: never;
+};
+
+export type InitConfig =
+  | PasswordAuthConfig
+  | SessionTokenAuthConfig
+  | NoServerConfig;
+
+export async function init(config: InitConfig) {
+  // Get from build
+
+  let dataDir, serverURL;
+  if (config) {
+    dataDir = config.dataDir;
+    serverURL = config.serverURL;
+
+    // Set verbose mode if specified
+    if (config.verbose !== undefined) {
+      setVerboseMode(config.verbose);
+    }
+  } else {
+    dataDir = process.env.ACTUAL_DATA_DIR;
+    serverURL = process.env.ACTUAL_SERVER_URL;
+  }
+
+  await sqlite.init();
+  asyncStorage.init({ persist: false });
+  await fs.init();
+  fs._setDocumentDir(dataDir || process.cwd());
+
+  if (serverURL) {
+    setServer(serverURL);
+
+    if ('sessionToken' in config && config.sessionToken) {
+      // Session token authentication
+      await runHandler(handlers['subscribe-set-token'], {
+        token: config.sessionToken,
+      });
+      // Validate the token
+      const user = await runHandler(handlers['subscribe-get-user'], undefined);
+      if (!user || user.tokenExpired === true) {
+        // Clear invalid token
+        await runHandler(handlers['subscribe-set-token'], { token: '' });
+        throw withErrorCode(
+          new Error('Authentication failed: invalid or expired session token'),
+          'token-expired',
+        );
+      }
+      if (user.offline === true) {
+        // Clear token since we can't validate
+        await runHandler(handlers['subscribe-set-token'], { token: '' });
+        throw withErrorCode(
+          new Error('Authentication failed: server offline or unreachable'),
+          'network-failure',
+        );
+      }
+    } else if ('password' in config && config.password) {
+      const result = await runHandler(handlers['subscribe-sign-in'], {
+        password: config.password,
+      });
+      if (result?.error) {
+        // `result.error` is already a machine-readable slug (e.g.
+        // 'invalid-password', 'network-failure')
+        throw withErrorCode(
+          new Error(`Authentication failed: ${result.error}`),
+          result.error,
+        );
+      }
+    }
+  } else {
+    // This turns off all server URLs. In this mode we don't want any
+    // access to the server, we are doing things locally
+    setServer(null);
+
+    app.events.on('load-budget', () => {
+      setSyncingMode('offline');
+    });
+  }
+
+  return lib;
+}
+
+// Export a few things required for the platform
+
+export const lib = {
+  getDataDir: fs.getDataDir,
+  sendMessage: (msg, args) => connection.send(msg, args),
+  send: async <K extends keyof Handlers, T extends Handlers[K]>(
+    name: K,
+    args?: Parameters<T>[0],
+  ): Promise<Awaited<ReturnType<T>>> => {
+    const res = await runHandler(app.handlers[name], args);
+    return res;
+  },
+  on: (name, func) => app.events.on(name, func),
+  q,
+  db,
+  amountToInteger,
+  integerToAmount,
+};

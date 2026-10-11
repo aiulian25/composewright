@@ -1,0 +1,6710 @@
+{
+  "files": [
+    "README.md",
+    "deployment/.env",
+    "docker/README.md",
+    "docker/docker-compose.dev.yml",
+    "docker/docker-compose.prod.yml",
+    "docker/docker-compose.rootless.yml",
+    "docker/docker-compose.yml",
+    "docker/example.env",
+    "docker/hwaccel.ml.yml",
+    "docker/hwaccel.transcoding.yml",
+    "docker/prometheus.yml",
+    "docs/README.md",
+    "docs/docs/administration/backup-and-restore.md",
+    "docs/docs/administration/jobs-workers.md",
+    "docs/docs/administration/maintenance-mode.md",
+    "docs/docs/administration/oauth.md",
+    "docs/docs/administration/postgres-standalone.md",
+    "docs/docs/administration/reverse-proxy.md",
+    "docs/docs/administration/server-commands.md",
+    "docs/docs/administration/server-stats.md",
+    "docs/docs/administration/system-integrity.md",
+    "docs/docs/administration/system-settings.md",
+    "docs/docs/api.md",
+    "docs/docs/developer/database-migrations.md",
+    "docs/docs/developer/devcontainers.md",
+    "docs/docs/developer/directories.md",
+    "docs/docs/developer/pr-checklist.md",
+    "docs/docs/developer/setup.md",
+    "docs/docs/developer/testing.md",
+    "docs/docs/developer/translations.md",
+    "docs/docs/developer/troubleshooting.md",
+    "docs/docs/features/casting.md",
+    "docs/docs/features/command-line-interface.md",
+    "docs/docs/features/duplicates-utility.md",
+    "docs/docs/features/facial-recognition.md",
+    "docs/docs/features/folder-view.md",
+    "docs/docs/features/hardware-transcoding.md",
+    "docs/docs/features/libraries.md",
+    "docs/docs/features/locked-folder.md",
+    "docs/docs/features/ml-hardware-acceleration.md",
+    "docs/docs/features/mobile-backup.md",
+    "docs/docs/features/monitoring.md",
+    "docs/docs/features/partner-sharing.md",
+    "docs/docs/features/reverse-geocoding.md",
+    "docs/docs/features/searching.md",
+    "docs/docs/features/sharing.md",
+    "docs/docs/features/supported-formats.md",
+    "docs/docs/features/tags.md",
+    "docs/docs/features/user-settings.md",
+    "docs/docs/features/xmp-sidecars.md",
+    "docs/docs/guides/better-facial-clusters.md",
+    "docs/docs/guides/custom-locations.md",
+    "docs/docs/guides/custom-map-styles.md",
+    "docs/docs/guides/database-gui.md",
+    "docs/docs/guides/database-queries.md",
+    "docs/docs/guides/docker-help.md",
+    "docs/docs/guides/external-library.md",
+    "docs/docs/guides/python-file-upload.md",
+    "docs/docs/guides/remote-access.md",
+    "docs/docs/guides/remote-machine-learning.md",
+    "docs/docs/guides/scaling-immich.md",
+    "docs/docs/guides/smtp-gmail.md",
+    "docs/docs/guides/smtp-microsoft365.md",
+    "docs/docs/guides/template-backup-script.md",
+    "docs/docs/install/all-in-one.md",
+    "docs/docs/install/config-file.md",
+    "docs/docs/install/environment-variables.md",
+    "docs/docs/install/kubernetes.md",
+    "docs/docs/install/one-click.md",
+    "docs/docs/install/portainer.md",
+    "docs/docs/install/qnap.md",
+    "docs/docs/install/requirements.md",
+    "docs/docs/install/script.md",
+    "docs/docs/install/synology.md",
+    "docs/docs/install/truenas.md",
+    "docs/docs/install/unraid.md",
+    "docs/docs/install/upgrading.md",
+    "docs/docs/overview/comparison.md",
+    "docs/docs/overview/help.md",
+    "docs/docs/overview/support-the-project.md",
+    "docs/docs/partials/_mobile-app-backup.md",
+    "docs/docs/partials/_mobile-app-download.md",
+    "docs/docs/partials/_mobile-app-login.md",
+    "docs/docs/partials/_register-admin.md",
+    "docs/docs/partials/_server-backup.md",
+    "docs/docs/partials/_storage-template.md",
+    "docs/docs/partials/_user-create.md",
+    "docs/package.json",
+    "docs/src/pages/errors.md",
+    "fastlane/README.md",
+    "machine-learning/Dockerfile",
+    "machine-learning/README.md",
+    "machine-learning/ann/export/env.yaml",
+    "machine-learning/ann/export/run.py",
+    "machine-learning/immich_ml/__main__.py",
+    "machine-learning/immich_ml/config.py",
+    "machine-learning/immich_ml/gunicorn_conf.py",
+    "machine-learning/pyproject.toml",
+    "machine-learning/scripts/healthcheck.py",
+    "mobile/README.md",
+    "mobile/analysis_options.yaml",
+    "mobile/android/Gemfile",
+    "mobile/android/fastlane/README.md",
+    "mobile/build.yaml",
+    "mobile/dcm_global.yaml",
+    "mobile/devtools_options.yaml",
+    "mobile/flutter_native_splash.yaml",
+    "mobile/ios/Gemfile",
+    "mobile/ios/Runner/Assets.xcassets/LaunchImage.imageset/README.md",
+    "mobile/ios/fastlane/README.md",
+    "mobile/lib/domain/README.md",
+    "mobile/lib/infrastructure/README.md",
+    "mobile/packages/ui/pubspec.yaml",
+    "mobile/pubspec.yaml",
+    "package.json",
+    "packages/cli/Dockerfile",
+    "packages/cli/README.md",
+    "packages/cli/package.json",
+    "packages/e2e-auth-server/Dockerfile",
+    "packages/e2e-auth-server/package.json",
+    "packages/plugin-core/package.json",
+    "packages/plugin-sdk/package.json",
+    "packages/scripts/package.json",
+    "packages/scripts/src/cli.ts",
+    "packages/scripts/src/commands/release.ts",
+    "packages/sdk/README.md",
+    "packages/sdk/package.json",
+    "pnpm-workspace.yaml",
+    "server/Dockerfile",
+    "server/Dockerfile.dev",
+    "server/package.json",
+    "server/src/bin/sync-open-api.ts",
+    "server/src/bin/sync-sql.ts",
+    "server/src/commands/media-location.command.ts",
+    "server/src/dtos/config.dto.ts",
+    "server/src/main.ts",
+    "server/src/schema/migrations/1752759108283-ConvertToAbsolutePaths.ts",
+    "server/src/services/database-backup.service.ts",
+    "server/src/services/media.service.ts",
+    "web/README.md",
+    "web/lint-env.js",
+    "web/package.json",
+    "web/svelte.config.js",
+    "web/vite.config.ts"
+  ],
+  "compose_files": [
+    {
+      "path": "docker/docker-compose.dev.yml",
+      "services": [
+        {
+          "name": "immich-init",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 36
+          },
+          "image": "immich-server-dev:latest",
+          "image_at": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 41
+          },
+          "build": true,
+          "ports": null,
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "build_cache",
+              "target": "/buildcache",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 52
+              }
+            }
+          ],
+          "environment": null,
+          "env_files": null,
+          "depends_on": null,
+          "healthcheck": {
+            "test": [
+              "CMD",
+              "test",
+              "-f",
+              "/tmp/init-complete"
+            ],
+            "interval": "2s",
+            "timeout": "3s",
+            "start_period": "5m0s",
+            "retries": 300,
+            "disabled": false,
+            "location": {
+              "file": "docker/docker-compose.dev.yml",
+              "line": 54
+            }
+          },
+          "command": [
+            "mise install\ntouch /tmp/init-complete\nexec tail -f /dev/null\n"
+          ],
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "immich-server",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 61
+          },
+          "image": "immich-server-dev:latest",
+          "image_at": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 67
+          },
+          "build": true,
+          "ports": [
+            {
+              "target": 9230,
+              "published": "9230",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 95
+              }
+            },
+            {
+              "target": 9231,
+              "published": "9231",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 96
+              }
+            },
+            {
+              "target": 2283,
+              "published": "2283",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 97
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "./library/photos",
+              "target": "/data",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 74
+              }
+            },
+            {
+              "type": "bind",
+              "source": "/etc/localtime",
+              "target": "/etc/localtime",
+              "read_only": true,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 75
+              }
+            },
+            {
+              "type": "bind",
+              "source": "../packages/plugin-core",
+              "target": "/build/plugins/immich-plugin-core",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 76
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "IMMICH_REPOSITORY",
+              "raw": "immich-app/immich",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 80
+              }
+            },
+            {
+              "key": "IMMICH_REPOSITORY_URL",
+              "raw": "https://github.com/immich-app/immich",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 81
+              }
+            },
+            {
+              "key": "IMMICH_SOURCE_REF",
+              "raw": "local",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 82
+              }
+            },
+            {
+              "key": "IMMICH_SOURCE_COMMIT",
+              "raw": "af2efbdbbddc27cd06142f22253ccbbbbeec1f55",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 83
+              }
+            },
+            {
+              "key": "IMMICH_SOURCE_URL",
+              "raw": "https://github.com/immich-app/immich/commit/af2efbdbbddc27cd06142f22253ccbbbbeec1f55",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 84
+              }
+            },
+            {
+              "key": "IMMICH_BUILD",
+              "raw": "9654404849",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 85
+              }
+            },
+            {
+              "key": "IMMICH_BUILD_URL",
+              "raw": "https://github.com/immich-app/immich/actions/runs/9654404849",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 86
+              }
+            },
+            {
+              "key": "IMMICH_BUILD_IMAGE",
+              "raw": "development",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 87
+              }
+            },
+            {
+              "key": "IMMICH_BUILD_IMAGE_URL",
+              "raw": "https://github.com/immich-app/immich/pkgs/container/immich-server",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 88
+              }
+            },
+            {
+              "key": "IMMICH_THIRD_PARTY_SOURCE_URL",
+              "raw": "https://github.com/immich-app/immich/",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 89
+              }
+            },
+            {
+              "key": "IMMICH_THIRD_PARTY_BUG_FEATURE_URL",
+              "raw": "https://github.com/immich-app/immich/issues",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 90
+              }
+            },
+            {
+              "key": "IMMICH_THIRD_PARTY_DOCUMENTATION_URL",
+              "raw": "https://docs.immich.app",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 91
+              }
+            },
+            {
+              "key": "IMMICH_THIRD_PARTY_SUPPORT_URL",
+              "raw": "https://docs.immich.app/community-guides",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 92
+              }
+            },
+            {
+              "key": "IMMICH_HELMET_FILE",
+              "raw": "true",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 93
+              }
+            }
+          ],
+          "env_files": [
+            ".env"
+          ],
+          "depends_on": [
+            {
+              "service": "database",
+              "condition": "service_started"
+            },
+            {
+              "service": "immich-init",
+              "condition": "service_healthy"
+            },
+            {
+              "service": "redis",
+              "condition": "service_started"
+            }
+          ],
+          "healthcheck": {
+            "test": null,
+            "interval": "",
+            "timeout": "",
+            "start_period": "",
+            "retries": 0,
+            "disabled": false,
+            "location": {
+              "file": "docker/docker-compose.dev.yml",
+              "line": 105
+            }
+          },
+          "command": [
+            "immich-dev"
+          ],
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "immich-web",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 108
+          },
+          "image": "immich-web-dev:latest",
+          "image_at": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 113
+          },
+          "build": true,
+          "ports": [
+            {
+              "target": 3000,
+              "published": "3000",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 122
+              }
+            },
+            {
+              "target": 24678,
+              "published": "24678",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 123
+              }
+            }
+          ],
+          "volumes": null,
+          "environment": null,
+          "env_files": [
+            ".env"
+          ],
+          "depends_on": [
+            {
+              "service": "immich-init",
+              "condition": "service_healthy"
+            },
+            {
+              "service": "immich-server",
+              "condition": "service_started"
+            }
+          ],
+          "command": [
+            "immich-web"
+          ],
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "immich-machine-learning",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 131
+          },
+          "image": "immich-machine-learning-dev:latest",
+          "image_at": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 133
+          },
+          "build": true,
+          "ports": [
+            {
+              "target": 3003,
+              "published": "3003",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 143
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "../machine-learning/immich_ml",
+              "target": "/usr/src/immich_ml",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 145
+              }
+            },
+            {
+              "type": "volume",
+              "source": "model_cache",
+              "target": "/cache",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 146
+              }
+            }
+          ],
+          "environment": null,
+          "env_files": [
+            ".env"
+          ],
+          "depends_on": [
+            {
+              "service": "database",
+              "condition": "service_started"
+            }
+          ],
+          "healthcheck": {
+            "test": null,
+            "interval": "",
+            "timeout": "",
+            "start_period": "",
+            "retries": 0,
+            "disabled": false,
+            "location": {
+              "file": "docker/docker-compose.dev.yml",
+              "line": 152
+            }
+          },
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "redis",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 155
+          },
+          "image": "docker.io/valkey/valkey:9@sha256:c123e3715db63d06d4ad6964884037aa0d5d4d703939b9929954112889708e1d",
+          "image_at": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 157
+          },
+          "build": false,
+          "ports": null,
+          "volumes": null,
+          "environment": null,
+          "env_files": null,
+          "depends_on": null,
+          "healthcheck": {
+            "test": [
+              "CMD-SHELL",
+              "redis-cli ping | grep -q PONG || exit 1"
+            ],
+            "interval": "",
+            "timeout": "",
+            "start_period": "",
+            "retries": 0,
+            "disabled": false,
+            "location": {
+              "file": "docker/docker-compose.dev.yml",
+              "line": 158
+            }
+          },
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "database",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 161
+          },
+          "image": "ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23",
+          "image_at": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 163
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 5432,
+              "published": "5432",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 174
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "./library/postgres",
+              "target": "/var/lib/postgresql/data",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 172
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "POSTGRES_PASSWORD",
+              "raw": "${DB_PASSWORD}",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 167
+              }
+            },
+            {
+              "key": "POSTGRES_USER",
+              "raw": "${DB_USERNAME}",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 168
+              }
+            },
+            {
+              "key": "POSTGRES_DB",
+              "raw": "${DB_DATABASE_NAME}",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 169
+              }
+            },
+            {
+              "key": "POSTGRES_INITDB_ARGS",
+              "raw": "--data-checksums",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 170
+              }
+            }
+          ],
+          "env_files": [
+            ".env"
+          ],
+          "depends_on": null,
+          "healthcheck": {
+            "test": null,
+            "interval": "",
+            "timeout": "",
+            "start_period": "",
+            "retries": 0,
+            "disabled": false,
+            "location": {
+              "file": "docker/docker-compose.dev.yml",
+              "line": 176
+            }
+          },
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": [
+        {
+          "name": "DB_DATABASE_NAME",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 169
+          }
+        },
+        {
+          "name": "DB_PASSWORD",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 167
+          }
+        },
+        {
+          "name": "DB_USERNAME",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 168
+          }
+        },
+        {
+          "name": "UPLOAD_LOCATION",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 74
+          }
+        }
+      ]
+    },
+    {
+      "path": "docker/docker-compose.prod.yml",
+      "services": [
+        {
+          "name": "immich-server",
+          "location": {
+            "file": "docker/docker-compose.prod.yml",
+            "line": 13
+          },
+          "image": "immich-server:latest",
+          "image_at": {
+            "file": "docker/docker-compose.prod.yml",
+            "line": 15
+          },
+          "build": true,
+          "ports": [
+            {
+              "target": 2283,
+              "published": "2283",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docker/docker-compose.prod.yml",
+                "line": 28
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "./library/photos",
+              "target": "/data",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.prod.yml",
+                "line": 23
+              }
+            },
+            {
+              "type": "bind",
+              "source": "/etc/localtime",
+              "target": "/etc/localtime",
+              "read_only": true,
+              "location": {
+                "file": "docker/docker-compose.prod.yml",
+                "line": 24
+              }
+            }
+          ],
+          "environment": null,
+          "env_files": [
+            ".env"
+          ],
+          "depends_on": [
+            {
+              "service": "database",
+              "condition": "service_started"
+            },
+            {
+              "service": "redis",
+              "condition": "service_started"
+            }
+          ],
+          "healthcheck": {
+            "test": null,
+            "interval": "",
+            "timeout": "",
+            "start_period": "",
+            "retries": 0,
+            "disabled": false,
+            "location": {
+              "file": "docker/docker-compose.prod.yml",
+              "line": 33
+            }
+          },
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "immich-machine-learning",
+          "location": {
+            "file": "docker/docker-compose.prod.yml",
+            "line": 36
+          },
+          "image": "immich-machine-learning:latest",
+          "image_at": {
+            "file": "docker/docker-compose.prod.yml",
+            "line": 38
+          },
+          "build": true,
+          "ports": [
+            {
+              "target": 3003,
+              "published": "3003",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docker/docker-compose.prod.yml",
+                "line": 48
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "model-cache",
+              "target": "/cache",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.prod.yml",
+                "line": 50
+              }
+            }
+          ],
+          "environment": null,
+          "env_files": [
+            ".env"
+          ],
+          "depends_on": null,
+          "healthcheck": {
+            "test": null,
+            "interval": "",
+            "timeout": "",
+            "start_period": "",
+            "retries": 0,
+            "disabled": false,
+            "location": {
+              "file": "docker/docker-compose.prod.yml",
+              "line": 54
+            }
+          },
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "redis",
+          "location": {
+            "file": "docker/docker-compose.prod.yml",
+            "line": 57
+          },
+          "image": "docker.io/valkey/valkey:9@sha256:c123e3715db63d06d4ad6964884037aa0d5d4d703939b9929954112889708e1d",
+          "image_at": {
+            "file": "docker/docker-compose.prod.yml",
+            "line": 59
+          },
+          "build": false,
+          "ports": null,
+          "volumes": null,
+          "environment": null,
+          "env_files": null,
+          "depends_on": null,
+          "healthcheck": {
+            "test": [
+              "CMD-SHELL",
+              "redis-cli ping | grep -q PONG || exit 1"
+            ],
+            "interval": "",
+            "timeout": "",
+            "start_period": "",
+            "retries": 0,
+            "disabled": false,
+            "location": {
+              "file": "docker/docker-compose.prod.yml",
+              "line": 60
+            }
+          },
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "database",
+          "location": {
+            "file": "docker/docker-compose.prod.yml",
+            "line": 64
+          },
+          "image": "ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23",
+          "image_at": {
+            "file": "docker/docker-compose.prod.yml",
+            "line": 66
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 5432,
+              "published": "5432",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docker/docker-compose.prod.yml",
+                "line": 77
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "./library/postgres",
+              "target": "/var/lib/postgresql/data",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.prod.yml",
+                "line": 75
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "POSTGRES_PASSWORD",
+              "raw": "${DB_PASSWORD}",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.prod.yml",
+                "line": 70
+              }
+            },
+            {
+              "key": "POSTGRES_USER",
+              "raw": "${DB_USERNAME}",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.prod.yml",
+                "line": 71
+              }
+            },
+            {
+              "key": "POSTGRES_DB",
+              "raw": "${DB_DATABASE_NAME}",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.prod.yml",
+                "line": 72
+              }
+            },
+            {
+              "key": "POSTGRES_INITDB_ARGS",
+              "raw": "--data-checksums",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.prod.yml",
+                "line": 73
+              }
+            }
+          ],
+          "env_files": [
+            ".env"
+          ],
+          "depends_on": null,
+          "healthcheck": {
+            "test": null,
+            "interval": "",
+            "timeout": "",
+            "start_period": "",
+            "retries": 0,
+            "disabled": false,
+            "location": {
+              "file": "docker/docker-compose.prod.yml",
+              "line": 80
+            }
+          },
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "immich-prometheus",
+          "location": {
+            "file": "docker/docker-compose.prod.yml",
+            "line": 84
+          },
+          "image": "prom/prometheus@sha256:5ce7540c3c00ef4ab0c9d2c995c6a5b9c421f44b4a115d97a2c7af3b1c21cbb0",
+          "image_at": {
+            "file": "docker/docker-compose.prod.yml",
+            "line": 88
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 9090,
+              "published": "9090",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docker/docker-compose.prod.yml",
+                "line": 87
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "./prometheus.yml",
+              "target": "/etc/prometheus/prometheus.yml",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.prod.yml",
+                "line": 90
+              }
+            },
+            {
+              "type": "volume",
+              "source": "prometheus-data",
+              "target": "/prometheus",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.prod.yml",
+                "line": 91
+              }
+            }
+          ],
+          "environment": null,
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "immich-grafana",
+          "location": {
+            "file": "docker/docker-compose.prod.yml",
+            "line": 95
+          },
+          "image": "grafana/grafana:12.4.11-ubuntu@sha256:23f2328b859c7677c7065c81b479600706ef9cc9004977af5bbd68b159b8ea60",
+          "image_at": {
+            "file": "docker/docker-compose.prod.yml",
+            "line": 100
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 3000,
+              "published": "3000",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docker/docker-compose.prod.yml",
+                "line": 99
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "grafana-data",
+              "target": "/var/lib/grafana",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.prod.yml",
+                "line": 102
+              }
+            }
+          ],
+          "environment": null,
+          "env_files": null,
+          "depends_on": null,
+          "command": [
+            "./run.sh",
+            "-disable-reporting"
+          ],
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": [
+        {
+          "name": "DB_DATABASE_NAME",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.prod.yml",
+            "line": 72
+          }
+        },
+        {
+          "name": "DB_PASSWORD",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.prod.yml",
+            "line": 70
+          }
+        },
+        {
+          "name": "DB_USERNAME",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.prod.yml",
+            "line": 71
+          }
+        },
+        {
+          "name": "UPLOAD_LOCATION",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.prod.yml",
+            "line": 23
+          }
+        }
+      ]
+    },
+    {
+      "path": "docker/docker-compose.rootless.yml",
+      "services": [
+        {
+          "name": "immich-server",
+          "location": {
+            "file": "docker/docker-compose.rootless.yml",
+            "line": 13
+          },
+          "image": "ghcr.io/immich-app/immich-server:v3",
+          "image_at": {
+            "file": "docker/docker-compose.rootless.yml",
+            "line": 15
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 2283,
+              "published": "2283",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docker/docker-compose.rootless.yml",
+                "line": 31
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "./library",
+              "target": "/data",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.rootless.yml",
+                "line": 26
+              }
+            },
+            {
+              "type": "bind",
+              "source": "/etc/localtime",
+              "target": "/etc/localtime",
+              "read_only": true,
+              "location": {
+                "file": "docker/docker-compose.rootless.yml",
+                "line": 27
+              }
+            }
+          ],
+          "environment": null,
+          "env_files": [
+            ".env"
+          ],
+          "depends_on": [
+            {
+              "service": "database",
+              "condition": "service_started"
+            },
+            {
+              "service": "redis",
+              "condition": "service_started"
+            }
+          ],
+          "healthcheck": {
+            "test": null,
+            "interval": "",
+            "timeout": "",
+            "start_period": "",
+            "retries": 0,
+            "disabled": false,
+            "location": {
+              "file": "docker/docker-compose.rootless.yml",
+              "line": 36
+            }
+          },
+          "command": null,
+          "entrypoint": null,
+          "user": "1000:1000"
+        },
+        {
+          "name": "immich-machine-learning",
+          "location": {
+            "file": "docker/docker-compose.rootless.yml",
+            "line": 39
+          },
+          "image": "ghcr.io/immich-app/immich-machine-learning:v3",
+          "image_at": {
+            "file": "docker/docker-compose.rootless.yml",
+            "line": 43
+          },
+          "build": false,
+          "ports": null,
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "./ml-model-cache",
+              "target": "/cache",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.rootless.yml",
+                "line": 53
+              }
+            }
+          ],
+          "environment": null,
+          "env_files": [
+            ".env"
+          ],
+          "depends_on": null,
+          "healthcheck": {
+            "test": null,
+            "interval": "",
+            "timeout": "",
+            "start_period": "",
+            "retries": 0,
+            "disabled": false,
+            "location": {
+              "file": "docker/docker-compose.rootless.yml",
+              "line": 57
+            }
+          },
+          "command": null,
+          "entrypoint": null,
+          "user": "1000:1000"
+        },
+        {
+          "name": "redis",
+          "location": {
+            "file": "docker/docker-compose.rootless.yml",
+            "line": 60
+          },
+          "image": "docker.io/valkey/valkey:9@sha256:c123e3715db63d06d4ad6964884037aa0d5d4d703939b9929954112889708e1d",
+          "image_at": {
+            "file": "docker/docker-compose.rootless.yml",
+            "line": 62
+          },
+          "build": false,
+          "ports": null,
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "./redis",
+              "target": "/data",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.rootless.yml",
+                "line": 69
+              }
+            }
+          ],
+          "environment": null,
+          "env_files": null,
+          "depends_on": null,
+          "healthcheck": {
+            "test": [
+              "CMD-SHELL",
+              "redis-cli ping | grep -q PONG || exit 1"
+            ],
+            "interval": "",
+            "timeout": "",
+            "start_period": "",
+            "retries": 0,
+            "disabled": false,
+            "location": {
+              "file": "docker/docker-compose.rootless.yml",
+              "line": 70
+            }
+          },
+          "command": null,
+          "entrypoint": null,
+          "user": "1000:1000"
+        },
+        {
+          "name": "database",
+          "location": {
+            "file": "docker/docker-compose.rootless.yml",
+            "line": 74
+          },
+          "image": "ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23",
+          "image_at": {
+            "file": "docker/docker-compose.rootless.yml",
+            "line": 76
+          },
+          "build": false,
+          "ports": null,
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "./postgres",
+              "target": "/var/lib/postgresql/data",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.rootless.yml",
+                "line": 91
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "POSTGRES_PASSWORD",
+              "raw": "${DB_PASSWORD}",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.rootless.yml",
+                "line": 83
+              }
+            },
+            {
+              "key": "POSTGRES_USER",
+              "raw": "${DB_USERNAME}",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.rootless.yml",
+                "line": 84
+              }
+            },
+            {
+              "key": "POSTGRES_DB",
+              "raw": "${DB_DATABASE_NAME}",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.rootless.yml",
+                "line": 85
+              }
+            },
+            {
+              "key": "POSTGRES_INITDB_ARGS",
+              "raw": "--data-checksums",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.rootless.yml",
+                "line": 86
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "healthcheck": {
+            "test": null,
+            "interval": "",
+            "timeout": "",
+            "start_period": "",
+            "retries": 0,
+            "disabled": false,
+            "location": {
+              "file": "docker/docker-compose.rootless.yml",
+              "line": 94
+            }
+          },
+          "command": null,
+          "entrypoint": null,
+          "user": "1000:1000"
+        }
+      ],
+      "variables": [
+        {
+          "name": "DB_DATABASE_NAME",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.rootless.yml",
+            "line": 85
+          }
+        },
+        {
+          "name": "DB_DATA_LOCATION",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.rootless.yml",
+            "line": 91
+          }
+        },
+        {
+          "name": "DB_PASSWORD",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.rootless.yml",
+            "line": 83
+          }
+        },
+        {
+          "name": "DB_USERNAME",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.rootless.yml",
+            "line": 84
+          }
+        },
+        {
+          "name": "IMMICH_VERSION",
+          "kind": "compose",
+          "default": "release",
+          "location": {
+            "file": "docker/docker-compose.rootless.yml",
+            "line": 15
+          }
+        },
+        {
+          "name": "UPLOAD_LOCATION",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.rootless.yml",
+            "line": 26
+          }
+        }
+      ]
+    },
+    {
+      "path": "docker/docker-compose.yml",
+      "services": [
+        {
+          "name": "immich-server",
+          "location": {
+            "file": "docker/docker-compose.yml",
+            "line": 13
+          },
+          "image": "ghcr.io/immich-app/immich-server:v3",
+          "image_at": {
+            "file": "docker/docker-compose.yml",
+            "line": 15
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 2283,
+              "published": "2283",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docker/docker-compose.yml",
+                "line": 26
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "./library",
+              "target": "/data",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.yml",
+                "line": 21
+              }
+            },
+            {
+              "type": "bind",
+              "source": "/etc/localtime",
+              "target": "/etc/localtime",
+              "read_only": true,
+              "location": {
+                "file": "docker/docker-compose.yml",
+                "line": 22
+              }
+            }
+          ],
+          "environment": null,
+          "env_files": [
+            ".env"
+          ],
+          "depends_on": [
+            {
+              "service": "database",
+              "condition": "service_started"
+            },
+            {
+              "service": "redis",
+              "condition": "service_started"
+            }
+          ],
+          "healthcheck": {
+            "test": null,
+            "interval": "",
+            "timeout": "",
+            "start_period": "",
+            "retries": 0,
+            "disabled": false,
+            "location": {
+              "file": "docker/docker-compose.yml",
+              "line": 31
+            }
+          },
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "immich-machine-learning",
+          "location": {
+            "file": "docker/docker-compose.yml",
+            "line": 34
+          },
+          "image": "ghcr.io/immich-app/immich-machine-learning:v3",
+          "image_at": {
+            "file": "docker/docker-compose.yml",
+            "line": 38
+          },
+          "build": false,
+          "ports": null,
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "model-cache",
+              "target": "/cache",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.yml",
+                "line": 43
+              }
+            }
+          ],
+          "environment": null,
+          "env_files": [
+            ".env"
+          ],
+          "depends_on": null,
+          "healthcheck": {
+            "test": null,
+            "interval": "",
+            "timeout": "",
+            "start_period": "",
+            "retries": 0,
+            "disabled": false,
+            "location": {
+              "file": "docker/docker-compose.yml",
+              "line": 47
+            }
+          },
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "redis",
+          "location": {
+            "file": "docker/docker-compose.yml",
+            "line": 50
+          },
+          "image": "docker.io/valkey/valkey:9@sha256:c123e3715db63d06d4ad6964884037aa0d5d4d703939b9929954112889708e1d",
+          "image_at": {
+            "file": "docker/docker-compose.yml",
+            "line": 52
+          },
+          "build": false,
+          "ports": null,
+          "volumes": null,
+          "environment": null,
+          "env_files": null,
+          "depends_on": null,
+          "healthcheck": {
+            "test": [
+              "CMD-SHELL",
+              "redis-cli ping | grep -q PONG || exit 1"
+            ],
+            "interval": "",
+            "timeout": "",
+            "start_period": "",
+            "retries": 0,
+            "disabled": false,
+            "location": {
+              "file": "docker/docker-compose.yml",
+              "line": 53
+            }
+          },
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "database",
+          "location": {
+            "file": "docker/docker-compose.yml",
+            "line": 57
+          },
+          "image": "ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23",
+          "image_at": {
+            "file": "docker/docker-compose.yml",
+            "line": 59
+          },
+          "build": false,
+          "ports": null,
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "./postgres",
+              "target": "/var/lib/postgresql/data",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.yml",
+                "line": 69
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "POSTGRES_PASSWORD",
+              "raw": "${DB_PASSWORD}",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.yml",
+                "line": 61
+              }
+            },
+            {
+              "key": "POSTGRES_USER",
+              "raw": "${DB_USERNAME}",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.yml",
+                "line": 62
+              }
+            },
+            {
+              "key": "POSTGRES_DB",
+              "raw": "${DB_DATABASE_NAME}",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.yml",
+                "line": 63
+              }
+            },
+            {
+              "key": "POSTGRES_INITDB_ARGS",
+              "raw": "--data-checksums",
+              "has_value": true,
+              "location": {
+                "file": "docker/docker-compose.yml",
+                "line": 64
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "healthcheck": {
+            "test": null,
+            "interval": "",
+            "timeout": "",
+            "start_period": "",
+            "retries": 0,
+            "disabled": false,
+            "location": {
+              "file": "docker/docker-compose.yml",
+              "line": 72
+            }
+          },
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": [
+        {
+          "name": "DB_DATABASE_NAME",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.yml",
+            "line": 63
+          }
+        },
+        {
+          "name": "DB_DATA_LOCATION",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.yml",
+            "line": 69
+          }
+        },
+        {
+          "name": "DB_PASSWORD",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.yml",
+            "line": 61
+          }
+        },
+        {
+          "name": "DB_USERNAME",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.yml",
+            "line": 62
+          }
+        },
+        {
+          "name": "IMMICH_VERSION",
+          "kind": "compose",
+          "default": "release",
+          "location": {
+            "file": "docker/docker-compose.yml",
+            "line": 15
+          }
+        },
+        {
+          "name": "UPLOAD_LOCATION",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.yml",
+            "line": 21
+          }
+        }
+      ]
+    }
+  ],
+  "dockerfiles": [
+    {
+      "path": "machine-learning/Dockerfile",
+      "base_image": "python:3.13-slim-trixie@sha256:9d2e5553305c7c7b0097999bb17187c69b921ccd6bc9d40e4bb5ebe652c00285",
+      "exposed": null,
+      "volumes": null,
+      "env": [
+        {
+          "key": "MACHINE_LEARNING_MODEL_ARENA",
+          "value": "false",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 86
+          }
+        },
+        {
+          "key": "TRANSFORMERS_CACHE",
+          "value": "/cache",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 172
+          }
+        },
+        {
+          "key": "PYTHONDONTWRITEBYTECODE",
+          "value": "1",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 172
+          }
+        },
+        {
+          "key": "PYTHONUNBUFFERED",
+          "value": "1",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 172
+          }
+        },
+        {
+          "key": "PATH",
+          "value": "/opt/venv/bin:$PATH",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 172
+          }
+        },
+        {
+          "key": "PYTHONPATH",
+          "value": "/usr/src",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 172
+          }
+        },
+        {
+          "key": "DEVICE",
+          "value": "${DEVICE}",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 172
+          }
+        },
+        {
+          "key": "VIRTUAL_ENV",
+          "value": "/opt/venv",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 172
+          }
+        },
+        {
+          "key": "MACHINE_LEARNING_CACHE_FOLDER",
+          "value": "/cache",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 172
+          }
+        },
+        {
+          "key": "IMMICH_BUILD",
+          "value": "${BUILD_ID}",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 195
+          }
+        },
+        {
+          "key": "IMMICH_BUILD_URL",
+          "value": "https://github.com/immich-app/immich/actions/runs/${BUILD_ID}",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 196
+          }
+        },
+        {
+          "key": "IMMICH_BUILD_IMAGE",
+          "value": "${BUILD_IMAGE}",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 197
+          }
+        },
+        {
+          "key": "IMMICH_BUILD_IMAGE_URL",
+          "value": "https://github.com/immich-app/immich/pkgs/container/immich-machine-learning",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 198
+          }
+        },
+        {
+          "key": "IMMICH_REPOSITORY",
+          "value": "immich-app/immich",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 199
+          }
+        },
+        {
+          "key": "IMMICH_REPOSITORY_URL",
+          "value": "https://github.com/immich-app/immich",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 200
+          }
+        },
+        {
+          "key": "IMMICH_SOURCE_REF",
+          "value": "${BUILD_SOURCE_REF}",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 201
+          }
+        },
+        {
+          "key": "IMMICH_SOURCE_COMMIT",
+          "value": "${BUILD_SOURCE_COMMIT}",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 202
+          }
+        },
+        {
+          "key": "IMMICH_SOURCE_URL",
+          "value": "https://github.com/immich-app/immich/commit/${BUILD_SOURCE_COMMIT}",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 203
+          }
+        },
+        {
+          "key": "HF_HOME",
+          "value": "/cache/hf-cache",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 206
+          }
+        },
+        {
+          "key": "CUDA_CACHE_PATH",
+          "value": "/cache/jit/cuda",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 208
+          }
+        },
+        {
+          "key": "AMD_COMGR_CACHE_DIR",
+          "value": "/cache/jit/comgr",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 208
+          }
+        },
+        {
+          "key": "NEO_CACHE_DIR",
+          "value": "/cache/jit/neo",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 208
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "DEVICE",
+          "value": "cpu",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 1
+          }
+        },
+        {
+          "key": "ONNXRUNTIME_VERSION",
+          "value": "v1.30.0",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 8
+          }
+        },
+        {
+          "key": "ARMNN_VERSION",
+          "value": "v26.07",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 53
+          }
+        },
+        {
+          "key": "DEVICE",
+          "value": "",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 70
+          }
+        },
+        {
+          "key": "RKNN_TOOLKIT_VERSION",
+          "value": "v2.3.0",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 147
+          }
+        },
+        {
+          "key": "DEVICE",
+          "value": "",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 161
+          }
+        },
+        {
+          "key": "BUILD_ID",
+          "value": "",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 190
+          }
+        },
+        {
+          "key": "BUILD_IMAGE",
+          "value": "",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 191
+          }
+        },
+        {
+          "key": "BUILD_SOURCE_REF",
+          "value": "",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 192
+          }
+        },
+        {
+          "key": "BUILD_SOURCE_COMMIT",
+          "value": "",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 193
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "python3 healthcheck.py"
+        ],
+        "interval": "",
+        "timeout": "",
+        "start_period": "",
+        "retries": 0,
+        "disabled": false,
+        "location": {
+          "file": "machine-learning/Dockerfile",
+          "line": 215
+        }
+      },
+      "entrypoint": [
+        "tini",
+        "--"
+      ],
+      "command": [
+        "python",
+        "-m",
+        "immich_ml"
+      ]
+    },
+    {
+      "path": "packages/cli/Dockerfile",
+      "base_image": "node:24.21.0-trixie-slim@sha256:8ec5d7557396cfe32d21c3f9c13072355ceab22b584578ca4bb28af31120cffe",
+      "exposed": null,
+      "volumes": null,
+      "env": null,
+      "args": null,
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": [
+        "node",
+        "/usr/src/app/packages/cli/dist"
+      ],
+      "command": null
+    },
+    {
+      "path": "packages/e2e-auth-server/Dockerfile",
+      "base_image": "node:24.21.0-trixie-slim@sha256:8ec5d7557396cfe32d21c3f9c13072355ceab22b584578ca4bb28af31120cffe",
+      "exposed": [
+        {
+          "port": 2286,
+          "protocol": "tcp",
+          "location": {
+            "file": "packages/e2e-auth-server/Dockerfile",
+            "line": 14
+          }
+        }
+      ],
+      "volumes": null,
+      "env": null,
+      "args": null,
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": null,
+      "command": [
+        "pnpm",
+        "run",
+        "start"
+      ]
+    },
+    {
+      "path": "server/Dockerfile",
+      "base_image": "ghcr.io/immich-app/base-server-prod:202610021601@sha256:bd94134f812c8231e9e997076f1db1e006fb0df5463e343b3e93286bd517abe8",
+      "exposed": [
+        {
+          "port": 2283,
+          "protocol": "tcp",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 123
+          }
+        }
+      ],
+      "volumes": [
+        {
+          "path": "/data",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 122
+          }
+        }
+      ],
+      "env": [
+        {
+          "key": "NODE_ENV",
+          "value": "production",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 92
+          }
+        },
+        {
+          "key": "NVIDIA_DRIVER_CAPABILITIES",
+          "value": "all",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 92
+          }
+        },
+        {
+          "key": "NVIDIA_VISIBLE_DEVICES",
+          "value": "all",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 92
+          }
+        },
+        {
+          "key": "PATH",
+          "value": "${PATH}:/usr/src/app/server/bin",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 105
+          }
+        },
+        {
+          "key": "IMMICH_BUILD",
+          "value": "${BUILD_ID}",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 112
+          }
+        },
+        {
+          "key": "IMMICH_BUILD_URL",
+          "value": "https://github.com/immich-app/immich/actions/runs/${BUILD_ID}",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 113
+          }
+        },
+        {
+          "key": "IMMICH_BUILD_IMAGE",
+          "value": "${BUILD_IMAGE}",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 114
+          }
+        },
+        {
+          "key": "IMMICH_BUILD_IMAGE_URL",
+          "value": "https://github.com/immich-app/immich/pkgs/container/immich-server",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 115
+          }
+        },
+        {
+          "key": "IMMICH_REPOSITORY",
+          "value": "immich-app/immich",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 116
+          }
+        },
+        {
+          "key": "IMMICH_REPOSITORY_URL",
+          "value": "https://github.com/immich-app/immich",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 117
+          }
+        },
+        {
+          "key": "IMMICH_SOURCE_REF",
+          "value": "${BUILD_SOURCE_REF}",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 118
+          }
+        },
+        {
+          "key": "IMMICH_SOURCE_COMMIT",
+          "value": "${BUILD_SOURCE_COMMIT}",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 119
+          }
+        },
+        {
+          "key": "IMMICH_SOURCE_URL",
+          "value": "https://github.com/immich-app/immich/commit/${BUILD_SOURCE_COMMIT}",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 120
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "BUILD_ID",
+          "value": "",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 52
+          }
+        },
+        {
+          "key": "TARGETPLATFORM",
+          "value": "",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 69
+          }
+        },
+        {
+          "key": "BUILD_ID",
+          "value": "",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 107
+          }
+        },
+        {
+          "key": "BUILD_IMAGE",
+          "value": "",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 108
+          }
+        },
+        {
+          "key": "BUILD_SOURCE_REF",
+          "value": "",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 109
+          }
+        },
+        {
+          "key": "BUILD_SOURCE_COMMIT",
+          "value": "",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 110
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "immich-healthcheck"
+        ],
+        "interval": "",
+        "timeout": "",
+        "start_period": "",
+        "retries": 0,
+        "disabled": false,
+        "location": {
+          "file": "server/Dockerfile",
+          "line": 127
+        }
+      },
+      "entrypoint": [
+        "tini",
+        "--",
+        "/bin/bash",
+        "-c"
+      ],
+      "command": [
+        "start.sh"
+      ]
+    },
+    {
+      "path": "server/Dockerfile.dev",
+      "base_image": "ghcr.io/immich-app/base-server-dev:202610021601@sha256:a97a4e83561eca4bee1a636d05642f354aefb8ceeb84c969f3ac372b4cde24a8",
+      "exposed": null,
+      "volumes": null,
+      "env": [
+        {
+          "key": "CI",
+          "value": "1",
+          "location": {
+            "file": "server/Dockerfile.dev",
+            "line": 15
+          }
+        },
+        {
+          "key": "PNPM_HOME",
+          "value": "/buildcache/pnpm-store",
+          "location": {
+            "file": "server/Dockerfile.dev",
+            "line": 16
+          }
+        },
+        {
+          "key": "MISE_DATA_DIR",
+          "value": "/buildcache/mise",
+          "location": {
+            "file": "server/Dockerfile.dev",
+            "line": 17
+          }
+        },
+        {
+          "key": "MISE_TRUSTED_CONFIG_PATHS",
+          "value": "/usr/src/app/mise.toml",
+          "location": {
+            "file": "server/Dockerfile.dev",
+            "line": 18
+          }
+        },
+        {
+          "key": "PATH",
+          "value": "${MISE_DATA_DIR}/shims:${PATH}:/usr/src/app/server/bin:/usr/src/app/web/bin",
+          "location": {
+            "file": "server/Dockerfile.dev",
+            "line": 19
+          }
+        },
+        {
+          "key": "IMMICH_ENV",
+          "value": "development",
+          "location": {
+            "file": "server/Dockerfile.dev",
+            "line": 20
+          }
+        },
+        {
+          "key": "NVIDIA_DRIVER_CAPABILITIES",
+          "value": "all",
+          "location": {
+            "file": "server/Dockerfile.dev",
+            "line": 21
+          }
+        },
+        {
+          "key": "NVIDIA_VISIBLE_DEVICES",
+          "value": "all",
+          "location": {
+            "file": "server/Dockerfile.dev",
+            "line": 22
+          }
+        },
+        {
+          "key": "FLUTTER_CHANNEL",
+          "value": "stable",
+          "location": {
+            "file": "server/Dockerfile.dev",
+            "line": 62
+          }
+        },
+        {
+          "key": "FLUTTER_VERSION",
+          "value": "3.35.7",
+          "location": {
+            "file": "server/Dockerfile.dev",
+            "line": 63
+          }
+        },
+        {
+          "key": "FLUTTER_HOME",
+          "value": "/flutter",
+          "location": {
+            "file": "server/Dockerfile.dev",
+            "line": 64
+          }
+        },
+        {
+          "key": "PATH",
+          "value": "${PATH}:${FLUTTER_HOME}/bin",
+          "location": {
+            "file": "server/Dockerfile.dev",
+            "line": 65
+          }
+        }
+      ],
+      "args": null,
+      "user": "root",
+      "user_at": {
+        "file": "server/Dockerfile.dev",
+        "line": 43
+      },
+      "entrypoint": [
+        "tini",
+        "--",
+        "/bin/bash",
+        "-c"
+      ],
+      "command": null
+    }
+  ],
+  "env_samples": [
+    {
+      "path": "deployment/.env",
+      "entries": [
+        {
+          "key": "CLOUDFLARE_ACCOUNT_ID",
+          "value": "op://tf/cloudflare/account_id",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "deployment/.env",
+            "line": 1
+          }
+        },
+        {
+          "key": "CLOUDFLARE_API_TOKEN",
+          "value": "op://tf/cloudflare/api_token",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "deployment/.env",
+            "line": 2
+          }
+        },
+        {
+          "key": "TF_STATE_POSTGRES_CONN_STR",
+          "value": "op://tf/tf_state/postgres_conn_str",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "deployment/.env",
+            "line": 3
+          }
+        },
+        {
+          "key": "TF_VAR_env",
+          "value": "$ENVIRONMENT",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "deployment/.env",
+            "line": 4
+          }
+        }
+      ]
+    },
+    {
+      "path": "docker/example.env",
+      "entries": [
+        {
+          "key": "UPLOAD_LOCATION",
+          "value": "./library",
+          "comment": "The location where your uploaded files are stored",
+          "commented": false,
+          "location": {
+            "file": "docker/example.env",
+            "line": 4
+          }
+        },
+        {
+          "key": "DB_DATA_LOCATION",
+          "value": "./postgres",
+          "comment": "The location where your database files are stored. Network shares are not supported for the database",
+          "commented": false,
+          "location": {
+            "file": "docker/example.env",
+            "line": 7
+          }
+        },
+        {
+          "key": "TZ",
+          "value": "Etc/UTC",
+          "comment": "To set a timezone, uncomment the next line and change Etc/UTC to a TZ identifier from this list: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List",
+          "commented": true,
+          "location": {
+            "file": "docker/example.env",
+            "line": 10
+          }
+        },
+        {
+          "key": "IMMICH_VERSION",
+          "value": "v3",
+          "comment": "The Immich version to use. You can pin this to a specific version like \"v2.1.0\"",
+          "commented": false,
+          "location": {
+            "file": "docker/example.env",
+            "line": 13
+          }
+        },
+        {
+          "key": "DB_PASSWORD",
+          "value": "postgres",
+          "comment": "Connection secret for postgres. You should change it to a random password Please use only the characters `A-Za-z0-9`, without special characters or spaces",
+          "commented": false,
+          "location": {
+            "file": "docker/example.env",
+            "line": 17
+          }
+        },
+        {
+          "key": "DB_USERNAME",
+          "value": "postgres",
+          "comment": "The values below this line do not need to be changed",
+          "commented": false,
+          "location": {
+            "file": "docker/example.env",
+            "line": 21
+          }
+        },
+        {
+          "key": "DB_DATABASE_NAME",
+          "value": "immich",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "docker/example.env",
+            "line": 22
+          }
+        }
+      ]
+    },
+    {
+      "path": "machine-learning/ann/export/env.yaml",
+      "entries": null
+    }
+  ],
+  "variables": [
+    {
+      "name": "AMD_COMGR_CACHE_DIR",
+      "default": "/cache/jit/comgr",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "AMD_COMGR_CACHE_DIR",
+          "kind": "dockerfile",
+          "default": "/cache/jit/comgr",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 208
+          }
+        }
+      ]
+    },
+    {
+      "name": "AVI",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "AVI",
+          "kind": "readme",
+          "location": {
+            "file": "docs/docs/features/supported-formats.md",
+            "line": 35
+          }
+        }
+      ]
+    },
+    {
+      "name": "AVIF",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "AVIF",
+          "kind": "readme",
+          "location": {
+            "file": "docs/docs/features/supported-formats.md",
+            "line": 13
+          }
+        }
+      ]
+    },
+    {
+      "name": "BMP",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "BMP",
+          "kind": "readme",
+          "location": {
+            "file": "docs/docs/features/supported-formats.md",
+            "line": 14
+          }
+        }
+      ]
+    },
+    {
+      "name": "BUILD_STATS",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "BUILD_STATS",
+          "kind": "code",
+          "location": {
+            "file": "web/vite.config.ts",
+            "line": 47
+          }
+        }
+      ]
+    },
+    {
+      "name": "CI",
+      "default": "1",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CI",
+          "kind": "dockerfile",
+          "default": "1",
+          "location": {
+            "file": "server/Dockerfile.dev",
+            "line": 15
+          }
+        }
+      ]
+    },
+    {
+      "name": "CLOUDFLARE_ACCOUNT_ID",
+      "default": "op://tf/cloudflare/account_id",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CLOUDFLARE_ACCOUNT_ID",
+          "kind": "env_sample",
+          "default": "op://tf/cloudflare/account_id",
+          "location": {
+            "file": "deployment/.env",
+            "line": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "CLOUDFLARE_API_TOKEN",
+      "default": "op://tf/cloudflare/api_token",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CLOUDFLARE_API_TOKEN",
+          "kind": "env_sample",
+          "default": "op://tf/cloudflare/api_token",
+          "location": {
+            "file": "deployment/.env",
+            "line": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "CPU_CORES",
+      "default": "auto-detected CPU core count",
+      "description": "Number of cores available to the Immich server",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CPU_CORES",
+          "kind": "readme",
+          "default": "auto-detected CPU core count",
+          "text": "Number of cores available to the Immich server",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 42
+          }
+        }
+      ]
+    },
+    {
+      "name": "CUDA_CACHE_PATH",
+      "default": "/cache/jit/cuda",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CUDA_CACHE_PATH",
+          "kind": "dockerfile",
+          "default": "/cache/jit/cuda",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 208
+          }
+        }
+      ]
+    },
+    {
+      "name": "DB_DATABASE_NAME",
+      "default": "immich",
+      "description": "Database name",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DB_DATABASE_NAME",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 169
+          }
+        },
+        {
+          "name": "DB_DATABASE_NAME",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.prod.yml",
+            "line": 72
+          }
+        },
+        {
+          "name": "DB_DATABASE_NAME",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.rootless.yml",
+            "line": 85
+          }
+        },
+        {
+          "name": "DB_DATABASE_NAME",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.yml",
+            "line": 63
+          }
+        },
+        {
+          "name": "DB_DATABASE_NAME",
+          "kind": "env_sample",
+          "default": "immich",
+          "location": {
+            "file": "docker/example.env",
+            "line": 22
+          }
+        },
+        {
+          "name": "DB_DATABASE_NAME",
+          "kind": "readme",
+          "default": "immich",
+          "text": "Database name",
+          "location": {
+            "file": "docs/docs/developer/devcontainers.md",
+            "line": 156
+          }
+        },
+        {
+          "name": "DB_DATABASE_NAME",
+          "kind": "readme",
+          "default": "immich",
+          "text": "Database name",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 84
+          }
+        },
+        {
+          "name": "DB_DATABASE_NAME",
+          "kind": "readme",
+          "text": "DB_DATABASE_NAME_FILE\u003csup\u003e\\*1\u003c/sup\u003e",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 220
+          }
+        }
+      ]
+    },
+    {
+      "name": "DB_DATA_LOCATION",
+      "default": "./postgres",
+      "description": "The location where your database files are stored. Network shares are not supported for the database",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DB_DATA_LOCATION",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.rootless.yml",
+            "line": 91
+          }
+        },
+        {
+          "name": "DB_DATA_LOCATION",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.yml",
+            "line": 69
+          }
+        },
+        {
+          "name": "DB_DATA_LOCATION",
+          "kind": "env_sample",
+          "default": "./postgres",
+          "text": "The location where your database files are stored. Network shares are not supported for the database",
+          "location": {
+            "file": "docker/example.env",
+            "line": 7
+          }
+        },
+        {
+          "name": "DB_DATA_LOCATION",
+          "kind": "readme",
+          "text": "Host path for Postgres database",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 24
+          }
+        },
+        {
+          "name": "DB_DATA_LOCATION",
+          "kind": "readme",
+          "text": "Change this to use an Unraid share (preferably a cache pool, e.g. /mnt/user/appdata/postgresql/data). This uses the appdata share. Do also create the postgresql folder, by running mkdir /mnt/user/{share_location}/postgresql/data. If left at default it will try to use Unraid's /boot/config/plugins/compose.manager/projects/[stack_name]/postgres folder which it doesn't have permissions to, resulting in this container continuously restarting.",
+          "location": {
+            "file": "docs/docs/install/unraid.md",
+            "line": 85
+          }
+        }
+      ]
+    },
+    {
+      "name": "DB_HOSTNAME",
+      "default": "database",
+      "description": "Database host",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DB_HOSTNAME",
+          "kind": "readme",
+          "default": "database",
+          "text": "Database host",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 80
+          }
+        },
+        {
+          "name": "DB_HOSTNAME",
+          "kind": "readme",
+          "text": "DB_HOSTNAME_FILE\u003csup\u003e\\*1\u003c/sup\u003e",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 219
+          }
+        },
+        {
+          "name": "DB_HOSTNAME",
+          "kind": "code",
+          "location": {
+            "file": "server/src/bin/sync-sql.ts",
+            "line": 77
+          }
+        },
+        {
+          "name": "DB_HOSTNAME",
+          "kind": "code",
+          "location": {
+            "file": "server/src/bin/sync-sql.ts",
+            "line": 78
+          }
+        }
+      ]
+    },
+    {
+      "name": "DB_PASSWORD",
+      "default": "postgres",
+      "description": "Connection secret for postgres. You should change it to a random password Please use only the characters `A-Za-z0-9`, without special characters or spaces",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DB_PASSWORD",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 167
+          }
+        },
+        {
+          "name": "DB_PASSWORD",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.prod.yml",
+            "line": 70
+          }
+        },
+        {
+          "name": "DB_PASSWORD",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.rootless.yml",
+            "line": 83
+          }
+        },
+        {
+          "name": "DB_PASSWORD",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.yml",
+            "line": 61
+          }
+        },
+        {
+          "name": "DB_PASSWORD",
+          "kind": "env_sample",
+          "default": "postgres",
+          "text": "Connection secret for postgres. You should change it to a random password Please use only the characters `A-Za-z0-9`, without special characters or spaces",
+          "location": {
+            "file": "docker/example.env",
+            "line": 17
+          }
+        },
+        {
+          "name": "DB_PASSWORD",
+          "kind": "readme",
+          "default": "postgres",
+          "text": "PostgreSQL password",
+          "location": {
+            "file": "docs/docs/developer/devcontainers.md",
+            "line": 154
+          }
+        },
+        {
+          "name": "DB_PASSWORD",
+          "kind": "readme",
+          "default": "postgres",
+          "text": "Database password",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 83
+          }
+        },
+        {
+          "name": "DB_PASSWORD",
+          "kind": "readme",
+          "text": "DB_PASSWORD_FILE\u003csup\u003e\\*1\u003c/sup\u003e",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 222
+          }
+        }
+      ]
+    },
+    {
+      "name": "DB_PORT",
+      "default": "5432",
+      "description": "Database port",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DB_PORT",
+          "kind": "readme",
+          "default": "5432",
+          "text": "Database port",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 81
+          }
+        }
+      ]
+    },
+    {
+      "name": "DB_SKIP_MIGRATIONS",
+      "default": "false",
+      "description": "Whether to skip running migrations on startup (one of [true, false])",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DB_SKIP_MIGRATIONS",
+          "kind": "readme",
+          "default": "false",
+          "text": "Whether to skip running migrations on startup (one of [true, false])",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 87
+          }
+        }
+      ]
+    },
+    {
+      "name": "DB_SSL_MODE",
+      "default": "",
+      "description": "Database SSL mode",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DB_SSL_MODE",
+          "kind": "readme",
+          "text": "Database SSL mode",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 85
+          }
+        }
+      ]
+    },
+    {
+      "name": "DB_STORAGE_TYPE",
+      "default": "SSD",
+      "description": "Optimize concurrent IO on SSDs or sequential IO on HDDs ([SSD, HDD])\u003csup\u003e\\*3\u003c/sup\u003e",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DB_STORAGE_TYPE",
+          "kind": "readme",
+          "default": "SSD",
+          "text": "Optimize concurrent IO on SSDs or sequential IO on HDDs ([SSD, HDD])\u003csup\u003e\\*3\u003c/sup\u003e",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 88
+          }
+        }
+      ]
+    },
+    {
+      "name": "DB_URL",
+      "default": "",
+      "description": "Database URL",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DB_URL",
+          "kind": "readme",
+          "text": "Database URL",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 79
+          }
+        },
+        {
+          "name": "DB_URL",
+          "kind": "readme",
+          "text": "DB_URL_FILE\u003csup\u003e\\*1\u003c/sup\u003e",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 223
+          }
+        },
+        {
+          "name": "DB_URL",
+          "kind": "code",
+          "location": {
+            "file": "server/src/bin/sync-open-api.ts",
+            "line": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "DB_USERNAME",
+      "default": "postgres",
+      "description": "The values below this line do not need to be changed",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DB_USERNAME",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 168
+          }
+        },
+        {
+          "name": "DB_USERNAME",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.prod.yml",
+            "line": 71
+          }
+        },
+        {
+          "name": "DB_USERNAME",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.rootless.yml",
+            "line": 84
+          }
+        },
+        {
+          "name": "DB_USERNAME",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.yml",
+            "line": 62
+          }
+        },
+        {
+          "name": "DB_USERNAME",
+          "kind": "env_sample",
+          "default": "postgres",
+          "text": "The values below this line do not need to be changed",
+          "location": {
+            "file": "docker/example.env",
+            "line": 21
+          }
+        },
+        {
+          "name": "DB_USERNAME",
+          "kind": "readme",
+          "default": "postgres",
+          "text": "PostgreSQL username",
+          "location": {
+            "file": "docs/docs/developer/devcontainers.md",
+            "line": 155
+          }
+        },
+        {
+          "name": "DB_USERNAME",
+          "kind": "readme",
+          "default": "postgres",
+          "text": "Database user",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 82
+          }
+        },
+        {
+          "name": "DB_USERNAME",
+          "kind": "readme",
+          "text": "DB_USERNAME_FILE\u003csup\u003e\\*1\u003c/sup\u003e",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 221
+          }
+        }
+      ]
+    },
+    {
+      "name": "DEVICE",
+      "default": "${DEVICE}",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DEVICE",
+          "kind": "dockerfile",
+          "default": "${DEVICE}",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 172
+          }
+        },
+        {
+          "name": "DEVICE",
+          "kind": "code",
+          "location": {
+            "file": "machine-learning/immich_ml/config.py",
+            "line": 47
+          }
+        }
+      ]
+    },
+    {
+      "name": "DISCOVER",
+      "default": "",
+      "description": "Finds new .xmp files next to media that don’t already have one linked",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DISCOVER",
+          "kind": "readme",
+          "text": "Finds new .xmp files next to media that don’t already have one linked",
+          "location": {
+            "file": "docs/docs/features/xmp-sidecars.md",
+            "line": 65
+          }
+        }
+      ]
+    },
+    {
+      "name": "FLUTTER_CHANNEL",
+      "default": "stable",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "FLUTTER_CHANNEL",
+          "kind": "dockerfile",
+          "default": "stable",
+          "location": {
+            "file": "server/Dockerfile.dev",
+            "line": 62
+          }
+        }
+      ]
+    },
+    {
+      "name": "FLUTTER_HOME",
+      "default": "/flutter",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "FLUTTER_HOME",
+          "kind": "dockerfile",
+          "default": "/flutter",
+          "location": {
+            "file": "server/Dockerfile.dev",
+            "line": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "FLUTTER_VERSION",
+      "default": "3.35.7",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "FLUTTER_VERSION",
+          "kind": "dockerfile",
+          "default": "3.35.7",
+          "location": {
+            "file": "server/Dockerfile.dev",
+            "line": 63
+          }
+        }
+      ]
+    },
+    {
+      "name": "FLV",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "FLV",
+          "kind": "readme",
+          "location": {
+            "file": "docs/docs/features/supported-formats.md",
+            "line": 36
+          }
+        }
+      ]
+    },
+    {
+      "name": "GIF",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GIF",
+          "kind": "readme",
+          "location": {
+            "file": "docs/docs/features/supported-formats.md",
+            "line": 15
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITHUB_ENV",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITHUB_ENV",
+          "kind": "code",
+          "location": {
+            "file": "packages/scripts/src/commands/release.ts",
+            "line": 94
+          }
+        },
+        {
+          "name": "GITHUB_ENV",
+          "kind": "code",
+          "location": {
+            "file": "packages/scripts/src/commands/release.ts",
+            "line": 97
+          }
+        }
+      ]
+    },
+    {
+      "name": "GITHUB_TOKEN",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "GITHUB_TOKEN",
+          "kind": "code",
+          "location": {
+            "file": "packages/scripts/src/cli.ts",
+            "line": 60
+          }
+        }
+      ]
+    },
+    {
+      "name": "HEIC",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "HEIC",
+          "kind": "readme",
+          "location": {
+            "file": "docs/docs/features/supported-formats.md",
+            "line": 16
+          }
+        }
+      ]
+    },
+    {
+      "name": "HEIF",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "HEIF",
+          "kind": "readme",
+          "location": {
+            "file": "docs/docs/features/supported-formats.md",
+            "line": 17
+          }
+        }
+      ]
+    },
+    {
+      "name": "HF_HOME",
+      "default": "/cache/hf-cache",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "HF_HOME",
+          "kind": "dockerfile",
+          "default": "/cache/hf-cache",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 206
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_ALLOW_SETUP",
+      "default": "true",
+      "description": "When false disables the /auth/admin-sign-up and /admin/database-backups/start-restore endpoints",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_ALLOW_SETUP",
+          "kind": "readme",
+          "default": "true",
+          "text": "When false disables the /auth/admin-sign-up and /admin/database-backups/start-restore endpoints",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 48
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_API_KEY",
+      "default": "your-api-key",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_API_KEY",
+          "kind": "readme",
+          "default": "your-api-key",
+          "location": {
+            "file": "docs/docs/features/command-line-interface.md",
+            "line": 40
+          }
+        },
+        {
+          "name": "IMMICH_API_KEY",
+          "kind": "readme",
+          "default": "your-api-key",
+          "location": {
+            "file": "docs/docs/features/command-line-interface.md",
+            "line": 48
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_API_METRICS_PORT",
+      "default": "8081",
+      "description": "Port for the OTEL metrics",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_API_METRICS_PORT",
+          "kind": "readme",
+          "default": "8081",
+          "text": "Port for the OTEL metrics",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 43
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_BUILD",
+      "default": "9654404849",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_BUILD",
+          "kind": "compose",
+          "default": "9654404849",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 85
+          }
+        },
+        {
+          "name": "IMMICH_BUILD",
+          "kind": "dockerfile",
+          "default": "${BUILD_ID}",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 195
+          }
+        },
+        {
+          "name": "IMMICH_BUILD",
+          "kind": "dockerfile",
+          "default": "${BUILD_ID}",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 112
+          }
+        },
+        {
+          "name": "IMMICH_BUILD",
+          "kind": "code",
+          "location": {
+            "file": "web/svelte.config.js",
+            "line": 19
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_BUILD_IMAGE",
+      "default": "development",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_BUILD_IMAGE",
+          "kind": "compose",
+          "default": "development",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 87
+          }
+        },
+        {
+          "name": "IMMICH_BUILD_IMAGE",
+          "kind": "dockerfile",
+          "default": "${BUILD_IMAGE}",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 197
+          }
+        },
+        {
+          "name": "IMMICH_BUILD_IMAGE",
+          "kind": "dockerfile",
+          "default": "${BUILD_IMAGE}",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 114
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_BUILD_IMAGE_URL",
+      "default": "https://github.com/immich-app/immich/pkgs/container/immich-server",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_BUILD_IMAGE_URL",
+          "kind": "compose",
+          "default": "https://github.com/immich-app/immich/pkgs/container/immich-server",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 88
+          }
+        },
+        {
+          "name": "IMMICH_BUILD_IMAGE_URL",
+          "kind": "dockerfile",
+          "default": "https://github.com/immich-app/immich/pkgs/container/immich-machine-learning",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 198
+          }
+        },
+        {
+          "name": "IMMICH_BUILD_IMAGE_URL",
+          "kind": "dockerfile",
+          "default": "https://github.com/immich-app/immich/pkgs/container/immich-server",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 115
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_BUILD_URL",
+      "default": "https://github.com/immich-app/immich/actions/runs/9654404849",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_BUILD_URL",
+          "kind": "compose",
+          "default": "https://github.com/immich-app/immich/actions/runs/9654404849",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 86
+          }
+        },
+        {
+          "name": "IMMICH_BUILD_URL",
+          "kind": "dockerfile",
+          "default": "https://github.com/immich-app/immich/actions/runs/${BUILD_ID}",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 196
+          }
+        },
+        {
+          "name": "IMMICH_BUILD_URL",
+          "kind": "dockerfile",
+          "default": "https://github.com/immich-app/immich/actions/runs/${BUILD_ID}",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 113
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_CONFIG_FILE",
+      "default": "",
+      "description": "Path to config file",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_CONFIG_FILE",
+          "kind": "readme",
+          "text": "Path to config file",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 39
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_ENV",
+      "default": "production",
+      "description": "Environment (production, development)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_ENV",
+          "kind": "readme",
+          "default": "production",
+          "text": "Environment (production, development)",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 35
+          }
+        },
+        {
+          "name": "IMMICH_ENV",
+          "kind": "dockerfile",
+          "default": "development",
+          "location": {
+            "file": "server/Dockerfile.dev",
+            "line": 20
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_HELMET_FILE",
+      "default": "true",
+      "description": "Path to a json file with [helmet](https://www.npmjs.com/package/helmet) options. Set to false to disable. Set to true to use server/helmet.json\u003csup\u003e\\*3\u003c/sup\u003e.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_HELMET_FILE",
+          "kind": "compose",
+          "default": "true",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 93
+          }
+        },
+        {
+          "name": "IMMICH_HELMET_FILE",
+          "kind": "readme",
+          "default": "false",
+          "text": "Path to a json file with [helmet](https://www.npmjs.com/package/helmet) options. Set to false to disable. Set to true to use server/helmet.json\u003csup\u003e\\*3\u003c/sup\u003e.",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 40
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_HOST",
+      "default": "0.0.0.0",
+      "description": "Listening host",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_HOST",
+          "kind": "readme",
+          "default": "0.0.0.0",
+          "text": "Listening host",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 72
+          }
+        },
+        {
+          "name": "IMMICH_HOST",
+          "kind": "code",
+          "location": {
+            "file": "machine-learning/scripts/healthcheck.py",
+            "line": 8
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_IGNORE_MOUNT_CHECK_ERRORS",
+      "default": "",
+      "description": "See [System Integrity](/administration/system-integrity)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_IGNORE_MOUNT_CHECK_ERRORS",
+          "kind": "readme",
+          "text": "See [System Integrity](/administration/system-integrity)",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 47
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_INSTANCE_URL",
+      "default": "https://your-immich-instance/api",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_INSTANCE_URL",
+          "kind": "readme",
+          "default": "https://your-immich-instance/api",
+          "location": {
+            "file": "docs/docs/features/command-line-interface.md",
+            "line": 40
+          }
+        },
+        {
+          "name": "IMMICH_INSTANCE_URL",
+          "kind": "readme",
+          "default": "https://your-immich-instance/api",
+          "location": {
+            "file": "docs/docs/features/command-line-interface.md",
+            "line": 48
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_LOG_FORMAT",
+      "default": "console",
+      "description": "Log output format (console, json)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_LOG_FORMAT",
+          "kind": "readme",
+          "default": "console",
+          "text": "Log output format (console, json)",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 37
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_LOG_LEVEL",
+      "default": "log",
+      "description": "Log level (verbose, debug, log, warn, error)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_LOG_LEVEL",
+          "kind": "readme",
+          "default": "log",
+          "text": "Log level (verbose, debug, log, warn, error)",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 36
+          }
+        },
+        {
+          "name": "IMMICH_LOG_LEVEL",
+          "kind": "code",
+          "location": {
+            "file": "server/src/main.ts",
+            "line": 173
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_MACHINE_LEARNING_ENABLED",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_MACHINE_LEARNING_ENABLED",
+          "kind": "code",
+          "location": {
+            "file": "server/src/dtos/config.dto.ts",
+            "line": 620
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_MACHINE_LEARNING_URL",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_MACHINE_LEARNING_URL",
+          "kind": "code",
+          "location": {
+            "file": "server/src/dtos/config.dto.ts",
+            "line": 621
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_MEDIA_LOCATION",
+      "default": "/data",
+      "description": "Media location inside the container ⚠️You probably shouldn't set this\u003csup\u003e\\*2\u003c/sup\u003e⚠️",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_MEDIA_LOCATION",
+          "kind": "readme",
+          "default": "/data",
+          "text": "Media location inside the container ⚠️You probably shouldn't set this\u003csup\u003e\\*2\u003c/sup\u003e⚠️",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 38
+          }
+        },
+        {
+          "name": "IMMICH_MEDIA_LOCATION",
+          "kind": "code",
+          "location": {
+            "file": "server/src/commands/media-location.command.ts",
+            "line": 80
+          }
+        },
+        {
+          "name": "IMMICH_MEDIA_LOCATION",
+          "kind": "code",
+          "location": {
+            "file": "server/src/schema/migrations/1752759108283-ConvertToAbsolutePaths.ts",
+            "line": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_MICROSERVICES_METRICS_PORT",
+      "default": "8082",
+      "description": "Port for the OTEL metrics",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_MICROSERVICES_METRICS_PORT",
+          "kind": "readme",
+          "default": "8082",
+          "text": "Port for the OTEL metrics",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 44
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_PORT",
+      "default": "2283 (server), 3003 (machine learning)",
+      "description": "Listening port",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_PORT",
+          "kind": "readme",
+          "default": "2283 (server), 3003 (machine learning)",
+          "text": "Listening port",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 73
+          }
+        },
+        {
+          "name": "IMMICH_PORT",
+          "kind": "code",
+          "location": {
+            "file": "machine-learning/scripts/healthcheck.py",
+            "line": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_PROCESS_INVALID_IMAGES",
+      "default": "",
+      "description": "When true, generate thumbnails for invalid images",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_PROCESS_INVALID_IMAGES",
+          "kind": "readme",
+          "text": "When true, generate thumbnails for invalid images",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 45
+          }
+        },
+        {
+          "name": "IMMICH_PROCESS_INVALID_IMAGES",
+          "kind": "code",
+          "location": {
+            "file": "server/src/services/media.service.ts",
+            "line": 247
+          }
+        },
+        {
+          "name": "IMMICH_PROCESS_INVALID_IMAGES",
+          "kind": "code",
+          "location": {
+            "file": "server/src/services/media.service.ts",
+            "line": 420
+          }
+        },
+        {
+          "name": "IMMICH_PROCESS_INVALID_IMAGES",
+          "kind": "code",
+          "location": {
+            "file": "server/src/services/media.service.ts",
+            "line": 523
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_REPOSITORY",
+      "default": "immich-app/immich",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_REPOSITORY",
+          "kind": "compose",
+          "default": "immich-app/immich",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 80
+          }
+        },
+        {
+          "name": "IMMICH_REPOSITORY",
+          "kind": "dockerfile",
+          "default": "immich-app/immich",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 199
+          }
+        },
+        {
+          "name": "IMMICH_REPOSITORY",
+          "kind": "dockerfile",
+          "default": "immich-app/immich",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 116
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_REPOSITORY_URL",
+      "default": "https://github.com/immich-app/immich",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_REPOSITORY_URL",
+          "kind": "compose",
+          "default": "https://github.com/immich-app/immich",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 81
+          }
+        },
+        {
+          "name": "IMMICH_REPOSITORY_URL",
+          "kind": "dockerfile",
+          "default": "https://github.com/immich-app/immich",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 200
+          }
+        },
+        {
+          "name": "IMMICH_REPOSITORY_URL",
+          "kind": "dockerfile",
+          "default": "https://github.com/immich-app/immich",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 117
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_SERVER_URL",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_SERVER_URL",
+          "kind": "code",
+          "location": {
+            "file": "web/vite.config.ts",
+            "line": 10
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_SOURCE_COMMIT",
+      "default": "af2efbdbbddc27cd06142f22253ccbbbbeec1f55",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_SOURCE_COMMIT",
+          "kind": "compose",
+          "default": "af2efbdbbddc27cd06142f22253ccbbbbeec1f55",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 83
+          }
+        },
+        {
+          "name": "IMMICH_SOURCE_COMMIT",
+          "kind": "dockerfile",
+          "default": "${BUILD_SOURCE_COMMIT}",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 202
+          }
+        },
+        {
+          "name": "IMMICH_SOURCE_COMMIT",
+          "kind": "dockerfile",
+          "default": "${BUILD_SOURCE_COMMIT}",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 119
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_SOURCE_REF",
+      "default": "local",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_SOURCE_REF",
+          "kind": "compose",
+          "default": "local",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 82
+          }
+        },
+        {
+          "name": "IMMICH_SOURCE_REF",
+          "kind": "dockerfile",
+          "default": "${BUILD_SOURCE_REF}",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 201
+          }
+        },
+        {
+          "name": "IMMICH_SOURCE_REF",
+          "kind": "dockerfile",
+          "default": "${BUILD_SOURCE_REF}",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 118
+          }
+        },
+        {
+          "name": "IMMICH_SOURCE_REF",
+          "kind": "code",
+          "location": {
+            "file": "machine-learning/immich_ml/__main__.py",
+            "line": 9
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_SOURCE_URL",
+      "default": "https://github.com/immich-app/immich/commit/af2efbdbbddc27cd06142f22253ccbbbbeec1f55",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_SOURCE_URL",
+          "kind": "compose",
+          "default": "https://github.com/immich-app/immich/commit/af2efbdbbddc27cd06142f22253ccbbbbeec1f55",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 84
+          }
+        },
+        {
+          "name": "IMMICH_SOURCE_URL",
+          "kind": "dockerfile",
+          "default": "https://github.com/immich-app/immich/commit/${BUILD_SOURCE_COMMIT}",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 203
+          }
+        },
+        {
+          "name": "IMMICH_SOURCE_URL",
+          "kind": "dockerfile",
+          "default": "https://github.com/immich-app/immich/commit/${BUILD_SOURCE_COMMIT}",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 120
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_TELEMETRY_EXCLUDE",
+      "default": "",
+      "description": "Do not collect these telemetries. List of host, api, io, repo, job",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_TELEMETRY_EXCLUDE",
+          "kind": "readme",
+          "text": "Do not collect these telemetries. List of host, api, io, repo, job",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 209
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_TELEMETRY_INCLUDE",
+      "default": "",
+      "description": "Collect these telemetries. List of host, api, io, repo, job. Note: You can also specify all to enable all",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_TELEMETRY_INCLUDE",
+          "kind": "readme",
+          "text": "Collect these telemetries. List of host, api, io, repo, job. Note: You can also specify all to enable all",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 208
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_THIRD_PARTY_BUG_FEATURE_URL",
+      "default": "https://github.com/immich-app/immich/issues",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_THIRD_PARTY_BUG_FEATURE_URL",
+          "kind": "compose",
+          "default": "https://github.com/immich-app/immich/issues",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 90
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_THIRD_PARTY_DOCUMENTATION_URL",
+      "default": "https://docs.immich.app",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_THIRD_PARTY_DOCUMENTATION_URL",
+          "kind": "compose",
+          "default": "https://docs.immich.app",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 91
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_THIRD_PARTY_SOURCE_URL",
+      "default": "https://github.com/immich-app/immich/",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_THIRD_PARTY_SOURCE_URL",
+          "kind": "compose",
+          "default": "https://github.com/immich-app/immich/",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 89
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_THIRD_PARTY_SUPPORT_URL",
+      "default": "https://docs.immich.app/community-guides",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_THIRD_PARTY_SUPPORT_URL",
+          "kind": "compose",
+          "default": "https://docs.immich.app/community-guides",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 92
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_TRUSTED_PROXIES",
+      "default": "",
+      "description": "List of comma-separated IPs set as trusted proxies",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_TRUSTED_PROXIES",
+          "kind": "readme",
+          "text": "List of comma-separated IPs set as trusted proxies",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 46
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_VERSION",
+      "default": "release",
+      "description": "The Immich version to use. You can pin this to a specific version like \"v2.1.0\"",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_VERSION",
+          "kind": "compose",
+          "default": "release",
+          "location": {
+            "file": "docker/docker-compose.rootless.yml",
+            "line": 15
+          }
+        },
+        {
+          "name": "IMMICH_VERSION",
+          "kind": "compose",
+          "default": "release",
+          "location": {
+            "file": "docker/docker-compose.yml",
+            "line": 15
+          }
+        },
+        {
+          "name": "IMMICH_VERSION",
+          "kind": "env_sample",
+          "default": "v3",
+          "text": "The Immich version to use. You can pin this to a specific version like \"v2.1.0\"",
+          "location": {
+            "file": "docker/example.env",
+            "line": 13
+          }
+        },
+        {
+          "name": "IMMICH_VERSION",
+          "kind": "readme",
+          "default": "v3",
+          "text": "Image tags",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 22
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_WORKERS_EXCLUDE",
+      "default": "",
+      "description": "Do not run these workers. Matches against default workers, or IMMICH_WORKERS_INCLUDE if specified.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_WORKERS_EXCLUDE",
+          "kind": "readme",
+          "text": "Do not run these workers. Matches against default workers, or IMMICH_WORKERS_INCLUDE if specified.",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 62
+          }
+        }
+      ]
+    },
+    {
+      "name": "IMMICH_WORKERS_INCLUDE",
+      "default": "",
+      "description": "Only run these workers.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "IMMICH_WORKERS_INCLUDE",
+          "kind": "readme",
+          "text": "Only run these workers.",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 61
+          }
+        }
+      ]
+    },
+    {
+      "name": "JPEG",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "JPEG",
+          "kind": "readme",
+          "location": {
+            "file": "docs/docs/features/supported-formats.md",
+            "line": 19
+          }
+        }
+      ]
+    },
+    {
+      "name": "LD_LIBRARY_PATH",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LD_LIBRARY_PATH",
+          "kind": "code",
+          "location": {
+            "file": "machine-learning/ann/export/run.py",
+            "line": 119
+          }
+        }
+      ]
+    },
+    {
+      "name": "M4V",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "M4V",
+          "kind": "readme",
+          "location": {
+            "file": "docs/docs/features/supported-formats.md",
+            "line": 37
+          }
+        }
+      ]
+    },
+    {
+      "name": "MACHINE_LEARNING_ANN",
+      "default": "True",
+      "description": "Enable ARM-NN hardware acceleration if supported",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MACHINE_LEARNING_ANN",
+          "kind": "readme",
+          "default": "True",
+          "text": "Enable ARM-NN hardware acceleration if supported",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 175
+          }
+        }
+      ]
+    },
+    {
+      "name": "MACHINE_LEARNING_ANN_FP16_TURBO",
+      "default": "False",
+      "description": "Execute operations in FP16 precision: increasing speed, reducing precision (applies only to ARM-NN)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MACHINE_LEARNING_ANN_FP16_TURBO",
+          "kind": "readme",
+          "default": "False",
+          "text": "Execute operations in FP16 precision: increasing speed, reducing precision (applies only to ARM-NN)",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 176
+          }
+        }
+      ]
+    },
+    {
+      "name": "MACHINE_LEARNING_ANN_TUNING_LEVEL",
+      "default": "2",
+      "description": "ARM-NN GPU tuning level (1: rapid, 2: normal, 3: exhaustive)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MACHINE_LEARNING_ANN_TUNING_LEVEL",
+          "kind": "readme",
+          "default": "2",
+          "text": "ARM-NN GPU tuning level (1: rapid, 2: normal, 3: exhaustive)",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 177
+          }
+        }
+      ]
+    },
+    {
+      "name": "MACHINE_LEARNING_CACHE_FOLDER",
+      "default": "/cache",
+      "description": "Directory where models are downloaded",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MACHINE_LEARNING_CACHE_FOLDER",
+          "kind": "readme",
+          "default": "/cache",
+          "text": "Directory where models are downloaded",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 161
+          }
+        },
+        {
+          "name": "MACHINE_LEARNING_CACHE_FOLDER",
+          "kind": "dockerfile",
+          "default": "/cache",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 172
+          }
+        }
+      ]
+    },
+    {
+      "name": "MACHINE_LEARNING_DEVICE_ID",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MACHINE_LEARNING_DEVICE_ID",
+          "kind": "code",
+          "location": {
+            "file": "machine-learning/immich_ml/config.py",
+            "line": 85
+          }
+        }
+      ]
+    },
+    {
+      "name": "MACHINE_LEARNING_DEVICE_IDS",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MACHINE_LEARNING_DEVICE_IDS",
+          "kind": "code",
+          "location": {
+            "file": "machine-learning/immich_ml/gunicorn_conf.py",
+            "line": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "MACHINE_LEARNING_MAX_BATCH_SIZE__FACIAL_RECOGNITION",
+      "default": "4",
+      "description": "Set the maximum number of faces that will be processed at once by the facial recognition model",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MACHINE_LEARNING_MAX_BATCH_SIZE__FACIAL_RECOGNITION",
+          "kind": "readme",
+          "default": "4",
+          "text": "Set the maximum number of faces that will be processed at once by the facial recognition model",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 179
+          }
+        }
+      ]
+    },
+    {
+      "name": "MACHINE_LEARNING_MAX_BATCH_SIZE__OCR",
+      "default": "6",
+      "description": "Set the maximum number of boxes that will be processed at once by the OCR model",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MACHINE_LEARNING_MAX_BATCH_SIZE__OCR",
+          "kind": "readme",
+          "default": "6",
+          "text": "Set the maximum number of boxes that will be processed at once by the OCR model",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 180
+          }
+        }
+      ]
+    },
+    {
+      "name": "MACHINE_LEARNING_MODEL_ARENA",
+      "default": "true",
+      "description": "Pre-allocates CPU memory to avoid memory fragmentation",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MACHINE_LEARNING_MODEL_ARENA",
+          "kind": "readme",
+          "default": "true",
+          "text": "Pre-allocates CPU memory to avoid memory fragmentation",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 183
+          }
+        },
+        {
+          "name": "MACHINE_LEARNING_MODEL_ARENA",
+          "kind": "dockerfile",
+          "default": "false",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 86
+          }
+        }
+      ]
+    },
+    {
+      "name": "MACHINE_LEARNING_MODEL_INTER_OP_THREADS",
+      "default": "1",
+      "description": "Number of parallel model operations",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MACHINE_LEARNING_MODEL_INTER_OP_THREADS",
+          "kind": "readme",
+          "default": "1",
+          "text": "Number of parallel model operations",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 163
+          }
+        }
+      ]
+    },
+    {
+      "name": "MACHINE_LEARNING_MODEL_INTRA_OP_THREADS",
+      "default": "2",
+      "description": "Number of threads for each model operation",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MACHINE_LEARNING_MODEL_INTRA_OP_THREADS",
+          "kind": "readme",
+          "default": "2",
+          "text": "Number of threads for each model operation",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 164
+          }
+        }
+      ]
+    },
+    {
+      "name": "MACHINE_LEARNING_MODEL_REVISION",
+      "default": "main",
+      "description": "Model revision to download; main selects the original exports and v2 selects the newer exports",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MACHINE_LEARNING_MODEL_REVISION",
+          "kind": "readme",
+          "default": "main",
+          "text": "Model revision to download; main selects the original exports and v2 selects the newer exports",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 184
+          }
+        }
+      ]
+    },
+    {
+      "name": "MACHINE_LEARNING_MODEL_TTL",
+      "default": "300",
+      "description": "Inactivity time (s) before a model is unloaded (disabled if \\\u003c= 0)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MACHINE_LEARNING_MODEL_TTL",
+          "kind": "readme",
+          "default": "300",
+          "text": "Inactivity time (s) before a model is unloaded (disabled if \\\u003c= 0)",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 159
+          }
+        }
+      ]
+    },
+    {
+      "name": "MACHINE_LEARNING_MODEL_TTL_POLL_S",
+      "default": "10",
+      "description": "Interval (s) between checks for the model TTL (disabled if \\\u003c= 0)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MACHINE_LEARNING_MODEL_TTL_POLL_S",
+          "kind": "readme",
+          "default": "10",
+          "text": "Interval (s) between checks for the model TTL (disabled if \\\u003c= 0)",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 160
+          }
+        }
+      ]
+    },
+    {
+      "name": "MACHINE_LEARNING_PRELOAD__CLIP__TEXTUAL",
+      "default": "",
+      "description": "Comma-separated list of (textual) CLIP model(s) to preload and cache",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MACHINE_LEARNING_PRELOAD__CLIP__TEXTUAL",
+          "kind": "readme",
+          "text": "Comma-separated list of (textual) CLIP model(s) to preload and cache",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 168
+          }
+        }
+      ]
+    },
+    {
+      "name": "MACHINE_LEARNING_PRELOAD__CLIP__VISUAL",
+      "default": "",
+      "description": "Comma-separated list of (visual) CLIP model(s) to preload and cache",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MACHINE_LEARNING_PRELOAD__CLIP__VISUAL",
+          "kind": "readme",
+          "text": "Comma-separated list of (visual) CLIP model(s) to preload and cache",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 169
+          }
+        }
+      ]
+    },
+    {
+      "name": "MACHINE_LEARNING_PRELOAD__FACIAL_RECOGNITION__DETECTION",
+      "default": "",
+      "description": "Comma-separated list of (detection) facial recognition model(s) to preload and cache",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MACHINE_LEARNING_PRELOAD__FACIAL_RECOGNITION__DETECTION",
+          "kind": "readme",
+          "text": "Comma-separated list of (detection) facial recognition model(s) to preload and cache",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 171
+          }
+        }
+      ]
+    },
+    {
+      "name": "MACHINE_LEARNING_PRELOAD__FACIAL_RECOGNITION__RECOGNITION",
+      "default": "",
+      "description": "Comma-separated list of (recognition) facial recognition model(s) to preload and cache",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MACHINE_LEARNING_PRELOAD__FACIAL_RECOGNITION__RECOGNITION",
+          "kind": "readme",
+          "text": "Comma-separated list of (recognition) facial recognition model(s) to preload and cache",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 170
+          }
+        }
+      ]
+    },
+    {
+      "name": "MACHINE_LEARNING_PRELOAD__OCR__DETECTION",
+      "default": "",
+      "description": "Comma-separated list of (detection) OCR model(s) to preload and cache",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MACHINE_LEARNING_PRELOAD__OCR__DETECTION",
+          "kind": "readme",
+          "text": "Comma-separated list of (detection) OCR model(s) to preload and cache",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 173
+          }
+        }
+      ]
+    },
+    {
+      "name": "MACHINE_LEARNING_PRELOAD__OCR__MAX_RESOLUTION",
+      "default": "736",
+      "description": "Resolution to preload the OCR detection model(s) for (must match the server's OCR resolution)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MACHINE_LEARNING_PRELOAD__OCR__MAX_RESOLUTION",
+          "kind": "readme",
+          "default": "736",
+          "text": "Resolution to preload the OCR detection model(s) for (must match the server's OCR resolution)",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 174
+          }
+        }
+      ]
+    },
+    {
+      "name": "MACHINE_LEARNING_PRELOAD__OCR__RECOGNITION",
+      "default": "",
+      "description": "Comma-separated list of (recognition) OCR model(s) to preload and cache",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MACHINE_LEARNING_PRELOAD__OCR__RECOGNITION",
+          "kind": "readme",
+          "text": "Comma-separated list of (recognition) OCR model(s) to preload and cache",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 172
+          }
+        }
+      ]
+    },
+    {
+      "name": "MACHINE_LEARNING_RKNN",
+      "default": "True",
+      "description": "Enable RKNN hardware acceleration if supported",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MACHINE_LEARNING_RKNN",
+          "kind": "readme",
+          "default": "True",
+          "text": "Enable RKNN hardware acceleration if supported",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 181
+          }
+        }
+      ]
+    },
+    {
+      "name": "MACHINE_LEARNING_RKNN_THREADS",
+      "default": "1",
+      "description": "How many threads of RKNN runtime should be spun up while inferencing.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MACHINE_LEARNING_RKNN_THREADS",
+          "kind": "readme",
+          "default": "1",
+          "text": "How many threads of RKNN runtime should be spun up while inferencing.",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 182
+          }
+        }
+      ]
+    },
+    {
+      "name": "MACHINE_LEARNING_WORKER_TIMEOUT",
+      "default": "300 (900 if using ROCm)",
+      "description": "Maximum time (s) of unresponsiveness before a worker is killed",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MACHINE_LEARNING_WORKER_TIMEOUT",
+          "kind": "readme",
+          "default": "300 (900 if using ROCm)",
+          "text": "Maximum time (s) of unresponsiveness before a worker is killed",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 167
+          }
+        }
+      ]
+    },
+    {
+      "name": "MATROSKA",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MATROSKA",
+          "kind": "readme",
+          "location": {
+            "file": "docs/docs/features/supported-formats.md",
+            "line": 38
+          }
+        }
+      ]
+    },
+    {
+      "name": "MISE_DATA_DIR",
+      "default": "/buildcache/mise",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MISE_DATA_DIR",
+          "kind": "dockerfile",
+          "default": "/buildcache/mise",
+          "location": {
+            "file": "server/Dockerfile.dev",
+            "line": 17
+          }
+        }
+      ]
+    },
+    {
+      "name": "MISE_TRUSTED_CONFIG_PATHS",
+      "default": "/usr/src/app/mise.toml",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MISE_TRUSTED_CONFIG_PATHS",
+          "kind": "dockerfile",
+          "default": "/usr/src/app/mise.toml",
+          "location": {
+            "file": "server/Dockerfile.dev",
+            "line": 18
+          }
+        }
+      ]
+    },
+    {
+      "name": "MP2T",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MP2T",
+          "kind": "readme",
+          "location": {
+            "file": "docs/docs/features/supported-formats.md",
+            "line": 39
+          }
+        }
+      ]
+    },
+    {
+      "name": "MP4",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MP4",
+          "kind": "readme",
+          "location": {
+            "file": "docs/docs/features/supported-formats.md",
+            "line": 40
+          }
+        }
+      ]
+    },
+    {
+      "name": "MPEG",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MPEG",
+          "kind": "readme",
+          "location": {
+            "file": "docs/docs/features/supported-formats.md",
+            "line": 41
+          }
+        }
+      ]
+    },
+    {
+      "name": "MPO",
+      "default": "",
+      "description": "Multi-Picture",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MPO",
+          "kind": "readme",
+          "text": "Multi-Picture",
+          "location": {
+            "file": "docs/docs/features/supported-formats.md",
+            "line": 21
+          }
+        }
+      ]
+    },
+    {
+      "name": "MXF",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MXF",
+          "kind": "readme",
+          "location": {
+            "file": "docs/docs/features/supported-formats.md",
+            "line": 42
+          }
+        }
+      ]
+    },
+    {
+      "name": "NEO_CACHE_DIR",
+      "default": "/cache/jit/neo",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "NEO_CACHE_DIR",
+          "kind": "dockerfile",
+          "default": "/cache/jit/neo",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 208
+          }
+        }
+      ]
+    },
+    {
+      "name": "NODE_ENV",
+      "default": "production",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "NODE_ENV",
+          "kind": "dockerfile",
+          "default": "production",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 92
+          }
+        }
+      ]
+    },
+    {
+      "name": "NO_COLOR",
+      "default": "false",
+      "description": "Set to true to disable color-coded log output",
+      "required": false,
+      "mentions": [
+        {
+          "name": "NO_COLOR",
+          "kind": "readme",
+          "default": "false",
+          "text": "Set to true to disable color-coded log output",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 41
+          }
+        }
+      ]
+    },
+    {
+      "name": "NVIDIA_DRIVER_CAPABILITIES",
+      "default": "all",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "NVIDIA_DRIVER_CAPABILITIES",
+          "kind": "dockerfile",
+          "default": "all",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 92
+          }
+        },
+        {
+          "name": "NVIDIA_DRIVER_CAPABILITIES",
+          "kind": "dockerfile",
+          "default": "all",
+          "location": {
+            "file": "server/Dockerfile.dev",
+            "line": 21
+          }
+        }
+      ]
+    },
+    {
+      "name": "NVIDIA_VISIBLE_DEVICES",
+      "default": "all",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "NVIDIA_VISIBLE_DEVICES",
+          "kind": "dockerfile",
+          "default": "all",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 92
+          }
+        },
+        {
+          "name": "NVIDIA_VISIBLE_DEVICES",
+          "kind": "dockerfile",
+          "default": "all",
+          "location": {
+            "file": "server/Dockerfile.dev",
+            "line": 22
+          }
+        }
+      ]
+    },
+    {
+      "name": "PATH",
+      "default": "/opt/venv/bin:$PATH",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PATH",
+          "kind": "dockerfile",
+          "default": "/opt/venv/bin:$PATH",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 172
+          }
+        },
+        {
+          "name": "PATH",
+          "kind": "dockerfile",
+          "default": "${PATH}:/usr/src/app/server/bin",
+          "location": {
+            "file": "server/Dockerfile",
+            "line": 105
+          }
+        },
+        {
+          "name": "PATH",
+          "kind": "dockerfile",
+          "default": "${MISE_DATA_DIR}/shims:${PATH}:/usr/src/app/server/bin:/usr/src/app/web/bin",
+          "location": {
+            "file": "server/Dockerfile.dev",
+            "line": 19
+          }
+        },
+        {
+          "name": "PATH",
+          "kind": "dockerfile",
+          "default": "${PATH}:${FLUTTER_HOME}/bin",
+          "location": {
+            "file": "server/Dockerfile.dev",
+            "line": 65
+          }
+        },
+        {
+          "name": "PATH",
+          "kind": "code",
+          "location": {
+            "file": "server/src/services/database-backup.service.ts",
+            "line": 245
+          }
+        },
+        {
+          "name": "PATH",
+          "kind": "code",
+          "location": {
+            "file": "server/src/services/database-backup.service.ts",
+            "line": 406
+          }
+        },
+        {
+          "name": "PATH",
+          "kind": "code",
+          "location": {
+            "file": "server/src/services/database-backup.service.ts",
+            "line": 444
+          }
+        }
+      ]
+    },
+    {
+      "name": "PNG",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PNG",
+          "kind": "readme",
+          "location": {
+            "file": "docs/docs/features/supported-formats.md",
+            "line": 22
+          }
+        }
+      ]
+    },
+    {
+      "name": "PNPM_HOME",
+      "default": "/buildcache/pnpm-store",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PNPM_HOME",
+          "kind": "dockerfile",
+          "default": "/buildcache/pnpm-store",
+          "location": {
+            "file": "server/Dockerfile.dev",
+            "line": 16
+          }
+        }
+      ]
+    },
+    {
+      "name": "POSTGRES_DB",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "POSTGRES_DB",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 169
+          }
+        },
+        {
+          "name": "POSTGRES_DB",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.prod.yml",
+            "line": 72
+          }
+        },
+        {
+          "name": "POSTGRES_DB",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.rootless.yml",
+            "line": 85
+          }
+        },
+        {
+          "name": "POSTGRES_DB",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.yml",
+            "line": 63
+          }
+        }
+      ]
+    },
+    {
+      "name": "POSTGRES_INITDB_ARGS",
+      "default": "--data-checksums",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "POSTGRES_INITDB_ARGS",
+          "kind": "compose",
+          "default": "--data-checksums",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 170
+          }
+        },
+        {
+          "name": "POSTGRES_INITDB_ARGS",
+          "kind": "compose",
+          "default": "--data-checksums",
+          "location": {
+            "file": "docker/docker-compose.prod.yml",
+            "line": 73
+          }
+        },
+        {
+          "name": "POSTGRES_INITDB_ARGS",
+          "kind": "compose",
+          "default": "--data-checksums",
+          "location": {
+            "file": "docker/docker-compose.rootless.yml",
+            "line": 86
+          }
+        },
+        {
+          "name": "POSTGRES_INITDB_ARGS",
+          "kind": "compose",
+          "default": "--data-checksums",
+          "location": {
+            "file": "docker/docker-compose.yml",
+            "line": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "POSTGRES_PASSWORD",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "POSTGRES_PASSWORD",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 167
+          }
+        },
+        {
+          "name": "POSTGRES_PASSWORD",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.prod.yml",
+            "line": 70
+          }
+        },
+        {
+          "name": "POSTGRES_PASSWORD",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.rootless.yml",
+            "line": 83
+          }
+        },
+        {
+          "name": "POSTGRES_PASSWORD",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.yml",
+            "line": 61
+          }
+        }
+      ]
+    },
+    {
+      "name": "POSTGRES_USER",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "POSTGRES_USER",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 168
+          }
+        },
+        {
+          "name": "POSTGRES_USER",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.prod.yml",
+            "line": 71
+          }
+        },
+        {
+          "name": "POSTGRES_USER",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.rootless.yml",
+            "line": 84
+          }
+        },
+        {
+          "name": "POSTGRES_USER",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.yml",
+            "line": 62
+          }
+        }
+      ]
+    },
+    {
+      "name": "PSD",
+      "default": "",
+      "description": "Adobe Photoshop",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PSD",
+          "kind": "readme",
+          "text": "Adobe Photoshop",
+          "location": {
+            "file": "docs/docs/features/supported-formats.md",
+            "line": 23
+          }
+        }
+      ]
+    },
+    {
+      "name": "PUBLIC_IMMICH_BUY_HOST",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PUBLIC_IMMICH_BUY_HOST",
+          "kind": "code",
+          "location": {
+            "file": "web/svelte.config.js",
+            "line": 7
+          }
+        },
+        {
+          "name": "PUBLIC_IMMICH_BUY_HOST",
+          "kind": "code",
+          "location": {
+            "file": "web/svelte.config.js",
+            "line": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "PUBLIC_IMMICH_PAY_HOST",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PUBLIC_IMMICH_PAY_HOST",
+          "kind": "code",
+          "location": {
+            "file": "web/svelte.config.js",
+            "line": 8
+          }
+        },
+        {
+          "name": "PUBLIC_IMMICH_PAY_HOST",
+          "kind": "code",
+          "location": {
+            "file": "web/svelte.config.js",
+            "line": 8
+          }
+        }
+      ]
+    },
+    {
+      "name": "PYTHONDONTWRITEBYTECODE",
+      "default": "1",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PYTHONDONTWRITEBYTECODE",
+          "kind": "dockerfile",
+          "default": "1",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 172
+          }
+        }
+      ]
+    },
+    {
+      "name": "PYTHONPATH",
+      "default": "/usr/src",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PYTHONPATH",
+          "kind": "dockerfile",
+          "default": "/usr/src",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 172
+          }
+        }
+      ]
+    },
+    {
+      "name": "PYTHONUNBUFFERED",
+      "default": "1",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PYTHONUNBUFFERED",
+          "kind": "dockerfile",
+          "default": "1",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 172
+          }
+        }
+      ]
+    },
+    {
+      "name": "QUICKTIME",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "QUICKTIME",
+          "kind": "readme",
+          "location": {
+            "file": "docs/docs/features/supported-formats.md",
+            "line": 43
+          }
+        }
+      ]
+    },
+    {
+      "name": "RAW",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "RAW",
+          "kind": "readme",
+          "location": {
+            "file": "docs/docs/features/supported-formats.md",
+            "line": 24
+          }
+        }
+      ]
+    },
+    {
+      "name": "REDIS_DBINDEX",
+      "default": "0",
+      "description": "Redis DB index",
+      "required": false,
+      "mentions": [
+        {
+          "name": "REDIS_DBINDEX",
+          "kind": "readme",
+          "default": "0",
+          "text": "Redis DB index",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 117
+          }
+        }
+      ]
+    },
+    {
+      "name": "REDIS_HOSTNAME",
+      "default": "redis",
+      "description": "Redis host",
+      "required": false,
+      "mentions": [
+        {
+          "name": "REDIS_HOSTNAME",
+          "kind": "readme",
+          "default": "redis",
+          "text": "Redis host",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 113
+          }
+        }
+      ]
+    },
+    {
+      "name": "REDIS_PASSWORD",
+      "default": "",
+      "description": "Redis password",
+      "required": false,
+      "mentions": [
+        {
+          "name": "REDIS_PASSWORD",
+          "kind": "readme",
+          "text": "Redis password",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 116
+          }
+        },
+        {
+          "name": "REDIS_PASSWORD",
+          "kind": "readme",
+          "text": "REDIS_PASSWORD_FILE\u003csup\u003e\\*2\u003c/sup\u003e",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 224
+          }
+        }
+      ]
+    },
+    {
+      "name": "REDIS_PORT",
+      "default": "6379",
+      "description": "Redis port",
+      "required": false,
+      "mentions": [
+        {
+          "name": "REDIS_PORT",
+          "kind": "readme",
+          "default": "6379",
+          "text": "Redis port",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 114
+          }
+        }
+      ]
+    },
+    {
+      "name": "REDIS_SOCKET",
+      "default": "",
+      "description": "Redis socket",
+      "required": false,
+      "mentions": [
+        {
+          "name": "REDIS_SOCKET",
+          "kind": "readme",
+          "text": "Redis socket",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 112
+          }
+        }
+      ]
+    },
+    {
+      "name": "REDIS_URL",
+      "default": "",
+      "description": "Redis URL",
+      "required": false,
+      "mentions": [
+        {
+          "name": "REDIS_URL",
+          "kind": "readme",
+          "text": "Redis URL",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 111
+          }
+        }
+      ]
+    },
+    {
+      "name": "REDIS_USERNAME",
+      "default": "",
+      "description": "Redis username",
+      "required": false,
+      "mentions": [
+        {
+          "name": "REDIS_USERNAME",
+          "kind": "readme",
+          "text": "Redis username",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 115
+          }
+        }
+      ]
+    },
+    {
+      "name": "RW2",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "RW2",
+          "kind": "readme",
+          "location": {
+            "file": "docs/docs/features/supported-formats.md",
+            "line": 25
+          }
+        }
+      ]
+    },
+    {
+      "name": "SVELTE_ESLINT_PARSER_EXPERIMENTAL_TS_SYS_HOOK",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SVELTE_ESLINT_PARSER_EXPERIMENTAL_TS_SYS_HOOK",
+          "kind": "code",
+          "location": {
+            "file": "web/lint-env.js",
+            "line": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "SVG",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SVG",
+          "kind": "readme",
+          "location": {
+            "file": "docs/docs/features/supported-formats.md",
+            "line": 26
+          }
+        }
+      ]
+    },
+    {
+      "name": "SYNC",
+      "default": "",
+      "description": "Re-reads existing .xmp files and refreshes metadata in the database (e.g. after external edits)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SYNC",
+          "kind": "readme",
+          "text": "Re-reads existing .xmp files and refreshes metadata in the database (e.g. after external edits)",
+          "location": {
+            "file": "docs/docs/features/xmp-sidecars.md",
+            "line": 66
+          }
+        }
+      ]
+    },
+    {
+      "name": "TF_STATE_POSTGRES_CONN_STR",
+      "default": "op://tf/tf_state/postgres_conn_str",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TF_STATE_POSTGRES_CONN_STR",
+          "kind": "env_sample",
+          "default": "op://tf/tf_state/postgres_conn_str",
+          "location": {
+            "file": "deployment/.env",
+            "line": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "TF_VAR_env",
+      "default": "$ENVIRONMENT",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TF_VAR_env",
+          "kind": "env_sample",
+          "default": "$ENVIRONMENT",
+          "location": {
+            "file": "deployment/.env",
+            "line": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "TIFF",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TIFF",
+          "kind": "readme",
+          "location": {
+            "file": "docs/docs/features/supported-formats.md",
+            "line": 27
+          }
+        }
+      ]
+    },
+    {
+      "name": "TRANSFORMERS_CACHE",
+      "default": "/cache",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TRANSFORMERS_CACHE",
+          "kind": "dockerfile",
+          "default": "/cache",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 172
+          }
+        }
+      ]
+    },
+    {
+      "name": "TZ",
+      "default": "Etc/UTC",
+      "description": "To set a timezone, uncomment the next line and change Etc/UTC to a TZ identifier from this list: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TZ",
+          "kind": "env_sample",
+          "default": "Etc/UTC",
+          "text": "To set a timezone, uncomment the next line and change Etc/UTC to a TZ identifier from this list: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List",
+          "location": {
+            "file": "docker/example.env",
+            "line": 10
+          }
+        },
+        {
+          "name": "TZ",
+          "kind": "readme",
+          "default": "\u003csup\u003e\\*1\u003c/sup\u003e",
+          "text": "Timezone",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 34
+          }
+        }
+      ]
+    },
+    {
+      "name": "UPLOAD_LOCATION",
+      "default": "./library",
+      "description": "The location where your uploaded files are stored",
+      "required": false,
+      "mentions": [
+        {
+          "name": "UPLOAD_LOCATION",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 74
+          }
+        },
+        {
+          "name": "UPLOAD_LOCATION",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.prod.yml",
+            "line": 23
+          }
+        },
+        {
+          "name": "UPLOAD_LOCATION",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.rootless.yml",
+            "line": 26
+          }
+        },
+        {
+          "name": "UPLOAD_LOCATION",
+          "kind": "compose",
+          "location": {
+            "file": "docker/docker-compose.yml",
+            "line": 21
+          }
+        },
+        {
+          "name": "UPLOAD_LOCATION",
+          "kind": "env_sample",
+          "default": "./library",
+          "text": "The location where your uploaded files are stored",
+          "location": {
+            "file": "docker/example.env",
+            "line": 4
+          }
+        },
+        {
+          "name": "UPLOAD_LOCATION",
+          "kind": "readme",
+          "text": "Host path for uploads",
+          "location": {
+            "file": "docs/docs/install/environment-variables.md",
+            "line": 23
+          }
+        },
+        {
+          "name": "UPLOAD_LOCATION",
+          "kind": "readme",
+          "text": "Create a folder in your Images Unraid share and place the absolute location here \u003e For example my _\"images\"_ share has a folder within it called _\"immich\"_. If I browse to this directory in the terminal and type pwd the output is /mnt/user/images/immich. This is the exact value I need to enter as my UPLOAD_LOCATION",
+          "location": {
+            "file": "docs/docs/install/unraid.md",
+            "line": 84
+          }
+        }
+      ]
+    },
+    {
+      "name": "VIRTUAL_ENV",
+      "default": "/opt/venv",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "VIRTUAL_ENV",
+          "kind": "dockerfile",
+          "default": "/opt/venv",
+          "location": {
+            "file": "machine-learning/Dockerfile",
+            "line": 172
+          }
+        }
+      ]
+    },
+    {
+      "name": "WEBM",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "WEBM",
+          "kind": "readme",
+          "location": {
+            "file": "docs/docs/features/supported-formats.md",
+            "line": 44
+          }
+        }
+      ]
+    },
+    {
+      "name": "WEBP",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "WEBP",
+          "kind": "readme",
+          "location": {
+            "file": "docs/docs/features/supported-formats.md",
+            "line": 28
+          }
+        }
+      ]
+    },
+    {
+      "name": "WMV",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "WMV",
+          "kind": "readme",
+          "location": {
+            "file": "docs/docs/features/supported-formats.md",
+            "line": 45
+          }
+        }
+      ]
+    },
+    {
+      "name": "npm_package_version",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "npm_package_version",
+          "kind": "code",
+          "location": {
+            "file": "web/svelte.config.js",
+            "line": 19
+          }
+        }
+      ]
+    }
+  ],
+  "images": [
+    {
+      "reference": "immich-server-dev:latest",
+      "kind": "compose",
+      "location": {
+        "file": "docker/docker-compose.dev.yml",
+        "line": 41
+      }
+    },
+    {
+      "reference": "immich-web-dev:latest",
+      "kind": "compose",
+      "location": {
+        "file": "docker/docker-compose.dev.yml",
+        "line": 113
+      }
+    },
+    {
+      "reference": "immich-machine-learning-dev:latest",
+      "kind": "compose",
+      "location": {
+        "file": "docker/docker-compose.dev.yml",
+        "line": 133
+      }
+    },
+    {
+      "reference": "docker.io/valkey/valkey:9@sha256:c123e3715db63d06d4ad6964884037aa0d5d4d703939b9929954112889708e1d",
+      "kind": "compose",
+      "location": {
+        "file": "docker/docker-compose.dev.yml",
+        "line": 157
+      }
+    },
+    {
+      "reference": "ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23",
+      "kind": "compose",
+      "location": {
+        "file": "docker/docker-compose.dev.yml",
+        "line": 163
+      }
+    },
+    {
+      "reference": "immich-server:latest",
+      "kind": "compose",
+      "location": {
+        "file": "docker/docker-compose.prod.yml",
+        "line": 15
+      }
+    },
+    {
+      "reference": "immich-machine-learning:latest",
+      "kind": "compose",
+      "location": {
+        "file": "docker/docker-compose.prod.yml",
+        "line": 38
+      }
+    },
+    {
+      "reference": "prom/prometheus@sha256:5ce7540c3c00ef4ab0c9d2c995c6a5b9c421f44b4a115d97a2c7af3b1c21cbb0",
+      "kind": "compose",
+      "location": {
+        "file": "docker/docker-compose.prod.yml",
+        "line": 88
+      }
+    },
+    {
+      "reference": "grafana/grafana:12.4.11-ubuntu@sha256:23f2328b859c7677c7065c81b479600706ef9cc9004977af5bbd68b159b8ea60",
+      "kind": "compose",
+      "location": {
+        "file": "docker/docker-compose.prod.yml",
+        "line": 100
+      }
+    },
+    {
+      "reference": "ghcr.io/immich-app/immich-server:v3",
+      "kind": "compose",
+      "location": {
+        "file": "docker/docker-compose.rootless.yml",
+        "line": 15
+      }
+    },
+    {
+      "reference": "ghcr.io/immich-app/immich-machine-learning:v3",
+      "kind": "compose",
+      "location": {
+        "file": "docker/docker-compose.rootless.yml",
+        "line": 43
+      }
+    },
+    {
+      "reference": "ghcr.io/immich-app/immich-cli:latest",
+      "kind": "readme",
+      "location": {
+        "file": "docs/docs/features/command-line-interface.md",
+        "line": 40
+      }
+    },
+    {
+      "reference": "`",
+      "kind": "readme",
+      "location": {
+        "file": "docs/docs/features/command-line-interface.md",
+        "line": 45
+      }
+    },
+    {
+      "reference": "ghcr.io/immich-app/immich-server",
+      "kind": "readme",
+      "location": {
+        "file": "docs/docs/features/hardware-transcoding.md",
+        "line": 110
+      }
+    },
+    {
+      "reference": "ghcr.io/immich-app/immich-machine-learning",
+      "kind": "readme",
+      "location": {
+        "file": "docs/docs/features/ml-hardware-acceleration.md",
+        "line": 128
+      }
+    },
+    {
+      "reference": "prom/prometheus",
+      "kind": "readme",
+      "location": {
+        "file": "docs/docs/features/monitoring.md",
+        "line": 44
+      }
+    },
+    {
+      "reference": "grafana/grafana",
+      "kind": "readme",
+      "location": {
+        "file": "docs/docs/features/monitoring.md",
+        "line": 90
+      }
+    },
+    {
+      "reference": "dpage/pgadmin4",
+      "kind": "readme",
+      "location": {
+        "file": "docs/docs/guides/database-gui.md",
+        "line": 14
+      }
+    },
+    {
+      "reference": "ghcr.io/immich-app/postgres",
+      "kind": "readme",
+      "location": {
+        "file": "docs/docs/install/upgrading.md",
+        "line": 46
+      }
+    },
+    {
+      "reference": "docker.io/tensorchord/pgvecto-rs:pg14-v0.2.0",
+      "kind": "readme",
+      "location": {
+        "file": "docs/docs/install/upgrading.md",
+        "line": 64
+      }
+    },
+    {
+      "reference": "ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0",
+      "kind": "readme",
+      "location": {
+        "file": "docs/docs/install/upgrading.md",
+        "line": 65
+      }
+    },
+    {
+      "reference": "docker.io/tensorchord/pgvecto-rs:pg16-v0.3.0",
+      "kind": "readme",
+      "location": {
+        "file": "docs/docs/install/upgrading.md",
+        "line": 101
+      }
+    },
+    {
+      "reference": "ghcr.io/immich-app/postgres:16-vectorchord0.3.0-pgvectors0.3.0",
+      "kind": "readme",
+      "location": {
+        "file": "docs/docs/install/upgrading.md",
+        "line": 101
+      }
+    },
+    {
+      "reference": "ghcr.io/immich-app/postgres:14-vectorchord0.4.3",
+      "kind": "readme",
+      "location": {
+        "file": "docs/docs/install/upgrading.md",
+        "line": 128
+      }
+    }
+  ],
+  "docker_runs": [
+    {
+      "image": "ghcr.io/immich-app/immich-cli:latest",
+      "ports": null,
+      "volumes": [
+        "$(pwd):/import:ro"
+      ],
+      "env": [
+        {
+          "key": "IMMICH_INSTANCE_URL",
+          "value": "https://your-immich-instance/api",
+          "location": {
+            "file": "docs/docs/features/command-line-interface.md",
+            "line": 40
+          }
+        },
+        {
+          "key": "IMMICH_API_KEY",
+          "value": "your-api-key",
+          "location": {
+            "file": "docs/docs/features/command-line-interface.md",
+            "line": 40
+          }
+        }
+      ],
+      "location": {
+        "file": "docs/docs/features/command-line-interface.md",
+        "line": 40
+      }
+    },
+    {
+      "image": "`",
+      "ports": null,
+      "volumes": null,
+      "env": null,
+      "location": {
+        "file": "docs/docs/features/command-line-interface.md",
+        "line": 45
+      }
+    },
+    {
+      "image": "ghcr.io/immich-app/immich-cli:latest",
+      "ports": null,
+      "volumes": [
+        "$(pwd):/import:ro"
+      ],
+      "env": [
+        {
+          "key": "IMMICH_INSTANCE_URL",
+          "value": "https://your-immich-instance/api",
+          "location": {
+            "file": "docs/docs/features/command-line-interface.md",
+            "line": 48
+          }
+        },
+        {
+          "key": "IMMICH_API_KEY",
+          "value": "your-api-key",
+          "location": {
+            "file": "docs/docs/features/command-line-interface.md",
+            "line": 48
+          }
+        }
+      ],
+      "location": {
+        "file": "docs/docs/features/command-line-interface.md",
+        "line": 48
+      }
+    }
+  ],
+  "notes": [
+    {
+      "text": "Open [localhost:8888](http://localhost:8888) and login with the default credentials from above.",
+      "location": {
+        "file": "docs/docs/guides/database-gui.md",
+        "line": 35
+      }
+    },
+    {
+      "text": "- The default admin user must be enabled to run containers.",
+      "location": {
+        "file": "docs/docs/install/qnap.md",
+        "line": 17
+      }
+    },
+    {
+      "text": "Since TrueNAS Community Edition 24.10.2.2 and later, Immich can be run as any user and group, the default user being apps (UID 568) and the default group being apps (GID 568). This user, either apps or another user you choose, must have _modify_ permissions on the data dataset.",
+      "location": {
+        "file": "docs/docs/install/truenas.md",
+        "line": 51
+      }
+    },
+    {
+      "text": "Application in TrueNAS runs as a specific user and group. Immich uses the default user apps (UID 568) and the default group apps (GID 568).",
+      "location": {
+        "file": "docs/docs/install/truenas.md",
+        "line": 171
+      }
+    },
+    {
+      "text": "2. Update the datasets permissions: Ensure that the datasets used for Immich data storage (library, upload, thumbs, profile, video, backups) have the correct permissions set for the user who will run Immich. The user should have _modify_ permissions on these datasets. The default user for Immich is apps (UID 568) and the default group is apps (GID 568). If you are using a different user, make sure to set the permissions accordingly. You can do this from the TrueNAS web interface by going to the Datasets screen, selecting each dataset, clicking on the Edit button next to Permissions, and adding the user with _modify_ permissions.",
+      "location": {
+        "file": "docs/docs/install/truenas.md",
+        "line": 463
+      }
+    }
+  ],
+  "suspicious": null,
+  "readmes": [
+    "README.md",
+    "docker/README.md",
+    "docs/README.md",
+    "fastlane/README.md",
+    "machine-learning/README.md",
+    "mobile/README.md",
+    "mobile/android/fastlane/README.md",
+    "mobile/ios/Runner/Assets.xcassets/LaunchImage.imageset/README.md",
+    "mobile/ios/fastlane/README.md",
+    "mobile/lib/domain/README.md",
+    "mobile/lib/infrastructure/README.md",
+    "packages/cli/README.md",
+    "packages/sdk/README.md",
+    "web/README.md"
+  ],
+  "summary": {
+    "text": "Access the demo here. For the mobile app, you can use https://demo.immich.app for the Server Endpoint URL.",
+    "location": {
+      "file": "README.md",
+      "line": 66
+    }
+  },
+  "file_mentions": [
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docker/README.md",
+        "line": 2
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docker/README.md",
+        "line": 3
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/administration/backup-and-restore.md",
+        "line": 65
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/administration/backup-and-restore.md",
+        "line": 67
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/administration/backup-and-restore.md",
+        "line": 177
+      }
+    },
+    {
+      "text": "traefik.yaml",
+      "location": {
+        "file": "docs/docs/administration/reverse-proxy.md",
+        "line": 89
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/administration/reverse-proxy.md",
+        "line": 103
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/administration/reverse-proxy.md",
+        "line": 105
+      }
+    },
+    {
+      "text": "gitpod.yml",
+      "location": {
+        "file": "docs/docs/developer/devcontainers.md",
+        "line": 42
+      }
+    },
+    {
+      "text": "container-compose-overrides.yml",
+      "location": {
+        "file": "docs/docs/developer/devcontainers.md",
+        "line": 143
+      }
+    },
+    {
+      "text": "docker-compose.dev.yml",
+      "location": {
+        "file": "docs/docs/developer/devcontainers.md",
+        "line": 428
+      }
+    },
+    {
+      "text": "container-compose-overrides.yml",
+      "location": {
+        "file": "docs/docs/developer/devcontainers.md",
+        "line": 429
+      }
+    },
+    {
+      "text": "docker-compose.dev.yml",
+      "location": {
+        "file": "docs/docs/developer/setup.md",
+        "line": 88
+      }
+    },
+    {
+      "text": "docker-compose.dev.yml",
+      "location": {
+        "file": "docs/docs/developer/troubleshooting.md",
+        "line": 15
+      }
+    },
+    {
+      "text": "docker-compose.prod.yml",
+      "location": {
+        "file": "docs/docs/developer/troubleshooting.md",
+        "line": 15
+      }
+    },
+    {
+      "text": "auth.yml",
+      "location": {
+        "file": "docs/docs/features/command-line-interface.md",
+        "line": 64
+      }
+    },
+    {
+      "text": "auth.yml",
+      "location": {
+        "file": "docs/docs/features/command-line-interface.md",
+        "line": 126
+      }
+    },
+    {
+      "text": "hwaccel.transcoding.yml",
+      "location": {
+        "file": "docs/docs/features/hardware-transcoding.md",
+        "line": 54
+      }
+    },
+    {
+      "text": "hwaccel.transcoding.yml",
+      "location": {
+        "file": "docs/docs/features/hardware-transcoding.md",
+        "line": 66
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/features/hardware-transcoding.md",
+        "line": 66
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/features/hardware-transcoding.md",
+        "line": 67
+      }
+    },
+    {
+      "text": "hwaccel.transcoding.yml",
+      "location": {
+        "file": "docs/docs/features/hardware-transcoding.md",
+        "line": 96
+      }
+    },
+    {
+      "text": "hwaccel.transcoding.yml",
+      "location": {
+        "file": "docs/docs/features/hardware-transcoding.md",
+        "line": 105
+      }
+    },
+    {
+      "text": "hwaccel.transcoding.yml",
+      "location": {
+        "file": "docs/docs/features/hardware-transcoding.md",
+        "line": 142
+      }
+    },
+    {
+      "text": "hwaccel.ml.yml",
+      "location": {
+        "file": "docs/docs/features/ml-hardware-acceleration.md",
+        "line": 38
+      }
+    },
+    {
+      "text": "hwaccel.ml.yml",
+      "location": {
+        "file": "docs/docs/features/ml-hardware-acceleration.md",
+        "line": 39
+      }
+    },
+    {
+      "text": "hwaccel.ml.yaml",
+      "location": {
+        "file": "docs/docs/features/ml-hardware-acceleration.md",
+        "line": 66
+      }
+    },
+    {
+      "text": "hwaccel.ml.yml",
+      "location": {
+        "file": "docs/docs/features/ml-hardware-acceleration.md",
+        "line": 94
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/features/ml-hardware-acceleration.md",
+        "line": 94
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/features/ml-hardware-acceleration.md",
+        "line": 96
+      }
+    },
+    {
+      "text": "hwaccel.ml.yml",
+      "location": {
+        "file": "docs/docs/features/ml-hardware-acceleration.md",
+        "line": 107
+      }
+    },
+    {
+      "text": "hwaccel.ml.yml",
+      "location": {
+        "file": "docs/docs/features/ml-hardware-acceleration.md",
+        "line": 122
+      }
+    },
+    {
+      "text": "hwaccel.ml.yml",
+      "location": {
+        "file": "docs/docs/features/ml-hardware-acceleration.md",
+        "line": 164
+      }
+    },
+    {
+      "text": "prometheus.yml",
+      "location": {
+        "file": "docs/docs/features/monitoring.md",
+        "line": 47
+      }
+    },
+    {
+      "text": "prometheus.yml",
+      "location": {
+        "file": "docs/docs/features/monitoring.md",
+        "line": 47
+      }
+    },
+    {
+      "text": "prometheus.yml",
+      "location": {
+        "file": "docs/docs/features/monitoring.md",
+        "line": 151
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/guides/custom-locations.md",
+        "line": 28
+      }
+    },
+    {
+      "text": "docker-compose-pgadmin.yml",
+      "location": {
+        "file": "docs/docs/guides/database-gui.md",
+        "line": 7
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/guides/database-gui.md",
+        "line": 7
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/guides/database-gui.md",
+        "line": 31
+      }
+    },
+    {
+      "text": "docker-compose-pgadmin.yml",
+      "location": {
+        "file": "docs/docs/guides/database-gui.md",
+        "line": 31
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/guides/external-library.md",
+        "line": 13
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/guides/remote-machine-learning.md",
+        "line": 16
+      }
+    },
+    {
+      "text": "hwaccel.ml.yml",
+      "location": {
+        "file": "docs/docs/guides/remote-machine-learning.md",
+        "line": 19
+      }
+    },
+    {
+      "text": "hwaccel.ml.yml",
+      "location": {
+        "file": "docs/docs/guides/remote-machine-learning.md",
+        "line": 19
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/guides/remote-machine-learning.md",
+        "line": 19
+      }
+    },
+    {
+      "text": "hwaccel.ml.yml",
+      "location": {
+        "file": "docs/docs/guides/remote-machine-learning.md",
+        "line": 32
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/guides/remote-machine-learning.md",
+        "line": 56
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/install/config-file.md",
+        "line": 268
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/install/environment-variables.md",
+        "line": 27
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/install/environment-variables.md",
+        "line": 90
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/install/portainer.md",
+        "line": 12
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/install/portainer.md",
+        "line": 12
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/install/qnap.md",
+        "line": 53
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/install/qnap.md",
+        "line": 53
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/install/qnap.md",
+        "line": 61
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/install/requirements.md",
+        "line": 74
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/install/script.md",
+        "line": 27
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/install/script.md",
+        "line": 27
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/install/synology.md",
+        "line": 26
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/install/synology.md",
+        "line": 26
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/install/synology.md",
+        "line": 37
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/install/synology.md",
+        "line": 41
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/install/synology.md",
+        "line": 67
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/install/synology.md",
+        "line": 134
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/install/synology.md",
+        "line": 143
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/install/unraid.md",
+        "line": 55
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/install/upgrading.md",
+        "line": 13
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/install/upgrading.md",
+        "line": 46
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/install/upgrading.md",
+        "line": 57
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "docs/docs/install/upgrading.md",
+        "line": 118
+      }
+    }
+  ],
+  "stack_hints": [
+    "docs/package.json",
+    "machine-learning/pyproject.toml",
+    "mobile/android/Gemfile",
+    "mobile/ios/Gemfile",
+    "package.json",
+    "packages/cli/package.json",
+    "packages/e2e-auth-server/package.json",
+    "packages/plugin-core/package.json",
+    "packages/plugin-sdk/package.json",
+    "packages/scripts/package.json",
+    "packages/sdk/package.json",
+    "server/package.json",
+    "web/package.json"
+  ],
+  "problems": null
+}

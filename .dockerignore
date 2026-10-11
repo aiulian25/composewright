@@ -1,0 +1,8 @@
+# The image builds from these alone. Everything else stays out of the build
+# context, the dev instance's data and master key in .dev/ above all.
+*
+!cmd
+!internal
+!web
+!go.mod
+!go.sum

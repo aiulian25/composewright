@@ -1,0 +1,339 @@
+{
+  "ir_version": "1",
+  "app": {
+    "name": "mealie",
+    "summary": "A Place For All Your Recipes",
+    "upstream_url": "https://github.com/mealie-recipes/mealie",
+    "docs_url": ""
+  },
+  "services": [
+    {
+      "name": "mealie",
+      "role": "app",
+      "image": {
+        "registry": "ghcr.io",
+        "repository": "mealie-recipes/mealie",
+        "tag": "latest",
+        "digest": "",
+        "provenance": {
+          "source": "readme",
+          "source_ref": "docs/docs/contributors/developers-guide/maintainers.md:36",
+          "confidence": "medium"
+        }
+      },
+      "command": [],
+      "entrypoint": [],
+      "env": [
+        {
+          "key": "ALLOW_SIGNUP",
+          "ref": "ALLOW_SIGNUP",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker/docker-compose.yml:15",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "LOG_LEVEL",
+          "ref": "LOG_LEVEL",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "Logging level (e.g. critical, error, warning, info, debug)",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker/docker-compose.yml:16",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "DB_ENGINE",
+          "ref": "DB_ENGINE",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "Optional: 'sqlite', 'postgres'",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker/docker-compose.yml:18",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "POSTGRES_USER",
+          "ref": "POSTGRES_USER",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker/docker-compose.yml:21",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "POSTGRES_PASSWORD",
+          "ref": "POSTGRES_PASSWORD",
+          "literal": "",
+          "required": true,
+          "secret": true,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker/docker-compose.yml:22",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "POSTGRES_SERVER",
+          "ref": "POSTGRES_SERVER",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker/docker-compose.yml:23",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "POSTGRES_PORT",
+          "ref": "POSTGRES_PORT",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker/docker-compose.yml:24",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "POSTGRES_DB",
+          "ref": "POSTGRES_DB",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker/docker-compose.yml:25",
+            "confidence": "high"
+          }
+        }
+      ],
+      "ports": [
+        {
+          "container": 9000,
+          "protocol": "tcp",
+          "publish": true,
+          "host_port": 9091,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker/docker-compose.yml:13",
+            "confidence": "high"
+          }
+        }
+      ],
+      "volumes": [
+        {
+          "name": "mealie-data",
+          "container_path": "/app/data",
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker/docker-compose.yml:11",
+            "confidence": "high"
+          }
+        }
+      ],
+      "depends_on": [],
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "$$MEALIE_HOME/healthcheck.sh"
+        ],
+        "interval": "",
+        "timeout": "",
+        "retries": 0,
+        "start_period": "",
+        "omitted_reason": "",
+        "provenance": {
+          "source": "dockerfile",
+          "source_ref": "docker/Dockerfile:157",
+          "confidence": "medium"
+        }
+      },
+      "user": "",
+      "resources": {
+        "memory_limit": "",
+        "cpus": "",
+        "pids_limit": 0
+      },
+      "notes": [],
+      "provenance": {
+        "source": "compose",
+        "source_ref": "docker/docker-compose.yml:2",
+        "confidence": "high"
+      }
+    }
+  ],
+  "env_file": [
+    {
+      "key": "ALLOW_SIGNUP",
+      "value": "false",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "docker/docker-compose.yml:15",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "LOG_LEVEL",
+      "value": "DEBUG",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "Logging level (e.g. critical, error, warning, info, debug)",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "docker/docker-compose.yml:16",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "DB_ENGINE",
+      "value": "sqlite",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "Optional: 'sqlite', 'postgres'",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "docker/docker-compose.yml:18",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": "mealie",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "docker/docker-compose.yml:21",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "value": "",
+      "generate": "hex32",
+      "secret": true,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "docker/docker-compose.yml:22",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "POSTGRES_SERVER",
+      "value": "postgres",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "docker/docker-compose.yml:23",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "POSTGRES_PORT",
+      "value": "5432",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "docker/docker-compose.yml:24",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": "mealie",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "docker/docker-compose.yml:25",
+        "confidence": "high"
+      }
+    }
+  ],
+  "needs": [],
+  "probe": {
+    "service": "mealie",
+    "port": 9000,
+    "path": "/",
+    "expect": []
+  },
+  "post_install_notes": [
+    "!!! warning \"Default Username\" (docs/docs/documentation/getting-started/installation/installation-checklist.md:80)",
+    "Note that the default username (below) has been changed from previous versions (docs/docs/documentation/getting-started/installation/installation-checklist.md:82)",
+    "!!! tip \"Default Credentials\" (docs/docs/documentation/getting-started/installation/installation-checklist.md:84)",
+    "After the startup is complete, you should see a login screen. Use the default credentials above to log in and navigate to /admin/site-settings. Here, you'll find a summary of your configuration details and their respective status. Before proceeding, you should validate that the configuration is correct. For any warnings or errors the page will display an error and notify you of what you need to verify. (docs/docs/documentation/getting-started/installation/installation-checklist.md:92)",
+    "POSTGRES_PASSWORD was generated for you; it is in .env"
+  ],
+  "confidence": "medium",
+  "evidence": [
+    {
+      "claim": "compose file docker/docker-compose.yml chosen among 2 upstream compose files",
+      "file": "docker/docker-compose.yml",
+      "line": 1
+    },
+    {
+      "claim": "app image ghcr.io/mealie-recipes/mealie",
+      "file": "docker/docker-compose.yml",
+      "line": 4
+    }
+  ],
+  "suspicious_instructions": [],
+  "unfilled": [
+    "env_file.ALLOW_SIGNUP.description",
+    "env_file.POSTGRES_USER.description",
+    "env_file.POSTGRES_PASSWORD.description",
+    "env_file.POSTGRES_SERVER.description",
+    "env_file.POSTGRES_PORT.description",
+    "env_file.POSTGRES_DB.description"
+  ]
+}

@@ -1,0 +1,18 @@
+# composewright in one container:
+#   DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose -f composewright.yaml up -d
+# then open http://127.0.0.1:8484 and create the administrator.
+services:
+  composewright:
+    image: ghcr.io/aiulian25/composewright:latest   # or pin a release: :1.2.3@sha256:…
+    container_name: composewright
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8484:8484"                     # this machine only; put a reverse proxy in front for LAN or TLS
+    volumes:
+      - composewright-data:/data                    # config, database, master key and projects
+      - /var/run/docker.sock:/var/run/docker.sock
+    group_add:
+      - "${DOCKER_GID:?set DOCKER_GID to the group of /var/run/docker.sock: stat -c %g /var/run/docker.sock}"
+    security_opt: ["no-new-privileges:true"]
+volumes:
+  composewright-data: {}

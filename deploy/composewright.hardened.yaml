@@ -1,0 +1,40 @@
+# composewright behind a Docker socket proxy. The
+# app never holds the socket, both containers are read-only and drop every
+# capability, and the proxy passes only the API calls validation makes.
+# The data folder must exist and belong to the image's user first:
+#   sudo install -d -m 0700 -o 65532 -g 65532 /srv/composewright/data
+#   DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose -f composewright.hardened.yaml up -d
+services:
+  socket-proxy:
+    image: docker.io/wollomatic/socket-proxy:1.13.1@sha256:3935b709275e4ec35d6ed5a5c4a1f0d01ed31eec5e7234efc3357ecd47689002
+    command:
+      - -loglevel=info
+      - -listenip=0.0.0.0
+      - -allowfrom=composewright
+      - -allowGET=/(v[0-9.]+/)?(_ping|version|events|info|containers/.*|networks(/.*)?|volumes(/.*)?|images/.*|distribution/.*)
+      - -allowHEAD=/(v[0-9.]+/)?_ping
+      - -allowPOST=/(v[0-9.]+/)?(containers/.*|networks(/.*)?|volumes(/.*)?|images/create)
+      - -allowDELETE=/(v[0-9.]+/)?(containers/.*|networks/.*|volumes/.*)
+      - -allowbindmountfrom=/srv/composewright/data
+    volumes: ["/var/run/docker.sock:/var/run/docker.sock:ro"]
+    user: "65534:${DOCKER_GID:?set DOCKER_GID to the group of /var/run/docker.sock: stat -c %g /var/run/docker.sock}"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    networks: [internal]
+  composewright:
+    image: ghcr.io/aiulian25/composewright:latest   # or pin a release: :1.2.3@sha256:…
+    container_name: composewright
+    restart: unless-stopped
+    environment:
+      DOCKER_HOST: tcp://socket-proxy:2375
+    volumes: ["/srv/composewright/data:/data"]
+    ports: ["127.0.0.1:8484:8484"]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    depends_on: [socket-proxy]
+    networks: [internal, default]
+networks:
+  internal: {internal: true}

@@ -1,0 +1,584 @@
+{
+  "files": [
+    "Dockerfile",
+    "Dockerfile.aarch64",
+    "README.md",
+    "jenkins-vars.yml",
+    "readme-vars.yml"
+  ],
+  "compose_files": null,
+  "dockerfiles": [
+    {
+      "path": "Dockerfile",
+      "base_image": "ghcr.io/linuxserver/baseimage-alpine-nginx:3.24",
+      "exposed": [
+        {
+          "port": 80,
+          "protocol": "tcp",
+          "location": {
+            "file": "Dockerfile",
+            "line": 65
+          }
+        },
+        {
+          "port": 443,
+          "protocol": "tcp",
+          "location": {
+            "file": "Dockerfile",
+            "line": 65
+          }
+        }
+      ],
+      "volumes": [
+        {
+          "path": "/config",
+          "location": {
+            "file": "Dockerfile",
+            "line": 66
+          }
+        }
+      ],
+      "env": [
+        {
+          "key": "S6_STAGE2_HOOK",
+          "value": "/init-hook",
+          "location": {
+            "file": "Dockerfile",
+            "line": 12
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "BUILD_DATE",
+          "value": "",
+          "location": {
+            "file": "Dockerfile",
+            "line": 6
+          }
+        },
+        {
+          "key": "VERSION",
+          "value": "",
+          "location": {
+            "file": "Dockerfile",
+            "line": 7
+          }
+        },
+        {
+          "key": "BOOKSTACK_RELEASE",
+          "value": "",
+          "location": {
+            "file": "Dockerfile",
+            "line": 8
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": null,
+      "command": null
+    },
+    {
+      "path": "Dockerfile.aarch64",
+      "base_image": "ghcr.io/linuxserver/baseimage-alpine-nginx:arm64v8-3.24",
+      "exposed": [
+        {
+          "port": 80,
+          "protocol": "tcp",
+          "location": {
+            "file": "Dockerfile.aarch64",
+            "line": 65
+          }
+        },
+        {
+          "port": 443,
+          "protocol": "tcp",
+          "location": {
+            "file": "Dockerfile.aarch64",
+            "line": 65
+          }
+        }
+      ],
+      "volumes": [
+        {
+          "path": "/config",
+          "location": {
+            "file": "Dockerfile.aarch64",
+            "line": 66
+          }
+        }
+      ],
+      "env": [
+        {
+          "key": "S6_STAGE2_HOOK",
+          "value": "/init-hook",
+          "location": {
+            "file": "Dockerfile.aarch64",
+            "line": 12
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "BUILD_DATE",
+          "value": "",
+          "location": {
+            "file": "Dockerfile.aarch64",
+            "line": 6
+          }
+        },
+        {
+          "key": "VERSION",
+          "value": "",
+          "location": {
+            "file": "Dockerfile.aarch64",
+            "line": 7
+          }
+        },
+        {
+          "key": "BOOKSTACK_RELEASE",
+          "value": "",
+          "location": {
+            "file": "Dockerfile.aarch64",
+            "line": 8
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": null,
+      "command": null
+    }
+  ],
+  "env_samples": null,
+  "variables": [
+    {
+      "name": "APP_KEY",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "APP_KEY",
+          "kind": "readme",
+          "location": {
+            "file": "README.md",
+            "line": 144
+          }
+        }
+      ]
+    },
+    {
+      "name": "APP_URL",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "APP_URL",
+          "kind": "readme",
+          "location": {
+            "file": "README.md",
+            "line": 144
+          }
+        }
+      ]
+    },
+    {
+      "name": "DB_DATABASE",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DB_DATABASE",
+          "kind": "readme",
+          "location": {
+            "file": "README.md",
+            "line": 144
+          }
+        }
+      ]
+    },
+    {
+      "name": "DB_HOST",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DB_HOST",
+          "kind": "readme",
+          "location": {
+            "file": "README.md",
+            "line": 144
+          }
+        }
+      ]
+    },
+    {
+      "name": "DB_PASSWORD",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DB_PASSWORD",
+          "kind": "readme",
+          "location": {
+            "file": "README.md",
+            "line": 144
+          }
+        }
+      ]
+    },
+    {
+      "name": "DB_PORT",
+      "default": "3306",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DB_PORT",
+          "kind": "readme",
+          "default": "3306",
+          "location": {
+            "file": "README.md",
+            "line": 144
+          }
+        }
+      ]
+    },
+    {
+      "name": "DB_USERNAME",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DB_USERNAME",
+          "kind": "readme",
+          "location": {
+            "file": "README.md",
+            "line": 144
+          }
+        }
+      ]
+    },
+    {
+      "name": "PGID",
+      "default": "1000",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PGID",
+          "kind": "readme",
+          "default": "1000",
+          "location": {
+            "file": "README.md",
+            "line": 144
+          }
+        }
+      ]
+    },
+    {
+      "name": "PUID",
+      "default": "1000",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PUID",
+          "kind": "readme",
+          "default": "1000",
+          "location": {
+            "file": "README.md",
+            "line": 144
+          }
+        }
+      ]
+    },
+    {
+      "name": "QUEUE_CONNECTION",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "QUEUE_CONNECTION",
+          "kind": "readme",
+          "location": {
+            "file": "README.md",
+            "line": 144
+          }
+        }
+      ]
+    },
+    {
+      "name": "S6_STAGE2_HOOK",
+      "default": "/init-hook",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "S6_STAGE2_HOOK",
+          "kind": "dockerfile",
+          "default": "/init-hook",
+          "location": {
+            "file": "Dockerfile",
+            "line": 12
+          }
+        },
+        {
+          "name": "S6_STAGE2_HOOK",
+          "kind": "dockerfile",
+          "default": "/init-hook",
+          "location": {
+            "file": "Dockerfile.aarch64",
+            "line": 12
+          }
+        }
+      ]
+    },
+    {
+      "name": "TZ",
+      "default": "Etc/UTC",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TZ",
+          "kind": "readme",
+          "default": "Etc/UTC",
+          "location": {
+            "file": "README.md",
+            "line": 144
+          }
+        }
+      ]
+    }
+  ],
+  "images": [
+    {
+      "reference": "quay.io/repository/linuxserver.io/bookstack",
+      "kind": "readme",
+      "location": {
+        "file": "README.md",
+        "line": 34
+      }
+    },
+    {
+      "reference": "codeberg.org/bookstack/bookstack",
+      "kind": "readme",
+      "location": {
+        "file": "README.md",
+        "line": 39
+      }
+    },
+    {
+      "reference": "lscr.io/linuxserver/bookstack:latest",
+      "kind": "readme",
+      "location": {
+        "file": "README.md",
+        "line": 51
+      }
+    },
+    {
+      "reference": "parameters",
+      "kind": "readme",
+      "location": {
+        "file": "README.md",
+        "line": 311
+      }
+    },
+    {
+      "reference": "lscr.io/linuxserver/qemu-static",
+      "kind": "readme",
+      "location": {
+        "file": "README.md",
+        "line": 336
+      }
+    }
+  ],
+  "docker_runs": [
+    {
+      "image": "lscr.io/linuxserver/bookstack:latest",
+      "ports": [
+        "6875:80"
+      ],
+      "volumes": [
+        "/path/to/bookstack/config:/config"
+      ],
+      "env": [
+        {
+          "key": "PUID",
+          "value": "1000",
+          "location": {
+            "file": "README.md",
+            "line": 144
+          }
+        },
+        {
+          "key": "PGID",
+          "value": "1000",
+          "location": {
+            "file": "README.md",
+            "line": 144
+          }
+        },
+        {
+          "key": "TZ",
+          "value": "Etc/UTC",
+          "location": {
+            "file": "README.md",
+            "line": 144
+          }
+        },
+        {
+          "key": "APP_URL",
+          "value": "",
+          "location": {
+            "file": "README.md",
+            "line": 144
+          }
+        },
+        {
+          "key": "APP_KEY",
+          "value": "",
+          "location": {
+            "file": "README.md",
+            "line": 144
+          }
+        },
+        {
+          "key": "DB_HOST",
+          "value": "",
+          "location": {
+            "file": "README.md",
+            "line": 144
+          }
+        },
+        {
+          "key": "DB_PORT",
+          "value": "3306",
+          "location": {
+            "file": "README.md",
+            "line": 144
+          }
+        },
+        {
+          "key": "DB_USERNAME",
+          "value": "",
+          "location": {
+            "file": "README.md",
+            "line": 144
+          }
+        },
+        {
+          "key": "DB_PASSWORD",
+          "value": "",
+          "location": {
+            "file": "README.md",
+            "line": 144
+          }
+        },
+        {
+          "key": "DB_DATABASE",
+          "value": "",
+          "location": {
+            "file": "README.md",
+            "line": 144
+          }
+        },
+        {
+          "key": "QUEUE_CONNECTION",
+          "value": "",
+          "location": {
+            "file": "README.md",
+            "line": 144
+          }
+        }
+      ],
+      "location": {
+        "file": "README.md",
+        "line": 144
+      }
+    },
+    {
+      "image": "lscr.io/linuxserver/bookstack:latest",
+      "ports": null,
+      "volumes": null,
+      "env": null,
+      "location": {
+        "file": "README.md",
+        "line": 174
+      }
+    },
+    {
+      "image": "parameters",
+      "ports": null,
+      "volumes": null,
+      "env": null,
+      "location": {
+        "file": "README.md",
+        "line": 311
+      }
+    },
+    {
+      "image": "lscr.io/linuxserver/qemu-static",
+      "ports": null,
+      "volumes": null,
+      "env": null,
+      "location": {
+        "file": "README.md",
+        "line": 339
+      }
+    }
+  ],
+  "notes": [
+    {
+      "text": "The default username is admin@admin.com with the password of password, access the container at http://\u003chost ip\u003e:6875.",
+      "location": {
+        "file": "README.md",
+        "line": 62
+      }
+    }
+  ],
+  "suspicious": null,
+  "readmes": [
+    "README.md"
+  ],
+  "summary": {
+    "text": "The LinuxServer.io team brings you another container release featuring:",
+    "location": {
+      "file": "README.md",
+      "line": 11
+    }
+  },
+  "file_mentions": [
+    {
+      "text": "2Fmod-list.yml",
+      "location": {
+        "file": "README.md",
+        "line": 221
+      }
+    },
+    {
+      "text": "2Fmod-list.yml",
+      "location": {
+        "file": "README.md",
+        "line": 221
+      }
+    }
+  ],
+  "stack_hints": null,
+  "problems": null
+}

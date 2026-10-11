@@ -1,0 +1,74 @@
+{
+  "ir_version": "1",
+  "app": {
+    "name": "zigbee2mqtt",
+    "summary": "Allows you to use your Zigbee devices \u003cb\u003ewithout\u003c/b\u003e the vendor's bridge or gateway.",
+    "upstream_url": "https://github.com/Koenkk/zigbee2mqtt",
+    "docs_url": ""
+  },
+  "services": [
+    {
+      "name": "zigbee2mqtt",
+      "role": "app",
+      "image": {
+        "registry": "",
+        "repository": "",
+        "tag": "",
+        "digest": "",
+        "provenance": {
+          "source": "default",
+          "source_ref": "",
+          "confidence": "low"
+        }
+      },
+      "command": [],
+      "entrypoint": [],
+      "env": [],
+      "ports": [],
+      "volumes": [],
+      "depends_on": [],
+      "healthcheck": {
+        "test": [],
+        "interval": "",
+        "timeout": "",
+        "retries": 0,
+        "start_period": "",
+        "omitted_reason": "",
+        "provenance": {
+          "source": "default",
+          "source_ref": "",
+          "confidence": "low"
+        }
+      },
+      "user": "",
+      "resources": {
+        "memory_limit": "",
+        "cpus": "",
+        "pids_limit": 0
+      },
+      "notes": [],
+      "provenance": {
+        "source": "default",
+        "source_ref": "",
+        "confidence": "low"
+      }
+    }
+  ],
+  "env_file": [],
+  "needs": [],
+  "probe": {
+    "service": "",
+    "port": 0,
+    "path": "",
+    "expect": []
+  },
+  "post_install_notes": [],
+  "confidence": "low",
+  "evidence": [],
+  "suspicious_instructions": [],
+  "unfilled": [
+    "services.0.image",
+    "services.0.healthcheck",
+    "services.0.ports"
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "ir_version": "1",
+  "app": {
+    "name": "uptime-kuma",
+    "summary": "Uptime Kuma is an easy-to-use self-hosted monitoring tool.",
+    "upstream_url": "https://github.com/louislam/uptime-kuma",
+    "docs_url": ""
+  },
+  "services": [
+    {
+      "name": "uptime-kuma",
+      "role": "app",
+      "image": {
+        "registry": "docker.io",
+        "repository": "louislam/uptime-kuma",
+        "tag": "2",
+        "digest": "",
+        "provenance": {
+          "source": "compose",
+          "source_ref": "compose.yaml:3",
+          "confidence": "high"
+        }
+      },
+      "command": [],
+      "entrypoint": [],
+      "env": [],
+      "ports": [
+        {
+          "container": 3001,
+          "protocol": "tcp",
+          "publish": true,
+          "host_port": 3001,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "compose.yaml:9",
+            "confidence": "high"
+          }
+        }
+      ],
+      "volumes": [
+        {
+          "name": "data",
+          "container_path": "/app/data",
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "compose.yaml:6",
+            "confidence": "high"
+          }
+        }
+      ],
+      "depends_on": [],
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "extra/healthcheck"
+        ],
+        "interval": "60s",
+        "timeout": "30s",
+        "retries": 5,
+        "start_period": "180s",
+        "omitted_reason": "",
+        "provenance": {
+          "source": "dockerfile",
+          "source_ref": "docker/dockerfile:40",
+          "confidence": "medium"
+        }
+      },
+      "user": "",
+      "resources": {
+        "memory_limit": "",
+        "cpus": "",
+        "pids_limit": 0
+      },
+      "notes": [
+        "upstream bind mount ./data:/app/data is a named volume here (use --storage bind for a host folder)"
+      ],
+      "provenance": {
+        "source": "compose",
+        "source_ref": "compose.yaml:2",
+        "confidence": "high"
+      }
+    }
+  ],
+  "env_file": [],
+  "needs": [],
+  "probe": {
+    "service": "uptime-kuma",
+    "port": 3001,
+    "path": "/",
+    "expect": []
+  },
+  "post_install_notes": [],
+  "confidence": "high",
+  "evidence": [
+    {
+      "claim": "compose file compose.yaml chosen among 2 upstream compose files",
+      "file": "compose.yaml",
+      "line": 1
+    },
+    {
+      "claim": "app image docker.io/louislam/uptime-kuma",
+      "file": "compose.yaml",
+      "line": 3
+    }
+  ],
+  "suspicious_instructions": [],
+  "unfilled": []
+}

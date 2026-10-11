@@ -1,0 +1,13 @@
+{{define "content"}}
+<section class="card card-narrow card-danger" aria-labelledby="delete-title">
+  <div class="card-body">
+    <h1 id="delete-title">Delete {{.Data.Name}}?</h1>
+    <p>This removes every generation, wipes the encrypted secrets and deletes the project's logs. Files you saved or downloaded elsewhere stay where they are. The audit log keeps a record of the deletion.</p>
+    <form class="row" method="post" action="/projects/{{.Data.Name}}/delete">
+      <input type="hidden" name="csrf" value="{{.CSRF}}">
+      <a class="button" href="{{.Data.Back}}">Keep it</a>
+      <button class="button button-danger" type="submit">{{template "icon-trash"}}Delete {{.Data.Name}}</button>
+    </form>
+  </div>
+</section>
+{{end}}

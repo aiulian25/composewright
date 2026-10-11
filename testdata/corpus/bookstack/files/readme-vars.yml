@@ -1,0 +1,178 @@
+---
+
+# project information
+project_name: bookstack
+project_url: "https://codeberg.org/bookstack/bookstack"
+project_logo: "https://raw.githubusercontent.com/linuxserver/docker-templates/master/linuxserver.io/img/bookstack-logo.png"
+project_lsio_github_repo_url: "https://github.com/linuxserver/docker-{{ project_name }}"
+project_categories: "Content Management"
+project_blurb: |
+  [{{ project_name|capitalize }}]({{ project_url }}) is a free and open source Wiki designed for creating beautiful documentation. Featuring a simple, but powerful WYSIWYG editor it allows for teams to create detailed and useful documentation with ease.
+
+  Powered by SQL and including a Markdown editor for those who prefer it, BookStack is geared towards making documentation more of a pleasure than a chore.
+
+  For more information on BookStack visit their website and check it out: https://www.bookstackapp.com
+# supported architectures
+available_architectures:
+  - {arch: "{{ arch_x86_64 }}", tag: "amd64-latest"}
+  - {arch: "{{ arch_arm64 }}", tag: "arm64v8-latest"}
+# container parameters
+param_container_name: "{{ project_name }}"
+param_usage_include_vols: true
+param_volumes:
+  - {vol_path: "/config", vol_host_path: "/path/to/{{ project_name }}/config", desc: "Persistent config files"}
+param_usage_include_env: true
+param_env_vars:
+  - {env_var: "APP_URL", env_value: "", desc: "The protocol, IP/URL, and port that your application will be accessed on (ie. `http://192.168.1.1:6875` or `https://bookstack.mydomain.com`"}
+  - {env_var: "APP_KEY", env_value: "", desc: "Session encryption key. You will need to generate this with `docker run -it --rm --entrypoint /bin/bash lscr.io/linuxserver/bookstack:latest appkey`"}
+  - {env_var: "DB_HOST", env_value: "", desc: "The database instance hostname"}
+  - {env_var: "DB_PORT", env_value: "3306", desc: "Database port"}
+  - {env_var: "DB_USERNAME", env_value: "", desc: "Database user"}
+  - {env_var: "DB_PASSWORD", env_value: "", desc: "Database password (minimum 4 characters & non-alphanumeric passwords must be properly escaped.)"}
+  - {env_var: "DB_DATABASE", env_value: "", desc: "Database name"}
+param_usage_include_ports: true
+param_ports:
+  - {external_port: "6875", internal_port: "80", port_desc: "http/s web interface."}
+opt_param_usage_include_env: true
+opt_param_env_vars:
+  - {env_var: "QUEUE_CONNECTION", env_value: "", desc: "Set to `database` to enable async actions like sending email or triggering webhooks. See [documentation](https://www.bookstackapp.com/docs/admin/email-webhooks/#async-action-handling)."}
+readonly_supported: true
+readonly_message: |
+  * `/tmp` must be mounted to tmpfs
+# application setup block
+app_setup_block_enabled: true
+app_setup_block: |
+  The default username is admin@admin.com with the password of **password**, access the container at http://<host ip>:6875.
+
+  This application is dependent on a MariaDB database, be it one you already have or a new one. If you do not already have one, we provide an image here https://github.com/linuxserver/docker-mariadb.
+
+  If you intend to use this application behind a subfolder reverse proxy, such as our SWAG container or Traefik you will need to make sure that the `APP_URL` environment variable is set to your external domain, or it will not work.
+
+  Documentation for BookStack can be found at https://www.bookstackapp.com/docs/.
+
+  ### BookStack File & Directory Paths
+
+  This container ensures certain BookStack application files & folders, such as user file upload folders, are retained within the `/config` folder so that they are persistent & accessible when the `/config` container path is bound as a volume. There may be cases, when following the BookStack documentation, that you'll need to know how these files and folders are used relative to a non-container BookStack installation.
+
+  Below is a mapping of container `/config` paths to those relative within a BookStack install directory:
+
+  - **/config container path** => **BookStack relative path**
+  - `/config/www/.env` => `.env`
+  - `/config/log/bookstack/laravel.log` => `storage/logs/laravel.log`
+  - `/config/backups/` => `storage/backups/`
+  - `/config/www/files/` => `storage/uploads/files/`
+  - `/config/www/images/` => `storage/uploads/images/`
+  - `/config/www/themes/` => `themes/`
+  - `/config/www/uploads/` => `public/uploads/`
+
+  ### Changing APP_URL
+
+  If you change the APP_URL after initial install, you should run the following line from your host terminal to update the database URL entries:
+
+  ```shell
+  docker exec -it bookstack php /app/www/artisan bookstack:update-url ${OLD_URL} ${NEW_URL}
+  ```
+
+  ### Advanced Users (full control over the .env file)
+
+  If you wish to use the extra functionality of BookStack such as email, LDAP and so on you will need to set additional environment variables or make your own .env file with guidance from the BookStack documentation.
+
+  The container will copy an exemplary .env file to /config/www/.env on your host system for you to use.
+# init diagram
+init_diagram: |
+  "bookstack:latest": {
+    docker-mods
+    base {
+      fix-attr +\nlegacy cont-init
+    }
+    docker-mods -> base
+    legacy-services
+    custom services
+    init-services -> legacy-services
+    init-services -> custom services
+    custom services -> legacy-services
+    legacy-services -> ci-service-check
+    init-migrations -> init-adduser
+    init-nginx-end -> init-bookstack-config
+    init-nginx-end -> init-config
+    init-os-end -> init-config
+    init-bookstack-config -> init-config-end
+    init-config -> init-config-end
+    init-crontab-config -> init-config-end
+    init-config -> init-crontab-config
+    init-mods-end -> init-custom-files
+    init-adduser -> init-device-perms
+    base -> init-envfile
+    init-os-end -> init-folders
+    init-php -> init-keygen
+    base -> init-migrations
+    init-config-end -> init-mods
+    init-mods-package-install -> init-mods-end
+    init-mods -> init-mods-package-install
+    init-samples -> init-nginx
+    init-version-checks -> init-nginx-end
+    init-adduser -> init-os-end
+    init-device-perms -> init-os-end
+    init-envfile -> init-os-end
+    init-keygen -> init-permissions
+    init-nginx -> init-php
+    init-folders -> init-samples
+    init-custom-files -> init-services
+    init-permissions -> init-version-checks
+    init-services -> svc-cron
+    svc-cron -> legacy-services
+    init-services -> svc-memcached
+    svc-memcached -> legacy-services
+    init-services -> svc-nginx
+    svc-nginx -> legacy-services
+    init-services -> svc-php-fpm
+    svc-php-fpm -> legacy-services
+    init-services -> svc-queue-worker
+    svc-queue-worker -> legacy-services
+  }
+  Base Images: {
+    "baseimage-alpine-nginx:3.24" <- "baseimage-alpine:3.24"
+  }
+  "bookstack:latest" <- Base Images
+# changelog
+changelogs:
+  - {date: "05.08.26:", desc: "Run the async queue worker as the PUID/PGID-managed abc user."}
+  - {date: "05.07.26:", desc: "Rebase to Alpine 3.24."}
+  - {date: "29.04.26:", desc: "Switch to pulling releases from [Codeberg](https://codeberg.org/bookstack/bookstack)."}
+  - {date: "28.12.25:", desc: "Rebase to Alpine 3.23."}
+  - {date: "05.07.25:", desc: "Rebase to Alpine 3.22."}
+  - {date: "04.01.25:", desc: "Add php-opcache."}
+  - {date: "17.12.24:", desc: "Rebase to Alpine 3.21."}
+  - {date: "11.10.24:", desc: "Default to environment config over .env file config."}
+  - {date: "06.09.24:", desc: "Add php-exif for reading image EXIF data."}
+  - {date: "27.05.24:", desc: "Rebase to Alpine 3.20. Existing users should update their nginx confs to avoid http2 deprecation warnings."}
+  - {date: "25.01.24:", desc: "Existing users should update: site-confs/default.conf - Cleanup default site conf."}
+  - {date: "23.12.23:", desc: "Rebase to Alpine 3.19 with php 8.3."}
+  - {date: "31.10.23:", desc: "Further sanitize sed replace."}
+  - {date: "07.06.23:", desc: "Add mariadb-client for bookstack-system-cli support."}
+  - {date: "25.05.23:", desc: "Rebase to Alpine 3.18, deprecate armhf."}
+  - {date: "13.04.23:", desc: "Move ssl.conf include to default.conf."}
+  - {date: "01.03.23:", desc: "Add php iconv."}
+  - {date: "19.01.23:", desc: "Rebase to alpine 3.17 with php8.1."}
+  - {date: "16.01.23:", desc: "Wrap `.env` values in quotes."}
+  - {date: "05.01.23:", desc: "Fix db password setting (sed escape `&`)."}
+  - {date: "21.12.22:", desc: "Update db info in .env file when env vars are updated."}
+  - {date: "10.10.22:", desc: "Remove password escape logic which caused problems for a small subset of users."}
+  - {date: "20.08.22:", desc: "Rebasing to alpine 3.15 with php8. Restructure nginx configs ([see changes announcement](https://info.linuxserver.io/issues/2022-08-20-nginx-base))."}
+  - {date: "14.03.22:", desc: "Add symlinks for theme support."}
+  - {date: "11.07.21:", desc: "Rebase to Alpine 3.14."}
+  - {date: "12.01.21:", desc: "Remove unused requirement, as of release 0.31.0."}
+  - {date: "17.12.20:", desc: "Make APP_URL var required (upstream changes)."}
+  - {date: "17.09.20:", desc: "Rebase to alpine 3.12. Fix APP_URL setting. Bump php post max and upload max filesizes to 100MB by default."}
+  - {date: "19.12.19:", desc: "Rebasing to alpine 3.11."}
+  - {date: "26.07.19:", desc: "Use old version of tidyhtml pending upstream fixes."}
+  - {date: "28.06.19:", desc: "Rebasing to alpine 3.10."}
+  - {date: "14.06.19:", desc: "Add wkhtmltopdf to image for PDF rendering."}
+  - {date: "20.04.19:", desc: "Rebase to Alpine 3.9, add MySQL init logic."}
+  - {date: "22.03.19:", desc: "Switching to new Base images, shift to arm32v7 tag."}
+  - {date: "20.01.19:", desc: "Added php7-curl"}
+  - {date: "04.11.18:", desc: "Added php7-ldap"}
+  - {date: "15.10.18:", desc: "Changed functionality for advanced users"}
+  - {date: "08.10.18:", desc: "Advanced mode, symlink changes, sed fixing, docs updated, added some composer files"}
+  - {date: "23.09.28:", desc: "Updates pre-release"}
+  - {date: "02.07.18:", desc: "Initial Release."}

@@ -1,0 +1,57 @@
+# Known images for rules R4 (sidecars) and R5 (healthchecks). Every entry was
+# checked against the image's documentation; add one only with the same care.
+# A family with a sidecar is added for an app that needs its database: the
+# words that name it in the app's settings or its port say which, and the
+# image creates the app's user, password and database from these variables.
+families:
+  - name: postgres
+    role: db
+    images: [docker.io/library/postgres, docker.io/pgvector/pgvector, docker.io/postgis/postgis, docker.io/tensorchord/pgvecto-rs]
+    data_path: /var/lib/postgresql/data
+    # From 18 the image keeps its data in a folder per major version below
+    # /var/lib/postgresql and refuses a volume at the old path unless PGDATA
+    # points into it (docker-library/postgres#1259).
+    data_path_since: {major: 18, path: /var/lib/postgresql, unless_env: PGDATA}
+    healthcheck: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER:-postgres}\""]
+    sidecar: {tag: "18", port: 5432, words: [POSTGRES, POSTGRESQL, PG, PGSQL], user: POSTGRES_USER, password: POSTGRES_PASSWORD, database: POSTGRES_DB}
+  - name: mariadb
+    role: db
+    images: [docker.io/library/mariadb]
+    data_path: /var/lib/mysql
+    healthcheck: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+    sidecar: {tag: "11.8", port: 3306, words: [MARIADB, MYSQL], user: MARIADB_USER, password: MARIADB_PASSWORD, database: MARIADB_DATABASE, root_password: MARIADB_ROOT_PASSWORD}
+  - name: mysql
+    role: db
+    images: [docker.io/library/mysql]
+    data_path: /var/lib/mysql
+    # exit status is 0 whenever the server answers, even when access is denied
+    healthcheck: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 --silent"]
+  - name: mongo
+    role: db
+    images: [docker.io/library/mongo]
+    data_path: /data/db
+    healthcheck: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+  - name: redis
+    role: cache
+    images: [docker.io/library/redis, docker.io/redis/redis-stack-server]
+    data_path: /data
+    healthcheck: ["CMD", "redis-cli", "ping"]
+  - name: valkey
+    role: cache
+    images: [docker.io/valkey/valkey, docker.io/library/valkey]
+    data_path: /data
+    healthcheck: ["CMD", "valkey-cli", "ping"]
+  - name: memcached
+    role: cache
+    images: [docker.io/library/memcached]
+  - name: proxy
+    role: proxy
+    images: [docker.io/library/traefik, docker.io/library/caddy, docker.io/library/nginx, docker.io/library/haproxy, docker.io/jc21/nginx-proxy-manager, lscr.io/linuxserver/swag]
+apps:
+  # Immich needs at least 6 GB in all and its Postgres at least 2 GB under
+  # Docker memory limits (Immich's install requirements); the server's first
+  # geodata import runs out of heap at 512 MB.
+  - images: [ghcr.io/immich-app/immich-server, ghcr.io/immich-app/immich-machine-learning, ghcr.io/immich-app/postgres]
+    memory_limit: 2g
+  - images: [docker.io/miniflux/miniflux, ghcr.io/miniflux/miniflux]
+    healthcheck: ["CMD", "/usr/bin/miniflux", "-healthcheck", "auto"]

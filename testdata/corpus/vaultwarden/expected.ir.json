@@ -1,0 +1,132 @@
+{
+  "ir_version": "1",
+  "app": {
+    "name": "vaultwarden",
+    "summary": "An alternative server implementation of the Bitwarden Client API, written in Rust and compatible with official Bitwarden clients disclaimer, perfect for self-hosted deployment where running the offic…",
+    "upstream_url": "https://github.com/dani-garcia/vaultwarden",
+    "docs_url": ""
+  },
+  "services": [
+    {
+      "name": "vaultwarden",
+      "role": "app",
+      "image": {
+        "registry": "ghcr.io",
+        "repository": "dani-garcia/vaultwarden",
+        "tag": "latest",
+        "digest": "",
+        "provenance": {
+          "source": "readme",
+          "source_ref": "docker/README.md:187",
+          "confidence": "medium"
+        }
+      },
+      "command": [],
+      "entrypoint": [],
+      "env": [
+        {
+          "key": "DOMAIN",
+          "ref": "DOMAIN",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "Domain settings The domain must match the address from where you access the server It's recommended to configure this value, otherwise certain functionality might not work, like attachment downloads, email links and U2F. For U2F to work, the server must use HTTPS, you can use Let's Encrypt for free certs To use HTTPS, the recommended way is to put Vaultwarden behind a reverse proxy Details: - https://github.com/dani-garcia/vaultwarden/wiki/Enabling-HTTPS - https://github.com/dani-garcia/vaultwarden/wiki/Proxy-examples For development",
+          "provenance": {
+            "source": "readme",
+            "source_ref": "README.md:85",
+            "confidence": "medium"
+          }
+        }
+      ],
+      "ports": [
+        {
+          "container": 80,
+          "protocol": "tcp",
+          "publish": true,
+          "host_port": 8000,
+          "description": "",
+          "provenance": {
+            "source": "readme",
+            "source_ref": "README.md:85",
+            "confidence": "medium"
+          }
+        }
+      ],
+      "volumes": [
+        {
+          "name": "data",
+          "container_path": "/data",
+          "description": "",
+          "provenance": {
+            "source": "readme",
+            "source_ref": "README.md:85",
+            "confidence": "medium"
+          }
+        }
+      ],
+      "depends_on": [],
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "/healthcheck.sh"
+        ],
+        "interval": "60s",
+        "timeout": "10s",
+        "retries": 0,
+        "start_period": "",
+        "omitted_reason": "",
+        "provenance": {
+          "source": "dockerfile",
+          "source_ref": "docker/Dockerfile.alpine:157",
+          "confidence": "medium"
+        }
+      },
+      "user": "",
+      "resources": {
+        "memory_limit": "",
+        "cpus": "",
+        "pids_limit": 0
+      },
+      "notes": [],
+      "provenance": {
+        "source": "readme",
+        "source_ref": "docker/README.md:187",
+        "confidence": "medium"
+      }
+    }
+  ],
+  "env_file": [
+    {
+      "key": "DOMAIN",
+      "value": "http://localhost:8000",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "Domain settings The domain must match the address from where you access the server It's recommended to configure this value, otherwise certain functionality might not work, like attachment downloads, email links and U2F. For U2F to work, the server must use HTTPS, you can use Let's Encrypt for free certs To use HTTPS, the recommended way is to put Vaultwarden behind a reverse proxy Details: - https://github.com/dani-garcia/vaultwarden/wiki/Enabling-HTTPS - https://github.com/dani-garcia/vaultwarden/wiki/Proxy-examples For development",
+      "file_env_key": "",
+      "provenance": {
+        "source": "default",
+        "source_ref": "README.md:85",
+        "confidence": "medium"
+      }
+    }
+  ],
+  "needs": [],
+  "probe": {
+    "service": "vaultwarden",
+    "port": 80,
+    "path": "/",
+    "expect": []
+  },
+  "post_install_notes": [],
+  "confidence": "medium",
+  "evidence": [
+    {
+      "claim": "documented docker run command",
+      "file": "README.md",
+      "line": 85
+    }
+  ],
+  "suspicious_instructions": [],
+  "unfilled": []
+}

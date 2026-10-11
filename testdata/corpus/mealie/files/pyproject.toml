@@ -1,0 +1,194 @@
+[project]
+name = "mealie"
+version = "3.28.0"
+description = "A Recipe Manager"
+authors = [{ name = "Hayden", email = "hay-kot@pm.me" }]
+license = "AGPL-3.0-only"
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    "Jinja2==3.1.6",
+    "Pillow==12.3.0",
+    "PyYAML==6.0.3",
+    "SQLAlchemy==2.0.54",
+    "alembic==1.20.0",
+    "apprise==1.13.1",
+    "bcrypt==5.0.0",
+    "extruct==0.18.0",
+    "fastapi==0.141.1",
+    "httpx==0.28.1",
+    "lxml==6.1.3",
+    "orjson==3.12.0",
+    "pydantic==2.13.5",
+    "pyhumps==3.8.0",
+    "python-dateutil==2.9.0.post0",
+    "python-dotenv==1.2.3",
+    "python-ldap==3.4.8",
+    "python-multipart==0.0.32",
+    "python-slugify==9.1.0",
+    "recipe-scrapers==15.12.0",
+    "requests==2.34.2",
+    "tzdata==2026.4",
+    "uvicorn[standard]==0.53.0",
+    "beautifulsoup4==4.15.0",
+    "isodate==0.7.2",
+    "text-unidecode==1.3",
+    "rapidfuzz==3.14.6",
+    "authlib==1.8.0",
+    "html2text==2025.4.15",
+    "paho-mqtt==1.6.1",
+    "pydantic-settings==2.15.0",
+    "pillow-heif==1.7.0",
+    "pyjwt==2.14.0",
+    "openai==3.16.2",
+    "typing-extensions==4.16.0",
+    "itsdangerous==2.2.0",
+    "yt-dlp==2026.8.19",
+    "ingredient-parser-nlp==2.7.0",
+    "pint==0.26.1",
+    "httpx-curl-cffi==0.1.5",
+]
+
+[project.scripts]
+mealie = "mealie.main:main"
+
+[project.optional-dependencies]
+pgsql = [
+    "psycopg2-binary==2.9.13"
+]
+
+[dependency-groups]
+docs = [
+    "zensical==0.0.63",
+]
+dev = [
+    "coverage==7.16.1",
+    "coveragepy-lcov==0.1.2",
+    "mypy==2.3.1",
+    "pre-commit==4.6.2",
+    "pylint==4.0.8",
+    "pytest==9.1.1",
+    "pytest-asyncio==1.4.0",
+    "rich==15.0.0",
+    "ruff==0.16.8",
+    "types-PyYAML==6.0.12.20260906",
+    "types-python-dateutil==2.9.0.20260807",
+    "types-python-slugify==8.0.2.20240310",
+    "types-requests==2.33.0.20260906",
+    "types-urllib3==1.26.25.14",
+    "pydantic-to-typescript2==1.0.6",
+    "freezegun==1.5.5",
+    "httpx2==2.13.0",
+    "zensical==0.0.63",
+    "pytest-xdist==3.8.0",
+]
+
+[build-system]
+requires = ["setuptools==84.0.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["mealie*"]
+
+[tool.setuptools.package-data]
+"*" = ["*"]
+
+[tool.pytest.ini_options]
+addopts = "-ra -q"
+asyncio_default_fixture_loop_scope = "function"
+minversion = "6.0"
+python_classes = '*Tests'
+python_files = 'test_*'
+python_functions = 'test_*'
+testpaths = ["tests"]
+filterwarnings = [
+    # Treat every warning not explicitly ignored below as a test failure.
+    "error",
+    # Suppress unmaintained third-party pyRdfa utcnow() deprecation warning
+    "ignore::DeprecationWarning:pyRdfa.*",
+    # Suppress Python 3.12 default SQLite datetime-adapter deprecation warning
+    "ignore:The default datetime adapter is deprecated as of Python 3.12:DeprecationWarning",
+    # Suppress anyio 4.15 BlockingPortal alias deprecation from starlette.testclient.
+    # Fixed in starlette 1.7.0; drop this once that version clears the exclude-newer window.
+    "ignore:The anyio.abc.BlockingPortal alias is deprecated:DeprecationWarning",
+]
+
+[tool.coverage.report]
+skip_empty = true
+
+[tool.mypy]
+follow_imports = "skip"
+ignore_missing_imports = true
+plugins = "pydantic.mypy"
+python_version = "3.14"
+strict_optional = true
+
+[tool.ruff]
+target-version = "py314"
+line-length = 120
+output-format = "concise"
+
+# Exclude a variety of commonly ignored directories.
+exclude = [
+  ".bzr",
+  ".direnv",
+  ".eggs",
+  ".git",
+  ".hg",
+  ".mypy_cache",
+  ".nox",
+  ".pants.d",
+  ".ruff_cache",
+  ".svn",
+  ".tox",
+  ".venv",
+  "__pypackages__",
+  "_build",
+  "buck-out",
+  "build",
+  "dist",
+  "node_modules",
+  "venv",
+]
+
+[tool.ruff.lint.isort]
+known-third-party = ["alembic"]
+
+[tool.ruff.lint]
+# Enable Pyflakes `E` and `F` codes by default.
+ignore = ["F403", "TID252", "B008"]
+select = [
+  "B",  # flake8-bugbear
+  "C4", # McCabe complexity
+  "C90", # flake8-comprehensions
+  "DTZ", # flake8-datetimez
+  "E",  # pycodestyles
+  "F",  # pyflakes
+  "I",  # isort
+  "T",  # flake8-print
+  "UP", # pyupgrade
+  # "ANN", # flake8-annotations
+  # "BLE", # blind-except
+  # "RUF", # Ruff specific
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["E402", "E501"]
+"mealie/alembic/versions/*" = ["E501", "I001"]
+"dev/scripts/all_recipes_stress_test.py" = ["E501"]
+"ldap_provider.py" = ["UP032"]
+"tests/conftest.py" = ["E402"]
+"tests/utils/routes/__init__.py" = ["F401"]
+
+[tool.ruff.lint.mccabe]
+# Unlike Flake8, default to a complexity level of 10.
+max-complexity = 24  # Default is 10.
+
+[tool.uv]
+add-bounds = "exact"
+# Cooling period: ignore package releases newer than 5 days to mitigate
+# supply-chain attacks (compromised releases are usually caught and yanked
+# within days). Evaluated at resolve time as a rolling window.
+exclude-newer = "5 days"

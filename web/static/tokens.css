@@ -1,0 +1,118 @@
+/*
+ * The one semantic token set and the only file that may hold a colour
+ * literal (scripts/lint-colours.sh).
+ * Dark is the default; light is a choice; "system" follows
+ * prefers-color-scheme and is opt-in. Code and log panes are dark in both.
+ * web/theme_test.go checks the WCAG contrast of every pair in both palettes.
+ */
+
+:root[data-theme="dark"],
+:root[data-theme="system"] {
+  color-scheme: dark;
+  --bg: #26231E;
+  --surface: #1F1D19;
+  --surface-2: #181613;
+  --raised: #2E2A24;
+  --border: #36322B;
+  --text: #EEE8DE;
+  --text-soft: #B5AD9F;
+  --text-muted: #A0988C;
+  --text-faint: #6F685D;
+  --accent: #F2A93B;
+  --accent-text: #F2A93B;
+  --on-accent: #1E1A15;
+  --accent-soft: #3A2F1D;
+  --ok: #9CCF84;
+  --ok-bg: #2E3225;
+  --warn: #F2A93B;
+  --warn-bg: #3A2F1D;
+  --danger: #EF8270;
+  --danger-bg: #3B2D26;
+  --danger-line: #A35E51;
+  --info: #8DB9DD;
+  --info-bg: #2C2F30;
+  --code-bg: #141210;
+  --focus: #F2A93B;
+  --brand: #F2A93B;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #F0EBE2;
+  --surface: #F8F5EF;
+  --surface-2: #E9E4DA;
+  --raised: #E6E0D5;
+  --border: #DCD5C8;
+  --text: #1E1A15;
+  --text-soft: #544C41;
+  --text-muted: #625A4E;
+  --text-faint: #8F8676;
+  --accent: #A15A00;
+  --accent-text: #8A4D00;
+  --on-accent: #FFFFFF;
+  --accent-soft: #EEE5D6;
+  --ok: #2E6E1E;
+  --ok-bg: #E3EEDB;
+  --warn: #8A4D00;
+  --warn-bg: #F5E8D2;
+  --danger: #951C15;
+  --danger-bg: #F7E3DE;
+  --danger-line: #C0705F;
+  --info: #2A6396;
+  --info-bg: #E5E7E7;
+  --code-bg: #1C1A17;
+  --focus: #A15A00;
+  --brand: #C27408;
+}
+
+/* "system" on a light OS: the light palette, repeated because a media query
+   cannot reuse a rule; the theme test asserts both copies are identical. */
+@media (prefers-color-scheme: light) {
+  :root[data-theme="system"] {
+    color-scheme: light;
+    --bg: #F0EBE2;
+    --surface: #F8F5EF;
+    --surface-2: #E9E4DA;
+    --raised: #E6E0D5;
+    --border: #DCD5C8;
+    --text: #1E1A15;
+    --text-soft: #544C41;
+    --text-muted: #625A4E;
+    --text-faint: #8F8676;
+    --accent: #A15A00;
+    --accent-text: #8A4D00;
+    --on-accent: #FFFFFF;
+    --accent-soft: #EEE5D6;
+    --ok: #2E6E1E;
+    --ok-bg: #E3EEDB;
+    --warn: #8A4D00;
+    --warn-bg: #F5E8D2;
+    --danger: #951C15;
+    --danger-bg: #F7E3DE;
+    --danger-line: #C0705F;
+    --info: #2A6396;
+    --info-bg: #E5E7E7;
+    --code-bg: #1C1A17;
+    --focus: #A15A00;
+    --brand: #C27408;
+  }
+}
+
+/* The same in both palettes: the always-dark code and log panes and their
+   syntax colours, and colours derived from the palette. */
+:root {
+  --code-text: #E6DFD3;
+  --code-muted: #8F877A;
+  --code-key: #E3C893;
+  --code-name: #A9D490;
+  --code-value: #F2A93B;
+  --code-alt: #8DB9DD;
+  --code-danger: #EF8270;
+  --code-line: #281F13;
+  --code-error: #2E1F1C;
+  --code-footer: #191714;
+  --code-border: #2A2622;
+  --input-border: color-mix(in srgb, var(--border) 25%, var(--text-muted));
+  --hairline: color-mix(in srgb, var(--border) 60%, var(--surface));
+  --warn-soft: color-mix(in srgb, var(--warn-bg) 60%, var(--surface));
+}

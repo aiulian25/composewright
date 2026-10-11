@@ -1,0 +1,100 @@
+{{define "actions"}}
+{{$csrf := .CSRF}}
+{{with .Data}}
+{{if .Running}}
+<form method="post" action="/jobs/{{.Job.ID}}/cancel"><input type="hidden" name="csrf" value="{{$csrf}}"><button class="button" type="submit">{{template "icon-cross"}}Cancel</button></form>
+{{else if .Passed}}
+<a class="button button-primary" href="/projects/{{.Project}}/files">Continue to files {{template "icon-arrow"}}</a>
+{{end}}
+{{end}}
+{{end}}
+
+{{define "content"}}
+{{$csrf := .CSRF}}
+{{with .Data}}
+<div class="page-head">
+  <h1>{{.Project}}</h1>
+  {{if .Attempt}}<span class="chip chip-{{.Tone}}">{{if .Passed}}{{template "icon-check"}}{{else if .Failed}}{{template "icon-cross"}}{{end}}{{.Attempt}}</span>{{end}}
+  {{if and .Sandbox (not .Running)}}<span class="muted small push-right">Project <span class="mono">{{.Sandbox}}</span> was removed with its volumes</span>{{end}}
+</div>
+{{range .Job.Notices}}<p class="banner banner-warn" role="status">{{.}}</p>{{end}}
+<section class="banner banner-{{.Tone}} banner-verdict" aria-live="polite" data-job="{{.Events}}?from={{.Job.Events}}" data-job-kind="validate"{{if .Job.Finished}} data-finished{{end}}>
+  {{if .Running}}<span class="spinner" aria-hidden="true"></span>{{else if .Passed}}{{template "status-icon" "ok"}}{{else}}{{template "status-icon" "failed"}}{{end}}
+  <span class="banner-text"><span class="strong">{{.Title}}</span><span class="small">{{.Detail}}</span></span>
+</section>
+
+{{if .Steps}}
+<section class="card" aria-labelledby="run-title">
+  <div class="card-head"><h2 id="run-title">{{template "icon-activity"}}Run</h2></div>
+  <ol class="run-list">
+    {{range .Steps}}<li class="run-step" data-state="{{.State}}">{{template "run-mark"}}<span class="run-name">{{.Name}}</span><span class="run-detail">{{.Detail}}</span></li>{{end}}
+  </ol>
+</section>
+{{end}}
+
+{{if .Failed}}
+<section class="card card-danger" aria-labelledby="why-title">
+  <div class="card-head"><h2 id="why-title">{{template "icon-diagnose"}}Why it failed</h2></div>
+  <div class="card-body stack">
+    {{if .Hint}}<p>{{.Hint}}</p>{{end}}
+    {{if .HealthSaid}}
+    <p class="muted small">What the healthcheck of <span class="mono">{{.Service}}</span> answered last:</p>
+    <pre class="terminal">{{.HealthSaid}}</pre>
+    {{end}}
+    {{if .Tail}}
+    <p class="muted small">The last lines from <span class="mono">{{.Service}}</span>:</p>
+    <div class="log log-inline">{{range .Tail}}<span class="log-line log-{{.Tone}}{{if .Error}} is-error{{end}}"{{if .Time}} title="{{.Time}}"{{end}}><span class="log-source">{{.Source}} </span><span class="log-text">{{.Text}}
+</span></span>{{end}}</div>
+    {{end}}
+    {{if .Matches}}
+    <p class="muted small">The log lines that failed the run:</p>
+    <pre class="terminal">{{range .Matches}}{{.}}
+{{end}}</pre>
+    {{end}}
+    <p class="muted">Fix it on the Review page, or in compose.yaml yourself, then run the test again. The whole log is on the right; <span class="strong">Errors only</span> shows just the lines that look like errors.</p>
+  </div>
+  <div class="card-foot">
+    <a class="button button-primary" href="/projects/{{.Project}}/review?pane=compose&amp;edit">{{template "icon-pencil"}}Edit compose.yaml</a>
+    <a class="button" href="/projects/{{.Project}}/review">{{template "icon-arrow-left"}}Back to review</a>
+    <form method="post" action="/projects/{{.Project}}/validate"><input type="hidden" name="csrf" value="{{$csrf}}"><button class="button" type="submit">{{template "icon-play"}}Run again</button></form>
+    <a class="button button-ghost push-right" href="/projects/{{.Project}}/files">Keep the files anyway</a>
+  </div>
+</section>
+{{end}}
+{{end}}
+{{end}}
+
+{{define "context"}}
+{{with .Data}}
+<div class="tabs">
+  <h2 class="tab tab-title">{{template "icon-logs"}}Logs</h2>
+  <span class="tabs-actions">
+    <label class="tab-toggle"><input type="checkbox" data-errors-only>{{template "icon-filter"}}Errors only</label>
+    {{if .Running}}<label class="tab-toggle"><input type="checkbox" checked data-log-follow>Follow</label>{{end}}
+    <button class="button button-small button-dark" type="button" data-copy-target="log-lines">{{template "icon-copy"}}Copy</button>
+  </span>
+</div>
+<div class="log" id="log-lines" data-log>{{range .Lines}}<span class="log-line log-{{.Tone}}{{if .Error}} is-error{{end}}"{{if .Time}} title="{{.Time}}"{{end}}><span class="log-source">{{.Source}} </span><span class="log-text">{{.Text}}
+</span></span>{{end}}</div>
+{{if .Job.Dropped}}<p class="context-hint context-section">{{.Job.Dropped}} later lines were not kept; the full log is in the project folder.</p>{{end}}
+{{if .Services}}
+<section class="context-section" aria-labelledby="containers-title">
+  <h3 id="containers-title">Containers</h3>
+  <dl class="states">{{range .Services}}<dt>{{.Service}}</dt><dd class="state-{{.Tone}}">{{.State}}{{if .Detail}} ({{.Detail}}){{end}}</dd>{{end}}</dl>
+</section>
+{{end}}
+<section class="context-section" aria-labelledby="limits-title">
+  <h3 id="limits-title">Sandbox limits</h3>
+  <dl class="kv">
+    <dt>memory</dt><dd>{{.Limits.MemoryLimit}}</dd>
+    <dt>cpus</dt><dd>{{.Limits.CPUs}}</dd>
+    <dt>pids</dt><dd>{{.Limits.PIDsLimit}}</dd>
+    <dt>timeout</dt><dd>{{.Limits.Timeout}}</dd>
+    <dt>ports</dt><dd>127.0.0.1 only</dd>
+    <dt>restart</dt><dd>"no"</dd>
+    <dt>security_opt</dt><dd>no-new-privileges</dd>
+    <dt>teardown</dt><dd>down -v --remove-orphans</dd>
+  </dl>
+</section>
+{{end}}
+{{end}}

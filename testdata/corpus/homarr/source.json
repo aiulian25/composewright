@@ -1,0 +1,7 @@
+{
+  "url": "https://github.com/homarr-labs/homarr",
+  "owner": "homarr-labs",
+  "commit": "ebbd4876d25a51151444a009ab596e1154d62880",
+  "allow_registries": "-",
+  "verdict": "deny:P1"
+}

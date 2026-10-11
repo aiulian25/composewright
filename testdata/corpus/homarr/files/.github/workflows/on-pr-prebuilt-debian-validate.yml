@@ -1,0 +1,38 @@
+name: "[Deployments] Validate prebuilt debian dependencies"
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    branches: ["**"]
+    paths:
+      - ".github/actions/prebuilt-debian/**"
+      - ".github/actions/extract-build-artifact/**"
+      - "deployments/prebuilt-debian/**"
+      - ".github/workflows/on-pr-prebuilt-debian-validate.yml"
+
+jobs:
+  prebuilt-debian-validate:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: amd64
+            runner: ubuntu-latest
+          - architecture: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: Validate Debian archive for ${{ matrix.architecture }}
+        uses: ./.github/actions/extract-build-artifact
+        with:
+          # This Alpine release image reproduces #7097 without the Debian replacement.
+          digest: ghcr.io/homarr-labs/homarr:v2.3.0
+          architecture: ${{ matrix.architecture }}
+          release-tag: v2.3.0
+          repository: ${{ github.repository }}
+          token: ${{ github.token }}
+          upload: "false"

@@ -1,0 +1,3613 @@
+{
+  "files": [
+    ".hadolint.yaml",
+    "Docker/Dockerfile",
+    "Docker/Dockerfile-Alpine",
+    "Docker/Dockerfile-Arch",
+    "Docker/Dockerfile-Newest",
+    "Docker/Dockerfile-Oldest",
+    "Docker/README.md",
+    "Docker/freshrss/docker-compose-db.yml",
+    "Docker/freshrss/docker-compose-development.yml",
+    "Docker/freshrss/docker-compose-local.yml",
+    "Docker/freshrss/docker-compose-proxy.yml",
+    "Docker/freshrss/docker-compose.yml",
+    "Docker/freshrss/example.env",
+    "Docker/freshrss/traefik/tls.yml",
+    "README.md",
+    "app/Utils/httpUtil.php",
+    "cli/README.md",
+    "composer.json",
+    "constants.php",
+    "data/PubSubHubbub/feeds/README.md",
+    "data/PubSubHubbub/keys/README.md",
+    "data/Retry-After/README.md",
+    "docs/Gemfile",
+    "docs/README.md",
+    "docs/_config.yml",
+    "docs/en/admins/01_Index.md",
+    "docs/en/admins/02_Prerequisites.md",
+    "docs/en/admins/03_Installation.md",
+    "docs/en/admins/04_Frequently_Asked_Questions.md",
+    "docs/en/admins/04_Updating.md",
+    "docs/en/admins/05_Backup.md",
+    "docs/en/admins/05_Configuring_email_validation.md",
+    "docs/en/admins/06_LinuxInstall.md",
+    "docs/en/admins/07_LinuxUpdate.md",
+    "docs/en/admins/08_FeedUpdates.md",
+    "docs/en/admins/09_AccessControl.md",
+    "docs/en/admins/10_ServerConfig.md",
+    "docs/en/admins/11_Themes.md",
+    "docs/en/admins/12_User_management.md",
+    "docs/en/admins/13_Default_user.md",
+    "docs/en/admins/14_CloudProviders.md",
+    "docs/en/admins/15_extensions.md",
+    "docs/en/admins/16_OpenID-Connect-Authentik.md",
+    "docs/en/admins/16_OpenID-Connect.md",
+    "docs/en/admins/17_configs_not_ui.md",
+    "docs/en/admins/18_Pocket-ID.md",
+    "docs/en/admins/Caddy.md",
+    "docs/en/admins/DatabaseConfig.md",
+    "docs/en/admins/OpenBSD-httpd.md",
+    "docs/en/admins/logs_and_errors.md",
+    "docs/en/contributing.md",
+    "docs/en/developers/01_Index.md",
+    "docs/en/developers/02_First_steps.md",
+    "docs/en/developers/02_GitHub.md",
+    "docs/en/developers/03_Backend/01_Database_schema.md",
+    "docs/en/developers/03_Backend/03_External_libraries.md",
+    "docs/en/developers/03_Backend/05_Extensions.md",
+    "docs/en/developers/03_Running_tests.md",
+    "docs/en/developers/04_Frontend/01_View_files.md",
+    "docs/en/developers/04_Frontend/02_Design.md",
+    "docs/en/developers/04_Pull_requests.md",
+    "docs/en/developers/05_Release_new_version.md",
+    "docs/en/developers/06_Fever_API.md",
+    "docs/en/developers/06_GoogleReader_API.md",
+    "docs/en/developers/06_Reporting_Bugs.md",
+    "docs/en/developers/Minz/index.md",
+    "docs/en/developers/OPML.md",
+    "docs/en/index.md",
+    "docs/en/internationalization.md",
+    "docs/en/users/02_First_steps.md",
+    "docs/en/users/03_Main_view.md",
+    "docs/en/users/04_Subscriptions.md",
+    "docs/en/users/05_Configuration.md",
+    "docs/en/users/06_Mobile_access.md",
+    "docs/en/users/07_Frequently_Asked_Questions.md",
+    "docs/en/users/08_sharing_services.md",
+    "docs/en/users/09_refreshing_feeds.md",
+    "docs/en/users/10_filter.md",
+    "docs/en/users/11_website_scraping.md",
+    "docs/en/users/WebSub.md",
+    "docs/en/users/user_queries.md",
+    "docs/fr/contributing.md",
+    "docs/fr/developers/01_First_steps.md",
+    "docs/fr/developers/02_Github.md",
+    "docs/fr/developers/03_Backend/01_Database_schema.md",
+    "docs/fr/developers/03_Backend/03_External_libraries.md",
+    "docs/fr/developers/03_Backend/05_Extensions.md",
+    "docs/fr/developers/03_Running_tests.md",
+    "docs/fr/developers/04_Frontend/01_View_files.md",
+    "docs/fr/developers/04_Frontend/02_Design.md",
+    "docs/fr/developers/05_Release_new_version.md",
+    "docs/fr/developers/Minz/index.md",
+    "docs/fr/index.md",
+    "docs/fr/internationalization.md",
+    "docs/fr/users/01_Installation.md",
+    "docs/fr/users/02_First_steps.md",
+    "docs/fr/users/03_Main_view.md",
+    "docs/fr/users/04_Subscriptions.md",
+    "docs/fr/users/05_Configuration.md",
+    "docs/fr/users/06_Fever_API.md",
+    "docs/fr/users/06_Mobile_access.md",
+    "docs/fr/users/07_Frequently_Asked_Questions.md",
+    "docs/fr/users/08_PubSubHubbub.md",
+    "docs/index.md",
+    "docs/pull_request_template.md",
+    "extensions/README.md",
+    "lib/Minz/FrontController.php",
+    "lib/Minz/Log.php",
+    "lib/README.md",
+    "lib/composer.json",
+    "lib/core-extensions/README.md",
+    "lib/marienfressinaud/lib_opml/README.md",
+    "lib/marienfressinaud/lib_opml/composer.json",
+    "lib/phpgt/cssxpath/README.md",
+    "lib/phpmailer/phpmailer/README.md",
+    "lib/simplepie/simplepie/.github/README.md",
+    "lib/simplepie/simplepie/README.markdown",
+    "lib/simplepie/simplepie/utils/PHPStan/README.md",
+    "p/themes/Dark-pink/README.md",
+    "p/themes/Nord/README.md",
+    "p/themes/Pafat/README.md",
+    "p/themes/base-theme/README.md",
+    "package.json"
+  ],
+  "compose_files": [
+    {
+      "path": "Docker/freshrss/docker-compose-db.yml",
+      "services": [
+        {
+          "name": "freshrss-db",
+          "location": {
+            "file": "Docker/freshrss/docker-compose-db.yml",
+            "line": 5
+          },
+          "image": "postgres:18",
+          "image_at": {
+            "file": "Docker/freshrss/docker-compose-db.yml",
+            "line": 6
+          },
+          "build": false,
+          "ports": null,
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "db",
+              "target": "/var/lib/postgresql",
+              "read_only": false,
+              "location": {
+                "file": "Docker/freshrss/docker-compose-db.yml",
+                "line": 14
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "POSTGRES_DB",
+              "raw": "${DB_BASE:-freshrss}",
+              "has_value": true,
+              "location": {
+                "file": "Docker/freshrss/docker-compose-db.yml",
+                "line": 16
+              }
+            },
+            {
+              "key": "POSTGRES_USER",
+              "raw": "${DB_USER:-freshrss}",
+              "has_value": true,
+              "location": {
+                "file": "Docker/freshrss/docker-compose-db.yml",
+                "line": 17
+              }
+            },
+            {
+              "key": "POSTGRES_PASSWORD",
+              "raw": "${DB_PASSWORD:-freshrss}",
+              "has_value": true,
+              "location": {
+                "file": "Docker/freshrss/docker-compose-db.yml",
+                "line": 18
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "command": [
+            "-c",
+            "shared_buffers=1GB",
+            "-c",
+            "work_mem=32MB"
+          ],
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": [
+        {
+          "name": "DB_BASE",
+          "kind": "compose",
+          "default": "freshrss",
+          "location": {
+            "file": "Docker/freshrss/docker-compose-db.yml",
+            "line": 16
+          }
+        },
+        {
+          "name": "DB_PASSWORD",
+          "kind": "compose",
+          "default": "freshrss",
+          "location": {
+            "file": "Docker/freshrss/docker-compose-db.yml",
+            "line": 18
+          }
+        },
+        {
+          "name": "DB_USER",
+          "kind": "compose",
+          "default": "freshrss",
+          "location": {
+            "file": "Docker/freshrss/docker-compose-db.yml",
+            "line": 17
+          }
+        }
+      ]
+    },
+    {
+      "path": "Docker/freshrss/docker-compose-proxy.yml",
+      "services": [
+        {
+          "name": "traefik",
+          "location": {
+            "file": "Docker/freshrss/docker-compose-proxy.yml",
+            "line": 7
+          },
+          "image": "traefik:3",
+          "image_at": {
+            "file": "Docker/freshrss/docker-compose-proxy.yml",
+            "line": 8
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 80,
+              "published": "80",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "Docker/freshrss/docker-compose-proxy.yml",
+                "line": 15
+              }
+            },
+            {
+              "target": 443,
+              "published": "443",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "Docker/freshrss/docker-compose-proxy.yml",
+                "line": 16
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "/var/run/docker.sock",
+              "target": "/var/run/docker.sock",
+              "read_only": true,
+              "location": {
+                "file": "Docker/freshrss/docker-compose-proxy.yml",
+                "line": 18
+              }
+            },
+            {
+              "type": "volume",
+              "source": "traefik-tmp",
+              "target": "/tmp",
+              "read_only": false,
+              "location": {
+                "file": "Docker/freshrss/docker-compose-proxy.yml",
+                "line": 19
+              }
+            },
+            {
+              "type": "volume",
+              "source": "traefik-letsencrypt",
+              "target": "/etc/traefik/acme",
+              "read_only": false,
+              "location": {
+                "file": "Docker/freshrss/docker-compose-proxy.yml",
+                "line": 20
+              }
+            },
+            {
+              "type": "bind",
+              "source": "./traefik/tls.yaml",
+              "target": "/etc/traefik/tls.yaml",
+              "read_only": true,
+              "location": {
+                "file": "Docker/freshrss/docker-compose-proxy.yml",
+                "line": 21
+              }
+            }
+          ],
+          "environment": null,
+          "env_files": null,
+          "depends_on": null,
+          "command": [
+            "--global.sendAnonymousUsage",
+            "--accesslog=true",
+            "--api=false",
+            "--providers.docker=true",
+            "--providers.docker.exposedByDefault=false",
+            "--log.level=INFO",
+            "--entryPoints.http.address=:80",
+            "--entryPoints.https.address=:443",
+            "--entryPoints.http.http.redirections.entryPoint.to=https",
+            "--entryPoints.http.http.redirections.entryPoint.scheme=https",
+            "--certificatesResolvers.letsEncrypt.acme.storage=/etc/traefik/acme/acme.json",
+            "--certificatesResolvers.letsEncrypt.acme.email=${ADMIN_EMAIL}",
+            "--certificatesResolvers.letsEncrypt.acme.tlsChallenge=true",
+            "--providers.file.filename=/etc/traefik/tls.yml"
+          ],
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "freshrss",
+          "location": {
+            "file": "Docker/freshrss/docker-compose-proxy.yml",
+            "line": 40
+          },
+          "image": "",
+          "image_at": {
+            "file": "Docker/freshrss/docker-compose-proxy.yml",
+            "line": 40
+          },
+          "build": false,
+          "ports": null,
+          "volumes": null,
+          "environment": [
+            {
+              "key": "TRUSTED_PROXY",
+              "raw": "172.16.0.1/12",
+              "has_value": true,
+              "location": {
+                "file": "Docker/freshrss/docker-compose-proxy.yml",
+                "line": 42
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": [
+        {
+          "name": "ADMIN_EMAIL",
+          "kind": "compose",
+          "location": {
+            "file": "Docker/freshrss/docker-compose-proxy.yml",
+            "line": 34
+          }
+        },
+        {
+          "name": "SERVER_DNS",
+          "kind": "compose",
+          "location": {
+            "file": "Docker/freshrss/docker-compose-proxy.yml",
+            "line": 56
+          }
+        }
+      ]
+    },
+    {
+      "path": "Docker/freshrss/docker-compose.yml",
+      "services": [
+        {
+          "name": "freshrss",
+          "location": {
+            "file": "Docker/freshrss/docker-compose.yml",
+            "line": 6
+          },
+          "image": "freshrss/freshrss:latest",
+          "image_at": {
+            "file": "Docker/freshrss/docker-compose.yml",
+            "line": 7
+          },
+          "build": false,
+          "ports": null,
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "data",
+              "target": "/var/www/FreshRSS/data",
+              "read_only": false,
+              "location": {
+                "file": "Docker/freshrss/docker-compose.yml",
+                "line": 20
+              }
+            },
+            {
+              "type": "volume",
+              "source": "extensions",
+              "target": "/var/www/FreshRSS/extensions",
+              "read_only": false,
+              "location": {
+                "file": "Docker/freshrss/docker-compose.yml",
+                "line": 21
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "TZ",
+              "raw": "Europe/Paris",
+              "has_value": true,
+              "location": {
+                "file": "Docker/freshrss/docker-compose.yml",
+                "line": 23
+              }
+            },
+            {
+              "key": "CRON_MIN",
+              "raw": "3,33",
+              "has_value": true,
+              "location": {
+                "file": "Docker/freshrss/docker-compose.yml",
+                "line": 24
+              }
+            },
+            {
+              "key": "TRUSTED_PROXY",
+              "raw": "172.16.0.1/12 192.168.0.1/16",
+              "has_value": true,
+              "location": {
+                "file": "Docker/freshrss/docker-compose.yml",
+                "line": 25
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": []
+    }
+  ],
+  "dockerfiles": [
+    {
+      "path": "Docker/Dockerfile",
+      "base_image": "debian:13-slim",
+      "exposed": [
+        {
+          "port": 80,
+          "protocol": "tcp",
+          "location": {
+            "file": "Docker/Dockerfile",
+            "line": 70
+          }
+        }
+      ],
+      "volumes": null,
+      "env": [
+        {
+          "key": "TZ",
+          "value": "UTC",
+          "location": {
+            "file": "Docker/Dockerfile",
+            "line": 3
+          }
+        },
+        {
+          "key": "COPY_LOG_TO_SYSLOG",
+          "value": "On",
+          "location": {
+            "file": "Docker/Dockerfile",
+            "line": 58
+          }
+        },
+        {
+          "key": "COPY_SYSLOG_TO_STDERR",
+          "value": "On",
+          "location": {
+            "file": "Docker/Dockerfile",
+            "line": 59
+          }
+        },
+        {
+          "key": "CRON_MIN",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile",
+            "line": 60
+          }
+        },
+        {
+          "key": "DATA_PATH",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile",
+            "line": 61
+          }
+        },
+        {
+          "key": "ENABLE_ACCESS_LOG",
+          "value": "1",
+          "location": {
+            "file": "Docker/Dockerfile",
+            "line": 62
+          }
+        },
+        {
+          "key": "FRESHRSS_ENV",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile",
+            "line": 63
+          }
+        },
+        {
+          "key": "LISTEN",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile",
+            "line": 64
+          }
+        },
+        {
+          "key": "OIDC_ENABLED",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile",
+            "line": 65
+          }
+        },
+        {
+          "key": "TRUSTED_PROXY",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile",
+            "line": 66
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "DEBIAN_FRONTEND",
+          "value": "noninteractive",
+          "location": {
+            "file": "Docker/Dockerfile",
+            "line": 6
+          }
+        },
+        {
+          "key": "FRESHRSS_VERSION",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile",
+            "line": 22
+          }
+        },
+        {
+          "key": "SOURCE_COMMIT",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile",
+            "line": 23
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": [
+        "./Docker/entrypoint.sh"
+      ],
+      "command": [
+        "/bin/sh",
+        "-c",
+        "([ -z \"$CRON_MIN\" ] || cron) \u0026\u0026  . /etc/apache2/envvars \u0026\u0026  exec apache2 -D FOREGROUND $([ -n \"$OIDC_ENABLED\" ] \u0026\u0026 [ \"$OIDC_ENABLED\" -ne 0 ] \u0026\u0026 echo \"-D OIDC_ENABLED\")"
+      ]
+    },
+    {
+      "path": "Docker/Dockerfile-Alpine",
+      "base_image": "alpine:3.24",
+      "exposed": [
+        {
+          "port": 80,
+          "protocol": "tcp",
+          "location": {
+            "file": "Docker/Dockerfile-Alpine",
+            "line": 66
+          }
+        }
+      ],
+      "volumes": null,
+      "env": [
+        {
+          "key": "TZ",
+          "value": "UTC",
+          "location": {
+            "file": "Docker/Dockerfile-Alpine",
+            "line": 3
+          }
+        },
+        {
+          "key": "COPY_LOG_TO_SYSLOG",
+          "value": "On",
+          "location": {
+            "file": "Docker/Dockerfile-Alpine",
+            "line": 54
+          }
+        },
+        {
+          "key": "COPY_SYSLOG_TO_STDERR",
+          "value": "On",
+          "location": {
+            "file": "Docker/Dockerfile-Alpine",
+            "line": 55
+          }
+        },
+        {
+          "key": "CRON_MIN",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Alpine",
+            "line": 56
+          }
+        },
+        {
+          "key": "DATA_PATH",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Alpine",
+            "line": 57
+          }
+        },
+        {
+          "key": "ENABLE_ACCESS_LOG",
+          "value": "1",
+          "location": {
+            "file": "Docker/Dockerfile-Alpine",
+            "line": 58
+          }
+        },
+        {
+          "key": "FRESHRSS_ENV",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Alpine",
+            "line": 59
+          }
+        },
+        {
+          "key": "LISTEN",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Alpine",
+            "line": 60
+          }
+        },
+        {
+          "key": "OIDC_ENABLED",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Alpine",
+            "line": 61
+          }
+        },
+        {
+          "key": "TRUSTED_PROXY",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Alpine",
+            "line": 62
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "FRESHRSS_VERSION",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Alpine",
+            "line": 19
+          }
+        },
+        {
+          "key": "SOURCE_COMMIT",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Alpine",
+            "line": 20
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": [
+        "./Docker/entrypoint.sh"
+      ],
+      "command": [
+        "/bin/sh",
+        "-c",
+        "([ -z \"$CRON_MIN\" ] || crond -d 6) \u0026\u0026  exec httpd -D FOREGROUND $([ -n \"$OIDC_ENABLED\" ] \u0026\u0026 [ \"$OIDC_ENABLED\" -ne 0 ] \u0026\u0026 echo \"-D OIDC_ENABLED\")"
+      ]
+    },
+    {
+      "path": "Docker/Dockerfile-Arch",
+      "base_image": "archlinux",
+      "exposed": [
+        {
+          "port": 80,
+          "protocol": "tcp",
+          "location": {
+            "file": "Docker/Dockerfile-Arch",
+            "line": 67
+          }
+        }
+      ],
+      "volumes": null,
+      "env": [
+        {
+          "key": "TZ",
+          "value": "UTC",
+          "location": {
+            "file": "Docker/Dockerfile-Arch",
+            "line": 5
+          }
+        },
+        {
+          "key": "COPY_LOG_TO_SYSLOG",
+          "value": "On",
+          "location": {
+            "file": "Docker/Dockerfile-Arch",
+            "line": 55
+          }
+        },
+        {
+          "key": "COPY_SYSLOG_TO_STDERR",
+          "value": "On",
+          "location": {
+            "file": "Docker/Dockerfile-Arch",
+            "line": 56
+          }
+        },
+        {
+          "key": "CRON_MIN",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Arch",
+            "line": 57
+          }
+        },
+        {
+          "key": "DATA_PATH",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Arch",
+            "line": 58
+          }
+        },
+        {
+          "key": "ENABLE_ACCESS_LOG",
+          "value": "1",
+          "location": {
+            "file": "Docker/Dockerfile-Arch",
+            "line": 59
+          }
+        },
+        {
+          "key": "FRESHRSS_ENV",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Arch",
+            "line": 60
+          }
+        },
+        {
+          "key": "LISTEN",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Arch",
+            "line": 61
+          }
+        },
+        {
+          "key": "OIDC_ENABLED",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Arch",
+            "line": 62
+          }
+        },
+        {
+          "key": "TRUSTED_PROXY",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Arch",
+            "line": 63
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "FRESHRSS_VERSION",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Arch",
+            "line": 21
+          }
+        },
+        {
+          "key": "SOURCE_COMMIT",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Arch",
+            "line": 22
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": [
+        "./Docker/entrypoint.sh"
+      ],
+      "command": [
+        "/bin/sh",
+        "-c",
+        "([ -z \"$CRON_MIN\" ] || crond) \u0026\u0026  exec httpd -D FOREGROUND"
+      ]
+    },
+    {
+      "path": "Docker/Dockerfile-Newest",
+      "base_image": "alpine:edge",
+      "exposed": [
+        {
+          "port": 80,
+          "protocol": "tcp",
+          "location": {
+            "file": "Docker/Dockerfile-Newest",
+            "line": 70
+          }
+        }
+      ],
+      "volumes": null,
+      "env": [
+        {
+          "key": "TZ",
+          "value": "UTC",
+          "location": {
+            "file": "Docker/Dockerfile-Newest",
+            "line": 4
+          }
+        },
+        {
+          "key": "COPY_LOG_TO_SYSLOG",
+          "value": "On",
+          "location": {
+            "file": "Docker/Dockerfile-Newest",
+            "line": 58
+          }
+        },
+        {
+          "key": "COPY_SYSLOG_TO_STDERR",
+          "value": "On",
+          "location": {
+            "file": "Docker/Dockerfile-Newest",
+            "line": 59
+          }
+        },
+        {
+          "key": "CRON_MIN",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Newest",
+            "line": 60
+          }
+        },
+        {
+          "key": "DATA_PATH",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Newest",
+            "line": 61
+          }
+        },
+        {
+          "key": "ENABLE_ACCESS_LOG",
+          "value": "1",
+          "location": {
+            "file": "Docker/Dockerfile-Newest",
+            "line": 62
+          }
+        },
+        {
+          "key": "FRESHRSS_ENV",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Newest",
+            "line": 63
+          }
+        },
+        {
+          "key": "LISTEN",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Newest",
+            "line": 64
+          }
+        },
+        {
+          "key": "OIDC_ENABLED",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Newest",
+            "line": 65
+          }
+        },
+        {
+          "key": "TRUSTED_PROXY",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Newest",
+            "line": 66
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "FRESHRSS_VERSION",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Newest",
+            "line": 21
+          }
+        },
+        {
+          "key": "SOURCE_COMMIT",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Newest",
+            "line": 22
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": [
+        "./Docker/entrypoint.sh"
+      ],
+      "command": [
+        "/bin/sh",
+        "-c",
+        "([ -z \"$CRON_MIN\" ] || crond -d 6) \u0026\u0026  exec httpd -D FOREGROUND $([ -n \"$OIDC_ENABLED\" ] \u0026\u0026 [ \"$OIDC_ENABLED\" -ne 0 ] \u0026\u0026 echo \"-D OIDC_ENABLED\")"
+      ]
+    },
+    {
+      "path": "Docker/Dockerfile-Oldest",
+      "base_image": "alpine:3.16",
+      "exposed": [
+        {
+          "port": 80,
+          "protocol": "tcp",
+          "location": {
+            "file": "Docker/Dockerfile-Oldest",
+            "line": 68
+          }
+        }
+      ],
+      "volumes": null,
+      "env": [
+        {
+          "key": "TZ",
+          "value": "UTC",
+          "location": {
+            "file": "Docker/Dockerfile-Oldest",
+            "line": 4
+          }
+        },
+        {
+          "key": "COPY_LOG_TO_SYSLOG",
+          "value": "On",
+          "location": {
+            "file": "Docker/Dockerfile-Oldest",
+            "line": 56
+          }
+        },
+        {
+          "key": "COPY_SYSLOG_TO_STDERR",
+          "value": "On",
+          "location": {
+            "file": "Docker/Dockerfile-Oldest",
+            "line": 57
+          }
+        },
+        {
+          "key": "CRON_MIN",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Oldest",
+            "line": 58
+          }
+        },
+        {
+          "key": "DATA_PATH",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Oldest",
+            "line": 59
+          }
+        },
+        {
+          "key": "ENABLE_ACCESS_LOG",
+          "value": "1",
+          "location": {
+            "file": "Docker/Dockerfile-Oldest",
+            "line": 60
+          }
+        },
+        {
+          "key": "FRESHRSS_ENV",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Oldest",
+            "line": 61
+          }
+        },
+        {
+          "key": "LISTEN",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Oldest",
+            "line": 62
+          }
+        },
+        {
+          "key": "OIDC_ENABLED",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Oldest",
+            "line": 63
+          }
+        },
+        {
+          "key": "TRUSTED_PROXY",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Oldest",
+            "line": 64
+          }
+        }
+      ],
+      "args": [
+        {
+          "key": "FRESHRSS_VERSION",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Oldest",
+            "line": 20
+          }
+        },
+        {
+          "key": "SOURCE_COMMIT",
+          "value": "",
+          "location": {
+            "file": "Docker/Dockerfile-Oldest",
+            "line": 21
+          }
+        }
+      ],
+      "user": "",
+      "user_at": {
+        "file": "",
+        "line": 0
+      },
+      "entrypoint": [
+        "./Docker/entrypoint.sh"
+      ],
+      "command": [
+        "/bin/sh",
+        "-c",
+        "([ -z \"$CRON_MIN\" ] || crond -d 6) \u0026\u0026  exec httpd -D FOREGROUND $([ -n \"$OIDC_ENABLED\" ] \u0026\u0026 [ \"$OIDC_ENABLED\" -ne 0 ] \u0026\u0026 echo \"-D OIDC_ENABLED\")"
+      ]
+    }
+  ],
+  "env_samples": [
+    {
+      "path": "Docker/freshrss/example.env",
+      "entries": [
+        {
+          "key": "ADMIN_EMAIL",
+          "value": "admin@example.net",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "Docker/freshrss/example.env",
+            "line": 8
+          }
+        },
+        {
+          "key": "PUBLISHED_PORT",
+          "value": "8080",
+          "comment": "Published port for development or local use (optional)",
+          "commented": false,
+          "location": {
+            "file": "Docker/freshrss/example.env",
+            "line": 11
+          }
+        },
+        {
+          "key": "ADMIN_PASSWORD",
+          "value": "freshrss",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "Docker/freshrss/example.env",
+            "line": 17
+          }
+        },
+        {
+          "key": "ADMIN_API_PASSWORD",
+          "value": "freshrss",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "Docker/freshrss/example.env",
+            "line": 18
+          }
+        },
+        {
+          "key": "BASE_URL",
+          "value": "https://freshrss.example.net",
+          "comment": "Address at which the FreshRSS instance will be reachable:",
+          "commented": false,
+          "location": {
+            "file": "Docker/freshrss/example.env",
+            "line": 21
+          }
+        },
+        {
+          "key": "SERVER_DNS",
+          "value": "freshrss.example.net",
+          "comment": "",
+          "commented": false,
+          "location": {
+            "file": "Docker/freshrss/example.env",
+            "line": 22
+          }
+        },
+        {
+          "key": "DB_HOST",
+          "value": "freshrss-db",
+          "comment": "Database server (not relevant if using default SQLite) Use the name of the Docker container if running on the same machine",
+          "commented": false,
+          "location": {
+            "file": "Docker/freshrss/example.env",
+            "line": 26
+          }
+        },
+        {
+          "key": "DB_BASE",
+          "value": "freshrss",
+          "comment": "Database to use",
+          "commented": false,
+          "location": {
+            "file": "Docker/freshrss/example.env",
+            "line": 33
+          }
+        },
+        {
+          "key": "DB_USER",
+          "value": "freshrss",
+          "comment": "User in the freshrss database",
+          "commented": false,
+          "location": {
+            "file": "Docker/freshrss/example.env",
+            "line": 36
+          }
+        },
+        {
+          "key": "DB_PASSWORD",
+          "value": "freshrss",
+          "comment": "Password for the defined user",
+          "commented": false,
+          "location": {
+            "file": "Docker/freshrss/example.env",
+            "line": 39
+          }
+        }
+      ]
+    }
+  ],
+  "variables": [
+    {
+      "name": "ADMIN_API_PASSWORD",
+      "default": "freshrss",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ADMIN_API_PASSWORD",
+          "kind": "env_sample",
+          "default": "freshrss",
+          "location": {
+            "file": "Docker/freshrss/example.env",
+            "line": 18
+          }
+        }
+      ]
+    },
+    {
+      "name": "ADMIN_EMAIL",
+      "default": "admin@example.net",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ADMIN_EMAIL",
+          "kind": "compose",
+          "location": {
+            "file": "Docker/freshrss/docker-compose-proxy.yml",
+            "line": 34
+          }
+        },
+        {
+          "name": "ADMIN_EMAIL",
+          "kind": "env_sample",
+          "default": "admin@example.net",
+          "location": {
+            "file": "Docker/freshrss/example.env",
+            "line": 8
+          }
+        }
+      ]
+    },
+    {
+      "name": "ADMIN_PASSWORD",
+      "default": "freshrss",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ADMIN_PASSWORD",
+          "kind": "env_sample",
+          "default": "freshrss",
+          "location": {
+            "file": "Docker/freshrss/example.env",
+            "line": 17
+          }
+        }
+      ]
+    },
+    {
+      "name": "BASE_URL",
+      "default": "https://freshrss.example.net",
+      "description": "Address at which the FreshRSS instance will be reachable:",
+      "required": false,
+      "mentions": [
+        {
+          "name": "BASE_URL",
+          "kind": "env_sample",
+          "default": "https://freshrss.example.net",
+          "text": "Address at which the FreshRSS instance will be reachable:",
+          "location": {
+            "file": "Docker/freshrss/example.env",
+            "line": 21
+          }
+        }
+      ]
+    },
+    {
+      "name": "COPY_LOG_TO_SYSLOG",
+      "default": "On",
+      "description": "(default is On) Copy all the logs to syslog",
+      "required": false,
+      "mentions": [
+        {
+          "name": "COPY_LOG_TO_SYSLOG",
+          "kind": "readme",
+          "text": "(default is On) Copy all the logs to syslog",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 99
+          }
+        },
+        {
+          "name": "COPY_LOG_TO_SYSLOG",
+          "kind": "dockerfile",
+          "default": "On",
+          "location": {
+            "file": "Docker/Dockerfile",
+            "line": 58
+          }
+        },
+        {
+          "name": "COPY_LOG_TO_SYSLOG",
+          "kind": "dockerfile",
+          "default": "On",
+          "location": {
+            "file": "Docker/Dockerfile-Alpine",
+            "line": 54
+          }
+        },
+        {
+          "name": "COPY_LOG_TO_SYSLOG",
+          "kind": "dockerfile",
+          "default": "On",
+          "location": {
+            "file": "Docker/Dockerfile-Arch",
+            "line": 55
+          }
+        },
+        {
+          "name": "COPY_LOG_TO_SYSLOG",
+          "kind": "dockerfile",
+          "default": "On",
+          "location": {
+            "file": "Docker/Dockerfile-Newest",
+            "line": 58
+          }
+        },
+        {
+          "name": "COPY_LOG_TO_SYSLOG",
+          "kind": "dockerfile",
+          "default": "On",
+          "location": {
+            "file": "Docker/Dockerfile-Oldest",
+            "line": 56
+          }
+        },
+        {
+          "name": "COPY_LOG_TO_SYSLOG",
+          "kind": "code",
+          "location": {
+            "file": "constants.php",
+            "line": 52
+          }
+        }
+      ]
+    },
+    {
+      "name": "COPY_SYSLOG_TO_STDERR",
+      "default": "On",
+      "description": "(default is On) Copy syslog to Standard Error so that it is visible in docker logs",
+      "required": false,
+      "mentions": [
+        {
+          "name": "COPY_SYSLOG_TO_STDERR",
+          "kind": "readme",
+          "text": "(default is On) Copy syslog to Standard Error so that it is visible in docker logs",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 100
+          }
+        },
+        {
+          "name": "COPY_SYSLOG_TO_STDERR",
+          "kind": "dockerfile",
+          "default": "On",
+          "location": {
+            "file": "Docker/Dockerfile",
+            "line": 59
+          }
+        },
+        {
+          "name": "COPY_SYSLOG_TO_STDERR",
+          "kind": "dockerfile",
+          "default": "On",
+          "location": {
+            "file": "Docker/Dockerfile-Alpine",
+            "line": 55
+          }
+        },
+        {
+          "name": "COPY_SYSLOG_TO_STDERR",
+          "kind": "dockerfile",
+          "default": "On",
+          "location": {
+            "file": "Docker/Dockerfile-Arch",
+            "line": 56
+          }
+        },
+        {
+          "name": "COPY_SYSLOG_TO_STDERR",
+          "kind": "dockerfile",
+          "default": "On",
+          "location": {
+            "file": "Docker/Dockerfile-Newest",
+            "line": 59
+          }
+        },
+        {
+          "name": "COPY_SYSLOG_TO_STDERR",
+          "kind": "dockerfile",
+          "default": "On",
+          "location": {
+            "file": "Docker/Dockerfile-Oldest",
+            "line": 57
+          }
+        },
+        {
+          "name": "COPY_SYSLOG_TO_STDERR",
+          "kind": "code",
+          "location": {
+            "file": "constants.php",
+            "line": 54
+          }
+        }
+      ]
+    },
+    {
+      "name": "CRON_MIN",
+      "default": "3,33",
+      "description": "(default is disabled) Define minutes for the built-in cron job to automatically refresh feeds (see below for more advanced options)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CRON_MIN",
+          "kind": "compose",
+          "default": "3,33",
+          "location": {
+            "file": "Docker/freshrss/docker-compose.yml",
+            "line": 24
+          }
+        },
+        {
+          "name": "CRON_MIN",
+          "kind": "readme",
+          "default": "1,31",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 32
+          }
+        },
+        {
+          "name": "CRON_MIN",
+          "kind": "readme",
+          "text": "(default is disabled) Define minutes for the built-in cron job to automatically refresh feeds (see below for more advanced options)",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 95
+          }
+        },
+        {
+          "name": "CRON_MIN",
+          "kind": "readme",
+          "default": "1,31",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 142
+          }
+        },
+        {
+          "name": "CRON_MIN",
+          "kind": "readme",
+          "default": "17,47",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 642
+          }
+        },
+        {
+          "name": "CRON_MIN",
+          "kind": "readme",
+          "default": "27,57",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 668
+          }
+        },
+        {
+          "name": "CRON_MIN",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile",
+            "line": 60
+          }
+        },
+        {
+          "name": "CRON_MIN",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile-Alpine",
+            "line": 56
+          }
+        },
+        {
+          "name": "CRON_MIN",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile-Arch",
+            "line": 57
+          }
+        },
+        {
+          "name": "CRON_MIN",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile-Newest",
+            "line": 60
+          }
+        },
+        {
+          "name": "CRON_MIN",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile-Oldest",
+            "line": 58
+          }
+        }
+      ]
+    },
+    {
+      "name": "DATA_PATH",
+      "default": "",
+      "description": "(default is empty, defined by ./constants.local.php or ./constants.php) Defines the path for writable data.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DATA_PATH",
+          "kind": "readme",
+          "text": "(default is empty, defined by ./constants.local.php or ./constants.php) Defines the path for writable data.",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 96
+          }
+        },
+        {
+          "name": "DATA_PATH",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile",
+            "line": 61
+          }
+        },
+        {
+          "name": "DATA_PATH",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile-Alpine",
+            "line": 57
+          }
+        },
+        {
+          "name": "DATA_PATH",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile-Arch",
+            "line": 58
+          }
+        },
+        {
+          "name": "DATA_PATH",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile-Newest",
+            "line": 61
+          }
+        },
+        {
+          "name": "DATA_PATH",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile-Oldest",
+            "line": 59
+          }
+        },
+        {
+          "name": "DATA_PATH",
+          "kind": "code",
+          "location": {
+            "file": "constants.php",
+            "line": 63
+          }
+        }
+      ]
+    },
+    {
+      "name": "DB_BASE",
+      "default": "freshrss",
+      "description": "Database to use",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DB_BASE",
+          "kind": "compose",
+          "default": "freshrss",
+          "location": {
+            "file": "Docker/freshrss/docker-compose-db.yml",
+            "line": 16
+          }
+        },
+        {
+          "name": "DB_BASE",
+          "kind": "env_sample",
+          "default": "freshrss",
+          "text": "Database to use",
+          "location": {
+            "file": "Docker/freshrss/example.env",
+            "line": 33
+          }
+        }
+      ]
+    },
+    {
+      "name": "DB_HOST",
+      "default": "freshrss-db",
+      "description": "Database server (not relevant if using default SQLite) Use the name of the Docker container if running on the same machine",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DB_HOST",
+          "kind": "env_sample",
+          "default": "freshrss-db",
+          "text": "Database server (not relevant if using default SQLite) Use the name of the Docker container if running on the same machine",
+          "location": {
+            "file": "Docker/freshrss/example.env",
+            "line": 26
+          }
+        }
+      ]
+    },
+    {
+      "name": "DB_PASSWORD",
+      "default": "freshrss",
+      "description": "Password for the defined user",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DB_PASSWORD",
+          "kind": "compose",
+          "default": "freshrss",
+          "location": {
+            "file": "Docker/freshrss/docker-compose-db.yml",
+            "line": 18
+          }
+        },
+        {
+          "name": "DB_PASSWORD",
+          "kind": "env_sample",
+          "default": "freshrss",
+          "text": "Password for the defined user",
+          "location": {
+            "file": "Docker/freshrss/example.env",
+            "line": 39
+          }
+        }
+      ]
+    },
+    {
+      "name": "DB_USER",
+      "default": "freshrss",
+      "description": "User in the freshrss database",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DB_USER",
+          "kind": "compose",
+          "default": "freshrss",
+          "location": {
+            "file": "Docker/freshrss/docker-compose-db.yml",
+            "line": 17
+          }
+        },
+        {
+          "name": "DB_USER",
+          "kind": "env_sample",
+          "default": "freshrss",
+          "text": "User in the freshrss database",
+          "location": {
+            "file": "Docker/freshrss/example.env",
+            "line": 36
+          }
+        }
+      ]
+    },
+    {
+      "name": "ENABLE_ACCESS_LOG",
+      "default": "1",
+      "description": "(default is 1) Set to 0 to disable the Apache access log.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ENABLE_ACCESS_LOG",
+          "kind": "readme",
+          "text": "(default is 1) Set to 0 to disable the Apache access log.",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 97
+          }
+        },
+        {
+          "name": "ENABLE_ACCESS_LOG",
+          "kind": "dockerfile",
+          "default": "1",
+          "location": {
+            "file": "Docker/Dockerfile",
+            "line": 62
+          }
+        },
+        {
+          "name": "ENABLE_ACCESS_LOG",
+          "kind": "dockerfile",
+          "default": "1",
+          "location": {
+            "file": "Docker/Dockerfile-Alpine",
+            "line": 58
+          }
+        },
+        {
+          "name": "ENABLE_ACCESS_LOG",
+          "kind": "dockerfile",
+          "default": "1",
+          "location": {
+            "file": "Docker/Dockerfile-Arch",
+            "line": 59
+          }
+        },
+        {
+          "name": "ENABLE_ACCESS_LOG",
+          "kind": "dockerfile",
+          "default": "1",
+          "location": {
+            "file": "Docker/Dockerfile-Newest",
+            "line": 62
+          }
+        },
+        {
+          "name": "ENABLE_ACCESS_LOG",
+          "kind": "dockerfile",
+          "default": "1",
+          "location": {
+            "file": "Docker/Dockerfile-Oldest",
+            "line": 60
+          }
+        }
+      ]
+    },
+    {
+      "name": "FRESHRSS_ENV",
+      "default": "development",
+      "description": "(default is production) Enables additional development information if set to development (increases the level of logging and ensures that errors are displayed) (see below for more development options)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "FRESHRSS_ENV",
+          "kind": "readme",
+          "text": "(default is production) Enables additional development information if set to development (increases the level of logging and ensures that errors are displayed) (see below for more development options)",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 98
+          }
+        },
+        {
+          "name": "FRESHRSS_ENV",
+          "kind": "readme",
+          "default": "development",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 142
+          }
+        },
+        {
+          "name": "FRESHRSS_ENV",
+          "kind": "readme",
+          "default": "development",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 170
+          }
+        },
+        {
+          "name": "FRESHRSS_ENV",
+          "kind": "readme",
+          "default": "development",
+          "location": {
+            "file": "docs/en/developers/03_Running_tests.md",
+            "line": 30
+          }
+        },
+        {
+          "name": "FRESHRSS_ENV",
+          "kind": "readme",
+          "default": "development",
+          "location": {
+            "file": "docs/en/developers/03_Running_tests.md",
+            "line": 31
+          }
+        },
+        {
+          "name": "FRESHRSS_ENV",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile",
+            "line": 63
+          }
+        },
+        {
+          "name": "FRESHRSS_ENV",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile-Alpine",
+            "line": 59
+          }
+        },
+        {
+          "name": "FRESHRSS_ENV",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile-Arch",
+            "line": 60
+          }
+        },
+        {
+          "name": "FRESHRSS_ENV",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile-Newest",
+            "line": 63
+          }
+        },
+        {
+          "name": "FRESHRSS_ENV",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile-Oldest",
+            "line": 61
+          }
+        },
+        {
+          "name": "FRESHRSS_ENV",
+          "kind": "code",
+          "location": {
+            "file": "lib/Minz/FrontController.php",
+            "line": 97
+          }
+        },
+        {
+          "name": "FRESHRSS_ENV",
+          "kind": "code",
+          "location": {
+            "file": "lib/Minz/Log.php",
+            "line": 38
+          }
+        }
+      ]
+    },
+    {
+      "name": "FRESHRSS_INSTALL",
+      "default": "",
+      "description": "automatically pass arguments to command line cli/do-install.php (for advanced users; see example in Docker Compose section). Only executed at the very first run (so far), so if you make any change, you need to delete your freshrss service, freshrss_data volume, before running again.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "FRESHRSS_INSTALL",
+          "kind": "readme",
+          "text": "automatically pass arguments to command line cli/do-install.php (for advanced users; see example in Docker Compose section). Only executed at the very first run (so far), so if you make any change, you need to delete your freshrss service, freshrss_data volume, before running again.",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 103
+          }
+        }
+      ]
+    },
+    {
+      "name": "FRESHRSS_USER",
+      "default": "",
+      "description": "automatically pass arguments to command line cli/create-user.php (for advanced users; see example in Docker Compose section). Only executed at the very first run (so far), so if you make any change, you need to delete your freshrss service, freshrss_data volume, before running again.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "FRESHRSS_USER",
+          "kind": "readme",
+          "text": "automatically pass arguments to command line cli/create-user.php (for advanced users; see example in Docker Compose section). Only executed at the very first run (so far), so if you make any change, you need to delete your freshrss service, freshrss_data volume, before running again.",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 104
+          }
+        }
+      ]
+    },
+    {
+      "name": "INTERNAL_HOST_ALLOWLIST",
+      "default": "",
+      "description": "(default is empty, can also be set in data/config.php or under *System configuration* in Web UI) Requests to internal hosts such as 127.0.0.1 are blocked by default; here you can add overrides for which internal hosts to allow, separated by whitespace. Each host should be described either as a host:port combination, CIDR notation (0.0.0.0/0 to allow any IPv4, ::/0 to allow any IPv6) or * to allow all hosts (unsafe)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "INTERNAL_HOST_ALLOWLIST",
+          "kind": "readme",
+          "text": "(default is empty, can also be set in data/config.php or under *System configuration* in Web UI) Requests to internal hosts such as 127.0.0.1 are blocked by default; here you can add overrides for which internal hosts to allow, separated by whitespace. Each host should be described either as a host:port combination, CIDR notation (0.0.0.0/0 to allow any IPv4, ::/0 to allow any IPv6) or * to allow all hosts (unsafe)",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 102
+          }
+        },
+        {
+          "name": "INTERNAL_HOST_ALLOWLIST",
+          "kind": "code",
+          "location": {
+            "file": "app/Utils/httpUtil.php",
+            "line": 335
+          }
+        }
+      ]
+    },
+    {
+      "name": "LISTEN",
+      "default": "",
+      "description": "(default is 80) Modifies the internal Apache listening address and port, e.g. 0.0.0.0:8080 (for advanced users; useful for [Docker host networking](https://docs.docker.com/engine/network/drivers/host/))",
+      "required": false,
+      "mentions": [
+        {
+          "name": "LISTEN",
+          "kind": "readme",
+          "text": "(default is 80) Modifies the internal Apache listening address and port, e.g. 0.0.0.0:8080 (for advanced users; useful for [Docker host networking](https://docs.docker.com/engine/network/drivers/host/))",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 101
+          }
+        },
+        {
+          "name": "LISTEN",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile",
+            "line": 64
+          }
+        },
+        {
+          "name": "LISTEN",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile-Alpine",
+            "line": 60
+          }
+        },
+        {
+          "name": "LISTEN",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile-Arch",
+            "line": 61
+          }
+        },
+        {
+          "name": "LISTEN",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile-Newest",
+            "line": 64
+          }
+        },
+        {
+          "name": "LISTEN",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile-Oldest",
+            "line": 62
+          }
+        }
+      ]
+    },
+    {
+      "name": "MYSQL_DATABASE",
+      "default": "freshrss",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MYSQL_DATABASE",
+          "kind": "readme",
+          "default": "freshrss",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 212
+          }
+        }
+      ]
+    },
+    {
+      "name": "MYSQL_PASSWORD",
+      "default": "freshrss",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MYSQL_PASSWORD",
+          "kind": "readme",
+          "default": "freshrss",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 212
+          }
+        }
+      ]
+    },
+    {
+      "name": "MYSQL_ROOT_PASSWORD",
+      "default": "rootpass",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MYSQL_ROOT_PASSWORD",
+          "kind": "readme",
+          "default": "rootpass",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 212
+          }
+        }
+      ]
+    },
+    {
+      "name": "MYSQL_USER",
+      "default": "freshrss",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "MYSQL_USER",
+          "kind": "readme",
+          "default": "freshrss",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 212
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_CLIENT_CRYPTO_KEY",
+      "default": "",
+      "description": "An opaque key used for internal encryption.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_CLIENT_CRYPTO_KEY",
+          "kind": "readme",
+          "text": "An opaque key used for internal encryption.",
+          "location": {
+            "file": "docs/en/admins/16_OpenID-Connect.md",
+            "line": 42
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_CLIENT_ID",
+      "default": "",
+      "description": "The OIDC client id from your issuer.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_CLIENT_ID",
+          "kind": "readme",
+          "text": "The OIDC client id from your issuer.",
+          "location": {
+            "file": "docs/en/admins/16_OpenID-Connect.md",
+            "line": 40
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_CLIENT_SECRET",
+      "default": "",
+      "description": "The OIDC client secret issuer.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_CLIENT_SECRET",
+          "kind": "readme",
+          "text": "The OIDC client secret issuer.",
+          "location": {
+            "file": "docs/en/admins/16_OpenID-Connect.md",
+            "line": 41
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_DEFAULT_URL",
+      "default": "",
+      "description": "Optional. URL the user is redirected to when the OIDC module receives a callback whose anti-CSRF state has expired or cannot be matched, for example when an interactive login (external identity provider, MFA/step-up, or the user stepping away) takes longer than the state timeout. When not defined, the default is /i/, the FreshRSS index, so that an expired login restarts against the existing provider session instead of returning an HTTP 400 error page. Maps to mod_auth_openidc’s [OIDCDefaultURL](https://github.com/OpenIDC/mod_auth_openidc/blob/b2e99151bc695335089c8d4bfe5793624ac0732e/auth_openidc.conf#L786-L790).",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_DEFAULT_URL",
+          "kind": "readme",
+          "text": "Optional. URL the user is redirected to when the OIDC module receives a callback whose anti-CSRF state has expired or cannot be matched, for example when an interactive login (external identity provider, MFA/step-up, or the user stepping away) takes longer than the state timeout. When not defined, the default is /i/, the FreshRSS index, so that an expired login restarts against the existing provider session instead of returning an HTTP 400 error page. Maps to mod_auth_openidc’s [OIDCDefaultURL](https://github.com/OpenIDC/mod_auth_openidc/blob/b2e99151bc695335089c8d4bfe5793624ac0732e/auth_openidc.conf#L786-L790).",
+          "location": {
+            "file": "docs/en/admins/16_OpenID-Connect.md",
+            "line": 49
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_ENABLED",
+      "default": "",
+      "description": "Activates OIDC support.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_ENABLED",
+          "kind": "readme",
+          "text": "Activates OIDC support.",
+          "location": {
+            "file": "docs/en/admins/16_OpenID-Connect.md",
+            "line": 38
+          }
+        },
+        {
+          "name": "OIDC_ENABLED",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile",
+            "line": 65
+          }
+        },
+        {
+          "name": "OIDC_ENABLED",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile-Alpine",
+            "line": 61
+          }
+        },
+        {
+          "name": "OIDC_ENABLED",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile-Arch",
+            "line": 62
+          }
+        },
+        {
+          "name": "OIDC_ENABLED",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile-Newest",
+            "line": 65
+          }
+        },
+        {
+          "name": "OIDC_ENABLED",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile-Oldest",
+            "line": 63
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_PROVIDER_METADATA_URL",
+      "default": "",
+      "description": "The config URL. Usually looks like: \u003cissuer\u003e/.well-known/openid-configuration",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_PROVIDER_METADATA_URL",
+          "kind": "readme",
+          "text": "The config URL. Usually looks like: \u003cissuer\u003e/.well-known/openid-configuration",
+          "location": {
+            "file": "docs/en/admins/16_OpenID-Connect.md",
+            "line": 39
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_REMOTE_USER_CLAIM",
+      "default": "",
+      "description": "The claim to use as the username within FreshRSS. Defaults to preferred_username. Depending on what you choose here, and your identity provider, you’ll need to adjust the scopes you request so that this claim will be accessible. Refer to your identity provider’s documentation.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_REMOTE_USER_CLAIM",
+          "kind": "readme",
+          "text": "The claim to use as the username within FreshRSS. Defaults to preferred_username. Depending on what you choose here, and your identity provider, you’ll need to adjust the scopes you request so that this claim will be accessible. Refer to your identity provider’s documentation.",
+          "location": {
+            "file": "docs/en/admins/16_OpenID-Connect.md",
+            "line": 43
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_SCOPES",
+      "default": "",
+      "description": "The OIDC scopes to request separated by an empty space. Defaults to openid. As mentioned previously, make sure the scopes you pick contain whatever OIDC_REMOTE_USER_CLAIM you chose. For example, Authelia would require setting this value to openid profile to make preferred_username accessible.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_SCOPES",
+          "kind": "readme",
+          "text": "The OIDC scopes to request separated by an empty space. Defaults to openid. As mentioned previously, make sure the scopes you pick contain whatever OIDC_REMOTE_USER_CLAIM you chose. For example, Authelia would require setting this value to openid profile to make preferred_username accessible.",
+          "location": {
+            "file": "docs/en/admins/16_OpenID-Connect.md",
+            "line": 44
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_SESSION_INACTIVITY_TIMEOUT",
+      "default": "",
+      "description": "Optional. Interval in seconds after which the session will be invalidated when no interaction has occurred. When not defined, the default is 300 seconds.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_SESSION_INACTIVITY_TIMEOUT",
+          "kind": "readme",
+          "text": "Optional. Interval in seconds after which the session will be invalidated when no interaction has occurred. When not defined, the default is 300 seconds.",
+          "location": {
+            "file": "docs/en/admins/16_OpenID-Connect.md",
+            "line": 46
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_SESSION_MAX_DURATION",
+      "default": "",
+      "description": "Optional. Maximum duration of the application session. When not defined the default is 8 hours (3600 * 8 seconds). When set to 0, the session duration will be set equal to the expiry time of the ID token.",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_SESSION_MAX_DURATION",
+          "kind": "readme",
+          "text": "Optional. Maximum duration of the application session. When not defined the default is 8 hours (3600 * 8 seconds). When set to 0, the session duration will be set equal to the expiry time of the ID token.",
+          "location": {
+            "file": "docs/en/admins/16_OpenID-Connect.md",
+            "line": 47
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_SESSION_TYPE",
+      "default": "",
+      "description": "Optional. OpenID Connect session storage type. See [mod_auth_openidc’s documentation for details](https://github.com/OpenIDC/mod_auth_openidc/blob/72c9f479c2d228477ff0a9518964f61879c83fb6/auth_openidc.conf#L587-L596).",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_SESSION_TYPE",
+          "kind": "readme",
+          "text": "Optional. OpenID Connect session storage type. See [mod_auth_openidc’s documentation for details](https://github.com/OpenIDC/mod_auth_openidc/blob/72c9f479c2d228477ff0a9518964f61879c83fb6/auth_openidc.conf#L587-L596).",
+          "location": {
+            "file": "docs/en/admins/16_OpenID-Connect.md",
+            "line": 48
+          }
+        }
+      ]
+    },
+    {
+      "name": "OIDC_X_FORWARDED_HEADERS",
+      "default": "",
+      "description": "Optional, but required when running FreshRSS behind a reverse proxy so that the OIDC module can determine what hostname, port and protocol were used to access FreshRSS, in order to generate a return URL for the OIDC authorization flow. Must be one or more of Forwarded, X-Forwarded-Host, X-Forwarded-Port or X-Forwarded-Proto (separate multiple values with a space). See [mod_auth_openidc’s documentation for details](https://github.com/OpenIDC/mod_auth_openidc/blob/72c9f479c2d228477ff0a9518964f61879c83fb6/auth_openidc.conf#L1041-L1048).",
+      "required": false,
+      "mentions": [
+        {
+          "name": "OIDC_X_FORWARDED_HEADERS",
+          "kind": "readme",
+          "text": "Optional, but required when running FreshRSS behind a reverse proxy so that the OIDC module can determine what hostname, port and protocol were used to access FreshRSS, in order to generate a return URL for the OIDC authorization flow. Must be one or more of Forwarded, X-Forwarded-Host, X-Forwarded-Port or X-Forwarded-Proto (separate multiple values with a space). See [mod_auth_openidc’s documentation for details](https://github.com/OpenIDC/mod_auth_openidc/blob/72c9f479c2d228477ff0a9518964f61879c83fb6/auth_openidc.conf#L1041-L1048).",
+          "location": {
+            "file": "docs/en/admins/16_OpenID-Connect.md",
+            "line": 45
+          }
+        }
+      ]
+    },
+    {
+      "name": "PHP",
+      "default": "",
+      "description": "FreshRSS 1.24.3: PHP 7.4+\u003cbr /\u003eFreshRSS 1.22.1: PHP 7.2+",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PHP",
+          "kind": "readme",
+          "text": "FreshRSS 1.24.3: PHP 7.4+\u003cbr /\u003eFreshRSS 1.22.1: PHP 7.2+",
+          "location": {
+            "file": "docs/en/admins/02_Prerequisites.md",
+            "line": 10
+          }
+        },
+        {
+          "name": "PHP",
+          "kind": "readme",
+          "text": "FreshRSS 1.24.3 : PHP 7.4+\u003cbr /\u003eFreshRSS 1.22.1 : PHP 7.2+",
+          "location": {
+            "file": "docs/fr/users/01_Installation.md",
+            "line": 10
+          }
+        }
+      ]
+    },
+    {
+      "name": "POSTGRES_DB",
+      "default": "freshrss",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "POSTGRES_DB",
+          "kind": "compose",
+          "location": {
+            "file": "Docker/freshrss/docker-compose-db.yml",
+            "line": 16
+          }
+        },
+        {
+          "name": "POSTGRES_DB",
+          "kind": "readme",
+          "default": "freshrss",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 192
+          }
+        }
+      ]
+    },
+    {
+      "name": "POSTGRES_PASSWORD",
+      "default": "freshrss",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "POSTGRES_PASSWORD",
+          "kind": "compose",
+          "location": {
+            "file": "Docker/freshrss/docker-compose-db.yml",
+            "line": 18
+          }
+        },
+        {
+          "name": "POSTGRES_PASSWORD",
+          "kind": "readme",
+          "default": "freshrss",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 192
+          }
+        }
+      ]
+    },
+    {
+      "name": "POSTGRES_USER",
+      "default": "freshrss",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "POSTGRES_USER",
+          "kind": "compose",
+          "location": {
+            "file": "Docker/freshrss/docker-compose-db.yml",
+            "line": 17
+          }
+        },
+        {
+          "name": "POSTGRES_USER",
+          "kind": "readme",
+          "default": "freshrss",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 192
+          }
+        }
+      ]
+    },
+    {
+      "name": "PUBLISHED_PORT",
+      "default": "8080",
+      "description": "Published port for development or local use (optional)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PUBLISHED_PORT",
+          "kind": "env_sample",
+          "default": "8080",
+          "text": "Published port for development or local use (optional)",
+          "location": {
+            "file": "Docker/freshrss/example.env",
+            "line": 11
+          }
+        }
+      ]
+    },
+    {
+      "name": "SERVER_DNS",
+      "default": "freshrss.example.net",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SERVER_DNS",
+          "kind": "compose",
+          "location": {
+            "file": "Docker/freshrss/docker-compose-proxy.yml",
+            "line": 56
+          }
+        },
+        {
+          "name": "SERVER_DNS",
+          "kind": "env_sample",
+          "default": "freshrss.example.net",
+          "location": {
+            "file": "Docker/freshrss/example.env",
+            "line": 22
+          }
+        }
+      ]
+    },
+    {
+      "name": "TRUSTED_PROXY",
+      "default": "172.16.0.1/12",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TRUSTED_PROXY",
+          "kind": "compose",
+          "default": "172.16.0.1/12",
+          "location": {
+            "file": "Docker/freshrss/docker-compose-proxy.yml",
+            "line": 42
+          }
+        },
+        {
+          "name": "TRUSTED_PROXY",
+          "kind": "compose",
+          "default": "172.16.0.1/12 192.168.0.1/16",
+          "location": {
+            "file": "Docker/freshrss/docker-compose.yml",
+            "line": 25
+          }
+        },
+        {
+          "name": "TRUSTED_PROXY",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile",
+            "line": 66
+          }
+        },
+        {
+          "name": "TRUSTED_PROXY",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile-Alpine",
+            "line": 62
+          }
+        },
+        {
+          "name": "TRUSTED_PROXY",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile-Arch",
+            "line": 63
+          }
+        },
+        {
+          "name": "TRUSTED_PROXY",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile-Newest",
+            "line": 66
+          }
+        },
+        {
+          "name": "TRUSTED_PROXY",
+          "kind": "dockerfile",
+          "location": {
+            "file": "Docker/Dockerfile-Oldest",
+            "line": 64
+          }
+        },
+        {
+          "name": "TRUSTED_PROXY",
+          "kind": "code",
+          "location": {
+            "file": "app/Utils/httpUtil.php",
+            "line": 848
+          }
+        }
+      ]
+    },
+    {
+      "name": "TZ",
+      "default": "Europe/Paris",
+      "description": "(default is UTC) A [server timezone](https://www.php.net/timezones)",
+      "required": false,
+      "mentions": [
+        {
+          "name": "TZ",
+          "kind": "compose",
+          "default": "Europe/Paris",
+          "location": {
+            "file": "Docker/freshrss/docker-compose.yml",
+            "line": 23
+          }
+        },
+        {
+          "name": "TZ",
+          "kind": "readme",
+          "default": "Europe/Paris",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 32
+          }
+        },
+        {
+          "name": "TZ",
+          "kind": "readme",
+          "text": "(default is UTC) A [server timezone](https://www.php.net/timezones)",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 94
+          }
+        },
+        {
+          "name": "TZ",
+          "kind": "readme",
+          "default": "Europe/Paris",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 142
+          }
+        },
+        {
+          "name": "TZ",
+          "kind": "readme",
+          "default": "UTC",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 170
+          }
+        },
+        {
+          "name": "TZ",
+          "kind": "readme",
+          "default": "UTC",
+          "location": {
+            "file": "docs/en/developers/03_Running_tests.md",
+            "line": 30
+          }
+        },
+        {
+          "name": "TZ",
+          "kind": "readme",
+          "default": "UTC",
+          "location": {
+            "file": "docs/en/developers/03_Running_tests.md",
+            "line": 31
+          }
+        },
+        {
+          "name": "TZ",
+          "kind": "dockerfile",
+          "default": "UTC",
+          "location": {
+            "file": "Docker/Dockerfile",
+            "line": 3
+          }
+        },
+        {
+          "name": "TZ",
+          "kind": "dockerfile",
+          "default": "UTC",
+          "location": {
+            "file": "Docker/Dockerfile-Alpine",
+            "line": 3
+          }
+        },
+        {
+          "name": "TZ",
+          "kind": "dockerfile",
+          "default": "UTC",
+          "location": {
+            "file": "Docker/Dockerfile-Arch",
+            "line": 5
+          }
+        },
+        {
+          "name": "TZ",
+          "kind": "dockerfile",
+          "default": "UTC",
+          "location": {
+            "file": "Docker/Dockerfile-Newest",
+            "line": 4
+          }
+        },
+        {
+          "name": "TZ",
+          "kind": "dockerfile",
+          "default": "UTC",
+          "location": {
+            "file": "Docker/Dockerfile-Oldest",
+            "line": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "XING",
+      "default": "",
+      "description": "Career-oriented social networking site, operated by New Work SE",
+      "required": false,
+      "mentions": [
+        {
+          "name": "XING",
+          "kind": "readme",
+          "text": "Career-oriented social networking site, operated by New Work SE",
+          "location": {
+            "file": "docs/en/users/08_sharing_services.md",
+            "line": 40
+          }
+        }
+      ]
+    }
+  ],
+  "images": [
+    {
+      "reference": "ghcr.io/freshrss/freshrss",
+      "kind": "readme",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 9
+      }
+    },
+    {
+      "reference": "freshrss/freshrss:edge",
+      "kind": "readme",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 32
+      }
+    },
+    {
+      "reference": "...",
+      "kind": "readme",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 115
+      }
+    },
+    {
+      "reference": "freshrss/freshrss:oldest",
+      "kind": "readme",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 170
+      }
+    },
+    {
+      "reference": "postgres",
+      "kind": "readme",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 192
+      }
+    },
+    {
+      "reference": "mysql",
+      "kind": "readme",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 212
+      }
+    },
+    {
+      "reference": "`",
+      "kind": "readme",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 611
+      }
+    },
+    {
+      "reference": "freshrss/freshrss:edge-alpine",
+      "kind": "readme",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 668
+      }
+    },
+    {
+      "reference": "postgres:18",
+      "kind": "compose",
+      "location": {
+        "file": "Docker/freshrss/docker-compose-db.yml",
+        "line": 6
+      }
+    },
+    {
+      "reference": "traefik:3",
+      "kind": "compose",
+      "location": {
+        "file": "Docker/freshrss/docker-compose-proxy.yml",
+        "line": 8
+      }
+    },
+    {
+      "reference": "freshrss/freshrss:latest",
+      "kind": "compose",
+      "location": {
+        "file": "Docker/freshrss/docker-compose.yml",
+        "line": 7
+      }
+    },
+    {
+      "reference": "freshrss/freshrss:newest",
+      "kind": "readme",
+      "location": {
+        "file": "docs/en/developers/03_Running_tests.md",
+        "line": 31
+      }
+    },
+    {
+      "reference": "wiremock/wiremock:latest-alpine",
+      "kind": "readme",
+      "location": {
+        "file": "docs/en/developers/03_Running_tests.md",
+        "line": 76
+      }
+    },
+    {
+      "reference": "codeberg.org/gedankenstuecke/freshrss-xpath-scraping-settings-examples",
+      "kind": "readme",
+      "location": {
+        "file": "docs/en/users/11_website_scraping.md",
+        "line": 62
+      }
+    }
+  ],
+  "docker_runs": [
+    {
+      "image": "freshrss/freshrss:edge",
+      "ports": [
+        "8080:80"
+      ],
+      "volumes": [
+        "freshrss_data:/var/www/FreshRSS/data",
+        "freshrss_extensions:/var/www/FreshRSS/extensions"
+      ],
+      "env": [
+        {
+          "key": "TZ",
+          "value": "Europe/Paris",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 32
+          }
+        },
+        {
+          "key": "CRON_MIN",
+          "value": "1,31",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 32
+          }
+        }
+      ],
+      "location": {
+        "file": "Docker/README.md",
+        "line": 32
+      }
+    },
+    {
+      "image": "...",
+      "ports": null,
+      "volumes": null,
+      "env": null,
+      "location": {
+        "file": "Docker/README.md",
+        "line": 115
+      }
+    },
+    {
+      "image": "freshrss/freshrss:edge",
+      "ports": [
+        "8080:80"
+      ],
+      "volumes": [
+        "$(pwd):/var/www/FreshRSS",
+        "freshrss_data:/var/www/FreshRSS/data"
+      ],
+      "env": [
+        {
+          "key": "FRESHRSS_ENV",
+          "value": "development",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 142
+          }
+        },
+        {
+          "key": "TZ",
+          "value": "Europe/Paris",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 142
+          }
+        },
+        {
+          "key": "CRON_MIN",
+          "value": "1,31",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 142
+          }
+        }
+      ],
+      "location": {
+        "file": "Docker/README.md",
+        "line": 142
+      }
+    },
+    {
+      "image": "freshrss/freshrss:oldest",
+      "ports": null,
+      "volumes": [
+        "$(pwd):/var/www/FreshRSS"
+      ],
+      "env": [
+        {
+          "key": "FRESHRSS_ENV",
+          "value": "development",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 170
+          }
+        },
+        {
+          "key": "TZ",
+          "value": "UTC",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 170
+          }
+        }
+      ],
+      "location": {
+        "file": "Docker/README.md",
+        "line": 170
+      }
+    },
+    {
+      "image": "postgres",
+      "ports": null,
+      "volumes": [
+        "pgsql_data:/var/lib/postgresql"
+      ],
+      "env": [
+        {
+          "key": "POSTGRES_DB",
+          "value": "freshrss",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 192
+          }
+        },
+        {
+          "key": "POSTGRES_USER",
+          "value": "freshrss",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 192
+          }
+        },
+        {
+          "key": "POSTGRES_PASSWORD",
+          "value": "freshrss",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 192
+          }
+        }
+      ],
+      "location": {
+        "file": "Docker/README.md",
+        "line": 192
+      }
+    },
+    {
+      "image": "mysql",
+      "ports": null,
+      "volumes": [
+        "mysql_data:/var/lib/mysql"
+      ],
+      "env": [
+        {
+          "key": "MYSQL_ROOT_PASSWORD",
+          "value": "rootpass",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 212
+          }
+        },
+        {
+          "key": "MYSQL_DATABASE",
+          "value": "freshrss",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 212
+          }
+        },
+        {
+          "key": "MYSQL_USER",
+          "value": "freshrss",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 212
+          }
+        },
+        {
+          "key": "MYSQL_PASSWORD",
+          "value": "freshrss",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 212
+          }
+        }
+      ],
+      "location": {
+        "file": "Docker/README.md",
+        "line": 212
+      }
+    },
+    {
+      "image": "...",
+      "ports": null,
+      "volumes": null,
+      "env": null,
+      "location": {
+        "file": "Docker/README.md",
+        "line": 243
+      }
+    },
+    {
+      "image": "`",
+      "ports": null,
+      "volumes": null,
+      "env": null,
+      "location": {
+        "file": "Docker/README.md",
+        "line": 611
+      }
+    },
+    {
+      "image": "...",
+      "ports": null,
+      "volumes": null,
+      "env": null,
+      "location": {
+        "file": "Docker/README.md",
+        "line": 616
+      }
+    },
+    {
+      "image": "freshrss/freshrss:edge",
+      "ports": null,
+      "volumes": [
+        "freshrss_data:/var/www/FreshRSS/data",
+        "freshrss_extensions:/var/www/FreshRSS/extensions"
+      ],
+      "env": [
+        {
+          "key": "CRON_MIN",
+          "value": "17,47",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 642
+          }
+        }
+      ],
+      "location": {
+        "file": "Docker/README.md",
+        "line": 642
+      }
+    },
+    {
+      "image": "freshrss/freshrss:edge",
+      "ports": null,
+      "volumes": [
+        "freshrss_data:/var/www/FreshRSS/data",
+        "freshrss_extensions:/var/www/FreshRSS/extensions",
+        "./freshrss_crontab:/etc/cron.d/freshrss"
+      ],
+      "env": null,
+      "location": {
+        "file": "Docker/README.md",
+        "line": 656
+      }
+    },
+    {
+      "image": "freshrss/freshrss:edge-alpine",
+      "ports": null,
+      "volumes": [
+        "freshrss_data:/var/www/FreshRSS/data",
+        "freshrss_extensions:/var/www/FreshRSS/extensions"
+      ],
+      "env": [
+        {
+          "key": "CRON_MIN",
+          "value": "27,57",
+          "location": {
+            "file": "Docker/README.md",
+            "line": 668
+          }
+        }
+      ],
+      "location": {
+        "file": "Docker/README.md",
+        "line": 668
+      }
+    },
+    {
+      "image": "`",
+      "ports": null,
+      "volumes": null,
+      "env": null,
+      "location": {
+        "file": "docs/en/admins/08_FeedUpdates.md",
+        "line": 15
+      }
+    },
+    {
+      "image": "...",
+      "ports": null,
+      "volumes": null,
+      "env": null,
+      "location": {
+        "file": "docs/en/admins/08_FeedUpdates.md",
+        "line": 20
+      }
+    },
+    {
+      "image": "freshrss/freshrss:oldest",
+      "ports": null,
+      "volumes": [
+        "$(pwd):/var/www/FreshRSS"
+      ],
+      "env": [
+        {
+          "key": "FRESHRSS_ENV",
+          "value": "development",
+          "location": {
+            "file": "docs/en/developers/03_Running_tests.md",
+            "line": 30
+          }
+        },
+        {
+          "key": "TZ",
+          "value": "UTC",
+          "location": {
+            "file": "docs/en/developers/03_Running_tests.md",
+            "line": 30
+          }
+        }
+      ],
+      "location": {
+        "file": "docs/en/developers/03_Running_tests.md",
+        "line": 30
+      }
+    },
+    {
+      "image": "freshrss/freshrss:newest",
+      "ports": null,
+      "volumes": [
+        "$(pwd):/var/www/FreshRSS"
+      ],
+      "env": [
+        {
+          "key": "FRESHRSS_ENV",
+          "value": "development",
+          "location": {
+            "file": "docs/en/developers/03_Running_tests.md",
+            "line": 31
+          }
+        },
+        {
+          "key": "TZ",
+          "value": "UTC",
+          "location": {
+            "file": "docs/en/developers/03_Running_tests.md",
+            "line": 31
+          }
+        }
+      ],
+      "location": {
+        "file": "docs/en/developers/03_Running_tests.md",
+        "line": 31
+      }
+    },
+    {
+      "image": "wiremock/wiremock:latest-alpine",
+      "ports": [
+        "\u003cPORT\u003e:8080"
+      ],
+      "volumes": [
+        "$PWD:/home/wiremock"
+      ],
+      "env": null,
+      "location": {
+        "file": "docs/en/developers/03_Running_tests.md",
+        "line": 76
+      }
+    }
+  ],
+  "notes": [
+    {
+      "text": "The [default user](13_Default_user.md) is marked with italic letters.",
+      "location": {
+        "file": "docs/en/admins/12_User_management.md",
+        "line": 7
+      }
+    },
+    {
+      "text": "# Default user",
+      "location": {
+        "file": "docs/en/admins/13_Default_user.md",
+        "line": 1
+      }
+    },
+    {
+      "text": "Currently, we have one main user, also called default user, or admin. All the others are regular users.",
+      "location": {
+        "file": "docs/en/admins/13_Default_user.md",
+        "line": 3
+      }
+    },
+    {
+      "text": "The default user is the first created user within the install routine.",
+      "location": {
+        "file": "docs/en/admins/13_Default_user.md",
+        "line": 5
+      }
+    },
+    {
+      "text": "The default user is always an administrator.",
+      "location": {
+        "file": "docs/en/admins/13_Default_user.md",
+        "line": 9
+      }
+    },
+    {
+      "text": "The default user is used for the anonymous reading.",
+      "location": {
+        "file": "docs/en/admins/13_Default_user.md",
+        "line": 15
+      }
+    },
+    {
+      "text": "* enable the checkbox of Allow anonymous reading of the default user’s articles",
+      "location": {
+        "file": "docs/en/admins/13_Default_user.md",
+        "line": 19
+      }
+    },
+    {
+      "text": "* when no user is logged in then the feeds of the default user is shown",
+      "location": {
+        "file": "docs/en/admins/13_Default_user.md",
+        "line": 20
+      }
+    },
+    {
+      "text": "## Change the default user",
+      "location": {
+        "file": "docs/en/admins/13_Default_user.md",
+        "line": 22
+      }
+    },
+    {
+      "text": "There is no UI for changing the default user, but a CLI (./cli/reconfigure.php --default_user YourNewAdmin) is provided. It can also be changed manually by editing the text file ./FreshRSS/data/config.php and changing 'default_user' =\u003e 'alice', to the desired user.",
+      "location": {
+        "file": "docs/en/admins/13_Default_user.md",
+        "line": 24
+      }
+    },
+    {
+      "text": "* Enter the exact username that matches your OIDC identity (e.g., admin@idm.example.com) as the default user",
+      "location": {
+        "file": "docs/en/admins/16_OpenID-Connect.md",
+        "line": 22
+      }
+    },
+    {
+      "text": "\u003e ⚠️ Important: Using a random username instead of your actual OIDC identity as the default user may result in no administrator access to your instance.",
+      "location": {
+        "file": "docs/en/admins/16_OpenID-Connect.md",
+        "line": 28
+      }
+    },
+    {
+      "text": "FreshRSS has a default user agent string that can be overwritten in each feed setting.",
+      "location": {
+        "file": "docs/en/admins/17_configs_not_ui.md",
+        "line": 97
+      }
+    },
+    {
+      "text": "This allows anyone to update the feeds of the default user’s subscriptions.",
+      "location": {
+        "file": "docs/en/users/09_refreshing_feeds.md",
+        "line": 87
+      }
+    },
+    {
+      "text": "If your FreshRSS instance uses no authentication (public instance, default user):",
+      "location": {
+        "file": "docs/en/users/09_refreshing_feeds.md",
+        "line": 105
+      }
+    }
+  ],
+  "suspicious": null,
+  "readmes": [
+    "Docker/README.md",
+    "README.md",
+    "cli/README.md",
+    "data/PubSubHubbub/feeds/README.md",
+    "data/PubSubHubbub/keys/README.md",
+    "data/Retry-After/README.md",
+    "docs/README.md",
+    "extensions/README.md",
+    "lib/README.md",
+    "lib/core-extensions/README.md",
+    "lib/marienfressinaud/lib_opml/README.md",
+    "lib/phpgt/cssxpath/README.md",
+    "lib/phpmailer/phpmailer/README.md",
+    "lib/simplepie/simplepie/.github/README.md",
+    "lib/simplepie/simplepie/README.markdown",
+    "lib/simplepie/simplepie/utils/PHPStan/README.md",
+    "p/themes/Dark-pink/README.md",
+    "p/themes/Nord/README.md",
+    "p/themes/Pafat/README.md",
+    "p/themes/base-theme/README.md"
+  ],
+  "summary": {
+    "text": "FreshRSS is a self-hosted RSS feed aggregator.",
+    "location": {
+      "file": "README.md",
+      "line": 8
+    }
+  },
+  "file_mentions": [
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 276
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 292
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 292
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 299
+      }
+    },
+    {
+      "text": "docker-compose-local.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 299
+      }
+    },
+    {
+      "text": "docker-compose-db.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 397
+      }
+    },
+    {
+      "text": "docker-compose-db.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 397
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 402
+      }
+    },
+    {
+      "text": "docker-compose-db.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 402
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 404
+      }
+    },
+    {
+      "text": "docker-compose-db.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 404
+      }
+    },
+    {
+      "text": "docker-compose-local.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 404
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 406
+      }
+    },
+    {
+      "text": "docker-compose-db.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 406
+      }
+    },
+    {
+      "text": "docker-compose-development.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 416
+      }
+    },
+    {
+      "text": "docker-compose-development.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 416
+      }
+    },
+    {
+      "text": "docker-compose-development.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 424
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 424
+      }
+    },
+    {
+      "text": "docker-compose-local.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 424
+      }
+    },
+    {
+      "text": "docker-compose-db.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 429
+      }
+    },
+    {
+      "text": "docker-compose-proxy.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 467
+      }
+    },
+    {
+      "text": "docker-compose-proxy.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 467
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 472
+      }
+    },
+    {
+      "text": "docker-compose-proxy.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 472
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 474
+      }
+    },
+    {
+      "text": "docker-compose-proxy.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 474
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 476
+      }
+    },
+    {
+      "text": "docker-compose-proxy.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 476
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 478
+      }
+    },
+    {
+      "text": "docker-compose-proxy.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 478
+      }
+    },
+    {
+      "text": "docker-compose-db.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 481
+      }
+    },
+    {
+      "text": "docker-compose-db.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 691
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 698
+      }
+    },
+    {
+      "text": "docker-compose-db.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 698
+      }
+    },
+    {
+      "text": "docker-compose-db.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 702
+      }
+    },
+    {
+      "text": "docker-compose-db.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 706
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 709
+      }
+    },
+    {
+      "text": "docker-compose-db.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 709
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 713
+      }
+    },
+    {
+      "text": "docker-compose-db.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 713
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 717
+      }
+    },
+    {
+      "text": "docker-compose-db.yml",
+      "location": {
+        "file": "Docker/README.md",
+        "line": 717
+      }
+    },
+    {
+      "text": "docker-compose.yml",
+      "location": {
+        "file": "README.md",
+        "line": 91
+      }
+    },
+    {
+      "text": "tests.yml",
+      "location": {
+        "file": "docs/en/developers/02_First_steps.md",
+        "line": 73
+      }
+    },
+    {
+      "text": "tests.yml",
+      "location": {
+        "file": "docs/en/developers/02_First_steps.md",
+        "line": 73
+      }
+    },
+    {
+      "text": "tests.yml",
+      "location": {
+        "file": "docs/en/developers/03_Running_tests.md",
+        "line": 40
+      }
+    },
+    {
+      "text": "tests.yml",
+      "location": {
+        "file": "docs/fr/developers/03_Running_tests.md",
+        "line": 33
+      }
+    }
+  ],
+  "stack_hints": [
+    "composer.json",
+    "docs/Gemfile",
+    "lib/composer.json",
+    "lib/marienfressinaud/lib_opml/composer.json",
+    "package.json"
+  ],
+  "problems": null
+}

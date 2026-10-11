@@ -1,0 +1,21 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-yaml
+        exclude: (mkdocs.yml|pnpm-lock.yaml)
+      - id: check-json
+        exclude: (.vscode|.devcontainer)
+      - id: check-toml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        exclude: ^tests/data/
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version.
+    rev: v0.16.0
+    hooks:
+        # Linter
+      - id: ruff-check
+        args: [ --fix ]
+        # Formatter
+      - id: ruff-format

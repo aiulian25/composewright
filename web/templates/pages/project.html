@@ -1,0 +1,45 @@
+{{define "content"}}
+{{$csrf := .CSRF}}
+{{with .Data}}
+<div class="page-head">
+  <h1>{{.Project.Name}}</h1>
+  <span class="chip chip-{{.Tone}}">{{.Project.Status}}</span>
+  {{if .Source}}<span class="chip chip-mono">{{template "icon-branch"}}{{.Source}}</span>{{end}}
+</div>
+{{if .Running}}<p class="banner banner-info" role="status">A run is going for this project. <a href="{{.Running}}">Watch it</a></p>{{end}}
+<section class="card" aria-labelledby="open-title">
+  <div class="card-head"><h2 id="open-title">{{template "icon-folder"}}Open</h2></div>
+  <div class="card-body"><div class="row">
+    <a class="button" href="/projects/{{.Project.Name}}/analyse">Analysis</a>
+    <a class="button" href="/projects/{{.Project.Name}}/review">Review</a>
+    <a class="button" href="/projects/{{.Project.Name}}/validate">Last run</a>
+    <a class="button" href="/projects/{{.Project.Name}}/files">Files</a>
+    {{if not .Blocked}}<form method="post" action="/projects/{{.Project.Name}}/validate"><input type="hidden" name="csrf" value="{{$csrf}}"><button class="button button-primary" type="submit">{{template "icon-play"}}Validate again</button></form>{{end}}
+    <a class="button button-danger push-right" href="/projects/{{.Project.Name}}/delete">{{template "icon-trash"}}Delete…</a>
+  </div></div>
+</section>
+<section class="card" aria-labelledby="history-title">
+  <div class="card-head"><h2 id="history-title">{{template "icon-history"}}Generations</h2></div>
+  <div class="table-scroll">
+    <table class="table">
+      <thead><tr><th scope="col">When</th><th scope="col">Generation</th><th scope="col">Engine</th><th scope="col">Run</th><th scope="col">Validation</th></tr></thead>
+      <tbody>
+        {{$name := .Project.Name}}
+        {{range .Generations}}<tr><td class="muted nowrap">{{.When}}</td><td class="mono">{{short .ID}}</td><td class="muted">{{.Engine}}</td><td>{{.Iteration}}</td><td>{{if .Tested}}<a class="chip chip-{{.Tone}}" href="/projects/{{$name}}/validate?generation={{.ID}}">{{.Validation}}</a>{{else}}<span class="chip chip-{{.Tone}}">{{.Validation}}</span>{{end}}{{if .Detail}}<span class="block muted small">{{.Detail}}</span>{{end}}</td></tr>{{end}}
+      </tbody>
+    </table>
+  </div>
+</section>
+<section class="card" aria-labelledby="audit-title">
+  <div class="card-head"><h2 id="audit-title">{{template "icon-book"}}Audit log</h2><span class="note">the latest entries for this project</span></div>
+  <div class="table-scroll">
+    <table class="table table-compact">
+      <thead><tr><th scope="col">When</th><th scope="col">Who</th><th scope="col">Action</th></tr></thead>
+      <tbody>
+        {{range .Audit}}<tr><td class="muted nowrap">{{when .Time}}</td><td class="mono">{{.Actor}}</td><td>{{.Action}}</td></tr>{{end}}
+      </tbody>
+    </table>
+  </div>
+</section>
+{{end}}
+{{end}}

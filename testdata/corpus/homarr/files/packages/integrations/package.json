@@ -1,0 +1,63 @@
+{
+  "name": "@homarr/integrations",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "typesVersions": {
+    "*": {
+      "*": [
+        "src/*"
+      ]
+    }
+  },
+  "exports": {
+    ".": "./index.ts",
+    "./anchor": "./src/anchor/anchor-types.ts",
+    "./downloads": "./src/interfaces/downloads/download-client-items.ts",
+    "./factory": "./src/factory.ts",
+    "./response-contract": "./src/base/response-contract.ts",
+    "./test-connection": "./src/base/test-connection/index.ts",
+    "./types": "./src/types.ts",
+    "./stats": "./src/stats/index.ts"
+  },
+  "scripts": {
+    "clean": "rm -rf .turbo node_modules",
+    "format": "oxfmt .",
+    "lint": "oxlint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ctrl/deluge": "catalog:",
+    "@ctrl/qbittorrent": "catalog:",
+    "@ctrl/transmission": "catalog:",
+    "@homarr/common": "workspace:^0.1.0",
+    "@homarr/core": "workspace:^0.1.0",
+    "@homarr/db": "workspace:^0.1.0",
+    "@homarr/definitions": "workspace:^0.1.0",
+    "@homarr/image-proxy": "workspace:^0.1.0",
+    "@homarr/node-unifi": "catalog:",
+    "@homarr/redis": "workspace:^0.1.0",
+    "@homarr/translation": "workspace:^0.1.0",
+    "@homarr/validation": "workspace:^0.1.0",
+    "@immich/sdk": "catalog:",
+    "@jellyfin/sdk": "catalog:",
+    "ical.js": "catalog:",
+    "maria2": "catalog:",
+    "octokit": "catalog:",
+    "proxmox-api": "catalog:",
+    "timezones-ical-library": "catalog:",
+    "tsdav": "catalog:",
+    "undici": "catalog:",
+    "ws": "catalog:",
+    "xml2js": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@homarr/tsconfig": "workspace:^0.1.0",
+    "@types/node-unifi": "catalog:",
+    "@types/ws": "catalog:",
+    "@types/xml2js": "catalog:",
+    "typescript": "catalog:"
+  }
+}

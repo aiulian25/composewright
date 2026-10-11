@@ -1,0 +1,7 @@
+{
+  "url": "https://github.com/miniflux/v2",
+  "owner": "miniflux",
+  "commit": "c52bdef6e9811f7c20cebc034a6c0ec6799dc6df",
+  "allow_registries": "-",
+  "verdict": "pass"
+}

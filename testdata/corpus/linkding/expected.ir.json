@@ -1,0 +1,573 @@
+{
+  "ir_version": "1",
+  "app": {
+    "name": "linkding",
+    "summary": "linkding is a bookmark manager that you can host yourself.",
+    "upstream_url": "https://github.com/sissbruecker/linkding",
+    "docs_url": ""
+  },
+  "services": [
+    {
+      "name": "linkding",
+      "role": "app",
+      "image": {
+        "registry": "docker.io",
+        "repository": "sissbruecker/linkding",
+        "tag": "latest",
+        "digest": "",
+        "provenance": {
+          "source": "compose",
+          "source_ref": "docker-compose.yml:4",
+          "confidence": "high"
+        }
+      },
+      "command": [],
+      "entrypoint": [],
+      "env": [
+        {
+          "key": "LD_CONTEXT_PATH",
+          "ref": "LD_CONTEXT_PATH",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "Can be used to run linkding under a context path, for example: linkding/ Must end with a slash `/`",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": ".env.sample:10",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "LD_SUPERUSER_NAME",
+          "ref": "LD_SUPERUSER_NAME",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "Username of the initial superuser to create, leave empty to not create one",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": ".env.sample:12",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "LD_SUPERUSER_PASSWORD",
+          "ref": "LD_SUPERUSER_PASSWORD",
+          "literal": "",
+          "required": false,
+          "secret": true,
+          "description": "Password for the initial superuser, leave empty to disable credentials authentication and rely on proxy authentication instead",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": ".env.sample:14",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "LD_DISABLE_BACKGROUND_TASKS",
+          "ref": "LD_DISABLE_BACKGROUND_TASKS",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "Option to disable background tasks",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": ".env.sample:16",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "LD_DISABLE_URL_VALIDATION",
+          "ref": "LD_DISABLE_URL_VALIDATION",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "Option to disable URL validation for bookmarks completely",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": ".env.sample:18",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "LD_ENABLE_AUTH_PROXY",
+          "ref": "LD_ENABLE_AUTH_PROXY",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "Enables support for authentication proxies such as Authelia",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": ".env.sample:20",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "LD_AUTH_PROXY_USERNAME_HEADER",
+          "ref": "LD_AUTH_PROXY_USERNAME_HEADER",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "Name of the request header that the auth proxy passes to the application to identify the user See docs/Options.md for more details",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": ".env.sample:23",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "LD_AUTH_PROXY_LOGOUT_URL",
+          "ref": "LD_AUTH_PROXY_LOGOUT_URL",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "The URL that linkding should redirect to after a logout, when using an auth proxy See docs/Options.md for more details",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": ".env.sample:26",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "LD_DISABLE_LOGIN_FORM",
+          "ref": "LD_DISABLE_LOGIN_FORM",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "Disables the login form, useful to enforce OIDC authentication",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": ".env.sample:28",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "LD_CSRF_TRUSTED_ORIGINS",
+          "ref": "LD_CSRF_TRUSTED_ORIGINS",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "List of trusted origins from which to accept POST requests See docs/Options.md for more details",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": ".env.sample:31",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "LD_DB_ENGINE",
+          "ref": "LD_DB_ENGINE",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "Database engine, can be sqlite (default) or postgres",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": ".env.sample:38",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "LD_DB_DATABASE",
+          "ref": "LD_DB_DATABASE",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "Database name (default: linkding)",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": ".env.sample:40",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "LD_DB_USER",
+          "ref": "LD_DB_USER",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "Username to connect to the database server  (default: linkding)",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": ".env.sample:42",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "LD_DB_PASSWORD",
+          "ref": "LD_DB_PASSWORD",
+          "literal": "",
+          "required": false,
+          "secret": true,
+          "description": "Password to connect to the database server",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": ".env.sample:44",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "LD_DB_HOST",
+          "ref": "LD_DB_HOST",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "The hostname where the database is hosted (default: localhost)",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": ".env.sample:46",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "LD_DB_PORT",
+          "ref": "LD_DB_PORT",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "Port use to connect to the database server Should use the default port if not set",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": ".env.sample:49",
+            "confidence": "medium"
+          }
+        },
+        {
+          "key": "LD_DB_OPTIONS",
+          "ref": "LD_DB_OPTIONS",
+          "literal": "",
+          "required": false,
+          "secret": false,
+          "description": "Any additional options to pass to the database (default: {})",
+          "provenance": {
+            "source": "env_sample",
+            "source_ref": ".env.sample:51",
+            "confidence": "medium"
+          }
+        }
+      ],
+      "ports": [
+        {
+          "container": 9090,
+          "protocol": "tcp",
+          "publish": true,
+          "host_port": 9090,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker-compose.yml:6",
+            "confidence": "high"
+          }
+        }
+      ],
+      "volumes": [
+        {
+          "name": "data",
+          "container_path": "/etc/linkding/data",
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "docker-compose.yml:8",
+            "confidence": "high"
+          }
+        }
+      ],
+      "depends_on": [],
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "curl -f http://localhost:$${LD_SERVER_PORT:-9090}/$${LD_CONTEXT_PATH}health || exit 1"
+        ],
+        "interval": "30s",
+        "timeout": "1s",
+        "retries": 3,
+        "start_period": "",
+        "omitted_reason": "",
+        "provenance": {
+          "source": "dockerfile",
+          "source_ref": "docker/alpine.Dockerfile:84",
+          "confidence": "medium"
+        }
+      },
+      "user": "",
+      "resources": {
+        "memory_limit": "",
+        "cpus": "",
+        "pids_limit": 0
+      },
+      "notes": [
+        "upstream bind mount ./data:/etc/linkding/data is a named volume here (use --storage bind for a host folder)"
+      ],
+      "provenance": {
+        "source": "compose",
+        "source_ref": "docker-compose.yml:2",
+        "confidence": "high"
+      }
+    }
+  ],
+  "env_file": [
+    {
+      "key": "LD_CONTEXT_PATH",
+      "value": "",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "Can be used to run linkding under a context path, for example: linkding/ Must end with a slash `/`",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.sample:10",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "LD_SUPERUSER_NAME",
+      "value": "",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "Username of the initial superuser to create, leave empty to not create one",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.sample:12",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "LD_SUPERUSER_PASSWORD",
+      "value": "",
+      "generate": "password24",
+      "secret": true,
+      "required": false,
+      "description": "Password for the initial superuser, leave empty to disable credentials authentication and rely on proxy authentication instead",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.sample:14",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "LD_DISABLE_BACKGROUND_TASKS",
+      "value": "False",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "Option to disable background tasks",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.sample:16",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "LD_DISABLE_URL_VALIDATION",
+      "value": "False",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "Option to disable URL validation for bookmarks completely",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.sample:18",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "LD_ENABLE_AUTH_PROXY",
+      "value": "False",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "Enables support for authentication proxies such as Authelia",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.sample:20",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "LD_AUTH_PROXY_USERNAME_HEADER",
+      "value": "",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "Name of the request header that the auth proxy passes to the application to identify the user See docs/Options.md for more details",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.sample:23",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "LD_AUTH_PROXY_LOGOUT_URL",
+      "value": "",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "The URL that linkding should redirect to after a logout, when using an auth proxy See docs/Options.md for more details",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.sample:26",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "LD_DISABLE_LOGIN_FORM",
+      "value": "False",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "Disables the login form, useful to enforce OIDC authentication",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.sample:28",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "LD_CSRF_TRUSTED_ORIGINS",
+      "value": "",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "List of trusted origins from which to accept POST requests See docs/Options.md for more details",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.sample:31",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "LD_DB_ENGINE",
+      "value": "",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "Database engine, can be sqlite (default) or postgres",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.sample:38",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "LD_DB_DATABASE",
+      "value": "",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "Database name (default: linkding)",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.sample:40",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "LD_DB_USER",
+      "value": "",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "Username to connect to the database server  (default: linkding)",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.sample:42",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "LD_DB_PASSWORD",
+      "value": "",
+      "generate": "",
+      "secret": true,
+      "required": false,
+      "description": "Password to connect to the database server",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.sample:44",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "LD_DB_HOST",
+      "value": "",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "The hostname where the database is hosted (default: localhost)",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.sample:46",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "LD_DB_PORT",
+      "value": "",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "Port use to connect to the database server Should use the default port if not set",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.sample:49",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "LD_DB_OPTIONS",
+      "value": "",
+      "generate": "",
+      "secret": false,
+      "required": false,
+      "description": "Any additional options to pass to the database (default: {})",
+      "file_env_key": "",
+      "provenance": {
+        "source": "env_sample",
+        "source_ref": ".env.sample:51",
+        "confidence": "medium"
+      }
+    }
+  ],
+  "needs": [],
+  "probe": {
+    "service": "linkding",
+    "port": 9090,
+    "path": "/",
+    "expect": []
+  },
+  "post_install_notes": [
+    "LD_SUPERUSER_PASSWORD was generated for you; it is in .env"
+  ],
+  "confidence": "high",
+  "evidence": [
+    {
+      "claim": "compose file docker-compose.yml chosen among 3 upstream compose files",
+      "file": "docker-compose.yml",
+      "line": 1
+    },
+    {
+      "claim": "app image docker.io/sissbruecker/linkding",
+      "file": "docker-compose.yml",
+      "line": 4
+    }
+  ],
+  "suspicious_instructions": [],
+  "unfilled": []
+}

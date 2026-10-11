@@ -1,0 +1,7 @@
+{
+  "url": "https://github.com/dani-garcia/vaultwarden",
+  "owner": "dani-garcia",
+  "commit": "df2cd3c8693782eeedfd1f70318f6f14033213a8",
+  "allow_registries": "docker.io/vaultwarden/*",
+  "verdict": "pass"
+}
