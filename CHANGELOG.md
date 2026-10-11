@@ -14,6 +14,8 @@ All notable changes to this project are documented here. The format follows
   with `--allow-need docker_socket`, compose.yaml mounts
   `/var/run/docker.sock` marked NEED GRANTED BY USER. The sandbox test still
   runs without it.
+- `COMPOSEWRIGHT_RUN_AS` picks the `uid:gid` the container runs as, so
+  exported files can belong to you on the host; root is refused.
 
 ### Changed
 

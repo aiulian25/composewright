@@ -10,7 +10,7 @@ func TestParseTarget(t *testing.T) {
 	if err != nil || uid != 65532 || gid != 65532 {
 		t.Fatalf("parseTarget = %d, %d, %v", uid, gid, err)
 	}
-	for _, value := range []string{"", "65532", "nonroot:nonroot", "-1:0", "1:x"} {
+	for _, value := range []string{"", "65532", "nonroot:nonroot", "-1:0", "1:x", "0:0", "0:1000", "1000:0"} {
 		if _, _, err := parseTarget(value); err == nil {
 			t.Errorf("parseTarget(%q) accepted", value)
 		}

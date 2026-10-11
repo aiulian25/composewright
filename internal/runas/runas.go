@@ -60,9 +60,10 @@ func parseTarget(value string) (uid, gid int, err error) {
 	user, group, found := strings.Cut(value, targetSeparator)
 	uid, userErr := strconv.Atoi(user)
 	gid, groupErr := strconv.Atoi(group)
-	valid := found && userErr == nil && groupErr == nil && uid >= 0 && gid >= 0
+	// Root is refused: the capabilities kept for the start would stay.
+	valid := found && userErr == nil && groupErr == nil && uid > rootID && gid > rootID
 	if !valid {
-		return 0, 0, fmt.Errorf("%s=%q: want uid:gid", Variable, value)
+		return 0, 0, fmt.Errorf("%s=%q: want a uid:gid other than root's, such as 1000:1000", Variable, value)
 	}
 	return uid, gid, nil
 }
