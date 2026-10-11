@@ -12,10 +12,10 @@ import (
 	"github.com/aiulian25/composewright/internal/workspace"
 )
 
-// TestAuditCheck: doctor reports an intact chain with its size, and fails,
-// naming the entry, once a row is edited behind composewright's back.
-func TestAuditCheck(t *testing.T) {
-	ctx := context.Background()
+// loadedIn is a configuration whose files all go under a fresh temporary
+// directory, where nothing exists yet.
+func loadedIn(t *testing.T) *config.Loaded {
+	t.Helper()
 	root := t.TempDir()
 	t.Setenv("HOME", root)
 	t.Setenv("COMPOSEWRIGHT_MASTER_KEY_FILE", "")
@@ -23,10 +23,60 @@ func TestAuditCheck(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := workspace.Init(ctx, loaded); err != nil {
+	return loaded
+}
+
+// initialised runs composewright init for loaded.
+func initialised(t *testing.T, loaded *config.Loaded) {
+	t.Helper()
+	if _, err := workspace.Init(context.Background(), loaded); err != nil {
 		t.Fatal(err)
 	}
 	loaded.FileExists = true
+}
+
+// TestWorkspaceCheck: doctor fails while there is no data directory, saying
+// to run init, and passes once init made it.
+func TestWorkspaceCheck(t *testing.T) {
+	ctx := context.Background()
+	loaded := loadedIn(t)
+	if check := workspaceCheck(ctx, loaded); check.Status != StatusFail || !strings.Contains(check.Fix, "composewright init") {
+		t.Fatalf("before init: %+v", check)
+	}
+	initialised(t, loaded)
+	if check := workspaceCheck(ctx, loaded); check.Status != StatusOK || !strings.Contains(check.Detail, "is private, master key") {
+		t.Fatalf("after init: %+v", check)
+	}
+}
+
+// TestModelCheck: no model is fine, Anthropic without a key warns and says
+// how to add one, and a key in the environment is enough. The model itself
+// is never contacted.
+func TestModelCheck(t *testing.T) {
+	const keyVariable = "COMPOSEWRIGHT_TEST_ANTHROPIC_KEY"
+	ctx := context.Background()
+	loaded := loadedIn(t)
+	loaded.Config.LLM.Provider = config.ProviderNone
+	if check := modelCheck(ctx, loaded); check.Status != StatusOK || !strings.Contains(check.Detail, "llm.provider is none") {
+		t.Fatalf("no model: %+v", check)
+	}
+	loaded.Config.LLM.Provider, loaded.Config.LLM.APIKeyRef = config.ProviderAnthropic, config.SecretRefEnv+keyVariable
+	t.Setenv(keyVariable, "")
+	if check := modelCheck(ctx, loaded); check.Status != StatusWarn || !strings.Contains(check.Fix, "config set-secret llm") {
+		t.Fatalf("Anthropic without a key: %+v", check)
+	}
+	t.Setenv(keyVariable, "test-key-value")
+	if check := modelCheck(ctx, loaded); check.Status != StatusOK || !strings.Contains(check.Detail, "API key stored") {
+		t.Fatalf("Anthropic with a key: %+v", check)
+	}
+}
+
+// TestAuditCheck: doctor reports an intact chain with its size, and fails,
+// naming the entry, once a row is edited behind composewright's back.
+func TestAuditCheck(t *testing.T) {
+	ctx := context.Background()
+	loaded := loadedIn(t)
+	initialised(t, loaded)
 	if check := auditCheck(ctx, loaded); check.Status != StatusOK || check.Detail != "hash chain intact, 1 entry" {
 		t.Fatalf("untouched log: %+v", check)
 	}

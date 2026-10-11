@@ -347,6 +347,21 @@ func FuzzParseEnvSample(f *testing.F) {
 	})
 }
 
+// FuzzExtractCompose: whatever an untrusted compose file holds, reading its
+// facts never panics.
+func FuzzExtractCompose(f *testing.F) {
+	for _, seed := range []string{"../../testdata/corpus/linkding/files/docker-compose.yml", "../../testdata/corpus/uptime-kuma/files/compose.yaml"} {
+		content, err := os.ReadFile(seed)
+		if err != nil {
+			f.Fatal(err)
+		}
+		f.Add(content)
+	}
+	f.Fuzz(func(t *testing.T, data []byte) {
+		_, _, _ = extractCompose(context.Background(), "compose.yaml", data, nil)
+	})
+}
+
 func FuzzParseDockerfile(f *testing.F) {
 	f.Add([]byte("FROM a\nENV A=1 B=\"2 3\"\nHEALTHCHECK --interval=1s CMD [\"x\"]\nRUN <<EOF\nx\nEOF\n"))
 	f.Fuzz(func(t *testing.T, data []byte) {
