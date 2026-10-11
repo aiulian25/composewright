@@ -9,6 +9,8 @@
 
 composewright reads a repository (or a README, or a compose file you already have), works out how the app is meant to be deployed, writes a Compose file plus a `.env` with every variable explained and every secret generated, and then **proves the stack boots** by running it in an isolated, resource-capped sandbox before handing it to you. Runs as a normal user, works with a local Ollama, and never phones home.
 
+![The start page: paste a GitHub link, drop files, or paste a compose file and .env](.github/assets/screenshots/home.png)
+
 > Status: 0.1.0, the first public release. Expect rough edges and breaking changes before 1.0; the [CHANGELOG](CHANGELOG.md) lists what each release changes.
 
 ## Quickstart — one image, one command
@@ -95,6 +97,17 @@ Container Manager → Project → paste the compose file above and set `DOCKER_G
 3. **Review** — every variable shows where it came from; secrets are generated for you; anything that needs host networking, devices or privileged mode is a request *you* grant, never a default. You can edit compose.yaml yourself before the test; the policy gate checks your version too.
 4. **Validate** — the stack runs in a throw-away Compose project with memory, CPU and pid limits, ports bound to loopback, and `restart: "no"` so crash loops surface. Health checks and logs decide pass or fail; with a model, failures are repaired and retried up to three times.
 5. **Result** — copy the files, download them as a zip, save them to a folder named after the container (rename it if you like), or push them straight into Arcane's templates or projects folder. Delete or start over from the same screen.
+
+<table>
+  <tr>
+    <td><img src=".github/assets/screenshots/analyse.png" alt="Analyse: the rules that ran and every fact found, with the file and line it came from"><br><b>Analyse</b>: every fact with its file and line</td>
+    <td><img src=".github/assets/screenshots/review.png" alt="Review: where each variable came from, generated secrets hidden, and the source of every compose line"><br><b>Review</b>: sources, hidden secrets, your grants</td>
+  </tr>
+  <tr>
+    <td><img src=".github/assets/screenshots/validate.png" alt="Validate: miniflux and its database healthy in the sandbox, with their logs"><br><b>Validate</b>: the stack proven in a sandbox</td>
+    <td><img src=".github/assets/screenshots/result.png" alt="Result: save, download or copy the tested files, with every version kept"><br><b>Result</b>: save, download or copy</td>
+  </tr>
+</table>
 
 Everything above also works from the CLI:
 
