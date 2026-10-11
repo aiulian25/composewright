@@ -40,13 +40,13 @@ with deterministic rules, gate it with the policy, render compose.yaml, .env
 and DEPLOY.md with the environment profile, re-check the rendered file, and
 store the result with secrets encrypted.
 
---engine picks who writes the plan: "rules" uses deterministic rules only;
-"assisted" (the default) lets the configured model (llm.provider) fill only
-the fields the rules left empty or uncertain, never images, needs or policy
-results; "model" asks the model for the whole plan as a baseline. The model
-never sees secrets and its answer passes the same gates. When the model is
-unreachable or llm.provider is none, the rules' plan is used and a note says
-so. --no-llm is --engine rules.
+--engine picks who writes the plan, by default llm.engine ("rules" unless you
+change it): "rules" uses deterministic rules only; "assisted" lets the
+configured model (llm.provider) fill only the fields the rules left empty or
+uncertain, never images, needs or policy results; "model" asks the model for
+the whole plan as a baseline. The model never sees secrets and its answer
+passes the same gates. When the model is unreachable or llm.provider is none,
+the rules' plan is used and a note says so. --no-llm is --engine rules.
 
 Nothing that needs a privilege is granted unless you pass --allow-need for it;
 images outside the registry allowlist need --allow-registry. A blocked plan is
