@@ -2,6 +2,7 @@ package export
 
 import (
 	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
@@ -64,5 +65,21 @@ func TestDefaultDestinationUsesTheProfile(t *testing.T) {
 	written, err := Write("", profile, bundle(), false)
 	if err != nil || written.Directory != filepath.Join(profile.Storage.BasePath, "miniflux") {
 		t.Fatalf("profile save_dir not used: %+v %v", written, err)
+	}
+}
+
+// TestWriteRefusesBeforeWritingAnything: when any file the export would
+// write exists already, nothing is written, so a new compose.yaml never ends
+// up beside an old .env.
+func TestWriteRefusesBeforeWritingAnything(t *testing.T) {
+	directory := t.TempDir()
+	if err := os.WriteFile(filepath.Join(directory, EnvName), []byte("PASSWORD=old\n"), fileMode); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Write(directory, config.Default().Profile, bundle(), false); !errors.Is(err, ErrExists) {
+		t.Fatalf("an existing .env: %v, want ErrExists", err)
+	}
+	if _, err := os.Stat(filepath.Join(directory, ComposeName)); !errors.Is(err, fs.ErrNotExist) {
+		t.Fatalf("compose.yaml was written beside the old .env: %v", err)
 	}
 }

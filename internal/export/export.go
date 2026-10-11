@@ -77,21 +77,40 @@ func write(directory string, files map[string][]byte, overwrite, secrets bool) (
 	}
 	names := []string{ComposeName, EnvName, EnvExampleName, DeployName}
 	written := Written{Directory: directory, ContainsSecret: secrets}
+	if !overwrite {
+		if err := refuseExisting(directory, names, files); err != nil {
+			return written, err
+		}
+	}
 	for _, name := range names {
 		content, present := files[name]
 		if !present {
 			continue
 		}
 		path := filepath.Join(directory, name)
-		if _, err := os.Lstat(path); err == nil && !overwrite {
-			return written, fmt.Errorf("%s: %w", path, ErrExists)
-		} else if err != nil && !errors.Is(err, fs.ErrNotExist) {
-			return written, err
-		}
 		if err := atomicfile.Write(path, content, fileMode); err != nil {
 			return written, err
 		}
 		written.Files = append(written.Files, path)
 	}
 	return written, nil
+}
+
+// refuseExisting checks every file an export would write before it writes
+// any, so a refused export leaves the folder as it was.
+func refuseExisting(directory string, names []string, files map[string][]byte) error {
+	for _, name := range names {
+		if _, present := files[name]; !present {
+			continue
+		}
+		path := filepath.Join(directory, name)
+		_, err := os.Lstat(path)
+		if err == nil {
+			return fmt.Errorf("%s: %w", path, ErrExists)
+		}
+		if !errors.Is(err, fs.ErrNotExist) {
+			return err
+		}
+	}
+	return nil
 }
