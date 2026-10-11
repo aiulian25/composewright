@@ -10,6 +10,7 @@ import (
 	"net/netip"
 	"net/url"
 	"strings"
+	"sync/atomic"
 	"testing"
 
 	"github.com/aiulian25/composewright/internal/config"
@@ -138,5 +139,51 @@ func TestPolicyFromConfig(t *testing.T) {
 	none, _ := PolicyFromConfig(configuration, nil, "test")
 	if len(none.Hosts[LLM]) != 0 || contains(none.PrivateTargets, "127.0.0.1:11434") {
 		t.Fatalf("provider none still allows the model host: %+v", none)
+	}
+}
+
+// TestRequestsReuseTheirConnection: a run builds one transport per purpose,
+// so a later request, even through a new client, reuses the kept-alive
+// connection instead of opening another with its own handshake; purposes
+// keep separate transports.
+func TestRequestsReuseTheirConnection(t *testing.T) {
+	var connections atomic.Int32
+	server := httptest.NewUnstartedServer(http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
+		writer.WriteHeader(http.StatusNoContent)
+	}))
+	server.Config.ConnState = func(_ net.Conn, state http.ConnState) {
+		if state == http.StateNew {
+			connections.Add(1)
+		}
+	}
+	server.Start()
+	defer server.Close()
+	target, err := url.Parse(server.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	guard, err := New(Policy{Hosts: map[Purpose][]string{Registry: {target.Hostname()}}, PrivateTargets: []string{target.Host}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	const requests = 3
+	for range requests {
+		request, err := http.NewRequestWithContext(t.Context(), http.MethodGet, server.URL, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		response, err := guard.Client(Registry).Do(request)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, _ = io.Copy(io.Discard, response.Body)
+		response.Body.Close()
+	}
+	if opened := connections.Load(); opened != 1 {
+		t.Fatalf("%d requests opened %d connections, want 1", requests, opened)
+	}
+	registry, model := guard.Transport(Registry).(roundTripper), guard.Transport(LLM).(roundTripper)
+	if registry.base == model.base || model.base.ResponseHeaderTimeout != modelHeaderTimeout {
+		t.Fatal("purposes share a transport, or the model's lost its longer header timeout")
 	}
 }

@@ -17,6 +17,7 @@ import (
 	"os"
 	"slices"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -75,12 +76,16 @@ type Guard struct {
 	policy Policy
 	proxy  *url.URL
 	bypass []string
+	// transports keeps one transport per purpose for the guard's run, so
+	// requests reuse kept-alive connections instead of each opening one.
+	mutex      sync.Mutex
+	transports map[Purpose]*http.Transport
 }
 
 // New reads HTTPS_PROXY and NO_PROXY once. A configured proxy is trusted:
 // the guard still enforces host allowlists, while the proxy resolves names.
 func New(policy Policy) (*Guard, error) {
-	guard := &Guard{policy: policy}
+	guard := &Guard{policy: policy, transports: map[Purpose]*http.Transport{}}
 	for purpose, hosts := range policy.Hosts {
 		lowered := make([]string, len(hosts))
 		for index, host := range hosts {
@@ -117,11 +122,22 @@ func (guard *Guard) Client(purpose Purpose) *http.Client {
 // Transport returns a RoundTripper for libraries that take one, such as
 // go-containerregistry.
 func (guard *Guard) Transport(purpose Purpose) http.RoundTripper {
+	return roundTripper{guard: guard, purpose: purpose, base: guard.base(purpose)}
+}
+
+// base is the purpose's transport, built on first use. Every request still
+// passes allow, and every new connection dial's address check.
+func (guard *Guard) base(purpose Purpose) *http.Transport {
+	guard.mutex.Lock()
+	defer guard.mutex.Unlock()
+	if transport, built := guard.transports[purpose]; built {
+		return transport
+	}
 	timeout := headerTimeout
 	if purpose == LLM {
 		timeout = modelHeaderTimeout
 	}
-	base := &http.Transport{
+	transport := &http.Transport{
 		Proxy:                 guard.proxyFor,
 		DialContext:           guard.dial,
 		TLSHandshakeTimeout:   tlsTimeout,
@@ -130,7 +146,8 @@ func (guard *Guard) Transport(purpose Purpose) http.RoundTripper {
 		MaxIdleConns:          maxIdleConnections,
 		ForceAttemptHTTP2:     true,
 	}
-	return roundTripper{guard: guard, purpose: purpose, base: base}
+	guard.transports[purpose] = transport
+	return transport
 }
 
 type roundTripper struct {
