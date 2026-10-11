@@ -10,7 +10,7 @@ import (
 
 var (
 	plainValue     = regexp.MustCompile(`^[A-Za-z0-9_./:@%+,=~-]*$`)
-	referenceValue = regexp.MustCompile(`\$\{[A-Za-z_][A-Za-z0-9_]*(?::?[-?][^}]*)?\}`)
+	referenceValue = regexp.MustCompile(`\$\{([A-Za-z_][A-Za-z0-9_]*)(?::?[-?][^}]*)?\}`)
 	bareDollar     = regexp.MustCompile(`\$([^{]|$)`)
 )
 
@@ -96,13 +96,13 @@ func referenceOrder(entries []ir.EnvFileEntry) ([]ir.EnvFileEntry, error) {
 			return fmt.Errorf(".env value of %s refers back to itself", entry.Key)
 		}
 		visiting[entry.Key] = true
-		for _, match := range referenceValue.FindAllString(entry.Value, -1) {
-			name := strings.TrimLeft(strings.SplitN(strings.Trim(match, "${}"), ":", 2)[0], "$")
-			name = strings.SplitN(name, "-", 2)[0]
-			if dependency, found := byKey[name]; found {
-				if err := visit(dependency); err != nil {
-					return err
-				}
+		for _, match := range referenceValue.FindAllStringSubmatch(entry.Value, -1) {
+			dependency, found := byKey[match[1]]
+			if !found {
+				continue
+			}
+			if err := visit(dependency); err != nil {
+				return err
 			}
 		}
 		written[entry.Key] = true

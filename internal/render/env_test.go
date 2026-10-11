@@ -66,6 +66,22 @@ func TestEnvOrdersReferencesFirst(t *testing.T) {
 	}
 }
 
+// TestEnvOrdersEveryReferenceForm: whatever operator a reference uses, the
+// name it refers to is written first, so Compose reads its value.
+func TestEnvOrdersEveryReferenceForm(t *testing.T) {
+	for _, reference := range []string{"${B}", "${B-unset}", "${B:-empty}", "${B?B is required}", "${B:?B is required}"} {
+		plan := &ir.IR{EnvFile: []ir.EnvFileEntry{{Key: "A", Value: reference}, {Key: "B", Value: "set"}}}
+		content, err := Env(plan, map[string]string{"A": reference, "B": "set"}, "")
+		if err != nil {
+			t.Fatal(err)
+		}
+		parsed, err := dotenv.UnmarshalBytesWithLookup(content, nil)
+		if err != nil || parsed["A"] != "set" {
+			t.Errorf("%s: compose reads A as %q, %v:\n%s", reference, parsed["A"], err, content)
+		}
+	}
+}
+
 // FuzzFormatValue proves any single-line value survives the .env round trip.
 func FuzzFormatValue(f *testing.F) {
 	for _, seed := range []string{"plain", "a b", `x"'\$`, "# not a comment", "$${A}", "\\'"} {
