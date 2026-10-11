@@ -75,6 +75,9 @@ func Init(ctx context.Context, loaded *config.Loaded) (InitResult, error) {
 // rules: private data directory, private key directory, 0600 key files.
 func Open(ctx context.Context, loaded *config.Loaded) (*Workspace, error) {
 	paths := loaded.Paths
+	if err := finishInterruptedSwap(paths.KeyFile); err != nil {
+		return nil, err
+	}
 	if _, err := os.Stat(paths.KeyFile); errors.Is(err, fs.ErrNotExist) {
 		return nil, fmt.Errorf("%w: no key at %s; run `composewright init`", ErrNotInitialised, paths.KeyFile)
 	}
@@ -119,19 +122,25 @@ type RotationResult struct {
 // RotateKey writes a new key next to the current one, re-seals every value
 // in one transaction, then swaps the files. The old key is kept under
 // keys/retired/ until `keys purge`, so an older backup stays restorable.
+// An interrupted rotation is resumed with the key it left behind.
 func (workspace *Workspace) RotateKey(ctx context.Context) (RotationResult, error) {
 	keyFile := workspace.Paths.KeyFile
-	next, err := secrets.NewKey()
+	nextFile := keyFile + nextKeySuffix
+	next, created, err := nextKey(nextFile)
+	if errors.Is(err, fs.ErrPermission) {
+		return RotationResult{}, fmt.Errorf("write the new key (is %s writable?): %w", filepath.Dir(keyFile), err)
+	}
 	if err != nil {
 		return RotationResult{}, err
 	}
-	nextFile := keyFile + nextKeySuffix
-	if err := secrets.WriteKeyFile(nextFile, next); err != nil {
-		return RotationResult{}, fmt.Errorf("write the new key (is %s writable?): %w", filepath.Dir(keyFile), err)
-	}
 	resealed, err := workspace.Store.ResealAll(ctx, next)
-	if err != nil {
+	// Only a key made by this call may go: one left by an interrupted
+	// rotation can already seal every value.
+	if err != nil && created {
 		return RotationResult{}, errors.Join(err, os.Remove(nextFile))
+	}
+	if err != nil {
+		return RotationResult{}, err
 	}
 	retiredDir := filepath.Join(filepath.Dir(keyFile), retiredDirName)
 	if err := os.MkdirAll(retiredDir, secrets.KeyDirMode); err != nil {
@@ -222,6 +231,41 @@ func loadRetiredKeys(keyFile string) ([]secrets.Key, error) {
 	return keys, nil
 }
 
+// nextKey is the key a rotation re-seals with: the one an interrupted
+// rotation left behind, since values may already be sealed with it, or a
+// new one. created says which.
+func nextKey(nextFile string) (key secrets.Key, created bool, err error) {
+	key, err = secrets.LoadKeyFile(nextFile)
+	if err == nil {
+		return key, false, nil
+	}
+	if !errors.Is(err, fs.ErrNotExist) {
+		return secrets.Key{}, false, err
+	}
+	if key, err = secrets.NewKey(); err != nil {
+		return secrets.Key{}, false, err
+	}
+	return key, true, secrets.WriteKeyFile(nextFile, key)
+}
+
+// finishInterruptedSwap completes a rotation that stopped between its two
+// renames: the old key is retired already, and every value is sealed with
+// the next one, because ResealAll committed before the first rename.
+func finishInterruptedSwap(keyFile string) error {
+	if _, err := os.Stat(keyFile); !errors.Is(err, fs.ErrNotExist) {
+		return nil
+	}
+	nextFile := keyFile + nextKeySuffix
+	_, err := os.Stat(nextFile)
+	if errors.Is(err, fs.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	return os.Rename(nextFile, keyFile)
+}
+
 func retiredKeyFiles(keyFile string) ([]string, error) {
 	return filepath.Glob(filepath.Join(filepath.Dir(keyFile), retiredDirName, "*"+keyExtension))
 }
@@ -253,6 +297,9 @@ func ensureKey(paths config.Paths) (secrets.Key, bool, error) {
 		if err := ensurePrivateDir(paths.KeysDir()); err != nil {
 			return secrets.Key{}, false, err
 		}
+	}
+	if err := finishInterruptedSwap(paths.KeyFile); err != nil {
+		return secrets.Key{}, false, err
 	}
 	key, err := secrets.LoadKeyFile(paths.KeyFile)
 	if err == nil {
