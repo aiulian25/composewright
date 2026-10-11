@@ -1,20 +1,38 @@
 name: release
 
-# A version tag builds the image for amd64 and arm64 with buildx, pushes it
-# to GHCR with its SBOM and provenance, signs it with cosign (keyless), and
-# creates the GitHub release that `composewright version --check` reads.
+# A version tag first runs CI's checks on the tagged commit: lint, tests,
+# build, known vulnerabilities and the image smoke test. Only then does it
+# build the image for amd64 and arm64 with buildx, push it to GHCR with its
+# SBOM and provenance, sign it with cosign (keyless), and create the GitHub
+# release that `composewright version --check` reads.
 on:
   push:
     tags: ["v*"]
 
 permissions:
-  contents: write
-  packages: write
-  id-token: write
+  contents: read
 
 jobs:
-  image:
+  test:
+    name: lint, test, build, vulnerabilities and image smoke test
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: "1.27.x"
+      - run: make lint test build
+      - run: make vuln
+      - run: make container-smoke
+
+  image:
+    needs: test
+    runs-on: ubuntu-latest
+    # Only this job writes: the release, the image on GHCR and its signature.
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - id: build-info
