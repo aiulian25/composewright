@@ -105,6 +105,29 @@ func TestConfigSetGetShow(t *testing.T) {
 	}
 }
 
+// TestConfigSetRepairsAFileThatDoesNotLoad: a value that keeps the config
+// from loading can be set right, and a result that does not validate is
+// still refused.
+func TestConfigSetRepairsAFileThatDoesNotLoad(t *testing.T) {
+	environment := isolate(t)
+	broken := bytes.Replace(config.DefaultTemplate, []byte("session_ttl: 12h0m0s"), []byte("session_ttl: 0s"), 1)
+	if err := os.WriteFile(filepath.Join(environment, "config.yaml"), broken, config.FileMode); err != nil {
+		t.Fatal(err)
+	}
+	if result := run(t, environment, "config", "get", "ui.session_ttl"); result.code == exitOK {
+		t.Fatal("a config whose sessions end at once loaded")
+	}
+	if result := run(t, environment, "config", "set", "ui.session_ttl", "1m"); result.code == exitOK {
+		t.Fatal("config set wrote a session lifetime out of range")
+	}
+	if result := run(t, environment, "config", "set", "ui.session_ttl", "12h"); result.code != exitOK {
+		t.Fatalf("config set could not repair the file: %+v", result)
+	}
+	if result := run(t, environment, "config", "get", "ui.session_ttl"); strings.TrimSpace(result.stdout) != "12h0m0s" {
+		t.Fatalf("get after the repair: %+v", result)
+	}
+}
+
 func TestVersionJSON(t *testing.T) {
 	result := run(t, isolate(t), "--json", "version")
 	if result.code != exitOK || !strings.Contains(result.stdout, `"version": "test"`) {

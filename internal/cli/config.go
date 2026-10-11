@@ -115,17 +115,17 @@ func (application *app) runConfigGet(key string) error {
 	return nil
 }
 
+// runConfigSet does not load the config first, so a value that keeps it
+// from loading can be set right; the file is written only if the result
+// validates.
 func (application *app) runConfigSet(key, value string) error {
-	loaded, err := application.loadConfig()
-	if err != nil {
+	file := config.FilePath(application.global.configFile)
+	if err := config.SetInFile(file, key, value); err != nil {
 		return err
 	}
-	if err := config.SetInFile(loaded.Paths.ConfigFile, key, value); err != nil {
-		return err
-	}
-	application.logger.Info("config updated", "file", loaded.Paths.ConfigFile, "setting", key)
+	application.logger.Info("config updated", "file", file, "setting", key)
 	if !application.global.json {
-		fmt.Fprintf(application.stdout, "%s set in %s\n", key, loaded.Paths.ConfigFile)
+		fmt.Fprintf(application.stdout, "%s set in %s\n", key, file)
 	}
 	return nil
 }

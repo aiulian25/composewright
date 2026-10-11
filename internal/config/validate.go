@@ -11,6 +11,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/docker/go-units"
 )
@@ -40,8 +41,18 @@ func (config Config) Validate() error {
 		validatePrivateTargets(config.Network.AllowPrivateTargets),
 		updateCheckDisabled(config.Network.UpdateCheck),
 		oneOf("ui.theme", config.UI.Theme, themes),
+		sessionTTLProblem(config.UI.SessionTTL),
 		config.Profile.Validate(),
 	)
+}
+
+// sessionTTLProblem keeps sign-in usable: 0 would end every session at once
+// and a negative value deletes the cookie, locking the owner out.
+func sessionTTLProblem(lifetime time.Duration) error {
+	if lifetime >= minimumSessionTTL && lifetime <= maximumSessionTTL {
+		return nil
+	}
+	return fmt.Errorf("ui.session_ttl %s must be between %s and %s", lifetime, minimumSessionTTL, maximumSessionTTL)
 }
 
 // sandboxTierProblem accepts only the tiers composewright can stand behind;

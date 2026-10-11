@@ -26,7 +26,7 @@ func Default() Config {
 }
 
 func Load(flags Flags) (*Loaded, error) {
-	configFile := resolveConfigFile(flags.ConfigFile)
+	configFile := FilePath(flags.ConfigFile)
 	content, err := os.ReadFile(configFile)
 	fileExists := err == nil
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {

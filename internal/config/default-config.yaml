@@ -39,7 +39,7 @@ network:
   update_check: false        # must stay false: `composewright version --check` is the only update check
 ui:
   auth_required: true
-  session_ttl: 12h0m0s
+  session_ttl: 12h0m0s       # 5m to 720h (30 days)
   theme: dark                # dark (default) | light | system
 profile:
   networks: []               # existing external networks, e.g. {name: npm_default, kind: proxy, provider: npm, default: true, domain: apps.example.com}

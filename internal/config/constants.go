@@ -60,6 +60,8 @@ const (
 
 	MaxIterationsLimit = 10
 	minimumTimeout     = 10 * time.Second
+	minimumSessionTTL  = 5 * time.Minute
+	maximumSessionTTL  = 30 * 24 * time.Hour
 )
 
 // Preset is a ready set of connection values for a model service: where it

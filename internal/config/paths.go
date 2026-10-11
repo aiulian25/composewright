@@ -31,7 +31,10 @@ func (paths Paths) DefaultKeyFile() bool {
 	return paths.KeyFile == filepath.Join(paths.KeysDir(), KeyFileName)
 }
 
-func resolveConfigFile(flag string) string {
+// FilePath is the config file a command reads and writes: the flag, else
+// COMPOSEWRIGHT_CONFIG, else the XDG config folder. It never reads the file,
+// so config set can still repair one that does not load.
+func FilePath(flag string) string {
 	explicit := firstNonEmpty(flag, os.Getenv(EnvConfig))
 	if explicit != "" {
 		return explicit

@@ -178,6 +178,20 @@ func TestModelEndpointsOverPlainHTTP(t *testing.T) {
 	}
 }
 
+// TestSessionTTLRange: a session lasts long enough to sign in and work, and
+// at most a month; 0 would end each one at once.
+func TestSessionTTLRange(t *testing.T) {
+	cases := map[time.Duration]bool{0: false, -time.Hour: false, time.Minute: false, 5 * time.Minute: true,
+		12 * time.Hour: true, 720 * time.Hour: true, 1000 * time.Hour: false}
+	for lifetime, valid := range cases {
+		config := Default()
+		config.UI.SessionTTL = lifetime
+		if err := config.Validate(); (err == nil) != valid {
+			t.Errorf("session_ttl %s: error %v, want valid %v", lifetime, err, valid)
+		}
+	}
+}
+
 // TestSandboxTierRunscIsRefused: runsc would read as gVisor isolation that
 // nothing applies, so it is refused with a hint; proxy stays a label.
 func TestSandboxTierRunscIsRefused(t *testing.T) {
