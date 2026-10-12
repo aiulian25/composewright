@@ -500,7 +500,7 @@
         {
           "key": "WEB_VAULT_FOLDER",
           "value": "web-vault/",
-          "comment": "Web vault settings",
+          "comment": "",
           "commented": true,
           "location": {
             "file": ".env.template",
@@ -4837,14 +4837,13 @@
     {
       "name": "WEB_VAULT_FOLDER",
       "default": "web-vault/",
-      "description": "Web vault settings",
+      "description": "",
       "required": false,
       "mentions": [
         {
           "name": "WEB_VAULT_FOLDER",
           "kind": "env_sample",
           "default": "web-vault/",
-          "text": "Web vault settings",
           "location": {
             "file": ".env.template",
             "line": 45

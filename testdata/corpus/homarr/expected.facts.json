@@ -1418,7 +1418,7 @@
         {
           "key": "HOMARR_WEBSITE_URL",
           "value": "http://127.0.0.1:3003",
-          "comment": "Local Workshop stack:",
+          "comment": "",
           "commented": true,
           "location": {
             "file": ".env.example",
@@ -2966,7 +2966,7 @@
     {
       "name": "HOMARR_WEBSITE_URL",
       "default": "http://localhost:3003",
-      "description": "Local Workshop stack:",
+      "description": "",
       "required": true,
       "mentions": [
         {
@@ -3016,7 +3016,6 @@
           "name": "HOMARR_WEBSITE_URL",
           "kind": "env_sample",
           "default": "http://127.0.0.1:3003",
-          "text": "Local Workshop stack:",
           "location": {
             "file": ".env.example",
             "line": 72

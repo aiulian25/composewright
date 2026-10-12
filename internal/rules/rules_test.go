@@ -73,6 +73,41 @@ func assertGolden(t *testing.T, golden string, plan *ir.IR) {
 	}
 }
 
+// TestNamedSecretsKeepTheirOwnValue: upstream reads each password by its own
+// name, so an equal placeholder fallback is no reason to share one secret;
+// a literal written with the same value still refers to the first.
+func TestNamedSecretsKeepTheirOwnValue(t *testing.T) {
+	facts := testFacts(t, map[string]string{"docker-compose.yml": `services:
+  app:
+    image: example/app:1.0
+    environment:
+      DATABASE_URL: postgres://app:${POSTGRES_PASSWORD:-snapotter}@db/app
+      REDIS_URL: redis://:${REDIS_PASSWORD:-snapotter}@cache:6379
+      DB_PASS: snapotter
+    depends_on: [db, cache]
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-snapotter}
+  cache:
+    image: redis:8
+    command: redis-server --requirepass ${REDIS_PASSWORD:-snapotter}
+`})
+	plan := Build(context.Background(), Input{Facts: facts, Source: &fetch.Source{Owner: "example", Repository: "app"}})
+	values := map[string]ir.EnvFileEntry{}
+	for _, entry := range plan.EnvFile {
+		values[entry.Key] = entry
+	}
+	for _, key := range []string{"POSTGRES_PASSWORD", "REDIS_PASSWORD"} {
+		if values[key].Generate == "" || values[key].Value != "" {
+			t.Errorf("%s = %+v, want a secret of its own", key, values[key])
+		}
+	}
+	if values["DB_PASS"].Value != "${POSTGRES_PASSWORD}" {
+		t.Errorf("literal not linked to the named secret: %+v", values["DB_PASS"])
+	}
+}
+
 func TestSecretsAreGeneratedAndLinked(t *testing.T) {
 	facts := testFacts(t, map[string]string{"docker-compose.yml": `services:
   app:
@@ -592,7 +627,7 @@ func TestOptionalSettingsComeFromSamplesAndDocs(t *testing.T) {
 		"docker-compose.yml": "services:\n  app:\n    image: example/app:1.0\n    environment:\n      APP_URL: ${APP_URL}\n",
 		".env.example":       "APP_URL=http://localhost:8080\n# Log level, one of debug, info, warn\n# APP_LOG_LEVEL=info\n# APP_ADMIN_TOKEN=changeme-example\n",
 		"README.md": "# App\n\n| Variable | Default | Description |\n|---|---|---|\n| `APP_CACHE_TTL` | `5m` | How long pages are cached |\n" +
-			"| `APP_PROXY` | not set | An outbound proxy |\n| `APP_SOCKET` | the mounted socket | Where Docker answers |\n| `AVI` | | A video format |\n| `APP_SILENT` | | |\n",
+			"| `APP_PROXY` | not set | An outbound proxy |\n| `APP_ORIGIN` | (empty) | Allowed origins |\n| `APP_SOCKET` | the mounted socket | Where Docker answers |\n| `AVI` | | A video format |\n| `APP_SILENT` | | |\n",
 		"tests/README.md": "| Variable | Description |\n|---|---|\n| `APP_TEST_SEED` | Seed for the tests |\n",
 	})
 	plan := Build(context.Background(), Input{Facts: facts, Source: &fetch.Source{Owner: "example", Repository: "app"}})
@@ -600,7 +635,7 @@ func TestOptionalSettingsComeFromSamplesAndDocs(t *testing.T) {
 	for _, setting := range plan.OptionalEnv {
 		settings[setting.Key] = setting
 	}
-	want := map[string]string{"APP_LOG_LEVEL": "info", "APP_ADMIN_TOKEN": "", "APP_CACHE_TTL": "5m", "APP_PROXY": "", "APP_SOCKET": ""}
+	want := map[string]string{"APP_LOG_LEVEL": "info", "APP_ADMIN_TOKEN": "", "APP_CACHE_TTL": "5m", "APP_PROXY": "", "APP_ORIGIN": "", "APP_SOCKET": ""}
 	if len(settings) != len(want) {
 		t.Fatalf("optional settings %v, want %v", settings, want)
 	}
@@ -612,5 +647,28 @@ func TestOptionalSettingsComeFromSamplesAndDocs(t *testing.T) {
 	}
 	if !strings.Contains(settings["APP_SOCKET"].Description, "Default: the mounted socket") || settings["APP_LOG_LEVEL"].Description == "" {
 		t.Errorf("descriptions: %q, %q", settings["APP_SOCKET"].Description, settings["APP_LOG_LEVEL"].Description)
+	}
+}
+
+// TestOptionalDefaultsComeFromTheImage: when this repository builds the
+// app's image, a setting its Dockerfile sets shows the container's value,
+// not a sample's path for running without Docker, which would lie outside
+// every volume.
+func TestOptionalDefaultsComeFromTheImage(t *testing.T) {
+	facts := testFacts(t, map[string]string{
+		"docker-compose.yml": "services:\n  app:\n    image: example/app:1.0\n",
+		"Dockerfile":         "FROM alpine:3\nENV FILES_STORAGE_PATH=/data/files\nENV LOG_DIR=${DATA_DIR}/logs\n",
+		".env.example":       "FILES_STORAGE_PATH=./data/files\nLOG_DIR=./data/logs\nAPP_THEME=light\n",
+	})
+	plan := Build(context.Background(), Input{Facts: facts, Source: &fetch.Source{Owner: "example", Repository: "app"}})
+	settings := map[string]string{}
+	for _, setting := range plan.OptionalEnv {
+		settings[setting.Key] = setting.Default
+	}
+	want := map[string]string{"FILES_STORAGE_PATH": "/data/files", "LOG_DIR": "", "APP_THEME": "light"}
+	for key, value := range want {
+		if got, found := settings[key]; !found || got != value {
+			t.Errorf("%s default %q (listed %v), want %q", key, got, found, value)
+		}
 	}
 }

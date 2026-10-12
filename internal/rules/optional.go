@@ -14,6 +14,9 @@ const (
 	maxOptionalDescription = 300
 	defaultNote            = "Default: "
 	quoteCharacters        = "`\"'"
+	// asideCharacters wrap a cell such as "(empty)" or "*none*".
+	asideCharacters = "()[]*_"
+	referenceMark   = "$"
 )
 
 var (
@@ -37,16 +40,40 @@ func (builder *builder) optionalSettings() {
 		return
 	}
 	used := usedVariables(builder.plan)
+	imageValues := builder.imageEnvironment(app)
 	for _, variable := range builder.facts.Variables {
 		mention, documented := documentation(variable)
 		if used[variable.Name] || !documented {
 			continue
 		}
-		value, prose := optionalDefault(variable.Name, mention.Default)
+		cell, setByImage := imageValues[variable.Name]
+		if !setByImage {
+			cell = mention.Default
+		}
+		value, prose := optionalDefault(variable.Name, cell)
 		description := optionalDescription(firstNonEmpty(mention.Text, variable.Description), prose)
 		builder.plan.OptionalEnv = append(builder.plan.OptionalEnv, ir.OptionalSetting{Service: app.Name, Key: variable.Name, Default: value,
 			Description: description, Provenance: provenance(mentionSource(mention), mention.Location, ir.ConfidenceMedium)})
 	}
+}
+
+// imageEnvironment is what the app's Dockerfile sets with ENV, when this
+// repository builds the app's image: the value a commented-out setting has
+// in the container, where a sample's ./data/files would point outside every
+// volume. A value the image derives from another variable is left empty.
+func (builder *builder) imageEnvironment(app *ir.Service) map[string]string {
+	values := map[string]string{}
+	dockerfile, found := chooseDockerfile(builder.facts, app)
+	if !found || !builder.matchesIdentity(app.Image) {
+		return values
+	}
+	for _, variable := range dockerfile.Env {
+		values[variable.Key] = variable.Value
+		if strings.Contains(variable.Value, referenceMark) {
+			values[variable.Key] = ""
+		}
+	}
+	return values
 }
 
 // documentation picks the mention that documents a variable as a setting: a
@@ -89,7 +116,7 @@ func optionalDefault(name, cell string) (value, prose string) {
 	value = strings.TrimSpace(strings.Trim(strings.TrimSpace(cell), quoteCharacters))
 	command := strings.ContainsAny(value, "\n\r`") || strings.Contains(value, "$(")
 	switch {
-	case redact.IsSecretName(name), command, slices.Contains(noDefault, strings.ToLower(value)):
+	case redact.IsSecretName(name), command, slices.Contains(noDefault, strings.ToLower(strings.Trim(value, asideCharacters))):
 		return "", ""
 	case strings.ContainsAny(value, " \t"):
 		return "", value

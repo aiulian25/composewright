@@ -177,6 +177,9 @@ func TestClassify(t *testing.T) {
 		"docker/default.Dockerfile": Config, ".env.sample": Config, ".env.template": Config, "example.env": Config,
 		"config.example.toml": Config, "src/main.go": Code, "src/main_test.go": Skip, "web/app.spec.ts": Skip, "node_modules/a/README.md": Skip, "test/compose.yml": Skip,
 		"logo.png": Skip, "package.json": Config,
+		"apps/docs/guide/configuration.md": Document, "website/Docs/setup.md": Document, "apps/docs/de/guide/configuration.md": Skip,
+		"docs/zh_CN/setup.md": Skip, "docs/pt-BR/compose.yml": Skip, "docs/en/setup.md": Document, "src/main/java/de/app/Main.java": Code,
+		"de/compose.yml": Config, "apps/api/notes.md": Skip,
 	}
 	for name, want := range cases {
 		if got := Classify(name); got != want {

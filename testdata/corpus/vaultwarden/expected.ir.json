@@ -1039,7 +1039,7 @@
     {
       "service": "vaultwarden",
       "key": "ROCKET_PORT",
-      "default": "8000",
+      "default": "80",
       "description": "The default port is 8000, unless running in a Docker container, in which case it is 80.",
       "provenance": {
         "source": "env_sample",
@@ -1667,7 +1667,7 @@
       "service": "vaultwarden",
       "key": "WEB_VAULT_FOLDER",
       "default": "web-vault/",
-      "description": "Web vault settings",
+      "description": "",
       "provenance": {
         "source": "env_sample",
         "source_ref": ".env.template:45",

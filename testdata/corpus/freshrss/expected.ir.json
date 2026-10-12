@@ -220,7 +220,7 @@
     {
       "service": "freshrss",
       "key": "COPY_LOG_TO_SYSLOG",
-      "default": "",
+      "default": "On",
       "description": "(default is On) Copy all the logs to syslog",
       "provenance": {
         "source": "readme",
@@ -231,7 +231,7 @@
     {
       "service": "freshrss",
       "key": "COPY_SYSLOG_TO_STDERR",
-      "default": "",
+      "default": "On",
       "description": "(default is On) Copy syslog to Standard Error so that it is visible in docker logs",
       "provenance": {
         "source": "readme",
@@ -297,7 +297,7 @@
     {
       "service": "freshrss",
       "key": "ENABLE_ACCESS_LOG",
-      "default": "",
+      "default": "1",
       "description": "(default is 1) Set to 0 to disable the Apache access log.",
       "provenance": {
         "source": "readme",

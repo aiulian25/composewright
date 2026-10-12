@@ -515,7 +515,7 @@
         {
           "key": "THEME_LIGHT_PRIMARY",
           "value": "#E58325",
-          "comment": "Light Mode Config",
+          "comment": "",
           "commented": false,
           "location": {
             "file": "frontend/template.env",
@@ -585,7 +585,7 @@
         {
           "key": "THEME_DARK_PRIMARY",
           "value": "#E58325",
-          "comment": "Light Mode Config",
+          "comment": "",
           "commented": false,
           "location": {
             "file": "frontend/template.env",
@@ -2250,14 +2250,13 @@
     {
       "name": "THEME_DARK_PRIMARY",
       "default": "#E58325",
-      "description": "Light Mode Config",
+      "description": "Main brand color and headers",
       "required": false,
       "mentions": [
         {
           "name": "THEME_DARK_PRIMARY",
           "kind": "env_sample",
           "default": "#E58325",
-          "text": "Light Mode Config",
           "location": {
             "file": "frontend/template.env",
             "line": 16
@@ -2496,14 +2495,13 @@
     {
       "name": "THEME_LIGHT_PRIMARY",
       "default": "#E58325",
-      "description": "Light Mode Config",
+      "description": "Main brand color and headers",
       "required": false,
       "mentions": [
         {
           "name": "THEME_LIGHT_PRIMARY",
           "kind": "env_sample",
           "default": "#E58325",
-          "text": "Light Mode Config",
           "location": {
             "file": "frontend/template.env",
             "line": 7

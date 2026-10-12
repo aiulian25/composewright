@@ -121,7 +121,7 @@
           "literal": "",
           "required": false,
           "secret": false,
-          "description": "Local Workshop stack:",
+          "description": "",
           "provenance": {
             "source": "env_sample",
             "source_ref": ".env.example:59",
@@ -394,7 +394,7 @@
       "generate": "",
       "secret": false,
       "required": false,
-      "description": "Local Workshop stack:",
+      "description": "",
       "file_env_key": "",
       "provenance": {
         "source": "env_sample",
@@ -742,6 +742,7 @@
     "services.0.ports",
     "env_file.LOG_LEVEL.description",
     "env_file.TURBO_TELEMETRY_DISABLED.description",
+    "env_file.HOMARR_WEBSITE_URL.description",
     "env_file.DOCS_EXPOSE_PORT.description",
     "env_file.PB_ALLOWED_ORIGINS.description",
     "env_file.HOMARR_AI_DAILY_REQUEST_LIMIT.description",

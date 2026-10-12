@@ -102,7 +102,7 @@ QUOTED="a # not a comment"
 	want := []EnvSampleEntry{
 		{Key: "DOMAIN", Value: "https://vw.example.com", Comment: "Public URL of the instance shown in emails"},
 		{Key: "SIGNUPS_ALLOWED", Value: "true"},
-		{Key: "TZ", Value: "Europe/London"},
+		{Key: "TZ", Value: "Europe/London", Comment: "local time"},
 		{Key: "ADMIN_TOKEN", Value: "change-me", Comment: "Optional: admin page token", Commented: true},
 		{Key: "QUOTED", Value: "a # not a comment"},
 	}
@@ -114,6 +114,69 @@ QUOTED="a # not a comment"
 	}
 	if sample.Entries[0].Location.Line != 4 {
 		t.Fatalf("line %d", sample.Entries[0].Location.Line)
+	}
+}
+
+// TestEnvSampleComments: a comment describes the entry it belongs to, never
+// the first entry under a section title, a note about another entry, or the
+// next entry after a sentence that only looks like an assignment.
+func TestEnvSampleComments(t *testing.T) {
+	content := `# Server
+PORT=1349
+AUTH_ENABLED=true
+
+# Users (0 = unlimited)
+MAX_USERS=0
+# SVG has no "auto" sizing: 0 here disables the size cap entirely.
+MAX_SVG_SIZE_MB=50
+MAX_LOGO_SIZE_KB=2048
+# DB_PATH removed in 2.0 -- see DATABASE_URL below
+WORKSPACE_PATH=./tmp/workspace
+FILES_STORAGE_PATH=./data/files
+
+# --- 2.0 foundation ---
+# Postgres connection (required; this default matches docker-compose.dev.yml)
+# Start the dev stack first: docker compose -f docker-compose.dev.yml up -d
+DATABASE_URL=postgres://snapotter:snapotter@localhost:5432/snapotter
+
+# Job spine tuning
+SYNC_WAIT_MS=8000              # sync-response window (ms)
+# SCRATCH_PATH=                 # worker scratch dir
+
+# --- Analytics ---
+# Runtime kill switch: set to 0 to disable all telemetry.
+# ANALYTICS_ENABLED=false is honored as an alias (0/off also work).
+# SNAPOTTER_TELEMETRY=1
+# OIDC_SCOPES=openid profile email
+THEME_PRIMARY=#E58325
+# PocketBase API used by the docs site. Defaults to HOMARR_WEBSITE_URL.
+POCKETBASE_URL=
+`
+	want := map[string]EnvSampleEntry{
+		"PORT":                {Value: "1349"},
+		"AUTH_ENABLED":        {Value: "true"},
+		"MAX_USERS":           {Value: "0", Comment: "Users (0 = unlimited)"},
+		"MAX_SVG_SIZE_MB":     {Value: "50", Comment: `SVG has no "auto" sizing: 0 here disables the size cap entirely.`},
+		"MAX_LOGO_SIZE_KB":    {Value: "2048"},
+		"WORKSPACE_PATH":      {Value: "./tmp/workspace"},
+		"FILES_STORAGE_PATH":  {Value: "./data/files"},
+		"DATABASE_URL":        {Value: "postgres://snapotter:snapotter@localhost:5432/snapotter"},
+		"SYNC_WAIT_MS":        {Value: "8000", Comment: "sync-response window (ms)"},
+		"SCRATCH_PATH":        {Comment: "worker scratch dir", Commented: true},
+		"SNAPOTTER_TELEMETRY": {Value: "1", Comment: "Runtime kill switch: set to 0 to disable all telemetry. ANALYTICS_ENABLED=false is honored as an alias (0/off also work).", Commented: true},
+		"OIDC_SCOPES":         {Value: "openid profile email", Commented: true},
+		"THEME_PRIMARY":       {Value: "#E58325"},
+		"POCKETBASE_URL":      {Comment: "PocketBase API used by the docs site. Defaults to HOMARR_WEBSITE_URL."},
+	}
+	sample := parseEnvSample(".env.example", []byte(content))
+	if len(sample.Entries) != len(want) {
+		t.Fatalf("entries %+v", sample.Entries)
+	}
+	for _, got := range sample.Entries {
+		entry, found := want[got.Key]
+		if !found || got.Value != entry.Value || got.Comment != entry.Comment || got.Commented != entry.Commented {
+			t.Errorf("%s = %+v, want %+v", got.Key, got, entry)
+		}
 	}
 }
 

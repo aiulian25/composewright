@@ -6,6 +6,24 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Two services whose passwords upstream sets by separate names, such as
+  `${REDIS_PASSWORD:-app}` and `${POSTGRES_PASSWORD:-app}`, no longer share one
+  generated secret because their placeholder defaults match: each gets its own.
+- A commented-out setting in `.env` shows the value the app's image sets, such
+  as `/data/files`, instead of a sample's path for running without Docker,
+  which pointed outside every volume.
+- Documentation kept in a docs folder at any depth, as in a monorepo, is read
+  for settings, without its translated copies. A table without a name column
+  counts only UPPER_SNAKE names, so lists of file formats or HTTP methods are
+  no longer taken for variables, and a default such as "(empty)" means none.
+- Descriptions from `.env` samples: an inline comment describes its entry; a
+  short section title over several entries, a note that starts with another
+  variable, and advice for upstream's development setup no longer describe the
+  next entry; `KEY=  # note` has no value, and a commented sentence such as
+  `# X=false is honored as an alias` is not a setting.
+
 ## [0.1.2] - 2026-10-12
 
 Generated stacks now list every setting an app documents, ready to switch on.

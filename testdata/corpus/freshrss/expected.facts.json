@@ -81,28 +81,6 @@
     "docs/en/users/11_website_scraping.md",
     "docs/en/users/WebSub.md",
     "docs/en/users/user_queries.md",
-    "docs/fr/contributing.md",
-    "docs/fr/developers/01_First_steps.md",
-    "docs/fr/developers/02_Github.md",
-    "docs/fr/developers/03_Backend/01_Database_schema.md",
-    "docs/fr/developers/03_Backend/03_External_libraries.md",
-    "docs/fr/developers/03_Backend/05_Extensions.md",
-    "docs/fr/developers/03_Running_tests.md",
-    "docs/fr/developers/04_Frontend/01_View_files.md",
-    "docs/fr/developers/04_Frontend/02_Design.md",
-    "docs/fr/developers/05_Release_new_version.md",
-    "docs/fr/developers/Minz/index.md",
-    "docs/fr/index.md",
-    "docs/fr/internationalization.md",
-    "docs/fr/users/01_Installation.md",
-    "docs/fr/users/02_First_steps.md",
-    "docs/fr/users/03_Main_view.md",
-    "docs/fr/users/04_Subscriptions.md",
-    "docs/fr/users/05_Configuration.md",
-    "docs/fr/users/06_Fever_API.md",
-    "docs/fr/users/06_Mobile_access.md",
-    "docs/fr/users/07_Frequently_Asked_Questions.md",
-    "docs/fr/users/08_PubSubHubbub.md",
     "docs/index.md",
     "docs/pull_request_template.md",
     "extensions/README.md",
@@ -2294,32 +2272,6 @@
       ]
     },
     {
-      "name": "PHP",
-      "default": "",
-      "description": "FreshRSS 1.24.3: PHP 7.4+\u003cbr /\u003eFreshRSS 1.22.1: PHP 7.2+",
-      "required": false,
-      "mentions": [
-        {
-          "name": "PHP",
-          "kind": "readme",
-          "text": "FreshRSS 1.24.3: PHP 7.4+\u003cbr /\u003eFreshRSS 1.22.1: PHP 7.2+",
-          "location": {
-            "file": "docs/en/admins/02_Prerequisites.md",
-            "line": 10
-          }
-        },
-        {
-          "name": "PHP",
-          "kind": "readme",
-          "text": "FreshRSS 1.24.3 : PHP 7.4+\u003cbr /\u003eFreshRSS 1.22.1 : PHP 7.2+",
-          "location": {
-            "file": "docs/fr/users/01_Installation.md",
-            "line": 10
-          }
-        }
-      ]
-    },
-    {
       "name": "POSTGRES_DB",
       "default": "freshrss",
       "description": "",
@@ -2623,23 +2575,6 @@
           "location": {
             "file": "Docker/Dockerfile-Oldest",
             "line": 4
-          }
-        }
-      ]
-    },
-    {
-      "name": "XING",
-      "default": "",
-      "description": "Career-oriented social networking site, operated by New Work SE",
-      "required": false,
-      "mentions": [
-        {
-          "name": "XING",
-          "kind": "readme",
-          "text": "Career-oriented social networking site, operated by New Work SE",
-          "location": {
-            "file": "docs/en/users/08_sharing_services.md",
-            "line": 40
           }
         }
       ]
@@ -3592,13 +3527,6 @@
       "location": {
         "file": "docs/en/developers/03_Running_tests.md",
         "line": 40
-      }
-    },
-    {
-      "text": "tests.yml",
-      "location": {
-        "file": "docs/fr/developers/03_Running_tests.md",
-        "line": 33
       }
     }
   ],

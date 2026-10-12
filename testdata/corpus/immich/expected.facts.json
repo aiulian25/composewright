@@ -2548,54 +2548,6 @@
       ]
     },
     {
-      "name": "AVI",
-      "default": "",
-      "description": "",
-      "required": false,
-      "mentions": [
-        {
-          "name": "AVI",
-          "kind": "readme",
-          "location": {
-            "file": "docs/docs/features/supported-formats.md",
-            "line": 35
-          }
-        }
-      ]
-    },
-    {
-      "name": "AVIF",
-      "default": "",
-      "description": "",
-      "required": false,
-      "mentions": [
-        {
-          "name": "AVIF",
-          "kind": "readme",
-          "location": {
-            "file": "docs/docs/features/supported-formats.md",
-            "line": 13
-          }
-        }
-      ]
-    },
-    {
-      "name": "BMP",
-      "default": "",
-      "description": "",
-      "required": false,
-      "mentions": [
-        {
-          "name": "BMP",
-          "kind": "readme",
-          "location": {
-            "file": "docs/docs/features/supported-formats.md",
-            "line": 14
-          }
-        }
-      ]
-    },
-    {
       "name": "BUILD_STATS",
       "default": "",
       "description": "",
@@ -3159,23 +3111,6 @@
       ]
     },
     {
-      "name": "DISCOVER",
-      "default": "",
-      "description": "Finds new .xmp files next to media that don’t already have one linked",
-      "required": false,
-      "mentions": [
-        {
-          "name": "DISCOVER",
-          "kind": "readme",
-          "text": "Finds new .xmp files next to media that don’t already have one linked",
-          "location": {
-            "file": "docs/docs/features/xmp-sidecars.md",
-            "line": 65
-          }
-        }
-      ]
-    },
-    {
       "name": "FLUTTER_CHANNEL",
       "default": "stable",
       "description": "",
@@ -3227,38 +3162,6 @@
       ]
     },
     {
-      "name": "FLV",
-      "default": "",
-      "description": "",
-      "required": false,
-      "mentions": [
-        {
-          "name": "FLV",
-          "kind": "readme",
-          "location": {
-            "file": "docs/docs/features/supported-formats.md",
-            "line": 36
-          }
-        }
-      ]
-    },
-    {
-      "name": "GIF",
-      "default": "",
-      "description": "",
-      "required": false,
-      "mentions": [
-        {
-          "name": "GIF",
-          "kind": "readme",
-          "location": {
-            "file": "docs/docs/features/supported-formats.md",
-            "line": 15
-          }
-        }
-      ]
-    },
-    {
       "name": "GITHUB_ENV",
       "default": "",
       "description": "",
@@ -3294,38 +3197,6 @@
           "location": {
             "file": "packages/scripts/src/cli.ts",
             "line": 60
-          }
-        }
-      ]
-    },
-    {
-      "name": "HEIC",
-      "default": "",
-      "description": "",
-      "required": false,
-      "mentions": [
-        {
-          "name": "HEIC",
-          "kind": "readme",
-          "location": {
-            "file": "docs/docs/features/supported-formats.md",
-            "line": 16
-          }
-        }
-      ]
-    },
-    {
-      "name": "HEIF",
-      "default": "",
-      "description": "",
-      "required": false,
-      "mentions": [
-        {
-          "name": "HEIF",
-          "kind": "readme",
-          "location": {
-            "file": "docs/docs/features/supported-formats.md",
-            "line": 17
           }
         }
       ]
@@ -4291,22 +4162,6 @@
       ]
     },
     {
-      "name": "JPEG",
-      "default": "",
-      "description": "",
-      "required": false,
-      "mentions": [
-        {
-          "name": "JPEG",
-          "kind": "readme",
-          "location": {
-            "file": "docs/docs/features/supported-formats.md",
-            "line": 19
-          }
-        }
-      ]
-    },
-    {
       "name": "LD_LIBRARY_PATH",
       "default": "",
       "description": "",
@@ -4318,22 +4173,6 @@
           "location": {
             "file": "machine-learning/ann/export/run.py",
             "line": 119
-          }
-        }
-      ]
-    },
-    {
-      "name": "M4V",
-      "default": "",
-      "description": "",
-      "required": false,
-      "mentions": [
-        {
-          "name": "M4V",
-          "kind": "readme",
-          "location": {
-            "file": "docs/docs/features/supported-formats.md",
-            "line": 37
           }
         }
       ]
@@ -4779,22 +4618,6 @@
       ]
     },
     {
-      "name": "MATROSKA",
-      "default": "",
-      "description": "",
-      "required": false,
-      "mentions": [
-        {
-          "name": "MATROSKA",
-          "kind": "readme",
-          "location": {
-            "file": "docs/docs/features/supported-formats.md",
-            "line": 38
-          }
-        }
-      ]
-    },
-    {
       "name": "MISE_DATA_DIR",
       "default": "/buildcache/mise",
       "description": "",
@@ -4824,87 +4647,6 @@
           "location": {
             "file": "server/Dockerfile.dev",
             "line": 18
-          }
-        }
-      ]
-    },
-    {
-      "name": "MP2T",
-      "default": "",
-      "description": "",
-      "required": false,
-      "mentions": [
-        {
-          "name": "MP2T",
-          "kind": "readme",
-          "location": {
-            "file": "docs/docs/features/supported-formats.md",
-            "line": 39
-          }
-        }
-      ]
-    },
-    {
-      "name": "MP4",
-      "default": "",
-      "description": "",
-      "required": false,
-      "mentions": [
-        {
-          "name": "MP4",
-          "kind": "readme",
-          "location": {
-            "file": "docs/docs/features/supported-formats.md",
-            "line": 40
-          }
-        }
-      ]
-    },
-    {
-      "name": "MPEG",
-      "default": "",
-      "description": "",
-      "required": false,
-      "mentions": [
-        {
-          "name": "MPEG",
-          "kind": "readme",
-          "location": {
-            "file": "docs/docs/features/supported-formats.md",
-            "line": 41
-          }
-        }
-      ]
-    },
-    {
-      "name": "MPO",
-      "default": "",
-      "description": "Multi-Picture",
-      "required": false,
-      "mentions": [
-        {
-          "name": "MPO",
-          "kind": "readme",
-          "text": "Multi-Picture",
-          "location": {
-            "file": "docs/docs/features/supported-formats.md",
-            "line": 21
-          }
-        }
-      ]
-    },
-    {
-      "name": "MXF",
-      "default": "",
-      "description": "",
-      "required": false,
-      "mentions": [
-        {
-          "name": "MXF",
-          "kind": "readme",
-          "location": {
-            "file": "docs/docs/features/supported-formats.md",
-            "line": 42
           }
         }
       ]
@@ -5077,22 +4819,6 @@
           "location": {
             "file": "server/src/services/database-backup.service.ts",
             "line": 444
-          }
-        }
-      ]
-    },
-    {
-      "name": "PNG",
-      "default": "",
-      "description": "",
-      "required": false,
-      "mentions": [
-        {
-          "name": "PNG",
-          "kind": "readme",
-          "location": {
-            "file": "docs/docs/features/supported-formats.md",
-            "line": 22
           }
         }
       ]
@@ -5279,23 +5005,6 @@
       ]
     },
     {
-      "name": "PSD",
-      "default": "",
-      "description": "Adobe Photoshop",
-      "required": false,
-      "mentions": [
-        {
-          "name": "PSD",
-          "kind": "readme",
-          "text": "Adobe Photoshop",
-          "location": {
-            "file": "docs/docs/features/supported-formats.md",
-            "line": 23
-          }
-        }
-      ]
-    },
-    {
       "name": "PUBLIC_IMMICH_BUY_HOST",
       "default": "",
       "description": "",
@@ -5390,38 +5099,6 @@
           "location": {
             "file": "machine-learning/Dockerfile",
             "line": 172
-          }
-        }
-      ]
-    },
-    {
-      "name": "QUICKTIME",
-      "default": "",
-      "description": "",
-      "required": false,
-      "mentions": [
-        {
-          "name": "QUICKTIME",
-          "kind": "readme",
-          "location": {
-            "file": "docs/docs/features/supported-formats.md",
-            "line": 43
-          }
-        }
-      ]
-    },
-    {
-      "name": "RAW",
-      "default": "",
-      "description": "",
-      "required": false,
-      "mentions": [
-        {
-          "name": "RAW",
-          "kind": "readme",
-          "location": {
-            "file": "docs/docs/features/supported-formats.md",
-            "line": 24
           }
         }
       ]
@@ -5558,22 +5235,6 @@
       ]
     },
     {
-      "name": "RW2",
-      "default": "",
-      "description": "",
-      "required": false,
-      "mentions": [
-        {
-          "name": "RW2",
-          "kind": "readme",
-          "location": {
-            "file": "docs/docs/features/supported-formats.md",
-            "line": 25
-          }
-        }
-      ]
-    },
-    {
       "name": "SVELTE_ESLINT_PARSER_EXPERIMENTAL_TS_SYS_HOOK",
       "default": "",
       "description": "",
@@ -5585,39 +5246,6 @@
           "location": {
             "file": "web/lint-env.js",
             "line": 5
-          }
-        }
-      ]
-    },
-    {
-      "name": "SVG",
-      "default": "",
-      "description": "",
-      "required": false,
-      "mentions": [
-        {
-          "name": "SVG",
-          "kind": "readme",
-          "location": {
-            "file": "docs/docs/features/supported-formats.md",
-            "line": 26
-          }
-        }
-      ]
-    },
-    {
-      "name": "SYNC",
-      "default": "",
-      "description": "Re-reads existing .xmp files and refreshes metadata in the database (e.g. after external edits)",
-      "required": false,
-      "mentions": [
-        {
-          "name": "SYNC",
-          "kind": "readme",
-          "text": "Re-reads existing .xmp files and refreshes metadata in the database (e.g. after external edits)",
-          "location": {
-            "file": "docs/docs/features/xmp-sidecars.md",
-            "line": 66
           }
         }
       ]
@@ -5652,22 +5280,6 @@
           "location": {
             "file": "deployment/.env",
             "line": 4
-          }
-        }
-      ]
-    },
-    {
-      "name": "TIFF",
-      "default": "",
-      "description": "",
-      "required": false,
-      "mentions": [
-        {
-          "name": "TIFF",
-          "kind": "readme",
-          "location": {
-            "file": "docs/docs/features/supported-formats.md",
-            "line": 27
           }
         }
       ]
@@ -5798,54 +5410,6 @@
           "location": {
             "file": "machine-learning/Dockerfile",
             "line": 172
-          }
-        }
-      ]
-    },
-    {
-      "name": "WEBM",
-      "default": "",
-      "description": "",
-      "required": false,
-      "mentions": [
-        {
-          "name": "WEBM",
-          "kind": "readme",
-          "location": {
-            "file": "docs/docs/features/supported-formats.md",
-            "line": 44
-          }
-        }
-      ]
-    },
-    {
-      "name": "WEBP",
-      "default": "",
-      "description": "",
-      "required": false,
-      "mentions": [
-        {
-          "name": "WEBP",
-          "kind": "readme",
-          "location": {
-            "file": "docs/docs/features/supported-formats.md",
-            "line": 28
-          }
-        }
-      ]
-    },
-    {
-      "name": "WMV",
-      "default": "",
-      "description": "",
-      "required": false,
-      "mentions": [
-        {
-          "name": "WMV",
-          "kind": "readme",
-          "location": {
-            "file": "docs/docs/features/supported-formats.md",
-            "line": 45
           }
         }
       ]

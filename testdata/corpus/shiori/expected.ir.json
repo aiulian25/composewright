@@ -105,8 +105,8 @@
     {
       "service": "shiori",
       "key": "SHIORI_DIR",
-      "default": "",
-      "description": "Directory where Shiori stores its data. Default: (current dir)",
+      "default": "/shiori",
+      "description": "Directory where Shiori stores its data.",
       "provenance": {
         "source": "readme",
         "source_ref": "docs/Configuration.md:55",

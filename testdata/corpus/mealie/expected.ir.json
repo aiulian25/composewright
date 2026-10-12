@@ -855,7 +855,7 @@
       "service": "mealie",
       "key": "THEME_DARK_PRIMARY",
       "default": "#E58325",
-      "description": "Light Mode Config",
+      "description": "Main brand color and headers",
       "provenance": {
         "source": "env_sample",
         "source_ref": "frontend/template.env:16",
@@ -932,7 +932,7 @@
       "service": "mealie",
       "key": "THEME_LIGHT_PRIMARY",
       "default": "#E58325",
-      "description": "Light Mode Config",
+      "description": "Main brand color and headers",
       "provenance": {
         "source": "env_sample",
         "source_ref": "frontend/template.env:7",

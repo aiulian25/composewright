@@ -19,6 +19,19 @@ var skippedDirs = []string{
 	"e2e", "spec", "dist", "target", ".devcontainer", "playwright", "cypress", ".idea", ".vscode", "locale", "locales", "i18n", "translations",
 }
 
+// docsDirectories hold documentation pages, at the root or in a monorepo
+// package such as apps/docs.
+var docsDirectories = []string{"docs", "doc"}
+
+// translationDirectories are the language folders of a docs site, such as
+// apps/docs/de or docs/zh-CN: they repeat the English pages, which are the
+// ones read, so a translated description never wins.
+var translationDirectories = []string{
+	"ar", "bg", "bn", "ca", "cs", "da", "de", "el", "es", "et", "fa", "fi", "fr", "he", "hi", "hr", "hu", "id", "it", "ja", "ko",
+	"lt", "lv", "ms", "nb", "nl", "no", "pl", "pt", "pt-br", "pt-pt", "ro", "ru", "sk", "sl", "sr", "sv", "th", "tr", "uk", "ur",
+	"vi", "zh", "zh-cn", "zh-hans", "zh-hant", "zh-hk", "zh-tw",
+}
+
 var codeExtensions = []string{".go", ".js", ".mjs", ".cjs", ".ts", ".py", ".rs", ".java", ".kt", ".rb", ".php", ".cs", ".ex", ".exs"}
 
 var stackHintFiles = []string{"package.json", "go.mod", "pyproject.toml", "Cargo.toml", "composer.json", "Gemfile", "requirements.txt"}
@@ -58,7 +71,8 @@ func Classify(name string) Kind {
 	name = path.Clean(strings.ReplaceAll(name, "\\", "/"))
 	directories := strings.Split(path.Dir(name), "/")
 	base := path.Base(name)
-	if slices.ContainsFunc(directories, func(directory string) bool { return slices.Contains(skippedDirs, strings.ToLower(directory)) }) {
+	skipped := slices.ContainsFunc(directories, func(directory string) bool { return slices.Contains(skippedDirs, strings.ToLower(directory)) })
+	if skipped || isTranslation(directories) {
 		return Skip
 	}
 	if isWorkflow(name) {
@@ -70,7 +84,7 @@ func Classify(name string) Kind {
 	switch {
 	case historyName.MatchString(base):
 		return Skip
-	case readmeName.MatchString(base), isDocsMarkdown(name):
+	case readmeName.MatchString(base), isDocsMarkdown(directories, base):
 		return Document
 	case dockerfileName.MatchString(base), envSampleName.MatchString(base), exampleName.MatchString(base),
 		slices.Contains(stackHintFiles, base), isYAML(base):
@@ -101,8 +115,19 @@ func isWorkflow(name string) bool {
 	return strings.HasPrefix(name, ".github/workflows/") && isYAML(path.Base(name))
 }
 
-func isDocsMarkdown(name string) bool {
-	first, _, _ := strings.Cut(name, "/")
-	extension := strings.ToLower(path.Ext(name))
-	return (first == "docs" || first == "doc") && (extension == ".md" || extension == ".markdown")
+func isDocsMarkdown(directories []string, base string) bool {
+	extension := strings.ToLower(path.Ext(base))
+	return slices.ContainsFunc(directories, isDocsDirectory) && (extension == ".md" || extension == ".markdown")
+}
+
+// isTranslation is true inside a language folder of a docs site.
+func isTranslation(directories []string) bool {
+	docs := slices.IndexFunc(directories, isDocsDirectory)
+	return docs >= 0 && slices.ContainsFunc(directories[docs+1:], func(directory string) bool {
+		return slices.Contains(translationDirectories, strings.ReplaceAll(strings.ToLower(directory), "_", "-"))
+	})
+}
+
+func isDocsDirectory(directory string) bool {
+	return slices.Contains(docsDirectories, strings.ToLower(directory))
 }

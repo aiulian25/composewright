@@ -10,6 +10,9 @@ var (
 	fenceLine     = regexp.MustCompile("^\\s*(```|~~~)")
 	listVariable  = regexp.MustCompile("^\\s*[-*+]\\s+`?([A-Z][A-Z0-9_]{1,})`?\\s*(?:[:=–—]|\\s-\\s|\\s\\|)\\s*(.+)$")
 	variableToken = regexp.MustCompile("^`?\\$?([A-Z][A-Z0-9_]+)`?$")
+	// snakeName is what a table without a name column must hold to count:
+	// UPPER_SNAKE with an underscore, unlike a format (AVI) or a method (GET).
+	snakeName     = regexp.MustCompile(`^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+$`)
 	credentials   = regexp.MustCompile(`(?i)\bdefault\s+(user(name)?|login|password|credentials?|admin)\b`)
 	imageInText   = regexp.MustCompile(`\b((?:ghcr\.io|docker\.io|quay\.io|lscr\.io|registry\.gitlab\.com|codeberg\.org)/[a-z0-9]+(?:[._-][a-z0-9]+)*(?:/[a-z0-9]+(?:[._-][a-z0-9]+)*)+(?::[A-Za-z0-9_][A-Za-z0-9_.-]{0,127})?)`)
 	imageKeyLine  = regexp.MustCompile(`^\s*image:\s*["']?([^\s"'#]+)`)
@@ -106,7 +109,8 @@ func (scan *markdownScan) imagesIn(line string, at Location) {
 }
 
 // tableRow records variables from markdown tables. The header row decides
-// which column holds the name, the description and the default.
+// which column holds the name, the description and the default; without a
+// name column the first one is read, for UPPER_SNAKE names only.
 func (scan *markdownScan) tableRow(line string, header []string, at Location) []string {
 	trimmed := strings.TrimSpace(line)
 	if !strings.HasPrefix(trimmed, "|") {
@@ -119,14 +123,16 @@ func (scan *markdownScan) tableRow(line string, header []string, at Location) []
 	if header == nil {
 		return lowerAll(cells)
 	}
-	nameColumn := columnIndex(header, []string{"variable", "name", "env", "key", "option", "setting", "parameter"}, 0)
+	nameColumn := columnIndex(header, []string{"variable", "name", "env", "key", "option", "setting", "parameter"}, -1)
+	named := nameColumn >= 0
+	nameColumn = max(nameColumn, 0)
 	descriptionColumn := columnIndex(header, []string{"description", "meaning", "purpose", "explanation"}, len(cells)-1)
 	defaultColumn := columnIndex(header, []string{"default"}, -1)
 	if nameColumn >= len(cells) {
 		return header
 	}
 	match := variableToken.FindStringSubmatch(strings.TrimSpace(cells[nameColumn]))
-	if match == nil || !isVariableName(match[1]) {
+	if match == nil || !isVariableName(match[1]) || (!named && !snakeName.MatchString(match[1])) {
 		return header
 	}
 	mention := Mention{Name: match[1], Kind: KindReadme, Location: at}

@@ -212,7 +212,12 @@ func (builder *builder) secretValue(entry *ir.EnvFileEntry) {
 		entry.Value = ""
 		return
 	}
-	if owner, found := builder.secretOwners[literal]; found && len(literal) >= minimumSecretLength {
+	owner, found := builder.secretOwners[literal]
+	// Upstream lets the user set each of two variables it reads by name, as
+	// ${REDIS_PASSWORD:-snapotter} and ${POSTGRES_PASSWORD:-snapotter}: an
+	// equal fallback is a shared placeholder, so each gets its own secret.
+	bothNamed := builder.interpolated(entry.Key) && builder.interpolated(owner)
+	if found && len(literal) >= minimumSecretLength && !bothNamed {
 		entry.Value = "${" + owner + "}"
 		return
 	}
@@ -220,9 +225,17 @@ func (builder *builder) secretValue(entry *ir.EnvFileEntry) {
 		return
 	}
 	entry.Value, entry.Generate = "", generatorFor(entry.Key)
-	if len(literal) >= minimumSecretLength {
+	if !found && len(literal) >= minimumSecretLength {
 		builder.secretOwners[literal] = entry.Key
 	}
+}
+
+// interpolated is true when a compose file of the repository reads name as
+// ${name}.
+func (builder *builder) interpolated(name string) bool {
+	return slices.ContainsFunc(builder.facts.ComposeFiles, func(file extract.ComposeFile) bool {
+		return slices.ContainsFunc(file.Variables, func(mention extract.Mention) bool { return mention.Name == name })
+	})
 }
 
 // generateStackSecrets fills the empty secrets the stack owns: keys the app
