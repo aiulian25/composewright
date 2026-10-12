@@ -6,6 +6,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- The model that fills what the rules leave open is sent only the facts the
+  asked fields use: the variables it should describe, and the image facts
+  when it is asked about a service. The plan it reads leaves out the optional
+  settings, which it cannot change, and repeats no description. A repository
+  that documents hundreds of settings now usually fits a small local model's
+  8000-token budget instead of skipping the model.
+
 ### Fixed
 
 - Two services whose passwords upstream sets by separate names, such as

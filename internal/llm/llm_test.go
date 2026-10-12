@@ -310,7 +310,8 @@ func TestPromptsCarryNoSecrets(t *testing.T) {
 	provider := &recording{answer: planText(t)}
 	assistant := NewAssistant(provider, "model", 60000)
 	documents := []Document{{Path: "README.md", Text: files["README.md"]}}
-	if _, _, err := assistant.Fill(context.Background(), plan, []string{"app.summary"}, extracted, documents); err != nil {
+	fields := []string{ir.SummaryField, ir.DescriptionField("SECRET_KEY"), ir.DescriptionField("DATABASE_URL")}
+	if _, _, err := assistant.Fill(context.Background(), plan, fields, extracted, documents); err != nil {
 		t.Fatal(err)
 	}
 	sent := provider.request.System + provider.request.Prompt
@@ -319,7 +320,7 @@ func TestPromptsCarryNoSecrets(t *testing.T) {
 			t.Errorf("the prompt contains %q", secret)
 		}
 	}
-	for _, want := range []string{`${SECRET_KEY}`, "FILL:\n", "RULE_PLAN:\n", "FACTS:\n", "REPO_CONTENT:\n"} {
+	for _, want := range []string{`${SECRET_KEY}`, "FILL:\n", "RULE_PLAN:\n", "FACTS:\n", "REPO_CONTENT:\n", ".env.sample"} {
 		if !strings.Contains(sent, want) {
 			t.Errorf("%q missing from the prompt", want)
 		}
@@ -332,6 +333,47 @@ func TestPromptsCarryNoSecrets(t *testing.T) {
 	repairPrompt := provider.request.Prompt
 	if strings.Contains(repairPrompt, "Hunter2Hunter2") || strings.Contains(repairPrompt, "Sess10nSecretValue") || len(repairPrompt) > maxLogTail+len(planText(t))*2 {
 		t.Errorf("the repair prompt leaks a secret or carries too much log (%d bytes)", len(repairPrompt))
+	}
+}
+
+// TestFillSendsOnlyWhatItsFieldsUse: a description needs only its variable's
+// facts and a service field the image facts; notes and suspicious lines
+// always go, a variable's description goes once, and optional settings,
+// which no fill answer changes, never do.
+func TestFillSendsOnlyWhatItsFieldsUse(t *testing.T) {
+	extracted := &extract.Facts{
+		Variables:   []extract.Variable{{Name: "ASKED_SETTING", Description: "asked-description"}, {Name: "OTHER_SETTING", Description: "other-description"}},
+		Dockerfiles: []extract.Dockerfile{{Path: "docker/Dockerfile.marker"}},
+		Notes:       []extract.Note{{Text: "note-marker"}},
+		Suspicious:  []extract.Note{{Text: "suspicious-marker"}},
+	}
+	plan := &ir.IR{IRVersion: ir.Version, App: ir.App{Name: "demo"},
+		Services:    []ir.Service{{Name: "app", Role: ir.RoleApp, Env: []ir.EnvRef{{Key: "ASKED_SETTING", Ref: "ASKED_SETTING", Description: "service-copy-marker"}}}},
+		EnvFile:     []ir.EnvFileEntry{{Key: "ASKED_SETTING", Description: "env-file-marker"}},
+		OptionalEnv: []ir.OptionalSetting{{Service: "app", Key: "OPTIONAL_MARKER"}}}
+	cases := map[string]struct {
+		fields, sent, withheld []string
+	}{
+		"description": {fields: []string{ir.DescriptionField("ASKED_SETTING")}, sent: []string{"asked-description", "env-file-marker", "note-marker", "suspicious-marker"},
+			withheld: []string{"other-description", "Dockerfile.marker", "OPTIONAL_MARKER", "service-copy-marker"}},
+		"service": {fields: []string{"services.0.ports"}, sent: []string{"Dockerfile.marker", "env-file-marker", "note-marker", "suspicious-marker"},
+			withheld: []string{"asked-description", "other-description", "OPTIONAL_MARKER", "service-copy-marker"}},
+	}
+	for name, testCase := range cases {
+		provider := &recording{}
+		if _, _, err := NewAssistant(provider, "model", 60000).Fill(context.Background(), plan, testCase.fields, extracted, nil); err != nil {
+			t.Fatal(err)
+		}
+		for _, text := range testCase.sent {
+			if !strings.Contains(provider.request.Prompt, text) {
+				t.Errorf("%s: %q not sent", name, text)
+			}
+		}
+		for _, text := range testCase.withheld {
+			if strings.Contains(provider.request.Prompt, text) {
+				t.Errorf("%s: %q sent", name, text)
+			}
+		}
 	}
 }
 

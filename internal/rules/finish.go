@@ -99,7 +99,7 @@ func rollUp(plan *ir.IR) string {
 func Gaps(plan *ir.IR) []string {
 	var gaps []string
 	if plan.App.Summary == "" {
-		gaps = append(gaps, "app.summary")
+		gaps = append(gaps, ir.SummaryField)
 	}
 	for index, service := range plan.Services {
 		field := fmt.Sprintf("services.%d", index)
@@ -116,7 +116,7 @@ func Gaps(plan *ir.IR) []string {
 	}
 	for _, entry := range plan.EnvFile {
 		if entry.Description == "" {
-			gaps = append(gaps, "env_file."+entry.Key+".description")
+			gaps = append(gaps, ir.DescriptionField(entry.Key))
 		}
 	}
 	return gaps

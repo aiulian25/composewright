@@ -23,6 +23,11 @@ const (
 	maxModelText    = 400
 	imageGapSuffix  = ".image"
 	provenanceKey   = "provenance"
+	// SummaryField asks for the one-sentence summary of the app.
+	SummaryField           = "app.summary"
+	envFieldPrefix         = "env_file."
+	descriptionFieldSuffix = ".description"
+	serviceFieldPrefix     = "services."
 )
 
 var referencesOnly = regexp.MustCompile(`^(\$\{[A-Za-z_][A-Za-z0-9_]*\})+$`)
@@ -71,7 +76,7 @@ func Merge(plan, proposal *IR, threshold string) (*IR, []string) {
 	for _, field := range Fillable(plan, threshold) {
 		fillable[field] = true
 	}
-	if fillable["app.summary"] {
+	if fillable[SummaryField] {
 		merged.App.Summary = modelText(proposal.App.Summary)
 	}
 	for index := range merged.Services {
@@ -84,7 +89,7 @@ func Merge(plan, proposal *IR, threshold string) (*IR, []string) {
 	for index := range merged.EnvFile {
 		entry := &merged.EnvFile[index]
 		offered, found := proposal.EnvEntry(entry.Key)
-		describe := found && offered.Description != "" && fillable["env_file."+entry.Key+".description"]
+		describe := found && offered.Description != "" && fillable[DescriptionField(entry.Key)]
 		if describe {
 			entry.Description = modelText(offered.Description) + ModelMark
 		}
@@ -316,7 +321,24 @@ func modelText(text string) string {
 }
 
 func servicePrefix(index int) string {
-	return fmt.Sprintf("services.%d.", index)
+	return fmt.Sprintf("%s%d.", serviceFieldPrefix, index)
+}
+
+// DescriptionField asks what the variable key is for.
+func DescriptionField(key string) string {
+	return envFieldPrefix + key + descriptionFieldSuffix
+}
+
+// DescribedVariable is the variable a description field asks about.
+func DescribedVariable(field string) (string, bool) {
+	rest, isVariable := strings.CutPrefix(field, envFieldPrefix)
+	key, isDescription := strings.CutSuffix(rest, descriptionFieldSuffix)
+	return key, isVariable && isDescription
+}
+
+// IsServiceField is true for a field of one service, such as services.0.ports.
+func IsServiceField(field string) bool {
+	return strings.HasPrefix(field, serviceFieldPrefix)
 }
 
 // sameValues compares two parts of a plan without their provenance, so a

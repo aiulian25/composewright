@@ -51,7 +51,7 @@ func splitGaps(unfilled []string) ([]string, int) {
 	var gaps []string
 	undescribed := 0
 	for _, gap := range unfilled {
-		if strings.HasPrefix(gap, "env_file.") && strings.HasSuffix(gap, ".description") {
+		if _, isDescription := ir.DescribedVariable(gap); isDescription {
 			undescribed++
 			continue
 		}

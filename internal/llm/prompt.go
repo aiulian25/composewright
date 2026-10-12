@@ -182,11 +182,11 @@ func splitSections(index int, document Document) []section {
 // fillFacts is what gap filling needs from the facts: where variables are
 // mentioned and described, and what Dockerfiles and documentation say.
 // Compose files are left out because RULE_PLAN already carries what the
-// rules took from them; on a small local model every token counts.
+// rules took from them, and .env samples because every entry is a mention
+// of its variable; on a small local model every token counts.
 type fillFacts struct {
 	Summary     extract.Note           `json:"summary"`
 	Variables   []extract.Variable     `json:"variables"`
-	EnvSamples  []extract.EnvSample    `json:"env_samples"`
 	Dockerfiles []extract.Dockerfile   `json:"dockerfiles"`
 	Images      []extract.ImageMention `json:"images"`
 	DockerRuns  []extract.DockerRun    `json:"docker_runs"`
@@ -194,9 +194,50 @@ type fillFacts struct {
 	Suspicious  []extract.Note         `json:"suspicious"`
 }
 
-func fillFactsOf(facts *extract.Facts) fillFacts {
-	return fillFacts{Summary: facts.Summary, Variables: facts.Variables, EnvSamples: facts.EnvSamples, Dockerfiles: facts.Dockerfiles,
-		Images: facts.Images, DockerRuns: facts.DockerRuns, Notes: facts.Notes, Suspicious: facts.Suspicious}
+// fillFactsOf keeps the facts the FILL fields can use, so a repository with
+// hundreds of documented variables still fits a small model: the variables
+// whose description is asked, and Dockerfiles, images and docker run
+// commands when a service field is. The summary, notes and suspicious lines
+// always go, since every answer may add post-install notes and must report
+// injected instructions.
+func fillFactsOf(facts *extract.Facts, fields []string) fillFacts {
+	described := map[string]bool{}
+	serviceAsked := false
+	for _, field := range fields {
+		if key, isDescription := ir.DescribedVariable(field); isDescription {
+			described[key] = true
+		}
+		serviceAsked = serviceAsked || ir.IsServiceField(field)
+	}
+	kept := fillFacts{Summary: facts.Summary, Variables: []extract.Variable{}, Notes: facts.Notes, Suspicious: facts.Suspicious}
+	for _, variable := range facts.Variables {
+		if described[variable.Name] {
+			kept.Variables = append(kept.Variables, variable)
+		}
+	}
+	// ponytail: a listed variable goes with all its mentions and a service
+	// field with every Dockerfile, so a repository full of examples, such as
+	// nextcloud's 27 Dockerfiles, can still exceed a small budget; send only
+	// the asked service's Dockerfiles and drop mention locations if it matters.
+	if serviceAsked {
+		kept.Dockerfiles, kept.Images, kept.DockerRuns = facts.Dockerfiles, facts.Images, facts.DockerRuns
+	}
+	return kept
+}
+
+// fillPlan is RULE_PLAN as a fill sees it: secret-free, without the
+// optional settings, which only the rules list and no fill answer changes,
+// and with each variable's description once, in env_file, rather than again
+// on every service that reads it.
+func fillPlan(plan *ir.IR) *ir.IR {
+	view := secretFree(plan)
+	view.OptionalEnv = []ir.OptionalSetting{}
+	for service := range view.Services {
+		for index := range view.Services[service].Env {
+			view.Services[service].Env[index].Description = ""
+		}
+	}
+	return view
 }
 
 // secretFree is the plan as a model may see it: no secret value, and

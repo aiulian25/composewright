@@ -60,7 +60,7 @@ func (assistant *Assistant) Fill(ctx context.Context, plan *ir.IR, fields []stri
 	if err != nil {
 		return nil, Call{}, err
 	}
-	blocks := []block{{"FILL", fields}, {"RULE_PLAN", secretFree(plan)}, {"FACTS", fillFactsOf(redacted)}}
+	blocks := []block{{"FILL", fields}, {"RULE_PLAN", fillPlan(plan)}, {"FACTS", fillFactsOf(redacted, fields)}}
 	text, call, err := assistant.ask(ctx, fillTask, blocks, documents, schema)
 	if err != nil {
 		return nil, call, err
