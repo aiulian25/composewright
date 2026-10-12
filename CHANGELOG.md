@@ -6,6 +6,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-10-12
+
+Generated stacks get each service a password of its own, the paths the image
+really uses, and the settings documented anywhere in a repository; the model
+that fills the gaps now fits a small local model.
+
 ### Changed
 
 - The model that fills what the rules leave open is sent only the facts the
