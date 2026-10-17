@@ -999,6 +999,21 @@ func TestSettings(t *testing.T) {
 	profile.Set("puid", "x")
 	response, page = harness.post("/settings/profile", profile)
 	status(t, response, http.StatusBadRequest, page)
+	profile = sentProfile()
+	profile.Set("registry_mirror", "Mirror.gcr.io")
+	response, page = harness.post("/settings/profile", profile)
+	status(t, response, http.StatusSeeOther, page)
+	response, page = harness.get(response.Header.Get("Location"))
+	status(t, response, http.StatusOK, page)
+	if harness.server.config().Profile.RegistryMirror != "mirror.gcr.io" || !strings.Contains(page, `value="mirror.gcr.io"`) || !strings.Contains(page, ", mirror.gcr.io, ") {
+		t.Fatalf("the registry mirror %q was not saved, shown or listed under Egress", harness.server.config().Profile.RegistryMirror)
+	}
+	profile.Set("registry_mirror", "https://mirror.gcr.io")
+	response, page = harness.post("/settings/profile", profile)
+	status(t, response, http.StatusBadRequest, page)
+	if !strings.Contains(page, "registry_mirror &#34;https://mirror.gcr.io&#34; must be host or host:port") || harness.server.config().Profile.RegistryMirror != "mirror.gcr.io" {
+		t.Fatal("a mirror with a scheme was saved or not explained")
+	}
 	response, page = harness.post("/settings/engine", url.Values{"engine": {"rules"}, "registries": {"docker.io/library/*\nghcr.io/*"}})
 	status(t, response, http.StatusSeeOther, page)
 	if registries := harness.server.config().Registries.Allow; len(registries) != 2 {

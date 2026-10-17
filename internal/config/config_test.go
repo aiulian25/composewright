@@ -131,6 +131,9 @@ func TestValidateRejectsBadValues(t *testing.T) {
 		"owner":            func(c *Config) { c.Profile.Storage.Owner = "root" },
 		"restart":          func(c *Config) { c.Profile.Defaults.Restart = "sometimes" },
 		"domain":           func(c *Config) { c.Profile.Defaults.DomainSuffix = "not a domain" },
+		"mirror scheme":    func(c *Config) { c.Profile.RegistryMirror = "https://mirror.gcr.io" },
+		"mirror port":      func(c *Config) { c.Profile.RegistryMirror = "mirror.gcr.io:http" },
+		"mirror port zero": func(c *Config) { c.Profile.RegistryMirror = "mirror.gcr.io:0" },
 		"network domain": func(c *Config) {
 			c.Profile.Networks = []ProfileNetwork{{Name: "npm", Kind: "proxy", Domain: "https://npm.example.com"}}
 		},
@@ -178,6 +181,18 @@ func TestModelEndpointsOverPlainHTTP(t *testing.T) {
 	err := config.Validate()
 	if err == nil || !strings.Contains(err.Error(), "sends the API key unencrypted") || !strings.Contains(err.Error(), "list api.openai.com:80 in network.allow_private_targets") {
 		t.Fatalf("a saved connection over plain HTTP to a public host: %v", err)
+	}
+}
+
+// TestRegistryMirrorIsAHost: a mirror is a host with an optional port; the
+// scheme follows from network.allow_private_targets.
+func TestRegistryMirrorIsAHost(t *testing.T) {
+	for _, mirror := range []string{"mirror.gcr.io", "192.168.1.10:5000", "registry.lan:5000"} {
+		config := Default()
+		config.Profile.RegistryMirror = mirror
+		if err := config.Validate(); err != nil {
+			t.Errorf("%s: %v", mirror, err)
+		}
 	}
 }
 

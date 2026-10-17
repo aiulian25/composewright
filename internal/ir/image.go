@@ -7,7 +7,8 @@ import (
 	"github.com/distribution/reference"
 )
 
-const dockerHubHost = "docker.io"
+// DockerHubHost is the registry ParseImage gives every Docker Hub image.
+const DockerHubHost = "docker.io"
 
 // ParseImage normalises a reference the way Docker does: "postgres:17"
 // becomes docker.io/library/postgres:17. A missing tag stays empty so the
@@ -19,7 +20,7 @@ func ParseImage(text string) (Image, error) {
 	}
 	image := Image{Registry: reference.Domain(named), Repository: reference.Path(named)}
 	if image.Registry == "index.docker.io" || image.Registry == "registry-1.docker.io" {
-		image.Registry = dockerHubHost
+		image.Registry = DockerHubHost
 	}
 	if tagged, ok := named.(reference.Tagged); ok {
 		image.Tag = tagged.Tag()

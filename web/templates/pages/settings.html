@@ -89,8 +89,8 @@
 
   <section class="card" id="defaults" aria-labelledby="defaults-title">
     <div class="card-head"><h2 id="defaults-title">{{template "icon-sliders"}}Defaults</h2></div>
-    {{with .Config.Profile.Defaults}}
     <div class="card-body field-grid">
+      {{with .Config.Profile.Defaults}}
       <label class="field" for="tz">Time zone<input type="text" id="tz" name="tz" value="{{.TZ}}" placeholder="Europe/London"></label>
       <label class="field" for="puid">User ID (PUID)<input type="text" id="puid" name="puid" value="{{.PUID}}" inputmode="numeric" pattern="[0-9]+"></label>
       <label class="field" for="pgid">Group ID (PGID)<input type="text" id="pgid" name="pgid" value="{{.PGID}}" inputmode="numeric" pattern="[0-9]+"></label>
@@ -101,8 +101,9 @@
       <label class="field" for="memory_limit">Memory per service<input type="text" id="memory_limit" name="memory_limit" value="{{.MemoryLimit}}"></label>
       <label class="field" for="cpus">CPUs per service<input type="text" id="cpus" name="cpus" value="{{.CPUs}}" inputmode="decimal"></label>
       <label class="field" for="pids_limit">Processes per service<input type="text" id="pids_limit" name="pids_limit" value="{{.PIDsLimit}}" inputmode="numeric" pattern="[0-9]+"></label>
+      {{end}}
+      <label class="field" for="registry_mirror">Registry mirror<input class="mono" type="text" id="registry_mirror" name="registry_mirror" value="{{.Config.Profile.RegistryMirror}}" placeholder="mirror.gcr.io" spellcheck="false"><span class="muted small">Docker Hub images are checked through this host. A plain-HTTP mirror on your LAN needs its host:port under <a href="/settings?section=engine#private">private targets</a>.</span></label>
     </div>
-    {{end}}
   </section>
 {{end}}
 

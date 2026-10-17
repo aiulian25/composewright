@@ -37,6 +37,8 @@ const (
 	schemeHTTPS      = "https"
 	defaultHTTPPort  = "80"
 	defaultHTTPSPort = "443"
+	// lowestPort: port 0 parses but can never be dialled.
+	lowestPort = 1
 
 	// The engines decide who writes a plan: the rules alone, the rules with
 	// a model filling what they leave open, or a model drafting it all.

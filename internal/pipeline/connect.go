@@ -53,7 +53,7 @@ func Connect(ctx context.Context, setup Setup) (Connection, error) {
 	}
 	if !setup.Offline {
 		dependencies.Guard = guard
-		dependencies.Inspector = images.NewInspector(guard, imageCache(setup.Workspace), !setup.NoLabelCheck)
+		dependencies.Inspector = images.NewInspector(guard, imageCache(setup.Workspace), !setup.NoLabelCheck, setup.Config.Profile.RegistryMirror)
 	}
 	if dependencies.GitHubToken, err = resolveSecret(ctx, setup.Workspace, setup.Config.SCM.GitHubTokenRef); err != nil {
 		return Connection{}, err

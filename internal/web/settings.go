@@ -304,7 +304,7 @@ func (server *Server) update(request *http.Request, current *visit, values map[s
 }
 
 // profileForm reads the Environment profile page into the profile: the
-// networks table, the storage fields and the defaults.
+// networks table, the storage fields, the defaults and the registry mirror.
 func profileForm(request *http.Request, profile config.Profile) (config.Profile, error) {
 	profile.Networks = adopt(formNetworks(request), request.PostForm["adopt"])
 	profile.Storage = config.Storage{Style: field(request, "style"), BasePath: field(request, "base_path"), Layout: field(request, "layout"),
@@ -317,6 +317,7 @@ func profileForm(request *http.Request, profile config.Profile) (config.Profile,
 		LogMaxFile: reader.whole("log_max_file", "Log files kept", saved.LogMaxFile),
 		PIDsLimit:  reader.whole("pids_limit", "Processes per service", saved.PIDsLimit),
 		CPUs:       reader.decimal("cpus", "CPUs per service", saved.CPUs)}
+	profile.RegistryMirror = strings.ToLower(field(request, "registry_mirror"))
 	return profile, errors.Join(reader.problems...)
 }
 
@@ -398,6 +399,7 @@ func profileValues(profile config.Profile) map[string]string {
 		"profile.defaults.memory_limit":  quote(defaults.MemoryLimit),
 		"profile.defaults.cpus":          strconv.FormatFloat(defaults.CPUs, 'f', -1, 64),
 		"profile.defaults.pids_limit":    strconv.Itoa(defaults.PIDsLimit),
+		"profile.registry_mirror":        quote(profile.RegistryMirror),
 	}
 }
 

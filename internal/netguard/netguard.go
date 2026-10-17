@@ -207,6 +207,12 @@ func (guard *Guard) dial(ctx context.Context, network, address string) (net.Conn
 	return dialer.DialContext(ctx, network, address)
 }
 
+// PlainHTTPAllowed reports whether a registry host (host or host:port, port
+// 80 by default) is a configured private target the guard lets use http.
+func (guard *Guard) PlainHTTPAllowed(registryHost string) bool {
+	return guard.privateTarget(config.HostPort(&url.URL{Scheme: httpScheme, Host: registryHost}))
+}
+
 func (guard *Guard) privateTarget(address string) bool {
 	return slices.Contains(guard.policy.PrivateTargets, strings.ToLower(address))
 }

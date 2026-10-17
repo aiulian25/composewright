@@ -191,8 +191,25 @@ func (profile Profile) Validate() error {
 			problems = append(problems, fmt.Errorf("%s.domain %q is not a domain such as apps.example.com", field, network.Domain))
 		}
 	}
-	problems = append(problems, profile.Storage.validate(), profile.Defaults.validate())
+	problems = append(problems, profile.Storage.validate(), profile.Defaults.validate(), registryMirrorProblem(profile.RegistryMirror))
 	return errors.Join(problems...)
+}
+
+// registryMirrorProblem accepts host or host:port; plain HTTP is decided by
+// network.allow_private_targets, so a scheme here would only mislead.
+func registryMirrorProblem(mirror string) error {
+	if mirror == "" {
+		return nil
+	}
+	host, port, err := net.SplitHostPort(mirror)
+	if err != nil {
+		host, port = mirror, defaultHTTPSPort
+	}
+	portNumber, portErr := strconv.ParseUint(port, 10, 16)
+	if !hostnamePattern.MatchString(host) || portErr != nil || portNumber < lowestPort {
+		return fmt.Errorf("profile.registry_mirror %q must be host or host:port, such as mirror.gcr.io, with no scheme", mirror)
+	}
+	return nil
 }
 
 func (storage Storage) validate() error {

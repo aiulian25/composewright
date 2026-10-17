@@ -24,14 +24,17 @@ var registryHosts = map[string][]string{
 
 // PolicyFromConfig builds the egress allowlist from the configuration: the
 // LLM base URL host, a private target only when it is local, the SCM hosts,
-// the hosts behind every allowlisted registry, and GitHub for the manual
-// update check.
+// the hosts behind every allowlisted registry, the Docker Hub mirror when
+// one is set, and GitHub for the manual update check.
 func PolicyFromConfig(configuration config.Config, extraRegistries []string, version string) (Policy, error) {
 	policy := Policy{Hosts: map[Purpose][]string{}, PrivateTargets: lowered(configuration.Network.AllowPrivateTargets), Version: version}
 	policy.Hosts[SCM] = lowered(configuration.SCM.AllowHosts)
 	policy.Hosts[Release] = []string{ReleaseHost}
 	for _, pattern := range append(append([]string{}, configuration.Registries.Allow...), extraRegistries...) {
 		policy.Hosts[Registry] = appendUnique(policy.Hosts[Registry], RegistryHosts(pattern)...)
+	}
+	if mirror := configuration.Profile.RegistryMirror; mirror != "" {
+		policy.Hosts[Registry] = appendUnique(policy.Hosts[Registry], RegistryHosts(mirror)...)
 	}
 	if configuration.LLM.Provider == config.ProviderNone {
 		return policy, nil

@@ -30,7 +30,11 @@ const (
 	linuxOS     = "linux"
 )
 
-var ErrNotFound = errors.New("image not found in the registry")
+var (
+	ErrNotFound = errors.New("image not found in the registry")
+	// ErrRateLimited is Docker Hub refusing anonymous requests for a while.
+	ErrRateLimited = errors.New("hit Docker Hub's anonymous pull limit; set profile.registry_mirror or wait")
+)
 
 type Metadata struct {
 	Reference         string            `json:"reference"`
@@ -60,12 +64,14 @@ type Inspector struct {
 	guard      *netguard.Guard
 	cache      Cache
 	readConfig bool
+	mirror     string
 }
 
 // NewInspector inspects through the guard's registry purpose. readConfig
-// controls the image-config GET used for labels and R3 facts.
-func NewInspector(guard *netguard.Guard, cache Cache, readConfig bool) *Inspector {
-	return &Inspector{guard: guard, cache: cache, readConfig: readConfig}
+// controls the image-config GET used for labels and R3 facts; mirror, when
+// set, is the host Docker Hub images are read from instead.
+func NewInspector(guard *netguard.Guard, cache Cache, readConfig bool, mirror string) *Inspector {
+	return &Inspector{guard: guard, cache: cache, readConfig: readConfig, mirror: mirror}
 }
 
 // Inspect resolves an image's digest and, if enabled, reads its config.
@@ -75,7 +81,7 @@ func (inspector *Inspector) Inspect(ctx context.Context, image ir.Image) (Metada
 	if cached, found := inspector.cached(ctx, reference); found {
 		return cached, nil
 	}
-	parsed, err := name.ParseReference(reference)
+	parsed, err := inspector.remoteReference(image, reference)
 	if err != nil {
 		return Metadata{}, err
 	}
@@ -85,16 +91,42 @@ func (inspector *Inspector) Inspect(ctx context.Context, image ir.Image) (Metada
 	}
 	descriptor, err := remote.Head(parsed, options...)
 	if err != nil {
-		return Metadata{}, classify(reference, err)
+		return Metadata{}, inspector.classify(image, reference, err)
 	}
 	metadata := Metadata{Reference: reference, Digest: descriptor.Digest.String(), FetchedAt: time.Now().UTC()}
 	if inspector.readConfig {
 		if err := readConfig(parsed, options, &metadata); err != nil {
-			return metadata, classify(reference, err)
+			return metadata, inspector.classify(image, reference, err)
 		}
 	}
 	inspector.store(ctx, metadata)
 	return metadata, nil
+}
+
+// remoteReference is where the registry requests go: a Docker Hub image is
+// read through the mirror when one is set. Digests address content, so the
+// mirror's digest is Docker Hub's and the plan still names docker.io.
+func (inspector *Inspector) remoteReference(image ir.Image, reference string) (name.Reference, error) {
+	if !inspector.throughMirror(image) {
+		return name.ParseReference(reference)
+	}
+	// name.Insecure makes every request plain HTTP, so it is only for a
+	// mirror listed in network.allow_private_targets; others use https.
+	var options []name.Option
+	if inspector.guard.PlainHTTPAllowed(inspector.mirror) {
+		options = append(options, name.Insecure)
+	}
+	// Built from a Registry, not parsed from text: parsing reads a single-word
+	// host such as "nas" as a Docker Hub namespace and never reaches the mirror.
+	registry, err := name.NewRegistry(inspector.mirror, options...)
+	if err != nil {
+		return nil, err
+	}
+	return registry.Repo(image.Repository).Tag(image.Tag), nil
+}
+
+func (inspector *Inspector) throughMirror(image ir.Image) bool {
+	return image.Registry == ir.DockerHubHost && inspector.mirror != ""
 }
 
 func readConfig(reference name.Reference, options []remote.Option, metadata *Metadata) error {
@@ -147,13 +179,26 @@ func (inspector *Inspector) store(ctx context.Context, metadata Metadata) {
 	}
 }
 
-// classify turns a registry error into ErrNotFound when the registry said
-// the image or tag does not exist; anything else (network, rate limit) is
-// reported as an unverified image.
-func classify(reference string, err error) error {
+// classify turns a registry error into ErrNotFound when the image's own
+// registry said the image or tag does not exist, and into ErrRateLimited when
+// Docker Hub, asked directly, says to slow down; anything else (network,
+// another registry's limit, a mirror lacking the image) is reported as an
+// unverified image.
+func (inspector *Inspector) classify(image ir.Image, reference string, err error) error {
 	var registryError *transport.Error
-	if errors.As(err, &registryError) && registryError.StatusCode == http.StatusNotFound {
+	if !errors.As(err, &registryError) {
+		return fmt.Errorf("verify %s: %w", reference, err)
+	}
+	notFound := registryError.StatusCode == http.StatusNotFound
+	if notFound && inspector.throughMirror(image) {
+		return fmt.Errorf("verify %s: the mirror %s does not have it: %w", reference, inspector.mirror, err)
+	}
+	if notFound {
 		return fmt.Errorf("%s: %w", reference, ErrNotFound)
+	}
+	hubAskedDirectly := image.Registry == ir.DockerHubHost && inspector.mirror == ""
+	if hubAskedDirectly && registryError.StatusCode == http.StatusTooManyRequests {
+		return fmt.Errorf("verify %s: %w", reference, ErrRateLimited)
 	}
 	return fmt.Errorf("verify %s: %w", reference, err)
 }

@@ -56,6 +56,16 @@ All notable changes to this project are documented here. The format follows
   with a plain message, and other kinds such as `.7z` or `.rar`, or an
   archive given with loose files, are refused with a message saying what to
   give instead. `composewright gen ./repo.zip` reads one the same way.
+- `profile.registry_mirror` now works: set it to a mirror such as
+  `mirror.gcr.io` or your own pull-through cache, as Registry mirror under
+  Settings › Environment profile or with
+  `composewright config set profile.registry_mirror mirror.gcr.io`, and
+  Docker Hub images are checked through it instead of Docker Hub. The plan
+  still names and pins the `docker.io` image, the mirror joins the hosts
+  composewright may contact, and a mirror on your network over plain HTTP
+  needs its host:port in `network.allow_private_targets`. When Docker Hub
+  itself refuses a check for its anonymous pull limit, the warning now says
+  to set this key or wait.
 
 ### Changed
 

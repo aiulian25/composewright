@@ -64,4 +64,4 @@ profile:
     memory_limit: 512m       # every service gets at least this; a plan raises it for images that need more
     cpus: 1
     pids_limit: 256
-  registry_mirror: ""
+  registry_mirror: ""        # host[:port] Docker Hub images are checked through, such as mirror.gcr.io

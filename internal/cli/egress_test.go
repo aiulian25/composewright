@@ -128,3 +128,21 @@ func TestEgressStaysOnTheAllowlist(t *testing.T) {
 	report := filepath.Join(environment, "egress.txt")
 	_ = os.WriteFile(report, []byte(strings.Join(contacted, "\n")+"\n"), 0o600)
 }
+
+// TestEgressListsTheMirrorOnlyWhenSet: doctor's allowlist names the Docker
+// Hub mirror once profile.registry_mirror is set, and not before.
+func TestEgressListsTheMirrorOnlyWhenSet(t *testing.T) {
+	const mirror = "mirror.gcr.io"
+	environment := isolate(t)
+	run(t, environment, "init")
+	fakeDocker(t, environment, "pass")
+	if result := run(t, environment, "doctor"); strings.Contains(result.stdout, mirror) {
+		t.Fatalf("a mirror nobody set is allowed:\n%s", result.stdout)
+	}
+	if result := run(t, environment, "config", "set", "profile.registry_mirror", mirror); result.code != exitOK {
+		t.Fatalf("config set profile.registry_mirror: %+v", result)
+	}
+	if result := run(t, environment, "doctor"); !strings.Contains(result.stdout, mirror) {
+		t.Fatalf("the mirror is not on the allowlist:\n%s", result.stdout)
+	}
+}

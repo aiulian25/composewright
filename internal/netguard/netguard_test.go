@@ -130,6 +130,15 @@ func TestPolicyFromConfig(t *testing.T) {
 	if !contains(policy.Hosts[SCM], "codeload.github.com") || len(policy.Hosts[Release]) != 1 {
 		t.Fatalf("scm/release hosts: %+v", policy.Hosts)
 	}
+	if contains(policy.Hosts[Registry], "mirror.gcr.io") {
+		t.Fatalf("a mirror nobody configured is allowed: %v", policy.Hosts[Registry])
+	}
+	configuration.Profile.RegistryMirror = "mirror.gcr.io"
+	mirrored, err := PolicyFromConfig(configuration, nil, "test")
+	if err != nil || !contains(mirrored.Hosts[Registry], "mirror.gcr.io") {
+		t.Fatalf("the registry mirror is not allowed: %v %v", mirrored.Hosts[Registry], err)
+	}
+	configuration.Profile.RegistryMirror = ""
 	configuration.LLM.Provider, configuration.LLM.BaseURL = config.ProviderAnthropic, "https://api.anthropic.com"
 	public, err := PolicyFromConfig(configuration, nil, "test")
 	if err != nil || !contains(public.Hosts[LLM], "api.anthropic.com") || contains(public.PrivateTargets, "api.anthropic.com:443") {
