@@ -1,6 +1,6 @@
 {{define "actions"}}
 {{with .Data}}
-<a class="button" href="/projects/{{.Project.Name}}/review?pane=compose&amp;edit">{{template "icon-pencil"}}Edit and re-test</a>
+<button class="button" type="button" data-side-toggle aria-controls="side-editor" aria-expanded="false">{{template "icon-pencil"}}Edit and re-test</button>
 {{end}}
 {{end}}
 
@@ -9,64 +9,79 @@
 {{with .Data}}
 <nav class="result-rail" aria-label="Result panel">
   <button class="rail-button rail-open" type="button" data-side-toggle aria-controls="side-editor" aria-expanded="false" aria-label="Show result panel">{{template "icon-panel-open"}}</button>
-  <button class="rail-button" type="button" data-rail="save-title" data-rail-saves aria-label="Save to folder">{{template "icon-folder"}}</button>
-  <button class="rail-button" type="button" data-rail="download-title" data-rail-saves aria-label="Download">{{template "icon-download"}}</button>
-  <button class="rail-button" type="button" data-rail="copy-title" data-rail-saves aria-label="Copy">{{template "icon-copy"}}</button>
-  <button class="rail-button" type="button" data-rail="versions-title" aria-label="Versions (v{{.OldestVersion}} to v{{(index .Versions 0).Number}})">{{template "icon-history"}}</button>
-  <button class="rail-button" type="button" data-rail="deploy-title" aria-label="Deploy">{{template "icon-deploy"}}</button>
+  <button class="rail-button" type="button" data-rail="deploy-title" data-rail-saves aria-label="Deploy">{{template "icon-deploy"}}</button>
+  <button class="rail-button" type="button" data-rail="history-title" aria-label="History">{{template "icon-history"}}</button>
 </nav>
 <div class="page-head">
   <h1>{{.Project.Name}}</h1>
   <span class="chip chip-{{.Tone}}">{{if .Passed}}{{template "icon-check"}}{{end}}{{.Headline}}</span>
-  <span class="chip">3 files</span>
 </div>
-<p class="muted">{{.Summary}}{{if .Failed}} · <a href="/projects/{{.Project.Name}}/validate">See why the test failed</a>{{end}}</p>
+<p class="muted">v{{.Generation.Number}} · {{.Summary}}{{if .Failed}} · <a href="/projects/{{.Project.Name}}/validate">See why the test failed</a>{{end}}</p>
 
-<section class="card" aria-labelledby="save-title">
-  <div class="card-head"><h2 id="save-title">{{template "icon-folder"}}Save to folder</h2></div>
-  <form class="card-body" method="post" action="/projects/{{.Project.Name}}/save">
+<section class="card" aria-labelledby="deploy-title">
+  <div class="card-head"><h2 id="deploy-title">{{template "icon-deploy"}}Deploy</h2><span class="note">{{if .Arcane}}compose.yaml and .env.example, without secrets{{else}}compose.yaml, .env and DEPLOY.md{{end}}</span></div>
+  <div class="card-body deploy-steps">
+    {{if .Saved}}
+    <p class="deploy-step" role="status"><span class="step-mark step-done">{{template "icon-check"}}</span><span class="strong">Saved</span><span class="mono">{{.Saved}}</span></p>
+    {{else}}
+    <p class="deploy-step"><span class="step-mark step-next">1</span><span class="strong">Save the files</span><span class="muted">to a folder on this machine</span></p>
+    {{if .Choosing}}
+    <form class="folder-choice" method="get" action="/projects/{{.Project.Name}}/files">
+      <fieldset class="choice-list">
+        <legend class="visually-hidden">Where to save</legend>
+        {{range .Locations}}<label class="choice{{if .Disabled}} choice-off{{end}}"><input type="radio" name="location" value="{{.Value}}"{{if .Selected}} checked{{end}}{{if .Disabled}} disabled{{end}}><span>{{.Label}}</span></label>{{end}}
+      </fieldset>
+      <div class="toolbar">
+        <label class="field grow" for="custom">Folder for Arcane or another folder
+          <input class="mono" id="custom" name="custom" type="text" value="{{.Custom}}" placeholder="/srv/arcane/data/templates" spellcheck="false">
+        </label>
+        <label class="field" for="folder">Folder name
+          <input class="mono" id="folder" name="folder" type="text" value="{{.Folder}}" pattern="[a-z0-9][a-z0-9_\-]{0,62}" required>
+        </label>
+      </div>
+      <div class="row"><button class="button button-primary" type="submit">Use this folder</button><a class="button" href="/projects/{{.Project.Name}}/files">Cancel</a></div>
+    </form>
+    {{else}}
+    <form class="save-form" method="post" action="/projects/{{.Project.Name}}/save">
+      <input type="hidden" name="csrf" value="{{$csrf}}">
+      <input type="hidden" name="file" value="{{.Tab}}">
+      <input type="hidden" name="location" value="{{.Location}}">
+      <input type="hidden" name="custom" value="{{.Custom}}">
+      <input type="hidden" name="folder" value="{{.Folder}}">
+      {{if .Replace}}<input type="hidden" name="overwrite" value="1">{{end}}
+      <div class="save-row">
+        <span class="path-box">{{template "icon-folder"}}<span class="mono grow">{{.TargetPath}}</span><a href="/projects/{{.Project.Name}}/files?change&amp;location={{.Location}}&amp;custom={{.Custom}}&amp;folder={{.Folder}}">Change</a></span>
+        {{if not .Replace}}<button class="button button-primary" type="submit">Save {{if .Arcane}}2{{else}}3{{end}} files</button>{{end}}
+      </div>
+      {{if .Replace}}
+      <div class="replace-prompt" role="alert">
+        <p><span class="strong">This folder already has files from an earlier save.</span> Replacing them changes what the stack runs the next time it starts.</p>
+        <div class="row"><button class="button button-primary" type="submit">Replace the files</button><a class="button" href="/projects/{{.Project.Name}}/files">Cancel</a></div>
+      </div>
+      {{end}}
+    </form>
+    {{end}}
+    <p class="muted small">{{if .Arcane}}Arcane gets a .env.example; the secrets stay here.{{else}}The .env is written with mode 0600; it holds the real secrets.{{end}}</p>
+    {{end}}
+    <hr class="divider">
+    <p class="deploy-step"><span class="step-mark{{if .Saved}} step-next{{end}}">2</span><span class="strong">Start it</span><span class="muted">{{if .Saved}}on this machine{{else}}once the files are saved{{end}}</span></p>
+    {{if .Arcane}}
+    <p>In Arcane, create the stack from the {{.Folder}} template.</p>
+    {{else}}
+    <div class="command"><code class="grow"><span class="comment">$ </span>cd {{.TargetPath}} &amp;&amp; docker compose up -d</code><button class="button button-small{{if .Saved}} button-primary{{end}}" type="button" data-copy-target="deploy-command">{{template "icon-copy"}}Copy</button></div>
+    <textarea id="deploy-command" hidden readonly>cd {{.TargetPath}} &amp;&amp; docker compose up -d</textarea>
+    {{end}}
+    <p class="muted small">DEPLOY.md lists what is left to do: exposure, secrets you supply, notes.</p>
+  </div>
+  <form class="card-foot" method="post" action="/projects/{{.Project.Name}}/download">
     <input type="hidden" name="csrf" value="{{$csrf}}">
-    <input type="hidden" name="file" value="{{.Tab}}">
-    <div class="toolbar">
-      <label class="field grow" for="location">Where
-        <select id="location" name="location">{{range .Locations}}<option value="{{.Value}}"{{if .Selected}} selected{{end}}{{if .Disabled}} disabled{{end}}>{{.Label}}</option>{{end}}</select>
-      </label>
-      <label class="field" for="folder">Folder name
-        <input class="mono" id="folder" name="folder" type="text" value="{{.Folder}}" pattern="[a-z0-9][a-z0-9_\-]{0,62}" required>
-      </label>
-    </div>
-    <label class="field" for="custom">Another folder (for Arcane or anywhere else)
-      <input class="mono" id="custom" name="custom" type="text" value="{{.Custom}}" placeholder="/srv/arcane/data/templates" spellcheck="false">
-    </label>
-    <div class="toolbar">
-      {{if .Preview}}<span class="source">{{template "icon-folder"}}{{.Preview}}</span>{{end}}
-      <label class="choice"><input type="checkbox" name="overwrite" value="1"><span>Overwrite existing files</span></label>
-      <button class="button button-primary push-right" type="submit">Save files</button>
-    </div>
-    <p class="muted small">The .env is written with mode 0600; it holds the real secrets.</p>
+    <span class="muted small">Deploying on another machine?</span>
+    <button class="button button-small" type="submit">{{template "icon-download"}}Download .zip</button>
   </form>
 </section>
 
-<div class="columns-2">
-  <section class="card" aria-labelledby="download-title">
-    <div class="card-head"><h2 id="download-title">{{template "icon-download"}}Download</h2></div>
-    <form class="card-body" method="post" action="/projects/{{.Project.Name}}/download">
-      <input type="hidden" name="csrf" value="{{$csrf}}">
-      <div class="row"><button class="button" type="submit">{{template "icon-file"}}.zip</button><span class="muted small">compose.yaml, .env, DEPLOY.md · written to the audit log</span></div>
-    </form>
-  </section>
-  <section class="card" aria-labelledby="copy-title">
-    <div class="card-head"><h2 id="copy-title">{{template "icon-copy"}}Copy</h2></div>
-    <div class="card-body"><div class="row">
-      <button class="button" type="button" data-copy-target="compose-source">compose.yaml</button>
-      <button class="button" type="button" data-copy-env="/projects/{{.Project.Name}}/env" data-csrf="{{$csrf}}">.env</button>
-      <button class="button" type="button" data-copy-heredoc="/projects/{{.Project.Name}}/env" data-csrf="{{$csrf}}">{{template "icon-terminal"}}Both as shell heredoc</button>
-    </div></div>
-  </section>
-</div>
-
-<section class="card" aria-labelledby="versions-title">
-  <div class="card-head"><h2 id="versions-title">{{template "icon-history"}}Versions</h2></div>
+<section class="card" aria-labelledby="history-title">
+  <div class="card-head"><h2 id="history-title">{{template "icon-history"}}History</h2><span class="note">untested drafts go once a later version passes</span></div>
   <div class="table-scroll">
     <table class="table">
       <thead><tr><th scope="col">Version</th><th scope="col">Result</th><th scope="col">Change</th><th scope="col">Engine</th><th scope="col">When</th></tr></thead>
@@ -85,20 +100,6 @@
     </table>
   </div>
 </section>
-
-<section class="card" aria-labelledby="deploy-title">
-  <div class="card-head"><h2 id="deploy-title">{{template "icon-deploy"}}Deploy</h2><span class="note">after saving the files</span></div>
-  <pre class="terminal">$ cd {{.Target}} &amp;&amp; docker compose up -d
-<span class="comment"># DEPLOY.md lists anything left to do: exposure, secrets you supply, notes.</span></pre>
-</section>
-
-<section class="card card-danger" aria-label="Finished with this project">
-  <div class="card-body"><div class="row">
-    <p class="grow"><span class="strong">Finished with this project?</span> <span class="muted">Delete removes the files and the encrypted secrets; the audit log keeps the run record.</span></p>
-    <a class="button" href="/new">{{template "icon-restart"}}Start over</a>
-    <a class="button button-danger" href="/projects/{{.Project.Name}}/delete">{{template "icon-trash"}}Delete project…</a>
-  </div></div>
-</section>
 <textarea id="compose-source" hidden readonly>{{.ComposeText}}</textarea>
 <form id="reveal-form" method="post" action="/projects/{{.Project.Name}}/reveal">
   <input type="hidden" name="csrf" value="{{$csrf}}">
@@ -110,12 +111,19 @@
 {{define "context"}}
 {{$csrf := .CSRF}}
 {{with .Data}}
-<button class="side-handle" type="button" data-side-toggle aria-controls="side-editor" aria-expanded="false" aria-label="Fold the result panel and edit side by side">{{template "icon-chevrons-left"}}</button>
 <div class="tabs" role="tablist" aria-label="Files" data-tabs>
   <a class="tab" role="tab" href="?file=compose" aria-selected="{{eq .Tab "compose"}}" data-tab="compose">{{template "icon-file"}}compose.yaml</a>
   <a class="tab" role="tab" href="?file=env" aria-selected="{{eq .Tab "env"}}" data-tab="env">.env</a>
   <a class="tab" role="tab" href="?file=deploy" aria-selected="{{eq .Tab "deploy"}}" data-tab="deploy">DEPLOY.md</a>
-  <span class="tabs-actions">{{if .Masked}}<button class="button button-small button-dark" type="submit" form="reveal-form">{{template "icon-eye-off"}}Secrets hidden</button>{{else if .Revealed}}<span class="chip chip-mono">{{template "icon-eye"}}shown</span>{{end}}<button class="button button-small button-dark side-toggle" type="button" data-side-toggle aria-controls="side-editor" aria-expanded="false">{{template "icon-columns"}}<span data-side-label>Side by side</span></button></span>
+  <span class="tabs-actions">{{if .Masked}}<button class="button button-small button-dark" type="submit" form="reveal-form">{{template "icon-eye-off"}}Secrets hidden</button>{{else if .Revealed}}<span class="chip chip-mono">{{template "icon-eye"}}shown</span>{{end}}
+    <details class="menu copy-menu" data-menu>
+      <summary class="button button-small button-dark">{{template "icon-copy"}}Copy{{template "icon-chevron-down"}}</summary>
+      <div class="menu-panel">
+        <button class="button button-small" type="button" data-copy-target="compose-source">compose.yaml</button>
+        <button class="button button-small" type="button" data-copy-env="/projects/{{.Project.Name}}/env" data-csrf="{{$csrf}}">.env</button>
+        <button class="button button-small" type="button" data-copy-heredoc="/projects/{{.Project.Name}}/env" data-csrf="{{$csrf}}">{{template "icon-terminal"}}Both as shell heredoc</button>
+      </div>
+    </details></span>
 </div>
 <div class="tab-panel" data-panel="compose"{{if ne .Tab "compose"}} hidden{{end}}><div class="code" id="file-content">{{template "code-lines" .ComposeLines}}</div>{{template "legend"}}</div>
 <div class="tab-panel" data-panel="env"{{if ne .Tab "env"}} hidden{{end}}><div class="code">{{template "code-lines" .EnvLines}}</div></div>

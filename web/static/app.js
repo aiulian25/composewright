@@ -887,7 +887,6 @@
     var actions = editor.querySelectorAll("[data-side-save], [data-side-discard]");
     var saveOnly = editor.querySelector("[data-side-save]:not([data-retest])");
     var toggles = document.querySelectorAll("[data-side-toggle]");
-    var label = document.querySelector("[data-side-label]");
     var untested = editor.hasAttribute("data-untested");
     var checkTimer = 0;
     var checkRound = 0;
@@ -1034,7 +1033,6 @@
       toggles.forEach(function (toggle) {
         toggle.setAttribute("aria-expanded", side ? "true" : "false");
       });
-      label.textContent = side ? "Exit side by side" : "Side by side";
       if (!side) {
         return;
       }

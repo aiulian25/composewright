@@ -8,12 +8,21 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The Result page finishes a project in one card: save the files to a folder,
+  then start them with the command shown, or download a .zip for another
+  machine. Change opens a short list of folders; saving over files from an
+  earlier save asks first instead of needing a checkbox. Copying moves into
+  the file panel's Copy menu, and Edit and re-test opens compose.yaml and .env
+  side by side on the page. Start over and Delete project left the page: the
+  side panel's New project and delete buttons do both.
 - Once a version passes its test, the untested versions before it are removed,
   so History lists what was tested and the work since; the audit log counts
   them.
 
 ### Fixed
 
+- The file panel's buttons wrap onto a second row instead of running off a
+  narrow panel.
 - The healthcheck an app's image ships with no longer blocks the stack: one
   read from the image itself, such as a probe of the address the app binds,
   passes the rule that a healthcheck may only contact its own container,

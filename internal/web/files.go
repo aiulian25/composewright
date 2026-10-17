@@ -36,6 +36,14 @@ const (
 	webMask         = "<hidden: Reveal secrets shows it>"
 	// retestField asks a side-by-side save to start a test run as well.
 	retestField = "retest"
+	// The Save form's fields, also read from the address once the folder
+	// chooser picked a folder; changeParameter opens the chooser.
+	fieldFile       = "file"
+	fieldFolder     = "folder"
+	fieldLocation   = "location"
+	fieldCustom     = "custom"
+	fieldOverwrite  = "overwrite"
+	changeParameter = "change"
 )
 
 type filesView struct {
@@ -43,18 +51,27 @@ type filesView struct {
 	Generation store.Generation
 	Passed     bool
 	// Failed is a project whose last test failed; the page links to why.
-	Failed       bool
-	Tone         string
-	Headline     string
-	Summary      string
-	Tab          string
-	Revealed     bool
-	Masked       bool
-	Folder       string
-	Locations    []option
-	Custom       string
-	Preview      string
-	Target       string
+	Failed    bool
+	Tone      string
+	Headline  string
+	Summary   string
+	Tab       string
+	Revealed  bool
+	Masked    bool
+	Folder    string
+	Location  string
+	Locations []option
+	Custom    string
+	Target    string
+	// TargetPath is the folder Save writes to as a person reads it; Arcane
+	// gets compose.yaml and a .env.example without secrets. Choosing shows
+	// the folder chooser, Replace asks before replacing files from an
+	// earlier save, and Saved names the folder just written.
+	TargetPath   string
+	Arcane       bool
+	Choosing     bool
+	Replace      bool
+	Saved        string
 	ComposeLines []badgedLine
 	EnvLines     []badgedLine
 	DeployLines  []badgedLine
@@ -66,7 +83,6 @@ type filesView struct {
 	EnvText           string
 	ComposeProvenance string
 	NextVersion       int
-	OldestVersion     int
 	EditedUntested    bool
 }
 
@@ -100,14 +116,28 @@ type filesState struct {
 	folder   string
 	location string
 	custom   string
+	choosing bool
+	replace  bool
+	saved    string
 }
 
+// filesPage shows the Result page; the folder chooser's choice arrives in
+// the address, and one that names no usable folder reopens the chooser.
 func (server *Server) filesPage(writer http.ResponseWriter, request *http.Request, current *visit) error {
 	stored, err := pipeline.Load(request.Context(), server.workspace(), request.PathValue("name"))
 	if err != nil {
 		return err
 	}
-	return server.renderFiles(writer, request, current, stored, filesState{tab: request.URL.Query().Get("file")})
+	query := request.URL.Query()
+	state := filesState{tab: query.Get(fieldFile), choosing: query.Has(changeParameter), folder: strings.TrimSpace(query.Get(fieldFolder)),
+		location: query.Get(fieldLocation), custom: strings.TrimSpace(query.Get(fieldCustom))}
+	if state.folder == "" {
+		state.folder = stored.Project.Name
+	}
+	if _, err := server.target(state.folder, state.location, state.custom); err != nil {
+		state.problem, state.status, state.choosing = capitalised(err.Error())+".", http.StatusBadRequest, true
+	}
+	return server.renderFiles(writer, request, current, stored, state)
 }
 
 func (server *Server) renderFiles(writer http.ResponseWriter, request *http.Request, current *visit, stored *pipeline.Stored, state filesState) error {
@@ -132,10 +162,14 @@ func (server *Server) filesView(ctx context.Context, stored *pipeline.Stored, st
 	}
 	project := stored.Project
 	view := filesView{Project: project, Generation: stored.Generation, Tab: tab, Revealed: state.revealed, Folder: state.folder,
-		Custom: state.custom, Passed: project.Status == store.StatusPassed, ComposeText: stored.Generation.ComposeYAML,
-		Failed: project.Status == store.StatusFailed || project.Status == store.StatusNeedsHuman}
+		Location: state.location, Custom: state.custom, Passed: project.Status == store.StatusPassed, ComposeText: stored.Generation.ComposeYAML,
+		Failed: project.Status == store.StatusFailed || project.Status == store.StatusNeedsHuman, Choosing: state.choosing,
+		Replace: state.replace, Saved: state.saved}
 	if view.Folder == "" {
 		view.Folder = project.Name
+	}
+	if view.Location == "" {
+		view.Location = locationData
 	}
 	view.Tone, view.Headline, view.Summary = filesBanner(stored)
 	env, err := fileText(stored, fileEnv, state.revealed)
@@ -145,17 +179,17 @@ func (server *Server) filesView(ctx context.Context, stored *pipeline.Stored, st
 	view.Masked = !state.revealed && strings.Contains(env, webMask)
 	view.ComposeLines = server.composeView(stored)
 	view.EnvLines, view.DeployLines = plainLines(env, languageEnv), plainLines(stored.Generation.DeployMD, languageMarkdown)
-	view.Locations = server.locationOptions(state.location)
-	view.Preview = server.savePreview(view.Folder, state.location, state.custom)
-	if target, err := server.target(view.Folder, state.location, state.custom); err == nil {
+	view.Locations = server.locationOptions(view.Location)
+	if target, err := server.target(view.Folder, view.Location, view.Custom); err == nil {
 		view.Target = target
+		view.TargetPath, view.Arcane = shownTarget(target, view.Folder)
 	}
 	generations, err := server.workspace().Store.Generations(ctx, project.ID)
 	if err != nil {
 		return view, err
 	}
 	view.Versions = versionRows(generations, stored.Generation.ID)
-	view.EnvText, view.NextVersion, view.OldestVersion = env, stored.Generation.Number+1, generations[len(generations)-1].Number
+	view.EnvText, view.NextVersion = env, stored.Generation.Number+1
 	_, tested := storedVerdict(stored.Generation)
 	view.EditedUntested = stored.Options.Edited && !tested
 	marks := make([]provenanceMark, 0, len(view.ComposeLines))
@@ -359,18 +393,18 @@ func (server *Server) locationOptions(current string) []option {
 // target is the export destination a Save form names.
 func (server *Server) target(folder, location, custom string) (string, error) {
 	if !store.ValidProjectName(folder) {
-		return "", badRequest("A folder name uses lowercase letters, digits, - and _.")
+		return "", badRequest("A folder name uses lowercase letters, digits, - and _")
 	}
 	profile := server.config().Profile
 	switch location {
 	case locationProfile:
 		if profile.Storage.BasePath == "" {
-			return "", badRequest("Set a base path in Settings › Paths first.")
+			return "", badRequest("Set a base path in Settings › Paths first")
 		}
 		return strings.NewReplacer(config.LayoutBase, profile.Storage.BasePath, config.LayoutProject, folder).Replace(profile.Storage.SaveDir), nil
 	case locationArcane, locationCustom:
 		if !filepath.IsAbs(custom) {
-			return "", badRequest("Give an absolute folder path.")
+			return "", badRequest("Give an absolute folder path")
 		}
 		if location == locationArcane {
 			return arcanePrefix + filepath.Clean(custom), nil
@@ -380,15 +414,14 @@ func (server *Server) target(folder, location, custom string) (string, error) {
 	return filepath.Join(server.paths().DataDir, exportsDir, folder), nil
 }
 
-func (server *Server) savePreview(folder, location, custom string) string {
-	target, err := server.target(folder, location, custom)
-	if err != nil {
-		return ""
+// shownTarget is a save target as a person reads it: an Arcane target is
+// the templates folder, which gets the project's folder.
+func shownTarget(target, folder string) (string, bool) {
+	templates, arcane := strings.CutPrefix(target, arcanePrefix)
+	if arcane {
+		return filepath.Join(templates, folder), true
 	}
-	if templates, arcane := strings.CutPrefix(target, arcanePrefix); arcane {
-		return filepath.Join(templates, folder) + "/{compose.yaml, .env.example}"
-	}
-	return target + "/{compose.yaml, .env (0600), DEPLOY.md}"
+	return target, false
 }
 
 func (server *Server) save(writer http.ResponseWriter, request *http.Request, current *visit) error {
@@ -397,16 +430,19 @@ func (server *Server) save(writer http.ResponseWriter, request *http.Request, cu
 	if err != nil {
 		return err
 	}
-	state := filesState{folder: strings.TrimSpace(request.PostFormValue("folder")), location: request.PostFormValue("location"),
-		custom: strings.TrimSpace(request.PostFormValue("custom")), tab: request.PostFormValue("file")}
+	state := filesState{folder: strings.TrimSpace(request.PostFormValue(fieldFolder)), location: request.PostFormValue(fieldLocation),
+		custom: strings.TrimSpace(request.PostFormValue(fieldCustom)), tab: request.PostFormValue(fieldFile)}
 	target, err := server.target(state.folder, state.location, state.custom)
 	if err == nil {
 		var written export.Written
-		written, err = pipeline.Export(ctx, server.as(current.user.Username), stored, target, request.PostFormValue("overwrite") != "", viaWeb)
-		state.notice = "Saved to " + written.Directory + "."
+		written, err = pipeline.Export(ctx, server.as(current.user.Username), stored, target, request.PostFormValue(fieldOverwrite) != "", viaWeb)
+		state.saved = written.Directory
 	}
-	if err != nil {
-		state.notice, state.problem, state.status = "", capitalised(err.Error())+".", http.StatusBadRequest
+	switch {
+	case errors.Is(err, export.ErrExists):
+		state.saved, state.replace, state.status = "", true, http.StatusConflict
+	case err != nil:
+		state.saved, state.problem, state.status = "", capitalised(err.Error())+".", http.StatusBadRequest
 	}
 	return server.renderFiles(writer, request, current, stored, state)
 }

@@ -651,15 +651,47 @@ func (harness *harness) checkFiles() {
 	if err != nil || len(reader.File) != 3 || reader.File[1].Mode().Perm() != 0o600 {
 		t.Fatalf("zip: %v", err)
 	}
-	target := filepath.Join(harness.root, "saved")
-	response, page = harness.post("/projects/miniflux/save", url.Values{"folder": {"feeds"}, "location": {locationCustom}, "custom": {target}})
+	response, page = harness.get("/projects/miniflux/files")
 	status(t, response, http.StatusOK, page)
+	for _, want := range []string{"Save 3 files", `data-copy-env="/projects/miniflux/env"`, `type="button" data-side-toggle aria-controls="side-editor"`, "docker compose up -d"} {
+		if !strings.Contains(page, want) {
+			t.Fatalf("the Result page lacks %q", want)
+		}
+	}
+	for _, gone := range []string{"Start over", "Delete project…", "Overwrite existing files", "Save to folder"} {
+		if strings.Contains(page, gone) {
+			t.Fatalf("the Result page still has %q", gone)
+		}
+	}
+	response, page = harness.get("/projects/miniflux/files?change")
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, `name="location" value="custom"`) || !strings.Contains(page, "Use this folder") {
+		t.Fatal("Change does not open the folder chooser")
+	}
+	response, page = harness.get("/projects/miniflux/files?location=custom&custom=relative")
+	status(t, response, http.StatusBadRequest, page)
+	if !strings.Contains(page, "Give an absolute folder path.") || !strings.Contains(page, "Use this folder") {
+		t.Fatal("a relative folder is not refused with the chooser open")
+	}
+	target := filepath.Join(harness.root, "saved")
+	saveForm := url.Values{"folder": {"feeds"}, "location": {locationCustom}, "custom": {target}}
+	response, page = harness.post("/projects/miniflux/save", saveForm)
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, filepath.Join(target, "feeds")) || !strings.Contains(page, `role="status"`) {
+		t.Fatal("the page does not say where the files were saved")
+	}
 	info, err := os.Stat(filepath.Join(target, "feeds", ".env"))
 	if err != nil || info.Mode().Perm() != 0o600 {
 		t.Fatalf("saved .env: %v", err)
 	}
-	response, page = harness.post("/projects/miniflux/save", url.Values{"folder": {"feeds"}, "location": {locationCustom}, "custom": {target}})
-	status(t, response, http.StatusBadRequest, page)
+	response, page = harness.post("/projects/miniflux/save", saveForm)
+	status(t, response, http.StatusConflict, page)
+	if !strings.Contains(page, "Replace the files") || !strings.Contains(page, `name="overwrite" value="1"`) {
+		t.Fatal("saving over earlier files does not ask first")
+	}
+	saveForm.Set("overwrite", "1")
+	response, page = harness.post("/projects/miniflux/save", saveForm)
+	status(t, response, http.StatusOK, page)
 }
 
 func TestEventsStream(t *testing.T) {
@@ -1585,7 +1617,7 @@ func TestSideBySideEditing(t *testing.T) {
 	if !strings.Contains(page, "Edited by you") || !strings.Contains(page, `id="side-editor"`) {
 		t.Fatal("the Result page lacks the version or the editor")
 	}
-	if !strings.Contains(page, "Versions (v1 to v3)") || !strings.Contains(page, "Save as v4") {
+	if !strings.Contains(page, `class="mono">v1</th>`) || !strings.Contains(page, `class="mono">v3</th>`) || !strings.Contains(page, "Save as v4") {
 		t.Fatal("the Result page does not number the versions from the stored numbers")
 	}
 	harness.remember(page)
