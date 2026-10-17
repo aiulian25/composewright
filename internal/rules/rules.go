@@ -38,6 +38,9 @@ type Input struct {
 	// EnabledOptional are the optional services, those upstream starts only
 	// with a Compose profile, to switch on, with those they depend on.
 	EnabledOptional []string
+	// ComposeFile is the path of the compose file to build from; empty, or
+	// one the facts lack, R1 chooses.
+	ComposeFile string
 }
 
 type builder struct {
@@ -68,7 +71,8 @@ func Build(ctx context.Context, input Input) *ir.IR {
 		plan:     &ir.IR{IRVersion: ir.Version},
 		identity: identityNames(input.Source),
 	}
-	compose := chooseCompose(builder.facts, builder.identity)
+	compose := chooseCompose(builder.facts, builder.identity, input.ComposeFile)
+	builder.missingVariant(compose)
 	if compose != nil {
 		builder.plan.OptionalServices = optionalServices(compose)
 		// A name the plan does not offer is left out; Enabled reports it.

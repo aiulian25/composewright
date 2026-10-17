@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/aiulian25/composewright/internal/config"
+	"github.com/aiulian25/composewright/internal/extract"
 	"github.com/aiulian25/composewright/internal/fetch"
 	"github.com/aiulian25/composewright/internal/ir"
 	"github.com/aiulian25/composewright/internal/llm"
@@ -313,9 +314,10 @@ func TestRegenerationReadsTheSameFiles(t *testing.T) {
 	const commit = "0123456789abcdef0123456789abcdef01234567"
 	kept := Options{Engine: EngineAssisted, Source: "https://github.com/acme/notes", Ref: "main", ExposeVia: "lan", Networks: []string{"proxy"},
 		Storage: "bind", AllowNeeds: []string{ir.NeedDevices}, AllowRegistries: []string{"ghcr.io/acme/*"}, BenignLogPatterns: []string{"warn"},
-		ProfileFile: "profile.yaml", Upstream: "https://github.com/acme/notes", Owner: "acme", RunSandbox: true, Edited: true}
+		ProfileFile: "profile.yaml", Upstream: "https://github.com/acme/notes", Owner: "acme", RunSandbox: true, Edited: true,
+		ComposeFile: "contrib/compose.yaml"}
 	stored := &Stored{Project: store.Project{Name: "notes", SourceKind: fetch.SourceGitHub, SourceCommit: commit}, Options: kept}
-	options, err := stored.Regeneration([]string{"tts"})
+	options, err := stored.Regeneration([]string{"tts"}, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -325,9 +327,109 @@ func TestRegenerationReadsTheSameFiles(t *testing.T) {
 	if !reflect.DeepEqual(options, want) {
 		t.Fatalf("got %+v\nwant %+v", options, want)
 	}
+	if options, err := stored.Regeneration(nil, "contrib/compose.traefik.yaml"); err != nil || options.ComposeFile != "contrib/compose.traefik.yaml" {
+		t.Fatalf("another compose file: %q, %v", options.ComposeFile, err)
+	}
 	stored.Options.Uploaded = true
-	if _, err := stored.Regeneration(nil); !errors.Is(err, ErrNotRereadable) {
+	if _, err := stored.Regeneration(nil, ""); !errors.Is(err, ErrNotRereadable) {
 		t.Fatalf("an upload: %v", err)
+	}
+}
+
+// TestComposeVariantSwitch: generating a project again from another compose
+// file builds it from that file, keeps a value and a secret a person set for
+// keys both files have, and keeps on only the optional services the new file
+// offers, with a notice for the others; a later regeneration, or a gen that
+// names none, stays on that file, and a file the repository lacks is noted
+// and the one built from instead kept. A path spelt with ./ names the same file. The model sees
+// nothing of the file not chosen but the image both share, and keeps the
+// note of one that is missing; what its provenance cites never marks the
+// file built from.
+func TestComposeVariantSwitch(t *testing.T) {
+	ctx := context.Background()
+	directory := t.TempDir()
+	const variant = "contrib/compose.traefik.yaml"
+	const sharedImage = "docker.io/library/nginx:1.27"
+	app := "services:\n  app:\n    image: " + sharedImage + "\n    ports: [\"8080:80\"]\n    environment:\n" +
+		"      LOG_LEVEL: ${LOG_LEVEL:-info}\n      SMTP_PASSWORD: ${SMTP_PASSWORD}\n"
+	const plainOnly = "PLAIN_ONLY"
+	files := map[string]string{"compose.yaml": app + "      " + plainOnly + ": ${" + plainOnly + "}\n  tts:\n    image: docker.io/library/busybox:1.36\n    profiles: [tts]\n",
+		variant: app + "  proxy:\n    image: docker.io/library/traefik:v3.1\n"}
+	for name, content := range files {
+		if err := os.MkdirAll(filepath.Dir(filepath.Join(directory, name)), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(directory, name), []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	dependencies := testDependencies(t, &scriptedDocker{})
+	if _, err := Generate(ctx, dependencies, Options{Source: directory, Name: "talk", EnabledOptional: []string{"tts"}}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Revise(ctx, dependencies, "talk", Revision{Values: map[string]string{"LOG_LEVEL": "debug"}, Secrets: map[string]string{"SMTP_PASSWORD": "typed-in-secret"}}); err != nil {
+		t.Fatal(err)
+	}
+	regenerate := func(composeFile string) (*Result, *Stored) {
+		t.Helper()
+		options, err := load(t, dependencies, "talk").Regeneration([]string{"tts"}, composeFile)
+		if err != nil {
+			t.Fatal(err)
+		}
+		result, err := Generate(ctx, dependencies, options)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return result, load(t, dependencies, "talk")
+	}
+	result, switched := regenerate(variant)
+	for _, service := range switched.Plan.Services {
+		if !strings.HasPrefix(service.Provenance.SourceRef, variant+":") {
+			t.Fatalf("%s comes from %s", service.Name, service.Provenance.SourceRef)
+		}
+	}
+	if switched.Options.ComposeFile != variant || len(switched.Options.EnabledOptional) != 0 || !slices.Contains(result.Notices, keptChoiceNotice+rules.ErrNotOptional.Error()+": tts") {
+		t.Fatalf("options %+v, notices %q", switched.Options, result.Notices)
+	}
+	if !slices.ContainsFunc(result.Facts.FromCompose(variant).Images, func(mention extract.ImageMention) bool { return mention.Reference == sharedImage }) {
+		t.Fatalf("the image both files share was left out of the facts")
+	}
+	if switched.Values["LOG_LEVEL"] != "debug" || switched.Values["SMTP_PASSWORD"] != "typed-in-secret" {
+		t.Fatalf("what the person set was lost: %+v", switched.Values)
+	}
+	if _, again := regenerate(""); again.Options.ComposeFile != variant {
+		t.Fatalf("a regeneration left the chosen file: %q", again.Options.ComposeFile)
+	}
+	if _, err := Generate(ctx, dependencies, Options{Source: directory, Name: "talk"}); err != nil || load(t, dependencies, "talk").Options.ComposeFile != variant {
+		t.Fatalf("a gen naming no file left the chosen one: %v", err)
+	}
+	const missingNote = "compose variant gone.yaml not found; used compose.yaml"
+	missingResult, missing := regenerate("gone.yaml")
+	if missing.Options.ComposeFile != "compose.yaml" || !slices.Contains(missing.Plan.PostInstallNotes, missingNote) || !slices.Contains(missingResult.Notices, missingNote) {
+		t.Fatalf("a missing file: %q, notes %q, notices %q", missing.Options.ComposeFile, missing.Plan.PostInstallNotes, missingResult.Notices)
+	}
+	if _, err := Generate(ctx, dependencies, Options{Source: directory, Name: "talk", ComposeFile: "./" + variant}); err != nil || load(t, dependencies, "talk").Options.ComposeFile != variant {
+		t.Fatalf("a path spelt with ./ was not found: %v", err)
+	}
+	model := &scriptedModel{change: func(*ir.IR) {}}
+	dependencies.Assistant = llm.NewAssistant(model, "configured", 60000)
+	if _, err := Generate(ctx, dependencies, Options{Source: directory, Name: "voice", Engine: EngineModel, ComposeFile: variant}); err != nil {
+		t.Fatal(err)
+	}
+	if len(model.prompts) != 1 || strings.Contains(model.prompts[0], plainOnly) {
+		t.Fatalf("the model saw the file not chosen: %d prompts", len(model.prompts))
+	}
+	drafted, err := Generate(ctx, dependencies, Options{Source: directory, Name: "voice", Engine: EngineModel, ComposeFile: "gone.yaml"})
+	if err != nil || drafted.Engine != EngineModel || !slices.Contains(drafted.Plan.PostInstallNotes, missingNote) {
+		t.Fatalf("the model's plan lost the note: %v, notes %q", err, drafted.Plan.PostInstallNotes)
+	}
+	model.change = func(plan *ir.IR) {
+		for index := range plan.Services {
+			plan.Services[index].Provenance.SourceRef = variant + ":1"
+		}
+	}
+	if _, err := Generate(ctx, dependencies, Options{Source: directory, Name: "chat", Engine: EngineModel}); err != nil || load(t, dependencies, "chat").BuiltFrom() != "compose.yaml" {
+		t.Fatalf("the model's provenance chose the file built from: %v", err)
 	}
 }
 
@@ -402,7 +504,7 @@ func TestRegenerationKeepsItsSource(t *testing.T) {
 	}
 	t.Chdir(second)
 	stored := load(t, dependencies, "app")
-	options, err := stored.Regeneration(nil)
+	options, err := stored.Regeneration(nil, "")
 	if err != nil {
 		t.Fatal(err)
 	}

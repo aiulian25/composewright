@@ -1,10 +1,12 @@
 package pipeline
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"errors"
 	"os"
+	"slices"
 
 	"github.com/aiulian25/composewright/internal/config"
 	"github.com/aiulian25/composewright/internal/ir"
@@ -36,28 +38,42 @@ const (
 // filling what they left open, or the model alone.
 var Engines = []string{EngineRules, EngineAssisted, EngineModel}
 
-// draft builds the first plan, with the optional services in
-// options.EnabledOptional switched on, which it spells as the plan does.
-// Named none, a regeneration keeps those the project has switched on; any
-// the repository no longer offers stay off, with a notice. The model engine
-// asks the model for the whole plan; a failure leaves the rules' plan and
-// says so.
+// draft builds the first plan from options.ComposeFile, when the facts have
+// it, with the optional services in options.EnabledOptional switched on,
+// which it spells as the plan does, and records in options.ComposeFile the
+// file the rules built from. Named none, a regeneration keeps the compose
+// file and the optional services the project chose; any the
+// repository, or the compose file chosen, no longer offers stay off, with a
+// notice. The model engine asks the model for the whole plan; a failure
+// leaves the rules' plan and says so.
 func draft(ctx context.Context, dependencies Dependencies, options *Options, result *Result) error {
-	input := rules.Input{Facts: result.Facts, Source: result.Source, Name: options.Name, EnabledOptional: options.EnabledOptional}
+	input := rules.Input{Facts: result.Facts, Source: result.Source, Name: options.Name, EnabledOptional: options.EnabledOptional,
+		ComposeFile: options.ComposeFile}
 	rulePlan := rules.Build(ctx, input)
 	kept := options.EnabledOptional == nil
-	if kept {
-		previous, err := previousChoice(ctx, dependencies.Workspace, rulePlan.App.Name, result.Source.URL, options.Uploaded)
-		if err != nil {
-			return err
-		}
-		input.EnabledOptional = previous
+	previous, err := previousOptions(ctx, dependencies.Workspace, rulePlan.App.Name, result.Source.URL, options.Uploaded)
+	if err != nil {
+		return err
 	}
-	if kept && len(input.EnabledOptional) > 0 {
+	carryPrevious(&input, previous, kept)
+	composeCarried := input.ComposeFile != options.ComposeFile
+	if composeCarried {
+		// The file carried over may name its app service otherwise; the
+		// project keeps the name it was found by.
+		input.Name = cmp.Or(input.Name, rulePlan.App.Name)
+	}
+	if composeCarried || !slices.Equal(input.EnabledOptional, options.EnabledOptional) {
 		rulePlan = rules.Build(ctx, input)
 	}
+	// The file the rules built from is kept, so a regeneration stays on it
+	// and never looks again for one they could not find.
+	options.ComposeFile = rules.ChosenCompose(input)
+	variantNote, variantMissing := rules.MissingVariantNote(rulePlan, input.ComposeFile)
+	if variantMissing {
+		result.Notices = append(result.Notices, variantNote)
+	}
 	enabled, err := rules.Enabled(rulePlan.OptionalServices, input.EnabledOptional)
-	if err != nil && !kept {
+	if err != nil && !kept && !options.Regenerating {
 		return err
 	}
 	if err != nil {
@@ -68,26 +84,39 @@ func draft(ctx context.Context, dependencies Dependencies, options *Options, res
 	if options.Engine != EngineModel || dependencies.Assistant == nil {
 		return nil
 	}
-	modelDraft(ctx, dependencies, enabled, result)
+	modelDraft(ctx, dependencies, enabled, options.ComposeFile, result)
+	if variantMissing && result.Plan != rulePlan {
+		result.Plan.PostInstallNotes = append(result.Plan.PostInstallNotes, variantNote)
+	}
 	return nil
 }
 
-// previousChoice are the optional services the project name has switched
-// on, when it comes from the same source; an upload always does.
-func previousChoice(ctx context.Context, workspace *workspace.Workspace, name, sourceURL string, uploaded bool) ([]string, error) {
+// carryPrevious fills in from the options the project was last generated
+// with what a person left unnamed: the compose file, and the optional
+// services when kept.
+func carryPrevious(input *rules.Input, previous Options, kept bool) {
+	input.ComposeFile = cmp.Or(input.ComposeFile, previous.ComposeFile)
+	if kept {
+		input.EnabledOptional = previous.EnabledOptional
+	}
+}
+
+// previousOptions are the options the project name was last generated
+// with, when it comes from the same source; an upload always does.
+func previousOptions(ctx context.Context, workspace *workspace.Workspace, name, sourceURL string, uploaded bool) (Options, error) {
+	var options Options
 	if workspace == nil {
-		return nil, nil
+		return options, nil
 	}
 	project, generation, found, err := latestGeneration(ctx, workspace.Store, name)
 	if err != nil || !found || (!uploaded && project.SourceURL != sourceURL) {
-		return nil, err
+		return options, err
 	}
 	// Only the options are read, and a decode error is ignored: a
 	// regeneration is how a version that no longer loads is mended, so
 	// nothing of it may stop one.
-	var options Options
 	_ = json.Unmarshal([]byte(generation.OptionsJSON), &options)
-	return options.EnabledOptional, nil
+	return options, nil
 }
 
 // latestGeneration is the latest version of the project name, if it has one.
@@ -107,14 +136,16 @@ func latestGeneration(ctx context.Context, database *store.Store, name string) (
 }
 
 // modelDraft asks the model for the whole plan from the facts of what
-// Compose starts, so it never sees an optional service that is off. A
-// depends_on it copied onto one that is off is dropped, as the rules drop
-// it, and a service switched on that it left out gets a notice.
-func modelDraft(ctx context.Context, dependencies Dependencies, enabled []string, result *Result) {
+// Compose starts, so it never sees an optional service that is off, nor
+// another compose file than the one the rules built from. A depends_on it copied
+// onto one that is off is dropped, as the rules drop it, and a service
+// switched on that it left out gets a notice.
+func modelDraft(ctx context.Context, dependencies Dependencies, enabled []string, composeFile string, result *Result) {
 	rulePlan := result.Plan
 	observer := dependencies.Observer
 	observer.step(StepModel, StateRunning, "")
-	proposal, call, err := dependencies.Assistant.Draft(ctx, result.Facts.Started(enabled), documents(result.Source.Directory, result.Facts.Readmes))
+	facts := result.Facts.Started(enabled).FromCompose(composeFile)
+	proposal, call, err := dependencies.Assistant.Draft(ctx, facts, documents(result.Source.Directory, result.Facts.Readmes))
 	if err != nil {
 		result.Notices = append(result.Notices, modelFailed+err.Error())
 		observer.step(StepModel, StateSkipped, modelFailed+err.Error())
@@ -154,7 +185,7 @@ func fill(ctx context.Context, dependencies Dependencies, options Options, resul
 		return
 	}
 	observer.step(StepModel, StateRunning, "")
-	facts := result.Facts.Started(options.EnabledOptional)
+	facts := result.Facts.Started(options.EnabledOptional).FromCompose(options.ComposeFile)
 	proposal, call, err := dependencies.Assistant.Fill(ctx, result.Plan, fields, facts, documents(result.Source.Directory, result.Facts.Readmes))
 	if err != nil {
 		result.Engine = EngineRules

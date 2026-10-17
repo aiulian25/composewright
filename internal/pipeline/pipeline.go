@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"maps"
 	"os"
+	"path"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -71,6 +72,10 @@ type Options struct {
 	// EnabledOptional are the optional services, those upstream starts only
 	// with a Compose profile, that a person switched on.
 	EnabledOptional []string `json:"enabled_optional,omitempty"`
+	// ComposeFile is the upstream compose file to build the plan from, by
+	// its path in the repository; empty, the rules choose. The generation
+	// stores the one the plan was built from.
+	ComposeFile string `json:"compose_file,omitempty"`
 	// Regenerating generates an existing project again from its own
 	// source: a source read elsewhere is refused, never moved to.
 	Regenerating bool `json:"-"`
@@ -361,9 +366,13 @@ func remoteURL(source string) bool {
 
 // absolutePaths stores a local source and the profile file as absolute
 // paths, so generating again from another working directory, as the web
-// server does, reads the same files.
+// server does, reads the same files; the compose file, a path in the
+// repository, it spells as the facts do.
 func absolutePaths(options *Options) error {
 	var err error
+	if options.ComposeFile != "" {
+		options.ComposeFile = path.Clean(filepath.ToSlash(options.ComposeFile))
+	}
 	if options.ProfileFile != "" {
 		if options.ProfileFile, err = filepath.Abs(options.ProfileFile); err != nil {
 			return err

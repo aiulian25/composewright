@@ -89,7 +89,7 @@ func (server *Server) projectLinks(summaries []store.ProjectSummary, listingErro
 }
 
 func projectSubtitle(summary store.ProjectSummary) string {
-	services := countText(len(strings.Fields(summary.Images)), "service", "services")
+	services := countText(len(strings.Fields(summary.Images)), serviceSingular, servicePlural)
 	switch summary.Status {
 	case store.StatusGenerated:
 		return "draft · " + services

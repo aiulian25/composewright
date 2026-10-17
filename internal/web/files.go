@@ -344,7 +344,7 @@ func filesBanner(stored *pipeline.Stored) (tone, headline, summary string) {
 			secrets++
 		}
 	}
-	summary = countText(len(plan.Services), "service", "services") + " · " + countText(len(plan.EnvFile), "variable", "variables") +
+	summary = countText(len(plan.Services), serviceSingular, servicePlural) + " · " + countText(len(plan.EnvFile), "variable", "variables") +
 		" (" + countText(secrets, "secret", "secrets") + ") · stored encrypted"
 	switch project.Status {
 	case store.StatusPassed:

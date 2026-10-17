@@ -410,6 +410,48 @@ func TestGenEnablesOptionalServices(t *testing.T) {
 	}
 }
 
+// TestGenComposeFile: --compose-file builds from that upstream compose file,
+// and a later gen without it regenerates the same project from that file,
+// though the file names its app service otherwise.
+func TestGenComposeFile(t *testing.T) {
+	environment := isolate(t)
+	directory := filepath.Join(environment, "notes")
+	const variant = "compose.traefik.yaml"
+	files := map[string]string{"compose.yaml": "services:\n  notes:\n    image: docker.io/library/nginx:1.27\n    ports: [\"8080:80\"]\n",
+		variant: "services:\n  notesweb:\n    image: docker.io/library/nginx:1.27\n    ports: [\"8080:80\"]\n"}
+	if err := os.MkdirAll(directory, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	for name, content := range files {
+		if err := os.WriteFile(filepath.Join(directory, name), []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	run(t, environment, "init")
+	gen := func(extra ...string) {
+		t.Helper()
+		arguments := append([]string{"gen", "--offline", "--no-llm", "--no-validate"}, extra...)
+		if result := run(t, environment, append(arguments, directory)...); result.code != exitOK {
+			t.Fatalf("gen %q: %+v", extra, result)
+		}
+	}
+	citesVariant := func() bool {
+		return strings.Contains(run(t, environment, "--json", "show", "notes").stdout, `"source_ref": "`+variant+":")
+	}
+	gen()
+	gen("--name", "notes", "--"+composeFileFlag, variant)
+	if !citesVariant() {
+		t.Fatalf("the plan does not cite %s", variant)
+	}
+	gen()
+	if !citesVariant() {
+		t.Fatalf("a gen without --%s left the file", composeFileFlag)
+	}
+	if shown := run(t, environment, "show", "notesweb"); shown.code == exitOK {
+		t.Fatal("a gen without the flag made another project")
+	}
+}
+
 const minifluxFiles = "../../testdata/corpus/miniflux/files"
 
 func generate(t *testing.T, environment string, extra ...string) result {

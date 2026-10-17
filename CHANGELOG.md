@@ -111,6 +111,19 @@ All notable changes to this project are documented here. The format follows
   `composewright gen --allow-need devices` grants it from the command line.
   A device given as host:container is now written as given instead of being
   doubled.
+- When the repository ships several compose files, such as a plain one and
+  Traefik, Caddy or rootless variants, the Review page has a Built from card
+  that lists each with its service count and marks the one the plan was built
+  from. Choosing another and applying generates the project again from that
+  file at the same repository commit or folder, keeping the values you set
+  and the stored secrets for variables both files have. Optional services
+  the new file also offers stay on; the others go off with a notice, and
+  switching optional services later keeps the chosen file. Files you
+  uploaded or pasted show the list without letting you switch.
+  `composewright gen --compose-file <path>` builds from the file at that path
+  in the repository, and a later gen without it keeps that file; a path it
+  lacks is shown in the gen output and the deployment notes, and the usual
+  file is used.
 
 ### Changed
 

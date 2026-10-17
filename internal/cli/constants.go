@@ -26,6 +26,8 @@ const (
 	optionalServiceLine = "%s %s (upstream profile %s): --%s %s\n"
 	optionalLabel       = "optional"
 	enableOptionalFlag  = "enable-optional"
+	// composeFileFlag names the upstream compose file to build from.
+	composeFileFlag = "compose-file"
 	// optionalServiceKind and optionalServiceFact list such a service
 	// among the facts.
 	optionalServiceKind = "optional service"

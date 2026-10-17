@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
+	"strings"
 
 	"github.com/aiulian25/composewright/internal/extract"
 	"github.com/aiulian25/composewright/internal/fetch"
@@ -21,7 +23,10 @@ import (
 
 // ErrNotRereadable is a version made from files someone uploaded or pasted:
 // they were kept only for that run.
-var ErrNotRereadable = errors.New("the files this project was made from were kept only for that run, so its optional services cannot be switched here; run composewright gen --enable-optional on a folder of them")
+var ErrNotRereadable = errors.New("the files this project was made from were kept only for that run, so its optional services and compose file cannot be switched here; run composewright gen --enable-optional or --compose-file on a folder of them")
+
+// provenanceSeparator parts the file a provenance cites from its line.
+const provenanceSeparator = ":"
 
 // Stored is a project's latest generation with its decrypted .env values.
 type Stored struct {
@@ -171,11 +176,38 @@ func (stored *Stored) Rereadable() bool {
 	return !stored.Options.Uploaded
 }
 
+// BuiltFrom is the upstream compose file the plan was built from, as
+// recorded; a version generated before it was recorded, the first file its
+// services' provenance cites.
+func (stored *Stored) BuiltFrom() string {
+	if stored.Options.ComposeFile != "" || stored.Facts == nil {
+		return stored.Options.ComposeFile
+	}
+	for _, service := range stored.Plan.Services {
+		file, _, _ := strings.Cut(service.Provenance.SourceRef, provenanceSeparator)
+		if slices.ContainsFunc(stored.Facts.ComposeFiles, func(compose extract.ComposeFile) bool { return compose.Path == file }) {
+			return file
+		}
+	}
+	return ""
+}
+
+// CanBuildFrom reports whether the project can be generated again from the
+// upstream compose file path: one the facts hold, other than the plan was
+// built from, of a source that can be read again.
+func (stored *Stored) CanBuildFrom(path string) bool {
+	if !stored.Rereadable() || stored.Facts == nil || path == stored.BuiltFrom() {
+		return false
+	}
+	return slices.ContainsFunc(stored.Facts.ComposeFiles, func(compose extract.ComposeFile) bool { return compose.Path == path })
+}
+
 // Regeneration are the options that generate the project again from its
 // source as its latest version was, with the optional services enabled
-// switched on. A GitHub repository is read at the stored commit, so the
-// files are the same.
-func (stored *Stored) Regeneration(enabled []string) (Options, error) {
+// switched on, from the compose file composeFile when one is named. A
+// GitHub repository is read at the stored commit, so the files are the
+// same.
+func (stored *Stored) Regeneration(enabled []string, composeFile string) (Options, error) {
 	if !stored.Rereadable() {
 		return Options{}, ErrNotRereadable
 	}
@@ -183,7 +215,7 @@ func (stored *Stored) Regeneration(enabled []string) (Options, error) {
 	options := Options{Name: cmp.Or(kept.Name, project.Name), Engine: kept.Engine, Source: kept.Source, Ref: kept.Ref, Owner: kept.Owner,
 		Upstream: kept.Upstream, ExposeVia: kept.ExposeVia, Networks: kept.Networks, Storage: kept.Storage, ProfileFile: kept.ProfileFile,
 		AllowNeeds: kept.AllowNeeds, AllowRegistries: kept.AllowRegistries, BenignLogPatterns: kept.BenignLogPatterns, EnabledOptional: enabled,
-		Regenerating: true}
+		ComposeFile: cmp.Or(composeFile, kept.ComposeFile), Regenerating: true}
 	if project.SourceKind == fetch.SourceGitHub && project.SourceCommit != "" {
 		options.Ref = project.SourceCommit
 	}

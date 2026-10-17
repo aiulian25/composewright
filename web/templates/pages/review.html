@@ -26,6 +26,17 @@
   <input type="hidden" name="csrf" value="{{$csrf}}">
   <button class="visually-hidden" type="submit" name="action" value="apply" tabindex="-1" aria-hidden="true">Apply changes</button>
   {{range .Registries}}<input type="hidden" name="registry" value="{{.}}">{{end}}
+  {{if .Variants}}
+  <section class="card" aria-labelledby="variants-title">
+    <div class="card-head"><h2 id="variants-title">{{template "icon-file"}}Built from</h2><span class="note">{{plural (len .Variants) "upstream compose file" "upstream compose files"}}</span></div>
+    <fieldset class="option-list">
+      <legend class="visually-hidden">Upstream compose file to build from</legend>
+      {{range .Variants}}<label class="option{{if .Disabled}} option-off{{end}}"><input type="radio" name="compose_file" value="{{.Value}}"{{if .Selected}} checked{{end}}{{if .Disabled}} disabled{{end}}><span class="option-text"><span class="option-name mono">{{.Label}}</span><span class="option-sub">{{.Sub}}</span></span></label>{{end}}
+    </fieldset>
+    {{if .ReadOnly}}<p class="card-body muted small">Files you uploaded or pasted are kept only for their run, so this cannot be switched here. Run <span class="mono">composewright gen --compose-file</span> on a folder of them instead.</p>
+    {{else}}<p class="card-body muted small">Upstream ships these variants. Choose another and apply to generate the project again from it; the values you set and the stored secrets are kept.</p>{{end}}
+  </section>
+  {{end}}
   <div class="columns">
     <section class="card" aria-labelledby="expose-title">
       <div class="card-head"><h2 id="expose-title">{{template "icon-network"}}Expose via</h2></div>
@@ -62,7 +73,7 @@
       <legend class="visually-hidden">Optional services to add</legend>
       {{range .OptionalServices}}<label class="option{{if .Disabled}} option-off{{end}}"><input type="checkbox" name="optional" value="{{.Value}}"{{if .Selected}} checked{{end}}{{if .Disabled}} disabled{{end}}><span class="option-text"><span class="option-name mono">{{.Label}}</span><span class="option-sub">{{.Sub}}</span></span></label>{{end}}
     </fieldset>
-    {{if .OptionalReadOnly}}<p class="card-body muted small">Files you uploaded or pasted are kept only for their run, so these cannot be switched here. Run <span class="mono">composewright gen --enable-optional</span> on a folder of them instead.</p>
+    {{if .ReadOnly}}<p class="card-body muted small">Files you uploaded or pasted are kept only for their run, so these cannot be switched here. Run <span class="mono">composewright gen --enable-optional</span> on a folder of them instead.</p>
     {{else}}<p class="card-body muted small">Upstream starts these only on request. Tick one and apply to generate the project again with it in compose.yaml and the test run.</p>{{end}}
   </section>
   {{end}}

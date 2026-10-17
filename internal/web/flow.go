@@ -58,7 +58,10 @@ const (
 	// the Review page.
 	benignRemoveField = "benign_remove"
 	// optionalField holds the optional services ticked on the Review page.
-	optionalField    = "optional"
+	optionalField = "optional"
+	// composeFileField holds the upstream compose file chosen on the
+	// Review page.
+	composeFileField = "compose_file"
 	lineField        = "line"
 	emptyLineProblem = "That log line has no text to ignore."
 	// trustAlwaysProblem follows a revision that already went in, so it
@@ -684,10 +687,14 @@ type reviewView struct {
 	LastFailure  string
 	ChangedSince bool
 	// OptionalServices are the services upstream starts only with a
-	// Compose profile, each one to switch on; OptionalReadOnly says the
-	// source cannot be read again to do it.
+	// Compose profile, each one to switch on.
 	OptionalServices []option
-	OptionalReadOnly bool
+	// ReadOnly says the source cannot be read again, so neither the
+	// optional services nor the compose file can be switched here.
+	ReadOnly bool
+	// Variants are the upstream compose files to build the plan from, the
+	// one it was built from selected; none when upstream ships one.
+	Variants []option
 }
 
 func (server *Server) reviewView(ctx context.Context, stored *pipeline.Stored, revealed bool) (reviewView, error) {
@@ -700,7 +707,8 @@ func (server *Server) reviewView(ctx context.Context, stored *pipeline.Stored, r
 		Warnings: report.Count(policy.Warn), Expose: portOptions(mode), Networks: networkOptions(profile, networks),
 		Storage: server.storageOptions(stored.Options.Storage), Env: envRows(plan, stored.Values, revealed), Optional: render.OptionalSettings(plan),
 		Needs: needViews(plan, stored.Options.AllowNeeds), Findings: findingViews(report, stored.Generation.ComposeYAML), Registries: stored.Options.AllowRegistries,
-		Benign: stored.Options.BenignLogPatterns, OptionalServices: optionalServiceOptions(plan, stored.Rereadable()), OptionalReadOnly: !stored.Rereadable(),
+		Benign: stored.Options.BenignLogPatterns, OptionalServices: optionalServiceOptions(plan, stored.Rereadable()), ReadOnly: !stored.Rereadable(),
+		Variants:    variantOptions(stored),
 		TrustOffers: trustOffers(plan, report, configuration.Registries.Allow), Revealed: revealed, Suspicious: plan.SuspiciousInstructions}
 	for _, note := range plan.PostInstallNotes {
 		view.Notes = append(view.Notes, noteView{Text: note, Suspicious: repeatsSuspicious(note, plan.SuspiciousInstructions)})
@@ -1006,8 +1014,9 @@ func (server *Server) review(writer http.ResponseWriter, request *http.Request, 
 	if err := server.trustAlways(request, current, alwaysPattern); err != nil {
 		return server.reviewProblem(writer, request, current, name, fmt.Errorf(trustAlwaysProblem, alwaysPattern, err))
 	}
-	if switched {
-		return server.regenerate(writer, request, current, name, enabled)
+	variant, variantSwitched := variantSwitch(request.PostForm, stored)
+	if switched || variantSwitched {
+		return server.regenerate(writer, request, current, name, enabled, variant)
 	}
 	switch action {
 	case actionValidate:
@@ -1042,14 +1051,15 @@ func (server *Server) reviewProblem(writer http.ResponseWriter, request *http.Re
 }
 
 // regenerate generates the project again from its source, as its latest
-// version was made, with the optional services enabled switched on. It runs
-// as a job, as the New page's do, and lands on the Review.
-func (server *Server) regenerate(writer http.ResponseWriter, request *http.Request, current *visit, name string, enabled []string) error {
+// version was made, with the optional services enabled switched on, from
+// the compose file composeFile when one is named. It runs as a job, as the
+// New page's do, and lands on the Review.
+func (server *Server) regenerate(writer http.ResponseWriter, request *http.Request, current *visit, name string, enabled []string, composeFile string) error {
 	stored, err := pipeline.Load(request.Context(), server.workspace(), name)
 	if err != nil {
 		return err
 	}
-	options, err := stored.Regeneration(enabled)
+	options, err := stored.Regeneration(enabled, composeFile)
 	if err != nil {
 		return server.reviewProblem(writer, request, current, name, err)
 	}
@@ -1118,6 +1128,16 @@ func optionalSwitch(form url.Values, stored *pipeline.Stored) (enabled []string,
 	}
 	enabled, err = rules.Enabled(stored.Plan.OptionalServices, form[optionalField])
 	return enabled, err == nil && !sameSet(enabled, rules.Running(stored.Plan)), err
+}
+
+// variantSwitch is the compose file the form chose, when the project can be
+// generated again from it.
+func variantSwitch(form url.Values, stored *pipeline.Stored) (string, bool) {
+	chosen := form.Get(composeFileField)
+	if !stored.CanBuildFrom(chosen) {
+		return "", false
+	}
+	return chosen, true
 }
 
 func sameSet(left, right []string) bool {

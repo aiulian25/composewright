@@ -60,6 +60,7 @@ still stored so you can inspect it, and gen exits with status 2.
   composewright gen ./homeassistant --allow-need host_network
   composewright gen ./app --expose-via npm_default --storage bind
   composewright gen ./app --enable-optional tts
+  composewright gen ./app --compose-file contrib/docker-compose/docker-compose-traefik.yml
   composewright gen --stop-after facts ./my-checkout`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(command *cobra.Command, arguments []string) error {
@@ -78,6 +79,7 @@ still stored so you can inspect it, and gen exits with status 2.
 	set.StringVar(&flags.options.ProfileFile, "profile", "", "use this exported profile.yaml instead of the config's profile")
 	set.StringSliceVar(&flags.options.AllowNeeds, "allow-need", nil, "grant a requested capability: "+strings.Join(ir.Capabilities, ", ")+" (repeatable, audited)")
 	set.StringSliceVar(&flags.options.EnabledOptional, enableOptionalFlag, nil, "add an optional service upstream starts only with a Compose profile (repeatable; \"\" switches them all off; without it, a regeneration keeps those switched on)")
+	set.StringVar(&flags.options.ComposeFile, composeFileFlag, "", "build from this upstream compose file, by its path in the repository (without it, a regeneration keeps the file chosen before, else the rules choose one; name a file to change it)")
 	set.StringSliceVar(&flags.options.AllowRegistries, "allow-registry", nil, "trust images matching this pattern, e.g. docker.io/vaultwarden/* (repeatable)")
 	set.BoolVar(&flags.offline, "offline", false, "composewright contacts nothing: local directories only, images are not verified (no digest pinning); a sandbox run still lets Docker pull images, add --no-validate to prevent that")
 	set.BoolVar(&flags.noLabelCheck, "no-label-check", false, "verify image digests with HEAD only; skip reading image configs (labels, healthchecks), which Docker Hub counts as a pull")

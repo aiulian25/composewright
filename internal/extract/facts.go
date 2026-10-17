@@ -305,21 +305,39 @@ func (facts *Facts) Started(enabled []string) *Facts {
 	if len(hidden) == 0 {
 		return &copied
 	}
-	// One mention stands for every service of an image, so it stays while
-	// a started service uses that image.
-	startedImages := map[string]bool{}
+	return copied.without(facts, func(location Location) bool { return hidden[location] })
+}
+
+// FromCompose returns a copy holding only the compose file path, with the
+// images and variables found in the others left out; empty, the facts as
+// they are.
+func (facts *Facts) FromCompose(path string) *Facts {
+	if path == "" {
+		return facts
+	}
+	copied := *facts
+	copied.ComposeFiles = slices.DeleteFunc(slices.Clone(facts.ComposeFiles), func(file ComposeFile) bool { return file.Path != path })
+	return copied.without(facts, func(location Location) bool { return location.File != path })
+}
+
+// without fills copied, which holds the compose files kept, with the images
+// and variables of facts but those of the compose lines dropped. One mention
+// stands for every service of an image, so it stays while a kept service
+// uses that image.
+func (copied Facts) without(facts *Facts, dropped func(Location) bool) *Facts {
+	keptImages := map[string]bool{}
 	for _, file := range copied.ComposeFiles {
 		for _, service := range file.Services {
-			startedImages[service.Image] = true
+			keptImages[service.Image] = true
 		}
 	}
 	copied.Images = slices.DeleteFunc(slices.Clone(facts.Images), func(mention ImageMention) bool {
-		return mention.Kind == KindCompose && hidden[mention.Location] && !startedImages[mention.Reference]
+		return mention.Kind == KindCompose && dropped(mention.Location) && !keptImages[mention.Reference]
 	})
 	var mentions []Mention
 	for _, variable := range facts.Variables {
 		for _, mention := range variable.Mentions {
-			if mention.Kind != KindCompose || !hidden[mention.Location] {
+			if mention.Kind != KindCompose || !dropped(mention.Location) {
 				mentions = append(mentions, mention)
 			}
 		}

@@ -39,6 +39,11 @@ const (
 	optionalServiceKind = "optional service"
 	optionalServiceFact = "%s (profile %s)"
 	noPublishedImage    = "no published image"
+	// minimumVariants is how many compose files upstream ships before the
+	// Review offers a choice among them.
+	minimumVariants = 2
+	serviceSingular = "service"
+	servicePlural   = "services"
 )
 
 type stepInfo struct {
@@ -293,6 +298,22 @@ func optionalServiceOptions(plan *ir.IR, switchable bool) []option {
 	return options
 }
 
+// variantOptions offers each upstream compose file to build the plan from,
+// with its service count, the one the plan was built from selected; none
+// when upstream ships one, read-only when the source cannot be read again.
+func variantOptions(stored *pipeline.Stored) []option {
+	if stored.Facts == nil || len(stored.Facts.ComposeFiles) < minimumVariants {
+		return nil
+	}
+	chosen := stored.BuiltFrom()
+	options := make([]option, 0, len(stored.Facts.ComposeFiles))
+	for _, file := range stored.Facts.ComposeFiles {
+		options = append(options, option{Value: file.Path, Label: file.Path, Sub: countText(len(file.Services), serviceSingular, servicePlural),
+			Selected: file.Path == chosen, Disabled: !stored.Rereadable()})
+	}
+	return options
+}
+
 func needViews(plan *ir.IR, granted []string) []needView {
 	requested := map[string][]needRequest{}
 	for _, need := range plan.Needs {
@@ -434,7 +455,7 @@ var startingRun = []runStep{{Name: "Policy gate on rendered YAML", Detail: "pass
 // log scan, the reachability probe and the teardown.
 func runSteps(verdict sandbox.Verdict) []runStep {
 	steps := []runStep{{Name: "Policy gate on rendered YAML", Detail: "passed", State: stateDone}}
-	startState, startDetail := stateDone, countText(len(verdict.Services), "service", "services")
+	startState, startDetail := stateDone, countText(len(verdict.Services), serviceSingular, servicePlural)
 	if verdict.Reason == sandbox.ReasonStart {
 		startState, startDetail = pipeline.StateFailed, verdict.Detail
 	}

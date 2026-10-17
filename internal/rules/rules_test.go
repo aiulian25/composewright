@@ -303,7 +303,7 @@ func TestChooseComposeSkipsDevelopmentAndAddonFiles(t *testing.T) {
 		"docker/compose/docker-compose.yml":         "services:\n  app:\n    image: example/app:1\n",
 		"scripts/test-env/compose.yml":              "services:\n  app:\n    image: example/app:test\n",
 	})
-	chosen := chooseCompose(facts, []string{"app", "example"})
+	chosen := chooseCompose(facts, []string{"app", "example"}, "")
 	if chosen == nil || chosen.Path != "docker/compose/docker-compose.yml" {
 		t.Fatalf("chose %+v", chosen)
 	}
@@ -313,7 +313,7 @@ func TestChooseComposeSkipsDevelopmentAndAddonFiles(t *testing.T) {
 		"hacks/proxy-auth/with-logout.yml": "services:\n  dex:\n    image: dexidp/dex:v2\n  app:\n    image: example/app:1\n",
 		"e2e-proxy/docker-compose.yml":     "services:\n  app:\n    image: example/app:1\n",
 	})
-	if chosen := chooseCompose(experiments, []string{"app", "example"}); chosen != nil {
+	if chosen := chooseCompose(experiments, []string{"app", "example"}, ""); chosen != nil {
 		t.Fatalf("chose the experiment %s", chosen.Path)
 	}
 	// Nor a file that mounts the repository (development), a staging file, a
@@ -324,8 +324,42 @@ func TestChooseComposeSkipsDevelopmentAndAddonFiles(t *testing.T) {
 		"examples/docker-compose-caddy-proxy.yml": "services:\n  app:\n    image: example/app:1\n  caddy:\n    image: caddy:2\n",
 		"apps/workshop/docker-compose.yml":        "services:\n  workshop:\n    build: ../..\n",
 	})
-	if chosen := chooseCompose(skipped, []string{"app", "example"}); chosen != nil {
+	if chosen := chooseCompose(skipped, []string{"app", "example"}, ""); chosen != nil {
 		t.Fatalf("chose %s", chosen.Path)
+	}
+}
+
+// TestChosenComposeFile: a compose file a person chose is what the plan is
+// built from, even a proxy variant the rules pass over; one the facts lack
+// leaves the rules' choice with a note naming both.
+func TestChosenComposeFile(t *testing.T) {
+	const traefik = "contrib/docker-compose-traefik.yml"
+	facts := testFacts(t, map[string]string{
+		"contrib/docker-compose.yml": "services:\n  app:\n    image: example/app:1\n",
+		traefik:                      "services:\n  app:\n    image: example/app:1\n  proxy:\n    image: traefik:v3\n",
+	})
+	source := &fetch.Source{Owner: "example", Repository: "app"}
+	plan := Build(context.Background(), Input{Facts: facts, Source: source, ComposeFile: traefik})
+	if len(plan.Services) != 2 {
+		t.Fatalf("services %+v", plan.Services)
+	}
+	for _, service := range plan.Services {
+		if !strings.HasPrefix(service.Provenance.SourceRef, traefik+":") {
+			t.Fatalf("%s comes from %s", service.Name, service.Provenance.SourceRef)
+		}
+	}
+	missing := Build(context.Background(), Input{Facts: facts, Source: source, ComposeFile: "gone.yml"})
+	note := "compose variant gone.yml not found; used contrib/docker-compose.yml"
+	if len(missing.Services) != 1 || !slices.Contains(missing.PostInstallNotes, note) {
+		t.Fatalf("services %+v, notes %q", missing.Services, missing.PostInstallNotes)
+	}
+	if chosen := ChosenCompose(Input{Facts: facts, Source: source, ComposeFile: "gone.yml"}); chosen != "contrib/docker-compose.yml" {
+		t.Fatalf("built from %q", chosen)
+	}
+	experiments := testFacts(t, map[string]string{"e2e-proxy/docker-compose.yml": "services:\n  app:\n    image: example/app:1\n"})
+	documented := Build(context.Background(), Input{Facts: experiments, Source: source, ComposeFile: "gone.yml"})
+	if note := "compose variant gone.yml not found; used the documentation"; !slices.Contains(documented.PostInstallNotes, note) {
+		t.Fatalf("notes %q", documented.PostInstallNotes)
 	}
 }
 

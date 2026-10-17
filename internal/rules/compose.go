@@ -30,6 +30,11 @@ const (
 	tmpfsSizeOption      = "size="
 	tmpfsModeOption      = "mode="
 	octalBase            = 8
+	// missingVariantNote says a chosen compose file was not found and what
+	// the plan was built from instead: a file, or documentationSource.
+	missingVariantNote  = missingVariantHead + "; used %s"
+	missingVariantHead  = "compose variant %s not found"
+	documentationSource = "the documentation"
 )
 
 var (
@@ -45,10 +50,14 @@ var (
 	hostPaths = []string{"/var/run/docker.sock", "/run/docker.sock", "/etc/localtime", "/etc/timezone", "/proc", "/sys", "/dev", "/run", "/var/run"}
 )
 
-// chooseCompose is R1's variant selection: among the candidate files, prefer
-// the canonical name, files the docs mention, shallow paths and plain
-// variants over add-on ones.
-func chooseCompose(facts *extract.Facts, identity []string) *extract.ComposeFile {
+// chooseCompose is R1's variant selection: the file a person chose, by its
+// path, whatever its kind; else, among the candidate files, prefer the
+// canonical name, files the docs mention, shallow paths and plain variants
+// over add-on ones.
+func chooseCompose(facts *extract.Facts, identity []string, chosen string) *extract.ComposeFile {
+	if index := slices.IndexFunc(facts.ComposeFiles, func(file extract.ComposeFile) bool { return file.Path == chosen }); chosen != "" && index >= 0 {
+		return &facts.ComposeFiles[index]
+	}
 	var best *extract.ComposeFile
 	bestScore := 0
 	for index := range facts.ComposeFiles {
@@ -149,6 +158,41 @@ func hasAppService(file *extract.ComposeFile) bool {
 		family, sidecar := known.family(image)
 		return !sidecar || family.Role == ir.RoleProxy
 	})
+}
+
+// ChosenCompose is the path of the compose file Build builds the plan from
+// for input; empty, it builds from the documentation.
+func ChosenCompose(input Input) string {
+	chosen := chooseCompose(input.Facts, identityNames(input.Source), input.ComposeFile)
+	if chosen == nil {
+		return ""
+	}
+	return chosen.Path
+}
+
+// missingVariant notes a chosen compose file the facts lack, and what the
+// plan was built from instead.
+func (builder *builder) missingVariant(used *extract.ComposeFile) {
+	chosen := builder.input.ComposeFile
+	if chosen == "" || (used != nil && used.Path == chosen) {
+		return
+	}
+	instead := documentationSource
+	if used != nil {
+		instead = used.Path
+	}
+	builder.plan.PostInstallNotes = append(builder.plan.PostInstallNotes, fmt.Sprintf(missingVariantNote, chosen, instead))
+}
+
+// MissingVariantNote is the note Build left on plan that the compose file
+// chosen was not found.
+func MissingVariantNote(plan *ir.IR, chosen string) (string, bool) {
+	head := fmt.Sprintf(missingVariantHead, chosen)
+	index := slices.IndexFunc(plan.PostInstallNotes, func(note string) bool { return strings.HasPrefix(note, head) })
+	if chosen == "" || index < 0 {
+		return "", false
+	}
+	return plan.PostInstallNotes[index], true
 }
 
 // fromCompose builds the services Compose starts from the chosen file with

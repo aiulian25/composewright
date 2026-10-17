@@ -1064,6 +1064,71 @@ func TestOptionalServicesOfAnUpload(t *testing.T) {
 	}
 }
 
+// TestComposeVariantsOnReview: a repository with several compose files
+// shows them on the Review with the one the plan was built from chosen;
+// choosing another generates the project again from it, keeping a value
+// typed in with the choice. Files given on the New page show the variants
+// read-only, and a project with one compose file shows none.
+func TestComposeVariantsOnReview(t *testing.T) {
+	harness := newHarness(t)
+	harness.signUp()
+	const variant = "docker-compose.traefik.yml"
+	app := "services:\n  app:\n    image: docker.io/library/nginx:1.27\n    ports: [\"8080:80\"]\n    environment:\n      LOG_LEVEL: ${LOG_LEVEL:-info}\n"
+	files := map[string]string{"compose.yaml": app, variant: app + "  proxy:\n    image: docker.io/library/traefik:v3.1\n"}
+	directory := t.TempDir()
+	for name, content := range files {
+		if err := os.WriteFile(filepath.Join(directory, name), []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	response, page := harness.post("/new", url.Values{"source": {directory}, "name": {"variants"}, "engine": {pipeline.EngineRules}})
+	status(t, response, http.StatusSeeOther, page)
+	if job := harness.waitForJob(response.Header.Get("Location")); job.Failure != "" {
+		t.Fatal(job.Failure)
+	}
+	response, page = harness.get(projectURL("variants", pageReview))
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, "Built from") || !strings.Contains(page, `name="compose_file" value="compose.yaml" checked>`) ||
+		!strings.Contains(page, `name="compose_file" value="`+variant+`">`) {
+		t.Fatal("the Review does not offer both compose files, the plan's chosen")
+	}
+	stored := harness.reviewWith("variants", nil, url.Values{composeFileField: {variant}, valuePrefix + "LOG_LEVEL": {"debug"}})
+	if !strings.Contains(stored.Generation.ComposeYAML, "\n  proxy:\n") || stored.Options.ComposeFile != variant || stored.Values["LOG_LEVEL"] != "debug" {
+		t.Fatalf("choosing the variant: %q, LOG_LEVEL %q\n%s", stored.Options.ComposeFile, stored.Values["LOG_LEVEL"], stored.Generation.ComposeYAML)
+	}
+	response, page = harness.get(projectURL("variants", pageReview))
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, `name="compose_file" value="`+variant+`" checked>`) {
+		t.Fatal("the Review does not show the chosen compose file")
+	}
+
+	response, page = harness.uploadForm("/new", map[string]string{"engine": pipeline.EngineRules, "name": "given"}, map[string][]byte{
+		"compose.yaml": []byte(files["compose.yaml"]), variant: []byte(files[variant])})
+	status(t, response, http.StatusSeeOther, page)
+	if job := harness.waitForJob(response.Header.Get("Location")); job.Failure != "" {
+		t.Fatal(job.Failure)
+	}
+	response, page = harness.get(projectURL("given", pageReview))
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, `name="compose_file" value="`+variant+`" disabled>`) || !strings.Contains(page, "composewright gen --compose-file") {
+		t.Fatal("the Review does not show the variants of given files read-only")
+	}
+	if given := harness.reviewWith("given", nil, url.Values{composeFileField: {variant}}); strings.Contains(given.Generation.ComposeYAML, "proxy") {
+		t.Fatalf("a choice switched the compose file of given files:\n%s", given.Generation.ComposeYAML)
+	}
+
+	response, page = harness.post("/new", url.Values{"compose": {app}, "name": {"single"}, "engine": {pipeline.EngineRules}})
+	status(t, response, http.StatusSeeOther, page)
+	if job := harness.waitForJob(response.Header.Get("Location")); job.Failure != "" {
+		t.Fatal(job.Failure)
+	}
+	response, page = harness.get(projectURL("single", pageReview))
+	status(t, response, http.StatusOK, page)
+	if strings.Contains(page, "Built from") {
+		t.Fatal("a project with one compose file offers a choice")
+	}
+}
+
 // TestUpstreamDevicesAreNeedsOnReview: each device upstream mounts is listed
 // under one Devices row with its reason, and granting it renders them all.
 func TestUpstreamDevicesAreNeedsOnReview(t *testing.T) {
