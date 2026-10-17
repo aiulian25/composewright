@@ -1,6 +1,7 @@
 package sandbox
 
 import (
+	"cmp"
 	"context"
 	"crypto/rand"
 	"encoding/hex"
@@ -8,9 +9,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -20,6 +23,7 @@ import (
 
 	"github.com/aiulian25/composewright/internal/atomicfile"
 	"github.com/aiulian25/composewright/internal/composefile"
+	"github.com/aiulian25/composewright/internal/config"
 	"github.com/aiulian25/composewright/internal/ir"
 	"github.com/aiulian25/composewright/internal/redact"
 )
@@ -43,7 +47,11 @@ const (
 	rootlessOption   = "name=rootless"
 	cgroupNone       = "none"
 	cgroupVersionTwo = "2"
+	runscRuntime     = "runsc"
 )
+
+// ErrRunscMissing stops a gVisor run on a daemon that cannot give it one.
+var ErrRunscMissing = errors.New("sandbox tier runsc, but this daemon has no runsc runtime: install gVisor and register it in the daemon's daemon.json")
 
 var projectCleaner = regexp.MustCompile(`[^a-z0-9-]+`)
 
@@ -91,7 +99,10 @@ func (sandbox *Sandbox) Validate(ctx context.Context, input Input) (verdict Verd
 	}
 	directory := filepath.Join(sandbox.root, slug(input.Project), "run", name)
 	output := newLiveOutput(input.Live, input.Secrets, sandbox.now)
-	environment := sandbox.Environment(ctx)
+	environment, infoErr := sandbox.Info(ctx)
+	if err := environment.MissingRuntime(); err != nil {
+		return Verdict{}, cmp.Or(infoErr, err)
+	}
 	pinned, err := sandbox.prepare(ctx, directory, name, input, started, environment.probesEarly())
 	if err != nil {
 		return Verdict{}, err
@@ -164,7 +175,7 @@ func (sandbox *Sandbox) prepare(ctx context.Context, directory, name string, inp
 	if err != nil {
 		return false, fmt.Errorf("compose.yaml does not load: %w", err)
 	}
-	override, err := Override(project, input.Published, sandbox.limits, name, started.Unix(), earlyProbes)
+	override, err := Override(project, input.Published, sandbox.limits, name, started.Unix(), earlyProbes, Runtime(sandbox.tier))
 	if err != nil {
 		return false, err
 	}
@@ -241,14 +252,9 @@ func (sandbox *Sandbox) Janitor(ctx context.Context) ([]string, error) {
 	return removed, nil
 }
 
-// Environment asks the daemon whether it is rootless and how cgroups work,
-// which decides whether --memory, --cpus and --pids-limit are enforced.
-func (sandbox *Sandbox) Environment(ctx context.Context) Environment {
-	environment, _ := sandbox.Info(ctx)
-	return environment
-}
-
-// Info is Environment with the error when the daemon cannot be reached.
+// Info asks the daemon whether it is rootless, how cgroups work and which
+// runtimes it offers, which decides whether --memory, --cpus and
+// --pids-limit are enforced; the error says when the daemon cannot be reached.
 func (sandbox *Sandbox) Info(ctx context.Context) (Environment, error) {
 	environment := Environment{Tier: sandbox.tier}
 	output, stderr, err := sandbox.run(ctx, "", nil, "info", "--format", "{{json .}}")
@@ -260,16 +266,27 @@ func (sandbox *Sandbox) Info(ctx context.Context) (Environment, error) {
 		CgroupVersion   string
 		CgroupDriver    string
 		ServerVersion   string
+		Runtimes        map[string]json.RawMessage
 	}
 	if err := json.Unmarshal(output, &info); err != nil {
 		return environment, err
 	}
+	environment.Runtimes = slices.Sorted(maps.Keys(info.Runtimes))
 	for _, option := range info.SecurityOptions {
 		environment.Rootless = environment.Rootless || option == rootlessOption
 	}
 	environment.CgroupVersion, environment.CgroupDriver, environment.EngineVersion = info.CgroupVersion, info.CgroupDriver, info.ServerVersion
 	environment.LimitsEnforced = info.CgroupDriver != cgroupNone && (!environment.Rootless || delegated())
 	return environment, nil
+}
+
+// Runtime is the runtime every sandbox container runs under: runsc for the
+// gVisor tier, else empty for the daemon's default.
+func Runtime(tier string) string {
+	if tier == config.SandboxTierRunsc {
+		return runscRuntime
+	}
+	return ""
 }
 
 // delegated reports whether systemd delegates the cpu controller to this

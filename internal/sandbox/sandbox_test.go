@@ -16,6 +16,7 @@ import (
 
 	"github.com/compose-spec/compose-go/v2/loader"
 	"github.com/compose-spec/compose-go/v2/types"
+	"go.yaml.in/yaml/v3"
 
 	"github.com/aiulian25/composewright/internal/composefile"
 	"github.com/aiulian25/composewright/internal/ir"
@@ -274,7 +275,7 @@ func TestStartProbesKeepTheCheckAndItsTolerance(t *testing.T) {
 		t.Fatal(err)
 	}
 	limits, _ := ParseLimits("256m", 1, 128)
-	override, err := Override(project, nil, limits, "cw-app-1234", 0, true)
+	override, err := Override(project, nil, limits, "cw-app-1234", 0, true, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -316,7 +317,7 @@ volumes:
 		t.Fatal(err)
 	}
 	limits, _ := ParseLimits("256m", 1, 128)
-	override, err := Override(project, nil, limits, "cw-app-1234", 0, true)
+	override, err := Override(project, nil, limits, "cw-app-1234", 0, true, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -347,7 +348,7 @@ func TestOverrideNeverPassesTheDockerSocket(t *testing.T) {
 		t.Fatal(err)
 	}
 	limits, _ := ParseLimits("256m", 1, 128)
-	override, err := Override(project, nil, limits, "cw-app-1234", 0, true)
+	override, err := Override(project, nil, limits, "cw-app-1234", 0, true, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -561,5 +562,120 @@ func TestLimitedBufferKeepsTheEnd(t *testing.T) {
 	}
 	if !bytes.Equal(whole.Bytes(), newest) {
 		t.Fatalf("one large write kept %d bytes that are not its last %d", whole.Len(), limit)
+	}
+}
+
+func TestOverrideRunsEveryContainerUnderTheRuntime(t *testing.T) {
+	project, err := composefile.Load(context.Background(), composeFile, []byte(testCompose), nil, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	limits, _ := ParseLimits("256m", 1, 128)
+	for runtime, want := range map[string]string{runscRuntime: runscRuntime, "": ""} {
+		override, err := Override(project, nil, limits, "cw-app-1234", 0, true, runtime)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var parsed struct {
+			Services map[string]struct{ Runtime string }
+		}
+		if err := yaml.Unmarshal(override, &parsed); err != nil {
+			t.Fatal(err)
+		}
+		for _, name := range []string{"app", "db", probeService} {
+			if got := parsed.Services[name].Runtime; got != want {
+				t.Errorf("runtime %q: %s runs under %q\n%s", runtime, name, got, override)
+			}
+		}
+		details := types.ConfigDetails{WorkingDir: t.TempDir(), Environment: types.Mapping{},
+			ConfigFiles: []types.ConfigFile{{Filename: composeFile, Content: []byte(testCompose)}, {Filename: overrideFile, Content: override}}}
+		merged, err := loader.LoadWithContext(context.Background(), details, func(options *loader.Options) { options.SetProjectName("cw-app-1234", true) })
+		if err != nil || merged.Services["app"].Runtime != want {
+			t.Fatalf("runtime %q after the merge: %v %+v", runtime, err, merged)
+		}
+	}
+}
+
+func TestInfoReadsTheRuntimes(t *testing.T) {
+	run := func(context.Context, string, io.Writer, ...string) ([]byte, []byte, error) {
+		return []byte(`{"CgroupVersion":"2","CgroupDriver":"systemd","Runtimes":{"runc":{"path":"runc"},"runsc":{"path":"/usr/bin/runsc"}}}`), nil, nil
+	}
+	environment, err := New(run, Limits{}, time.Second, "runsc", t.TempDir()).Info(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Join(environment.Runtimes, ",") != "runc,runsc" || environment.MissingRuntime() != nil {
+		t.Fatalf("runtimes %v, missing %v", environment.Runtimes, environment.MissingRuntime())
+	}
+}
+
+func TestMissingRuntime(t *testing.T) {
+	cases := []struct {
+		environment Environment
+		missing     bool
+	}{
+		{Environment{Tier: "policy"}, false},
+		{Environment{Tier: "runsc", Runtimes: []string{"runc", "runsc"}}, false},
+		{Environment{Tier: "runsc", Runtimes: []string{"runc"}}, true},
+	}
+	for _, testCase := range cases {
+		if err := testCase.environment.MissingRuntime(); (err != nil) != testCase.missing {
+			t.Errorf("%+v: %v, want missing %v", testCase.environment, err, testCase.missing)
+		}
+	}
+}
+
+// TestValidateRefusesRunscWithoutGVisor: the gVisor tier never falls back
+// to the default runtime; the run does not start.
+func TestValidateRefusesRunscWithoutGVisor(t *testing.T) {
+	fake := &fakeDocker{ps: healthyApp}
+	sandbox := newTestSandbox(t, fake)
+	sandbox.tier = "runsc"
+	_, err := sandbox.Validate(context.Background(), Input{Project: "app", Compose: []byte(testCompose)})
+	if !errors.Is(err, ErrRunscMissing) || fake.called(" up ") {
+		t.Fatalf("err %v, up called %v", err, fake.called(" up "))
+	}
+}
+
+// TestValidateRunsUnderGVisorOnTheRunscTier: a run on the gVisor tier writes
+// an override that puts every container, the probe included, under runsc,
+// and its verdict records that tier.
+func TestValidateRunsUnderGVisorOnTheRunscTier(t *testing.T) {
+	fake := &fakeDocker{ps: healthyApp}
+	sandbox := newTestSandbox(t, fake)
+	sandbox.tier = runscRuntime
+	upRan := false
+	sandbox.run = func(ctx context.Context, dir string, live io.Writer, arguments ...string) ([]byte, []byte, error) {
+		command := strings.Join(arguments, " ")
+		if strings.HasPrefix(command, "info") {
+			return []byte(`{"CgroupVersion":"2","CgroupDriver":"systemd","Runtimes":{"runc":{},"runsc":{}}}`), nil, nil
+		}
+		if strings.Contains(command, " up ") {
+			upRan = true
+			content, err := os.ReadFile(filepath.Join(dir, overrideFile))
+			if err != nil {
+				t.Fatal(err)
+			}
+			var parsed struct {
+				Services map[string]struct{ Runtime string }
+			}
+			if err := yaml.Unmarshal(content, &parsed); err != nil {
+				t.Fatal(err)
+			}
+			for _, name := range []string{"app", "db", probeService} {
+				if got := parsed.Services[name].Runtime; got != runscRuntime {
+					t.Errorf("%s runs under %q\n%s", name, got, content)
+				}
+			}
+		}
+		return fake.run(ctx, dir, live, arguments...)
+	}
+	verdict, err := sandbox.Validate(context.Background(), Input{Project: "app", Compose: []byte(testCompose), Env: []byte(""),
+		Published: map[string][]string{"app": {"80/tcp"}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !upRan || verdict.Sandbox.Tier != runscRuntime {
+		t.Fatalf("up ran %v, verdict tier %q", upRan, verdict.Sandbox.Tier)
 	}
 }

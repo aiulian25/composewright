@@ -66,6 +66,15 @@ All notable changes to this project are documented here. The format follows
   needs its host:port in `network.allow_private_targets`. When Docker Hub
   itself refuses a check for its anonymous pull limit, the warning now says
   to set this key or wait.
+- `docker.sandbox_tier: runsc` now runs every test-run container, and the
+  reachability probe, under gVisor: set it with
+  `composewright config set docker.sandbox_tier runsc`. The Docker daemon
+  must offer the runsc runtime; when it does not, `composewright doctor`
+  fails the sandbox tier check, the status bar says so and a test run
+  refuses to start instead of running without gVisor.
+  `composewright doctor --setup-runsc` prints the steps to install it on the
+  host. The Validate page lists the runtime among the sandbox limits, and the
+  generated `compose.yaml` stays the same.
 
 ### Changed
 

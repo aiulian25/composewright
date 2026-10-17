@@ -143,6 +143,9 @@ func TestTierCheck(t *testing.T) {
 		{"proxy on a unix socket", sandbox.Environment{Tier: config.SandboxTierProxy}, "unix:///var/run/docker.sock", StatusWarn, "not through a socket proxy"},
 		{"proxy over tcp, rootless", sandbox.Environment{Tier: config.SandboxTierProxy, Rootless: true}, "tcp://socket-proxy:2375", StatusOK, "rootless daemon"},
 		{"policy on a rootful daemon", sandbox.Environment{Tier: config.SandboxTierPolicy}, "", StatusWarn, "rootful daemon"},
+		{"runsc with gVisor on a rootless daemon", sandbox.Environment{Tier: config.SandboxTierRunsc, Rootless: true, Runtimes: []string{"runc", "runsc"}}, "", StatusOK, "gVisor"},
+		{"runsc with gVisor on a rootful daemon", sandbox.Environment{Tier: config.SandboxTierRunsc, Runtimes: []string{"runc", "runsc"}}, "", StatusWarn, "daemon is rootful"},
+		{"runsc without gVisor", sandbox.Environment{Tier: config.SandboxTierRunsc, Runtimes: []string{"runc"}}, "", StatusFail, "no runsc runtime"},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {

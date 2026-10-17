@@ -210,17 +210,16 @@ func TestSessionTTLRange(t *testing.T) {
 	}
 }
 
-// TestSandboxTierRunscIsRefused: runsc would read as gVisor isolation that
-// nothing applies, so it is refused with a hint; proxy stays a label.
-func TestSandboxTierRunscIsRefused(t *testing.T) {
-	config := Default()
-	config.Docker.SandboxTier = "runsc"
-	if err := config.Validate(); err == nil || !strings.Contains(err.Error(), "runsc is not implemented yet") {
-		t.Fatalf("runsc: %v", err)
-	}
-	config.Docker.SandboxTier = SandboxTierProxy
-	if err := config.Validate(); err != nil {
-		t.Fatalf("proxy: %v", err)
+func TestSandboxTiers(t *testing.T) {
+	for tier, valid := range map[string]bool{
+		SandboxTierPolicy: true, SandboxTierRootless: true, SandboxTierProxy: true, SandboxTierRunsc: true,
+		"kata": false, "": false,
+	} {
+		config := Default()
+		config.Docker.SandboxTier = tier
+		if err := config.Validate(); (err == nil) != valid {
+			t.Errorf("tier %q: error %v, want valid %v", tier, err, valid)
+		}
 	}
 }
 

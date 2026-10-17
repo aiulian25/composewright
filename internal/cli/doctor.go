@@ -12,7 +12,7 @@ import (
 )
 
 func (application *app) doctorCommand() *cobra.Command {
-	var setupRootless, contactModel bool
+	var setupRootless, setupRunsc, contactModel bool
 	command := &cobra.Command{
 		Use:   "doctor",
 		Short: "Check Docker, the sandbox tier, permissions and the egress allowlist",
@@ -26,21 +26,28 @@ doctor never changes anything and never contacts the model unless
 --contact-model asks it to send the model in use one tiny request, through
 the egress guard, and report what answered, the tokens and the time.
 --setup-rootless prints the steps to run a dedicated rootless Docker daemon
-on the host, the recommended sandbox, and the composewright container on it.`,
-		Example: "  composewright doctor\n  composewright doctor --json\n  composewright doctor --contact-model\n  composewright doctor --setup-rootless",
+on the host, the recommended sandbox, and the composewright container on it.
+--setup-runsc prints the steps to install gVisor on the host for the runsc
+sandbox tier, which runs every sandbox container under its own kernel.`,
+		Example: "  composewright doctor\n  composewright doctor --json\n  composewright doctor --contact-model\n  composewright doctor --setup-rootless\n  composewright doctor --setup-runsc",
 		Args:    cobra.NoArgs,
 		RunE: func(command *cobra.Command, _ []string) error {
-			return application.runDoctor(command.Context(), setupRootless, contactModel)
+			return application.runDoctor(command.Context(), setupRootless, setupRunsc, contactModel)
 		},
 	}
 	command.Flags().BoolVar(&setupRootless, "setup-rootless", false, "print the rootless Docker setup steps")
+	command.Flags().BoolVar(&setupRunsc, "setup-runsc", false, "print the gVisor (runsc) setup steps")
 	command.Flags().BoolVar(&contactModel, "contact-model", false, "send the model in use one tiny test request")
 	return command
 }
 
-func (application *app) runDoctor(ctx context.Context, setupRootless, contactModel bool) error {
+func (application *app) runDoctor(ctx context.Context, setupRootless, setupRunsc, contactModel bool) error {
 	if setupRootless {
 		fmt.Fprintln(application.stdout, doctor.RootlessRecipe())
+		return nil
+	}
+	if setupRunsc {
+		fmt.Fprintln(application.stdout, doctor.RunscRecipe())
 		return nil
 	}
 	loaded, err := application.loadConfig()

@@ -10,11 +10,14 @@ import (
 )
 
 const (
-	statusRefresh = time.Minute
-	statusTimeout = 3 * time.Second
-	dockerPrefix  = "Docker "
-	dockerMissing = "Docker not found"
-	cliMissingFix = "The docker CLI was not found: install Docker Engine with the compose plugin, or set docker.cli_path."
+	statusRefresh    = time.Minute
+	statusTimeout    = 3 * time.Second
+	dockerPrefix     = "Docker "
+	dockerMissing    = "Docker not found"
+	cliMissingFix    = "The docker CLI was not found: install Docker Engine with the compose plugin, or set docker.cli_path."
+	gVisorText       = ", gVisor"
+	runscMissingText = ", no gVisor"
+	runscMissingFix  = "The sandbox tier is runsc, but this daemon has no runsc runtime: install gVisor on the host (composewright doctor --setup-runsc shows how)."
 )
 
 var providerNames = map[string]string{
@@ -85,12 +88,24 @@ func (server *Server) dockerStatus(ctx context.Context) dockerState {
 	checkCtx, cancel := context.WithTimeout(ctx, statusTimeout)
 	defer cancel()
 	environment, err := runner.Info(checkCtx)
-	switch {
-	case err != nil:
+	if err != nil {
 		problem := sandbox.Diagnose(sandbox.DockerHost(server.config().Docker.Host))
 		return dockerState{Text: problem.Status, Tone: toneDanger, Fix: problem.Fix}
-	case environment.Rootless:
-		return dockerState{Text: dockerPrefix + environment.EngineVersion + ", rootless", Tone: toneOk}
 	}
-	return dockerState{Text: dockerPrefix + environment.EngineVersion + ", rootful", Tone: toneWarn}
+	return daemonState(environment)
+}
+
+// daemonState is what the status bar says about a reachable daemon.
+func daemonState(environment sandbox.Environment) dockerState {
+	if environment.MissingRuntime() != nil {
+		return dockerState{Text: dockerPrefix + environment.EngineVersion + runscMissingText, Tone: toneDanger, Fix: runscMissingFix}
+	}
+	state := dockerState{Text: dockerPrefix + environment.EngineVersion + ", rootful", Tone: toneWarn}
+	if environment.Rootless {
+		state = dockerState{Text: dockerPrefix + environment.EngineVersion + ", rootless", Tone: toneOk}
+	}
+	if environment.Tier == config.SandboxTierRunsc {
+		state.Text += gVisorText
+	}
+	return state
 }

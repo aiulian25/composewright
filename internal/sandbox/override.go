@@ -55,12 +55,13 @@ type Limits struct {
 //   - labels containers so the janitor can find stale runs,
 //   - with earlyProbes, runs healthchecks every two seconds while the app
 //     starts, for at least as long as its own settings tolerate failures,
-//   - adds the reachability probe's service, which only `run` starts.
+//   - adds the reachability probe's service, which only `run` starts,
+//   - with a runtime, runs every container, the probe too, under it.
 //
 // published lists, per service, the "port/protocol" the plan publishes; they
 // are bound on loopback even when the user's file reaches the app through a
 // proxy network instead.
-func Override(project *types.Project, published map[string][]string, limits Limits, sandboxName string, started int64, earlyProbes bool) ([]byte, error) {
+func Override(project *types.Project, published map[string][]string, limits Limits, sandboxName string, started int64, earlyProbes bool, runtime string) ([]byte, error) {
 	services := mapping()
 	volumes := mapping()
 	for _, name := range sortedServices(project) {
@@ -72,6 +73,12 @@ func Override(project *types.Project, published map[string][]string, limits Limi
 		services.Content = append(services.Content, scalar(name), node)
 	}
 	services.Content = append(services.Content, scalar(probeService), probeOverride(sandboxName, started))
+	if runtime != "" {
+		for index := 1; index < len(services.Content); index += 2 {
+			service := services.Content[index]
+			service.Content = append(service.Content, scalar("runtime"), quoted(runtime))
+		}
+	}
 	root := mapping(scalar("services"), services)
 	if networks := externalNetworks(project); len(networks.Content) > 0 {
 		root.Content = append(root.Content, scalar("networks"), networks)

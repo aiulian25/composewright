@@ -23,6 +23,8 @@ const (
 	tcpPrefix  = "tcp://"
 	// contactedName is the check that really asks the model.
 	contactedName = "model (contacted)"
+	tierCheckName = "sandbox tier"
+	rootlessFix   = "use a dedicated rootless daemon: composewright doctor --setup-rootless"
 )
 
 type Check struct {
@@ -154,16 +156,32 @@ func composeCheck(ctx context.Context, runner *sandbox.Sandbox) Check {
 // label, so it is checked against where Docker is really reached.
 func tierCheck(environment sandbox.Environment, dockerHost string) Check {
 	if environment.Tier == config.SandboxTierProxy && !strings.HasPrefix(dockerHost, tcpPrefix) {
-		return Check{Name: "sandbox tier", Status: StatusWarn,
+		return Check{Name: tierCheckName, Status: StatusWarn,
 			Detail: fmt.Sprintf("tier proxy, but Docker is reached at %s, not through a socket proxy", cmp.Or(dockerHost, "the default socket")),
 			Fix:    "point docker.host or DOCKER_HOST at the socket proxy, such as tcp://socket-proxy:2375"}
 	}
-	if environment.Rootless {
-		return Check{Name: "sandbox tier", Status: StatusOK, Detail: "rootless daemon: containers run as an unprivileged user (tier " + environment.Tier + ")"}
+	if environment.Tier == config.SandboxTierRunsc {
+		return runscCheck(environment)
 	}
-	return Check{Name: "sandbox tier", Status: StatusWarn,
+	if environment.Rootless {
+		return Check{Name: tierCheckName, Status: StatusOK, Detail: "rootless daemon: containers run as an unprivileged user (tier " + environment.Tier + ")"}
+	}
+	return Check{Name: tierCheckName, Status: StatusWarn,
 		Detail: "rootful daemon: whoever can use its socket is effectively root on this host (tier " + environment.Tier + ")",
-		Fix:    "use a dedicated rootless daemon: composewright doctor --setup-rootless"}
+		Fix:    rootlessFix}
+}
+
+func runscCheck(environment sandbox.Environment) Check {
+	if err := environment.MissingRuntime(); err != nil {
+		return Check{Name: tierCheckName, Status: StatusFail, Detail: err.Error(),
+			Fix: "install gVisor on the host and register runsc with Docker: composewright doctor --setup-runsc"}
+	}
+	if !environment.Rootless {
+		return Check{Name: tierCheckName, Status: StatusWarn,
+			Detail: "gVisor runs the sandbox containers, but the daemon is rootful: whoever can use its socket is effectively root on this host (tier runsc)",
+			Fix:    rootlessFix}
+	}
+	return Check{Name: tierCheckName, Status: StatusOK, Detail: "gVisor on a rootless daemon: every sandbox container runs under the runsc runtime (tier runsc)"}
 }
 
 func limitsCheck(environment sandbox.Environment) Check {
@@ -223,6 +241,28 @@ func RootlessRecipe() string {
 		"and record the tier:",
 		"",
 		"  docker exec composewright composewright config set docker.sandbox_tier rootless",
+		"  docker exec composewright composewright doctor",
+	}, "\n")
+}
+
+// RunscRecipe is what `doctor --setup-runsc` prints: the steps on the host
+// that install gVisor and register its runsc runtime with Docker. Nothing
+// here is ever executed by composewright.
+func RunscRecipe() string {
+	return strings.Join([]string{
+		"gVisor for the Docker daemon on the host. Run these there yourself; composewright never does:",
+		"",
+		"  curl -fsSL https://gvisor.dev/archive.key | sudo gpg --dearmor -o /usr/share/keyrings/gvisor-archive-keyring.gpg",
+		`  echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/gvisor-archive-keyring.gpg] https://storage.googleapis.com/gvisor/releases release main" | sudo tee /etc/apt/sources.list.d/gvisor.list`,
+		"  sudo apt-get update && sudo apt-get install -y runsc        # Debian/Ubuntu",
+		"  sudo runsc install                                         # adds runsc to /etc/docker/daemon.json",
+		"  sudo systemctl restart docker",
+		"",
+		"A rootless daemon reads ~/.config/docker/daemon.json instead: add runsc there and run systemctl --user restart docker.",
+		"",
+		"Then record the tier and check it:",
+		"",
+		"  docker exec composewright composewright config set docker.sandbox_tier runsc",
 		"  docker exec composewright composewright doctor",
 	}, "\n")
 }

@@ -32,7 +32,7 @@ var (
 
 func (config Config) Validate() error {
 	return errors.Join(
-		sandboxTierProblem(config.Docker.SandboxTier),
+		oneOf("docker.sandbox_tier", config.Docker.SandboxTier, sandboxTiers),
 		config.Docker.Validate.validate(),
 		config.LLM.validate(config.Network.AllowPrivateTargets),
 		validateRegistries(config.Registries.Allow),
@@ -66,16 +66,6 @@ func sessionTTLProblem(lifetime time.Duration) error {
 		return nil
 	}
 	return fmt.Errorf("ui.session_ttl %s must be between %s and %s", lifetime, minimumSessionTTL, maximumSessionTTL)
-}
-
-// sandboxTierProblem accepts only the tiers composewright can stand behind;
-// runsc gets a hint, since nothing would run under gVisor.
-func sandboxTierProblem(tier string) error {
-	err := oneOf("docker.sandbox_tier", tier, sandboxTiers)
-	if err == nil || tier != sandboxTierRunsc {
-		return err
-	}
-	return fmt.Errorf("%w (runsc is not implemented yet)", err)
 }
 
 func (validate Validate) validate() error {

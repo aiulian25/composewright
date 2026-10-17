@@ -94,6 +94,7 @@
     <dt>memory</dt><dd>{{.Limits.MemoryLimit}}</dd>
     <dt>cpus</dt><dd>{{.Limits.CPUs}}</dd>
     <dt>pids</dt><dd>{{.Limits.PIDsLimit}}</dd>
+    <dt>runtime</dt><dd>{{or .Runtime "daemon default"}}</dd>
     <dt>timeout</dt><dd>{{.Limits.Timeout}}</dd>
     <dt>ports</dt><dd>127.0.0.1 only</dd>
     <dt>restart</dt><dd>"no"</dd>

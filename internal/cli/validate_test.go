@@ -163,6 +163,10 @@ func TestDoctor(t *testing.T) {
 	if recipe.code != exitOK || !strings.Contains(recipe.stdout, "dockerd-rootless-setuptool.sh install") || !strings.Contains(recipe.stdout, "composewright never does") {
 		t.Fatalf("rootless recipe: %+v", recipe)
 	}
+	recipe = run(t, environment, "doctor", "--setup-runsc")
+	if recipe.code != exitOK || !strings.Contains(recipe.stdout, "runsc install") || !strings.Contains(recipe.stdout, "composewright never does") {
+		t.Fatalf("runsc recipe: %+v", recipe)
+	}
 }
 
 // TestDoctorContactsModelOnlyWhenAsked: plain doctor sends the model
@@ -186,5 +190,25 @@ func TestDoctorContactsModelOnlyWhenAsked(t *testing.T) {
 	result := run(t, environment, "doctor", "--contact-model")
 	if result.code != exitOK || requests.Load() != 1 || !strings.Contains(result.stdout, "Reachable · answered as qwen2.5-coder:7b · 23 in / 4 out tokens") {
 		t.Fatalf("doctor --contact-model: %+v", result)
+	}
+}
+
+// TestRunscTierWithoutGVisor: the tier is accepted, but on a daemon without
+// the runsc runtime doctor fails it and no sandbox run starts.
+func TestRunscTierWithoutGVisor(t *testing.T) {
+	environment := isolate(t)
+	run(t, environment, "init")
+	calls := fakeDocker(t, environment, "pass")
+	if set := run(t, environment, "config", "set", "docker.sandbox_tier", "runsc"); set.code != exitOK {
+		t.Fatalf("set tier: %+v", set)
+	}
+	checked := run(t, environment, "doctor")
+	if checked.code == exitOK || !strings.Contains(checked.stdout, "no runsc runtime") || !strings.Contains(checked.stdout, "--setup-runsc") {
+		t.Fatalf("doctor: %+v", checked)
+	}
+	generated := run(t, environment, "--yes", "gen", "--offline", "--no-llm", "--upstream", "https://github.com/miniflux/v2", minifluxFiles)
+	recorded, _ := os.ReadFile(calls)
+	if generated.code == exitOK || !strings.Contains(generated.stderr+generated.stdout, "no runsc runtime") || strings.Contains(string(recorded), " up ") {
+		t.Fatalf("gen ran without gVisor: %+v\ncalls:\n%s", generated, recorded)
 	}
 }

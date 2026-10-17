@@ -626,6 +626,9 @@ func TestTheWholeFlow(t *testing.T) {
 	if !strings.Contains(page, "Every service is up") || !strings.Contains(page, "Attempt 1 passed") || !strings.Contains(page, "Listening on :8080") {
 		t.Fatal("the kept run does not show its verdict and logs")
 	}
+	if !strings.Contains(page, "<dt>runtime</dt><dd>daemon default</dd>") {
+		t.Fatal("the sandbox limits do not say which runtime the run used")
+	}
 	if !strings.Contains(page, "Reach miniflux from the network") || !strings.Contains(page, "http://miniflux:8080/healthcheck answered 200") {
 		t.Fatal("the run does not say what the probe asked and what answered")
 	}
@@ -650,6 +653,14 @@ func TestTheWholeFlow(t *testing.T) {
 	status(t, response, http.StatusSeeOther, page)
 	response, page = harness.get("/projects/miniflux")
 	status(t, response, http.StatusNotFound, page)
+}
+
+func TestValidateViewShowsTheRuntimeTheRunUsed(t *testing.T) {
+	server := &Server{loaded: &config.Loaded{}}
+	kept := snapshot{Finished: true, Result: &pipeline.Result{Verdicts: []sandbox.Verdict{{Sandbox: sandbox.Environment{Tier: config.SandboxTierRunsc}}}}}
+	if runtime := server.validateView(kept).Runtime; runtime != sandbox.Runtime(config.SandboxTierRunsc) {
+		t.Fatalf("a run kept under gVisor shows runtime %q", runtime)
+	}
 }
 
 func (harness *harness) checkFiles() {

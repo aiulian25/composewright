@@ -562,6 +562,7 @@ type validateView struct {
 	HealthSaid string
 	Tail       []lineView
 	Limits     config.Validate
+	Runtime    string
 	Services   []stateView
 	Lines      []lineView
 	Events     string
@@ -569,10 +570,11 @@ type validateView struct {
 
 func (server *Server) validateView(snapshot snapshot) validateView {
 	view := validateView{Job: snapshot, Tone: toneInfo, Project: snapshot.Project, Running: !snapshot.Finished, Lines: lineViews(snapshot.Lines),
-		Events: "/jobs/" + snapshot.ID + "/events", Limits: server.config().Docker.Validate}
+		Events: "/jobs/" + snapshot.ID + "/events", Limits: server.config().Docker.Validate, Runtime: sandbox.Runtime(server.config().Docker.SandboxTier)}
 	verdict, found := lastVerdict(snapshot.Result)
 	if found {
 		view.Sandbox, view.Services, view.Matches = verdict.Project, stateViews(verdict), verdict.LogMatches
+		view.Runtime = sandbox.Runtime(verdict.Sandbox.Tier)
 	}
 	switch {
 	case view.Running:

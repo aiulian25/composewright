@@ -92,12 +92,23 @@ type Publisher struct {
 // Environment describes where the run happened; limits are only real when
 // the daemon can enforce them (rootless Docker needs cgroup v2 delegation).
 type Environment struct {
-	Tier           string `json:"tier"`
-	Rootless       bool   `json:"rootless"`
-	CgroupVersion  string `json:"cgroup_version"`
-	CgroupDriver   string `json:"cgroup_driver"`
-	LimitsEnforced bool   `json:"limits_enforced"`
-	EngineVersion  string `json:"engine_version,omitempty"`
+	Tier           string   `json:"tier"`
+	Rootless       bool     `json:"rootless"`
+	CgroupVersion  string   `json:"cgroup_version"`
+	CgroupDriver   string   `json:"cgroup_driver"`
+	LimitsEnforced bool     `json:"limits_enforced"`
+	EngineVersion  string   `json:"engine_version,omitempty"`
+	Runtimes       []string `json:"runtimes,omitempty"`
+}
+
+// MissingRuntime is ErrRunscMissing when the tier needs a runtime the
+// daemon does not offer.
+func (environment Environment) MissingRuntime() error {
+	runtime := Runtime(environment.Tier)
+	if runtime == "" || slices.Contains(environment.Runtimes, runtime) {
+		return nil
+	}
+	return ErrRunscMissing
 }
 
 // probesEarly reports whether the engine runs healthchecks at a faster
