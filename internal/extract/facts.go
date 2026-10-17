@@ -5,9 +5,12 @@ package extract
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
 	"slices"
 	"sort"
+	"strings"
 
+	"github.com/aiulian25/composewright/internal/ir"
 	"github.com/aiulian25/composewright/internal/redact"
 )
 
@@ -74,6 +77,9 @@ type ComposeService struct {
 	Command     []string            `json:"command"`
 	Entrypoint  []string            `json:"entrypoint"`
 	User        string              `json:"user"`
+	// Profiles are the Compose profiles that start the service; without
+	// one enabled, Compose leaves it out.
+	Profiles []string `json:"profiles,omitempty"`
 }
 
 type ComposePort struct {
@@ -257,10 +263,104 @@ func mergeVariables(mentions []Mention) []Variable {
 	return variables
 }
 
+// Started returns a copy holding the services Compose starts with the
+// optional services named in enabled switched on: the other services behind
+// a profile are left out, with the images and variables found in them.
+func (facts *Facts) Started(enabled []string) *Facts {
+	copied := *facts
+	copied.ComposeFiles = make([]ComposeFile, 0, len(facts.ComposeFiles))
+	hidden := map[Location]bool{}
+	for _, file := range facts.ComposeFiles {
+		started, hiddenInFile := file.started(enabled)
+		copied.ComposeFiles = append(copied.ComposeFiles, started)
+		maps.Copy(hidden, hiddenInFile)
+	}
+	if len(hidden) == 0 {
+		return &copied
+	}
+	// One mention stands for every service of an image, so it stays while
+	// a started service uses that image.
+	startedImages := map[string]bool{}
+	for _, file := range copied.ComposeFiles {
+		for _, service := range file.Services {
+			startedImages[service.Image] = true
+		}
+	}
+	copied.Images = slices.DeleteFunc(slices.Clone(facts.Images), func(mention ImageMention) bool {
+		return mention.Kind == KindCompose && hidden[mention.Location] && !startedImages[mention.Reference]
+	})
+	var mentions []Mention
+	for _, variable := range facts.Variables {
+		for _, mention := range variable.Mentions {
+			if mention.Kind != KindCompose || !hidden[mention.Location] {
+				mentions = append(mentions, mention)
+			}
+		}
+	}
+	copied.Variables = mergeVariables(mentions)
+	return &copied
+}
+
+// mark marks the lines that hold the service's image, variables, ports and
+// volumes.
+// ponytail: a variable interpolated on another line of the service, such
+// as in a command, stays; mark the service's whole span if that matters.
+func (service ComposeService) mark(lines map[Location]bool) {
+	lines[service.ImageAt] = true
+	for _, variable := range service.Environment {
+		lines[variable.Location] = true
+	}
+	for _, port := range service.Ports {
+		lines[port.Location] = true
+	}
+	for _, volume := range service.Volumes {
+		lines[volume.Location] = true
+	}
+}
+
+// Started is the file with the services Compose starts when the optional
+// services named in enabled are switched on, and the variables of those.
+func (file ComposeFile) Started(enabled []string) ComposeFile {
+	started, _ := file.started(enabled)
+	return started
+}
+
+// started is Started, with the lines of the services it leaves out.
+func (file ComposeFile) started(enabled []string) (ComposeFile, map[Location]bool) {
+	hidden := map[Location]bool{}
+	file.Services = slices.DeleteFunc(slices.Clone(file.Services), func(service ComposeService) bool {
+		switchedOn := slices.ContainsFunc(enabled, func(name string) bool { return strings.EqualFold(name, service.Name) })
+		off := service.Optional() && !switchedOn
+		if off {
+			service.mark(hidden)
+		}
+		return off
+	})
+	// ponytail: a line a started service shares, as every line of a
+	// flow-style file, keeps all its mentions, those of the service off
+	// too; split mentions by column if such files matter.
+	startedLines := map[Location]bool{{}: true}
+	for _, service := range file.Services {
+		service.mark(startedLines)
+	}
+	for line := range startedLines {
+		delete(hidden, line)
+	}
+	file.Variables = slices.DeleteFunc(slices.Clone(file.Variables), func(mention Mention) bool { return hidden[mention.Location] })
+	return file, hidden
+}
+
+// Optional is true for a service upstream starts only with a profile.
+func (service ComposeService) Optional() bool {
+	return len(service.Profiles) > 0
+}
+
 // Redacted returns a copy that is safe to display or send to a model: values
 // of secret-named variables are masked, and every other string, from the
 // summary to a compose command, loses credentials such as URL passwords,
-// tokens and secret assignments.
+// tokens and secret assignments. Each distinct secret of a variable or a URL
+// gets its own numbered mask, so a reader still sees which were equal. A
+// value that cannot be secret material, such as a _FILE path, stays.
 func (facts *Facts) Redacted() (*Facts, error) {
 	encoded, err := json.Marshal(facts)
 	if err != nil {
@@ -270,32 +370,83 @@ func (facts *Facts) Redacted() (*Facts, error) {
 	if err := json.Unmarshal(encoded, &copied); err != nil {
 		return nil, err
 	}
+	masker := redact.NewMasker()
+	secretKeys := secretReaders(copied.ComposeFiles)
+	redacted := func(name, value string) string {
+		if key, readUnderSecret := secretKeys[name]; readUnderSecret {
+			name = key
+		}
+		if redact.IsSecretName(name) && ir.IsSettingValue(name, value) {
+			return value
+		}
+		return masker.Value(name, value)
+	}
 	for index := range copied.Variables {
 		variable := &copied.Variables[index]
-		variable.Default = redact.Value(variable.Name, variable.Default)
+		variable.Default = redacted(variable.Name, variable.Default)
 		for mention := range variable.Mentions {
-			variable.Mentions[mention].Default = redact.Value(variable.Name, variable.Mentions[mention].Default)
+			variable.Mentions[mention].Default = redacted(variable.Name, variable.Mentions[mention].Default)
 		}
 	}
 	for sample := range copied.EnvSamples {
 		for index, entry := range copied.EnvSamples[sample].Entries {
-			copied.EnvSamples[sample].Entries[index].Value = redact.Value(entry.Key, entry.Value)
+			copied.EnvSamples[sample].Entries[index].Value = redacted(entry.Key, entry.Value)
 		}
 	}
 	for file := range copied.ComposeFiles {
+		for index, mention := range copied.ComposeFiles[file].Variables {
+			copied.ComposeFiles[file].Variables[index].Default = redacted(mention.Name, mention.Default)
+		}
 		for service := range copied.ComposeFiles[file].Services {
 			environment := copied.ComposeFiles[file].Services[service].Environment
 			for index, variable := range environment {
-				environment[index].Raw = redact.Value(variable.Key, variable.Raw)
+				environment[index].Raw = redacted(variable.Key, variable.Raw)
 			}
 		}
 	}
 	for run := range copied.DockerRuns {
 		for index, variable := range copied.DockerRuns[run].Env {
-			copied.DockerRuns[run].Env[index].Value = redact.Value(variable.Key, variable.Value)
+			copied.DockerRuns[run].Env[index].Value = redacted(variable.Key, variable.Value)
 		}
 	}
 	return redactStrings(&copied)
+}
+
+// secretReaders maps each variable whose name sounds harmless to a secret
+// key that a compose file reads it under, as PG in POSTGRES_PASSWORD:
+// ${PG:-hunter2}, so its defaults are masked as the secret they are.
+func secretReaders(files []ComposeFile) map[string]string {
+	readers := map[string]string{}
+	for _, variable := range secretEnvironment(files) {
+		for _, name := range harmlessReferences(variable.Raw) {
+			readers[name] = variable.Key
+		}
+	}
+	return readers
+}
+
+// secretEnvironment are the environment entries of the files' services
+// under a secret key.
+func secretEnvironment(files []ComposeFile) []ComposeVariable {
+	var entries []ComposeVariable
+	for _, file := range files {
+		for _, service := range file.Services {
+			entries = append(entries, service.Environment...)
+		}
+	}
+	return slices.DeleteFunc(entries, func(variable ComposeVariable) bool { return !redact.IsSecretName(variable.Key) })
+}
+
+// harmlessReferences are the variables raw refers to whose names do not
+// sound secret.
+func harmlessReferences(raw string) []string {
+	var names []string
+	for _, match := range referenceName.FindAllStringSubmatch(raw, -1) {
+		if !redact.IsSecretName(match[1]) {
+			names = append(names, match[1])
+		}
+	}
+	return names
 }
 
 // redactStrings runs redact.Text over every string of the facts, whichever

@@ -21,6 +21,10 @@ const (
 	referenceMarker  = "${"
 )
 
+// addedDescriptions mark a variable a person added, on the Review page or
+// in the editor.
+var addedDescriptions = []string{addedDescription, addedInEditor}
+
 var (
 	ErrUnknownVariable = errors.New("the plan has no such variable")
 	ErrNotEditable     = errors.New("this value cannot be changed here")
@@ -77,7 +81,11 @@ func Revise(ctx context.Context, dependencies Dependencies, name string, revisio
 	if err != nil {
 		return nil, err
 	}
-	if err := dependencies.Workspace.Store.ReplaceEnvVars(ctx, stored.Project.ID, envRecords(result.Plan, values)); err != nil {
+	variables, err := storedVariables(ctx, dependencies.Workspace.Store, stored.Project.Name)
+	if err != nil {
+		return nil, err
+	}
+	if err := dependencies.Workspace.Store.ReplaceEnvVars(ctx, stored.Project.ID, envRecords(result.Plan, values, variables)); err != nil {
 		return nil, err
 	}
 	input := policyInput(dependencies.Config, result.Plan, result.Source, options)

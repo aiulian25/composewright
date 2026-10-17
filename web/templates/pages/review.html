@@ -55,6 +55,18 @@
     </section>
   </div>
 
+  {{if .OptionalServices}}
+  <section class="card" aria-labelledby="optional-title">
+    <div class="card-head"><h2 id="optional-title">{{template "icon-plus"}}Optional services</h2><span class="note">{{plural (len .OptionalServices) "service" "services"}} behind an upstream profile</span></div>
+    <fieldset class="option-list">
+      <legend class="visually-hidden">Optional services to add</legend>
+      {{range .OptionalServices}}<label class="option{{if .Disabled}} option-off{{end}}"><input type="checkbox" name="optional" value="{{.Value}}"{{if .Selected}} checked{{end}}{{if .Disabled}} disabled{{end}}><span class="option-text"><span class="option-name mono">{{.Label}}</span><span class="option-sub">{{.Sub}}</span></span></label>{{end}}
+    </fieldset>
+    {{if .OptionalReadOnly}}<p class="card-body muted small">Files you uploaded or pasted are kept only for their run, so these cannot be switched here. Run <span class="mono">composewright gen --enable-optional</span> on a folder of them instead.</p>
+    {{else}}<p class="card-body muted small">Upstream starts these only on request. Tick one and apply to generate the project again with it in compose.yaml and the test run.</p>{{end}}
+  </section>
+  {{end}}
+
   <section class="card" aria-labelledby="env-title">
     <div class="card-head">
       <h2 id="env-title">{{template "icon-env"}}Environment</h2>

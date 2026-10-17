@@ -59,6 +59,7 @@ still stored so you can inspect it, and gen exits with status 2.
   composewright gen ./v2-main.zip --upstream https://github.com/miniflux/v2
   composewright gen ./homeassistant --allow-need host_network
   composewright gen ./app --expose-via npm_default --storage bind
+  composewright gen ./app --enable-optional tts
   composewright gen --stop-after facts ./my-checkout`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(command *cobra.Command, arguments []string) error {
@@ -76,6 +77,7 @@ still stored so you can inspect it, and gen exits with status 2.
 	set.StringVar(&flags.options.Storage, "storage", "", "volumes or bind (bind mounts under profile.storage.base_path; default: profile.storage.style)")
 	set.StringVar(&flags.options.ProfileFile, "profile", "", "use this exported profile.yaml instead of the config's profile")
 	set.StringSliceVar(&flags.options.AllowNeeds, "allow-need", nil, "grant a requested capability: "+strings.Join(ir.Capabilities, ", ")+" (repeatable, audited)")
+	set.StringSliceVar(&flags.options.EnabledOptional, enableOptionalFlag, nil, "add an optional service upstream starts only with a Compose profile (repeatable; \"\" switches them all off; without it, a regeneration keeps those switched on)")
 	set.StringSliceVar(&flags.options.AllowRegistries, "allow-registry", nil, "trust images matching this pattern, e.g. docker.io/vaultwarden/* (repeatable)")
 	set.BoolVar(&flags.offline, "offline", false, "composewright contacts nothing: local directories only, images are not verified (no digest pinning); a sandbox run still lets Docker pull images, add --no-validate to prevent that")
 	set.BoolVar(&flags.noLabelCheck, "no-label-check", false, "verify image digests with HEAD only; skip reading image configs (labels, healthchecks), which Docker Hub counts as a pull")
@@ -270,6 +272,10 @@ func (application *app) printFacts(output io.Writer, facts *extract.Facts) error
 
 func composeRows(service extract.ComposeService) [][]string {
 	var rows [][]string
+	if service.Optional() {
+		optional := fmt.Sprintf(optionalServiceFact, service.Name, ir.ProfileList(service.Profiles))
+		rows = append(rows, []string{optionalServiceKind, sanitize(optional), service.Location.String()})
+	}
 	for _, port := range service.Ports {
 		rows = append(rows, []string{"port", strconv.Itoa(port.Target) + "/" + port.Protocol + " (" + service.Name + ")", port.Location.String()})
 	}

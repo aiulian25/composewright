@@ -1,8 +1,10 @@
 package pipeline
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/aiulian25/composewright/internal/extract"
@@ -16,6 +18,10 @@ import (
 	"github.com/aiulian25/composewright/internal/store"
 	"github.com/aiulian25/composewright/internal/workspace"
 )
+
+// ErrNotRereadable is a version made from files someone uploaded or pasted:
+// they were kept only for that run.
+var ErrNotRereadable = errors.New("the files this project was made from were kept only for that run, so its optional services cannot be switched here; run composewright gen --enable-optional on a folder of them")
 
 // Stored is a project's latest generation with its decrypted .env values.
 type Stored struct {
@@ -157,3 +163,29 @@ func (stored *Stored) verifiedImages() (map[string]images.Metadata, map[string]p
 
 // Revealed is the mask that shows every value.
 const Revealed = ""
+
+// Rereadable reports whether the project's source can be read again: a
+// GitHub repository, or a folder or archive on this machine, not files
+// someone uploaded or pasted.
+func (stored *Stored) Rereadable() bool {
+	return !stored.Options.Uploaded
+}
+
+// Regeneration are the options that generate the project again from its
+// source as its latest version was, with the optional services enabled
+// switched on. A GitHub repository is read at the stored commit, so the
+// files are the same.
+func (stored *Stored) Regeneration(enabled []string) (Options, error) {
+	if !stored.Rereadable() {
+		return Options{}, ErrNotRereadable
+	}
+	kept, project := stored.Options, stored.Project
+	options := Options{Name: cmp.Or(kept.Name, project.Name), Engine: kept.Engine, Source: kept.Source, Ref: kept.Ref, Owner: kept.Owner,
+		Upstream: kept.Upstream, ExposeVia: kept.ExposeVia, Networks: kept.Networks, Storage: kept.Storage, ProfileFile: kept.ProfileFile,
+		AllowNeeds: kept.AllowNeeds, AllowRegistries: kept.AllowRegistries, BenignLogPatterns: kept.BenignLogPatterns, EnabledOptional: enabled,
+		Regenerating: true}
+	if project.SourceKind == fetch.SourceGitHub && project.SourceCommit != "" {
+		options.Ref = project.SourceCommit
+	}
+	return options, nil
+}

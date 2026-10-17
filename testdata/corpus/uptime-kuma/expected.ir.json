@@ -85,6 +85,7 @@
   ],
   "env_file": [],
   "optional_env": [],
+  "optional_services": [],
   "needs": [],
   "probe": {
     "service": "uptime-kuma",

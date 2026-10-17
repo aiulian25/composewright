@@ -46,6 +46,11 @@
       "items": { "$ref": "#/$defs/optional_setting" },
       "description": "Variables the upstream documents that the plan leaves unset. composewright fills this from the repository itself; a model returns an empty array."
     },
+    "optional_services": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/optional_service" },
+      "description": "Services the upstream starts only with a Compose profile; one a person switched on is also in services. composewright fills this from the repository itself; a model returns an empty array."
+    },
     "needs": {
       "type": "array",
       "items": { "$ref": "#/$defs/need" },
@@ -79,7 +84,7 @@
     }
   },
   "required": [
-    "ir_version", "app", "services", "env_file", "optional_env", "needs", "probe",
+    "ir_version", "app", "services", "env_file", "optional_env", "optional_services", "needs", "probe",
     "post_install_notes", "confidence", "evidence", "suspicious_instructions", "unfilled"
   ],
   "additionalProperties": false,
@@ -378,6 +383,25 @@
         "provenance": { "$ref": "#/$defs/provenance" }
       },
       "required": ["key", "value", "generate", "secret", "required", "description", "file_env_key", "provenance"],
+      "additionalProperties": false
+    },
+    "optional_service": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "The service name, as the plan spells it." },
+        "image": { "type": "string", "description": "The image upstream gives the service, empty when it is only built." },
+        "profiles": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "The upstream Compose profiles that start the service."
+        },
+        "depends_on": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "The optional services it depends on, switched on with it."
+        }
+      },
+      "required": ["name", "image", "profiles", "depends_on"],
       "additionalProperties": false
     },
     "optional_setting": {

@@ -108,6 +108,18 @@ func TestNamedSecretsKeepTheirOwnValue(t *testing.T) {
 	}
 }
 
+// TestOnlyExternalConnectionStringAsksForItsPassword: the password a lone
+// connection string to a database outside the stack asks for is the one it
+// reads, whatever adding that question moves.
+func TestOnlyExternalConnectionStringAsksForItsPassword(t *testing.T) {
+	facts := testFacts(t, map[string]string{"docker-compose.yml": "services:\n  app:\n    image: example/app:1.0\n    ports: [\"8080:8080\"]\n" +
+		"    environment:\n      DATABASE_URL: postgres://app:hunter22@db.example.com/app\n"})
+	plan := Build(context.Background(), Input{Facts: facts, Source: &fetch.Source{Owner: "example", Repository: "app"}})
+	if entry, _ := plan.EnvEntry("DATABASE_URL"); entry == nil || entry.Value != "postgres://app:${DATABASE_URL_PASSWORD}@db.example.com/app" {
+		t.Fatalf("DATABASE_URL is %+v", entry)
+	}
+}
+
 func TestSecretsAreGeneratedAndLinked(t *testing.T) {
 	facts := testFacts(t, map[string]string{"docker-compose.yml": `services:
   app:

@@ -31,6 +31,9 @@ const (
 	DockerSocket     = "/var/run/docker.sock"
 	dockerSocketName = "docker.sock"
 	optionalEnvField = "optional_env"
+	// optionalServicesField is filled from the repository, never by a model.
+	optionalServicesField = "optional_services"
+	profileSeparator      = ", "
 
 	GeneratePassword24 = secrets.GeneratePassword24
 	GenerateHex32      = secrets.GenerateHex32

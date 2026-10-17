@@ -1056,6 +1056,7 @@
       }
     }
   ],
+  "optional_services": [],
   "needs": [],
   "probe": {
     "service": "immich-server",

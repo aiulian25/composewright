@@ -1028,6 +1028,7 @@
       }
     }
   ],
+  "optional_services": [],
   "needs": [],
   "probe": {
     "service": "mealie",

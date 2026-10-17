@@ -241,9 +241,12 @@ func fillPlan(plan *ir.IR) *ir.IR {
 }
 
 // secretFree is the plan as a model may see it: no secret value, and
-// credentials removed from every other value.
+// credentials removed from every other value. Optional services are left
+// out: no model answer changes them, and those switched off are not the
+// model's to see.
 func secretFree(plan *ir.IR) *ir.IR {
 	copied := plan.Clone()
+	copied.OptionalServices = []ir.OptionalService{}
 	for index := range copied.EnvFile {
 		entry := &copied.EnvFile[index]
 		entry.Value = hiddenValue(entry.Key, entry.Value, entry.Secret)

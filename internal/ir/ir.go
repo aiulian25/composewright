@@ -16,6 +16,7 @@ type IR struct {
 	Services               []Service         `json:"services"`
 	EnvFile                []EnvFileEntry    `json:"env_file"`
 	OptionalEnv            []OptionalSetting `json:"optional_env"`
+	OptionalServices       []OptionalService `json:"optional_services"`
 	Needs                  []Need            `json:"needs"`
 	Probe                  Probe             `json:"probe"`
 	PostInstallNotes       []string          `json:"post_install_notes"`
@@ -130,6 +131,22 @@ type OptionalSetting struct {
 	Default     string     `json:"default"`
 	Description string     `json:"description"`
 	Provenance  Provenance `json:"provenance"`
+}
+
+// OptionalService describes a service the upstream starts only with a
+// Compose profile. A switched-on one is also an ordinary service of the
+// plan; the others are not rendered, gated or run.
+type OptionalService struct {
+	Name     string   `json:"name"`
+	Image    string   `json:"image"`
+	Profiles []string `json:"profiles"`
+	// DependsOn are the optional services it needs, switched on with it.
+	DependsOn []string `json:"depends_on"`
+}
+
+// ProfileList names Compose profiles as a plan or a page lists them.
+func ProfileList(profiles []string) string {
+	return strings.Join(profiles, profileSeparator)
 }
 
 type Need struct {

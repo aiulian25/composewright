@@ -371,6 +371,45 @@ func TestGenStopAfterIR(t *testing.T) {
 	}
 }
 
+// TestGenEnablesOptionalServices: --enable-optional adds a service upstream
+// starts only with a profile; without it the service stays out, and a name
+// the plan does not offer is refused.
+func TestGenEnablesOptionalServices(t *testing.T) {
+	environment := isolate(t)
+	directory := filepath.Join(environment, "talk")
+	compose := "services:\n  app:\n    image: docker.io/library/nginx:1.27\n    ports: [\"8080:80\"]\n" +
+		"  tts:\n    image: docker.io/library/busybox:1.36\n    profiles: [tts]\n"
+	if err := os.MkdirAll(directory, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(directory, "compose.yaml"), []byte(compose), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	run(t, environment, "init")
+	if facts := run(t, environment, "gen", "--offline", "--stop-after", "facts", directory); !strings.Contains(facts.stdout, "tts (profile tts)") {
+		t.Fatalf("the facts do not show the optional service:\n%s", facts.stdout)
+	}
+	arguments := []string{"gen", "--offline", "--no-llm", "--no-validate", "--name", "talk"}
+	if result := run(t, environment, append(arguments, directory)...); result.code != exitOK {
+		t.Fatalf("gen: %+v", result)
+	}
+	if shown := run(t, environment, "show", "talk", "--file", "plan"); !strings.Contains(shown.stdout, "--enable-optional tts") {
+		t.Fatalf("the plan does not offer the optional service:\n%s", shown.stdout)
+	}
+	if shown := run(t, environment, "show", "talk", "--file", "compose"); strings.Contains(shown.stdout, "tts:") {
+		t.Fatalf("the optional service is in compose.yaml without --enable-optional:\n%s", shown.stdout)
+	}
+	if result := run(t, environment, append(arguments, "--enable-optional", "tts", directory)...); result.code != exitOK {
+		t.Fatalf("gen --enable-optional: %+v", result)
+	}
+	if shown := run(t, environment, "show", "talk", "--file", "compose"); !strings.Contains(shown.stdout, "  tts:") {
+		t.Fatalf("--enable-optional did not add the service:\n%s", shown.stdout)
+	}
+	if result := run(t, environment, append(arguments, "--enable-optional", "gpu", directory)...); result.code == exitOK {
+		t.Fatal("an optional service the plan does not offer was accepted")
+	}
+}
+
 const minifluxFiles = "../../testdata/corpus/miniflux/files"
 
 func generate(t *testing.T, environment string, extra ...string) result {

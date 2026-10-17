@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"fmt"
 	"path"
 	"regexp"
 	"slices"
@@ -44,10 +45,12 @@ func chooseCompose(facts *extract.Facts, identity []string) *extract.ComposeFile
 	bestScore := 0
 	for index := range facts.ComposeFiles {
 		file := &facts.ComposeFiles[index]
-		if !candidate(file, identity) {
+		// Services behind a profile are not what a deployment starts from.
+		required := file.Started(nil)
+		if !candidate(&required, identity) {
 			continue
 		}
-		score := composeScore(file, facts, identity)
+		score := composeScore(&required, facts, identity)
 		better := best == nil || score > bestScore || (score == bestScore && len(file.Path) < len(best.Path))
 		if better {
 			best, bestScore = file, score
@@ -140,10 +143,17 @@ func hasAppService(file *extract.ComposeFile) bool {
 	})
 }
 
-func (builder *builder) fromCompose(file *extract.ComposeFile) {
-	builder.evidence("compose file "+file.Path+" chosen among "+strconv.Itoa(len(builder.facts.ComposeFiles))+" upstream compose files",
-		extract.Location{File: file.Path, Line: 1})
-	app := builder.appService(file)
+// fromCompose builds the services Compose starts from the chosen file with
+// the optional services named in enabled switched on: each is an ordinary
+// service then, though never the app. The services that always run are
+// built first, so a password one of them shares with a switched-on service
+// stays theirs; the plan keeps the file's order.
+func (builder *builder) fromCompose(chosen *extract.ComposeFile, enabled []string) {
+	builder.evidence("compose file "+chosen.Path+" chosen among "+strconv.Itoa(len(builder.facts.ComposeFiles))+" upstream compose files",
+		extract.Location{File: chosen.Path, Line: 1})
+	required := chosen.Started(nil)
+	app := builder.appService(&required)
+	file := chosen.Started(enabled)
 	for _, service := range file.Services {
 		for _, volume := range service.Volumes {
 			if volume.Type != volumeBind && volume.Source != "" {
@@ -151,8 +161,44 @@ func (builder *builder) fromCompose(file *extract.ComposeFile) {
 			}
 		}
 	}
-	for _, service := range file.Services {
-		builder.plan.Services = append(builder.plan.Services, builder.composeService(file, service, service.Name == app))
+	for _, optionalPass := range []bool{false, true} {
+		for _, service := range file.Services {
+			if service.Optional() != optionalPass {
+				continue
+			}
+			built := builder.composeService(&file, service, service.Name == app)
+			if service.Optional() {
+				builder.note(&built, optionalNote, ir.ProfileList(service.Profiles))
+			}
+			builder.plan.Services = append(builder.plan.Services, built)
+		}
+	}
+	order := func(service ir.Service) int {
+		return slices.IndexFunc(file.Services, func(upstream extract.ComposeService) bool { return strings.EqualFold(upstream.Name, service.Name) })
+	}
+	slices.SortStableFunc(builder.plan.Services, func(left, right ir.Service) int { return order(left) - order(right) })
+	DropOffDependencies(builder.plan)
+}
+
+// DropOffDependencies removes what a service waits for that is an optional
+// service the plan does not run, with a note saying so: Compose refuses to
+// start a stack whose service depends on one it does not define.
+func DropOffDependencies(plan *ir.IR) {
+	off := map[string]bool{}
+	for _, optional := range plan.OptionalServices {
+		if _, running := plan.Service(optional.Name); !running {
+			off[optional.Name] = true
+		}
+	}
+	for index := range plan.Services {
+		service := &plan.Services[index]
+		service.DependsOn = slices.DeleteFunc(service.DependsOn, func(dependency ir.Dependency) bool {
+			if !off[dependency.Service] {
+				return false
+			}
+			service.Notes = append(service.Notes, fmt.Sprintf(offDependencyNote, dependency.Service))
+			return true
+		})
 	}
 }
 

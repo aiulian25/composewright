@@ -185,6 +185,7 @@
       }
     }
   ],
+  "optional_services": [],
   "needs": [],
   "probe": {
     "service": "actual_server",

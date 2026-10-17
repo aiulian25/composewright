@@ -85,4 +85,17 @@ func TestValuesKeepStoredSecretsOnlyWhereThePlanHasNone(t *testing.T) {
 	if fresh["SMTP_PASSWORD"] != "" || len(fresh["DB_PASSWORD"]) != 24 {
 		t.Errorf("without stored values: %v", fresh)
 	}
+	// Each was a reference to a password that has left the .env.
+	references := map[string]string{"DB_PASSWORD": "${POSTGRES_PASSWORD}", "SMTP_PASSWORD": "${MAIL_PASSWORD}"}
+	if renewed, _ := Values(plan, options, references); len(renewed["DB_PASSWORD"]) != 24 || renewed["SMTP_PASSWORD"] != "" {
+		t.Errorf("a stored reference was kept as a secret: %v", renewed)
+	}
+	// SMTP_PASSWORD may refer to a password the .env still has.
+	if linked, _ := Values(plan, options, map[string]string{"SMTP_PASSWORD": "${DB_PASSWORD}"}); linked["SMTP_PASSWORD"] != "${DB_PASSWORD}" {
+		t.Errorf("a reference to a variable in the .env was dropped: %v", linked)
+	}
+	withDollar := map[string]string{"DB_PASSWORD": "gen$erated", "SMTP_PASSWORD": "Sup3r$ecret"}
+	if kept, _ := Values(plan, options, withDollar); kept["DB_PASSWORD"] != "gen$erated" || kept["SMTP_PASSWORD"] != "Sup3r$ecret" {
+		t.Errorf("a stored secret with a $ was dropped: %v", kept)
+	}
 }

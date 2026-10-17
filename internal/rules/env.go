@@ -339,6 +339,8 @@ func (builder *builder) linkSecrets() {
 		owner, known := builder.secretOwners[password]
 		if !known {
 			owner = builder.passwordEntry(entry.Key, entry.Provenance)
+			// The new entry may have moved the .env entries.
+			entry = &builder.plan.EnvFile[index]
 		}
 		user := parsed.User.Username()
 		entry.Value = strings.Replace(entry.Value, "://"+user+":"+password+"@", "://"+user+":${"+owner+"}@", 1)

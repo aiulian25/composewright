@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"log/slog"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -69,5 +70,43 @@ func TestHandlerMasksSecrets(t *testing.T) {
 	}
 	if !strings.Contains(output, "api.github.com") {
 		t.Fatalf("non-secret attribute lost: %s", output)
+	}
+}
+
+// TestMaskerNumbersSecrets: equal secrets get the same mask wherever they
+// are, others another one, and a short one the bare mask.
+func TestMaskerNumbersSecrets(t *testing.T) {
+	masker := NewMasker()
+	got := []string{
+		masker.Value("DB_PASSWORD", "hunter22"),
+		masker.Value("DATABASE_URL", "postgres://app:hunter22@db/app"),
+		masker.Value("SECRET_KEY", "other-secret"),
+		masker.Value("DB_PASSWORD", "${DB_PASSWORD:-hunter22}"),
+		masker.Value("API_KEY", "abc"),
+		masker.Value("DB_PASSWORD", "<redacted-1>"),
+	}
+	want := []string{"<redacted-1>", "postgres://app:<redacted-1>@db/app", "<redacted-2>", "${DB_PASSWORD:-<redacted-1>}", Mask, "<redacted-1>"}
+	if !slices.Equal(got, want) {
+		t.Fatalf("got %q\nwant %q", got, want)
+	}
+	if text := Text(`ROCKET_TLS={certs="/path/to/certs.pem",key="/path/to/key.pem"}`); strings.Contains(text, Mask) {
+		t.Fatalf("a file path was masked: %s", text)
+	}
+	if text := Text("dial postgres://u:" + got[0] + "@db"); text != "dial postgres://u:<redacted-1>@db" {
+		t.Fatalf("a numbered mask was masked again: %s", text)
+	}
+}
+
+// TestMaskerMasksAFallbackSecret: under a key that does not sound secret, a
+// fallback for a secret variable is masked as the variable's default is, in
+// the - and the :- form.
+func TestMaskerMasksAFallbackSecret(t *testing.T) {
+	masker := NewMasker()
+	defaultMask := masker.Value("DB_PASSWORD", "hunter22secret")
+	for _, form := range []string{"-", ":-"} {
+		got := masker.Value("APP_DATABASE", "${DB_PASSWORD"+form+"hunter22secret}")
+		if want := "${DB_PASSWORD" + form + defaultMask + "}"; got != want {
+			t.Errorf("%s form: got %q, want %q", form, got, want)
+		}
 	}
 }

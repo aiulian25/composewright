@@ -58,8 +58,9 @@ func Decode(data []byte) (*IR, error) {
 
 // DecodeModelOutput validates untrusted model output against the JSON schema
 // before decoding, so a missing field is rejected instead of zero-filled.
-// optional_env is the exception: composewright fills it from the repository
-// and never from a model, so an answer that leaves it out loses nothing.
+// optional_env and optional_services are the exception: composewright fills
+// them from the repository and never from a model, so an answer that leaves
+// them out loses nothing.
 func DecodeModelOutput(data []byte) (*IR, error) {
 	instance, err := jsonschema.UnmarshalJSON(bytes.NewReader(data))
 	if err != nil {
@@ -67,8 +68,10 @@ func DecodeModelOutput(data []byte) (*IR, error) {
 	}
 	lowercaseEnums(instance)
 	if object, isObject := instance.(map[string]any); isObject {
-		if _, present := object[optionalEnvField]; !present {
-			object[optionalEnvField] = []any{}
+		for _, field := range []string{optionalEnvField, optionalServicesField} {
+			if _, present := object[field]; !present {
+				object[field] = []any{}
+			}
 		}
 	}
 	schema, err := compiledSchema()
@@ -131,6 +134,7 @@ func (plan *IR) Normalize() {
 	plan.Services = nonNil(plan.Services)
 	plan.EnvFile = nonNil(plan.EnvFile)
 	plan.OptionalEnv = nonNil(plan.OptionalEnv)
+	plan.OptionalServices = nonNil(plan.OptionalServices)
 	plan.Needs = nonNil(plan.Needs)
 	plan.PostInstallNotes = nonNil(plan.PostInstallNotes)
 	plan.Evidence = nonNil(plan.Evidence)
@@ -141,6 +145,14 @@ func (plan *IR) Normalize() {
 	plan.Confidence = strings.ToLower(plan.Confidence)
 	for index := range plan.Services {
 		plan.Services[index].normalize()
+	}
+	for index := range plan.OptionalServices {
+		optional := &plan.OptionalServices[index]
+		optional.Name = strings.ToLower(optional.Name)
+		optional.Profiles, optional.DependsOn = nonNil(optional.Profiles), nonNil(optional.DependsOn)
+		for dependency := range optional.DependsOn {
+			optional.DependsOn[dependency] = strings.ToLower(optional.DependsOn[dependency])
+		}
 	}
 	for index := range plan.OptionalEnv {
 		plan.OptionalEnv[index].Service = strings.ToLower(plan.OptionalEnv[index].Service)

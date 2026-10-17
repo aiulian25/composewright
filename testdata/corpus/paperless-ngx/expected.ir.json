@@ -536,6 +536,7 @@
       }
     }
   ],
+  "optional_services": [],
   "needs": [],
   "probe": {
     "service": "webserver",

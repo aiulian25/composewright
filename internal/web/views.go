@@ -1,6 +1,7 @@
 package web
 
 import (
+	"cmp"
 	"fmt"
 	"path"
 	"regexp"
@@ -30,6 +31,14 @@ const (
 	kindReference  = "reference"
 	lineTimeLayout = "15:04:05.000"
 	githubPrefix   = "https://"
+	// optionalServiceSub shows a service upstream starts only with a
+	// Compose profile.
+	optionalServiceSub = "%s · upstream profile %s"
+	// optionalServiceKind and optionalServiceFact list a service upstream
+	// starts only with a Compose profile among the facts.
+	optionalServiceKind = "optional service"
+	optionalServiceFact = "%s (profile %s)"
+	noPublishedImage    = "no published image"
 )
 
 type stepInfo struct {
@@ -122,6 +131,10 @@ func factRows(facts *extract.Facts) ([]factRow, []string) {
 	for _, file := range facts.ComposeFiles {
 		for _, service := range file.Services {
 			add(factRow{Kind: "image", Value: service.Image, Source: service.ImageAt.String()})
+			if service.Optional() {
+				add(factRow{Kind: optionalServiceKind, Value: fmt.Sprintf(optionalServiceFact, service.Name, ir.ProfileList(service.Profiles)),
+					Source: service.Location.String()})
+			}
 			for _, port := range service.Ports {
 				add(factRow{Kind: "port", Value: fmt.Sprintf("%d/%s", port.Target, protocol(port.Protocol)), Source: port.Location.String()})
 			}
@@ -260,6 +273,20 @@ type needView struct {
 
 var capabilityLabels = map[string]string{ir.NeedHostNetwork: "Host network", ir.NeedDevices: "Devices", ir.NeedPrivileged: "Privileged",
 	ir.NeedBindMount: "Host folder", ir.NeedLowPort: "Port below 1024", ir.NeedCapAdd: "Capabilities", ir.NeedDockerSocket: "Docker socket"}
+
+// optionalServiceOptions offers each service upstream starts only with a
+// Compose profile, ticked when the plan runs it; read-only when the source
+// cannot be read again to switch it.
+func optionalServiceOptions(plan *ir.IR, switchable bool) []option {
+	options := make([]option, 0, len(plan.OptionalServices))
+	for _, service := range plan.OptionalServices {
+		_, enabled := plan.Service(service.Name)
+		options = append(options, option{Value: service.Name, Label: service.Name,
+			Sub:      fmt.Sprintf(optionalServiceSub, cmp.Or(service.Image, noPublishedImage), ir.ProfileList(service.Profiles)),
+			Selected: enabled, Disabled: !switchable})
+	}
+	return options
+}
 
 func needViews(plan *ir.IR, granted []string) []needView {
 	requested := map[string]ir.Need{}

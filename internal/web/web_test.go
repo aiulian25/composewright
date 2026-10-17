@@ -12,6 +12,7 @@ import (
 	"io"
 	"io/fs"
 	"log/slog"
+	"maps"
 	"mime/multipart"
 	"net/http"
 	"net/http/cookiejar"
@@ -976,6 +977,117 @@ func TestFilesOnly(t *testing.T) {
 	if stored.Values["POSTGRES_PASSWORD"] != "MyOwnDbPassword-7c2f" || stored.Values["NEXTCLOUD_ADMIN_PASSWORD"] == "changeme" {
 		t.Fatalf("stored values: own %q, placeholder %q", stored.Values["POSTGRES_PASSWORD"], stored.Values["NEXTCLOUD_ADMIN_PASSWORD"])
 	}
+}
+
+// TestOptionalServicesOnReview: a service upstream starts only with a
+// profile is listed on the Analyse page and left out of compose.yaml until it
+// is ticked on the Review, which generates the project again with it and the
+// optional service it depends on, keeping a value and a secret typed in with
+// the tick; unticking only that dependency changes nothing, and switching
+// them off and on again reuses the generated password.
+func TestOptionalServicesOnReview(t *testing.T) {
+	harness := newHarness(t)
+	harness.signUp()
+	directory := t.TempDir()
+	compose := "services:\n  app:\n    image: docker.io/library/nginx:1.27\n    ports: [\"8080:80\"]\n    environment:\n" +
+		"      LOG_LEVEL: ${LOG_LEVEL:-info}\n      SMTP_PASSWORD: ${SMTP_PASSWORD}\n" +
+		"  tts:\n    image: docker.io/library/busybox:1.36\n    profiles: [tts]\n    depends_on: [voices]\n    environment:\n      VOICE: ${TTS_VOICE:-alto}\n" +
+		"  voices:\n    image: docker.io/library/redis:7\n    profiles: [tts]\n    environment:\n      REDIS_PASSWORD: ${REDIS_PASSWORD}\n"
+	if err := os.WriteFile(filepath.Join(directory, "compose.yaml"), []byte(compose), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	response, page := harness.post("/new", url.Values{"source": {directory}, "name": {"talk"}, "engine": {pipeline.EngineRules}})
+	status(t, response, http.StatusSeeOther, page)
+	if job := harness.waitForJob(response.Header.Get("Location")); job.Failure != "" {
+		t.Fatal(job.Failure)
+	}
+	response, page = harness.get(projectURL("talk", pageAnalyse))
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, optionalServiceKind) || !strings.Contains(page, "tts (profile tts)") {
+		t.Fatal("the Analyse page does not list the optional service")
+	}
+	response, page = harness.get(projectURL("talk", pageReview))
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, `name="optional" value="tts">`) || !strings.Contains(page, "upstream profile tts") {
+		t.Fatal("the Review does not offer the optional service, off")
+	}
+	typed := url.Values{valuePrefix + "LOG_LEVEL": {"debug"}, secretPrefix + "SMTP_PASSWORD": {"typed-in-secret"}}
+	stored := harness.reviewWith("talk", []string{"tts"}, typed)
+	if !strings.Contains(stored.Generation.ComposeYAML, "\n  tts:\n") || !strings.Contains(stored.Generation.ComposeYAML, "\n  voices:\n") {
+		t.Fatalf("the ticked service is not in compose.yaml:\n%s", stored.Generation.ComposeYAML)
+	}
+	password := stored.Values["REDIS_PASSWORD"]
+	if !slices.Equal(stored.Options.EnabledOptional, []string{"tts", "voices"}) || password == "" {
+		t.Fatalf("the choice or the dependency's password is missing: %+v", stored.Options)
+	}
+	if stored.Values["LOG_LEVEL"] != "debug" || stored.Values["SMTP_PASSWORD"] != "typed-in-secret" {
+		t.Fatalf("what was typed in with the tick was lost: %+v", stored.Values)
+	}
+	response, page = harness.get(projectURL("talk", pageReview))
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, `name="optional" value="tts" checked>`) || !strings.Contains(page, `name="optional" value="voices" checked>`) {
+		t.Fatal("the Review does not show the service and its dependency switched on")
+	}
+	if untickedDependency := harness.reviewWith("talk", []string{"tts"}, nil); untickedDependency.Generation.Number != stored.Generation.Number {
+		t.Fatal("unticking only what a ticked service depends on stored a version that changes nothing")
+	}
+	stored = harness.reviewWith("talk", nil, nil)
+	if strings.Contains(stored.Generation.ComposeYAML, "tts") || strings.Contains(stored.Generation.ComposeYAML, "voices") || len(stored.Options.EnabledOptional) != 0 {
+		t.Fatalf("the unticked service stayed:\n%s", stored.Generation.ComposeYAML)
+	}
+	if stored = harness.reviewWith("talk", []string{"voices"}, nil); stored.Values["REDIS_PASSWORD"] != password {
+		t.Fatal("switching the service off and on again made a new password")
+	}
+}
+
+// TestOptionalServicesOfAnUpload: pasted files are kept only for their run,
+// so the Review shows their optional services read-only and a posted tick
+// switches nothing.
+func TestOptionalServicesOfAnUpload(t *testing.T) {
+	harness := newHarness(t)
+	harness.signUp()
+	compose := "services:\n  app:\n    image: docker.io/library/nginx:1.27\n    ports: [\"8080:80\"]\n" +
+		"  tts:\n    image: docker.io/library/busybox:1.36\n    profiles: [tts]\n"
+	response, page := harness.post("/new", url.Values{"compose": {compose}, "name": {"talk"}, "engine": {pipeline.EngineRules}})
+	status(t, response, http.StatusSeeOther, page)
+	if job := harness.waitForJob(response.Header.Get("Location")); job.Failure != "" {
+		t.Fatal(job.Failure)
+	}
+	response, page = harness.get(projectURL("talk", pageReview))
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, `name="optional" value="tts" disabled>`) || !strings.Contains(page, "cannot be switched here") {
+		t.Fatal("the Review does not show the upload's optional service read-only")
+	}
+	if stored := harness.reviewWith("talk", []string{"tts"}, nil); strings.Contains(stored.Generation.ComposeYAML, "tts") {
+		t.Fatalf("a tick switched on a service of an upload:\n%s", stored.Generation.ComposeYAML)
+	}
+}
+
+// reviewWith applies the Review form of the project name, as the page
+// renders it with the optional services given ticked and the extra fields,
+// waits for a generation it starts, and loads the result.
+func (harness *harness) reviewWith(name string, optional []string, extra url.Values) *pipeline.Stored {
+	harness.t.Helper()
+	load := func() *pipeline.Stored {
+		stored, err := pipeline.Load(context.Background(), harness.server.workspace(), name)
+		if err != nil {
+			harness.t.Fatal(err)
+		}
+		return stored
+	}
+	options := load().Options
+	mode, networks := render.Exposure(harness.server.config().Profile, options.ExposeVia, options.Networks)
+	form := url.Values{"expose": {mode}, "network": networks, "storage": {options.Storage}, "need": options.AllowNeeds,
+		"registry": options.AllowRegistries, optionalField: optional, "action": {actionApply}}
+	maps.Copy(form, extra)
+	response, page := harness.post(projectURL(name, pageReview), form)
+	status(harness.t, response, http.StatusSeeOther, page)
+	if location := response.Header.Get("Location"); strings.HasPrefix(location, "/jobs/") {
+		if job := harness.waitForJob(location); job.Failure != "" || !strings.HasPrefix(job.Next, projectURL(name, pageReview)) {
+			harness.t.Fatalf("the generation failed or went elsewhere: %q, %s", job.Failure, job.Next)
+		}
+	}
+	return load()
 }
 
 func TestSettings(t *testing.T) {

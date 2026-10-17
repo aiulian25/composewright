@@ -150,6 +150,151 @@
       "path": "docker/docker-compose.dev.yml",
       "services": [
         {
+          "name": "immich-app-base",
+          "location": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 17
+          },
+          "image": "",
+          "image_at": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 17
+          },
+          "build": false,
+          "ports": null,
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "..",
+              "target": "/usr/src/app",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 22
+              }
+            },
+            {
+              "type": "volume",
+              "source": "build_cache",
+              "target": "/buildcache",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 24
+              }
+            },
+            {
+              "type": "volume",
+              "source": "server_node_modules",
+              "target": "/usr/src/app/server/node_modules",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 25
+              }
+            },
+            {
+              "type": "volume",
+              "source": "web_node_modules",
+              "target": "/usr/src/app/web/node_modules",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 26
+              }
+            },
+            {
+              "type": "volume",
+              "source": "github_node_modules",
+              "target": "/usr/src/app/.github/node_modules",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 27
+              }
+            },
+            {
+              "type": "volume",
+              "source": "cli_node_modules",
+              "target": "/usr/src/app/packages/cli/node_modules",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 28
+              }
+            },
+            {
+              "type": "volume",
+              "source": "docs_node_modules",
+              "target": "/usr/src/app/docs/node_modules",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 29
+              }
+            },
+            {
+              "type": "volume",
+              "source": "e2e_node_modules",
+              "target": "/usr/src/app/e2e/node_modules",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 30
+              }
+            },
+            {
+              "type": "volume",
+              "source": "sdk_node_modules",
+              "target": "/usr/src/app/packages/sdk/node_modules",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 31
+              }
+            },
+            {
+              "type": "volume",
+              "source": "app_node_modules",
+              "target": "/usr/src/app/node_modules",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 32
+              }
+            },
+            {
+              "type": "volume",
+              "source": "sveltekit",
+              "target": "/usr/src/app/web/.svelte-kit",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 33
+              }
+            },
+            {
+              "type": "volume",
+              "source": "coverage",
+              "target": "/usr/src/app/web/coverage",
+              "read_only": false,
+              "location": {
+                "file": "docker/docker-compose.dev.yml",
+                "line": 34
+              }
+            }
+          ],
+          "environment": null,
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": "",
+          "profiles": [
+            "_base"
+          ]
+        },
+        {
           "name": "immich-init",
           "location": {
             "file": "docker/docker-compose.dev.yml",

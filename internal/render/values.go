@@ -1,6 +1,7 @@
 package render
 
 import (
+	"regexp"
 	"slices"
 	"strconv"
 
@@ -16,6 +17,10 @@ const (
 	variableGroupID  = "PGID"
 	httpsScheme      = "https://"
 )
+
+// wholeReference is a value that is only a reference to another variable,
+// as a Review edit such as DB_PASSWORD=${POSTGRES_PASSWORD} stores it.
+var wholeReference = regexp.MustCompile(`^\$\{([A-Za-z_][A-Za-z0-9_]*)\}$`)
 
 // Values decides every .env value. A secret stored for this project before
 // is reused, so regenerating never rotates a password already deployed;
@@ -34,9 +39,24 @@ func Values(plan *ir.IR, options Options, stored map[string]string) (map[string]
 	return values, nil
 }
 
+// danglingReference reports whether a stored value only refers to a
+// variable the .env no longer has, or to its own key: what the entry was
+// before, as DB_PASSWORD=${POSTGRES_PASSWORD} with the database switched
+// off, not a secret to keep. A reference to a variable still in the .env is
+// kept, and a secret that only holds a $, as Sup3r$ecret, is one.
+func danglingReference(plan *ir.IR, key, value string) bool {
+	match := wholeReference.FindStringSubmatch(value)
+	if match == nil {
+		return false
+	}
+	_, defined := plan.EnvEntry(match[1])
+	return !defined || match[1] == key
+}
+
 func entryValue(plan *ir.IR, entry ir.EnvFileEntry, options Options, stored map[string]string) (string, error) {
 	defaults := options.Profile.Defaults
 	previous, hasPrevious := stored[entry.Key]
+	hasPrevious = hasPrevious && !danglingReference(plan, entry.Key, previous)
 	switch {
 	case entry.Generate != "" && hasPrevious && previous != "":
 		return previous, nil

@@ -11,6 +11,8 @@ import (
 	"slices"
 	"strings"
 	"testing"
+
+	"github.com/aiulian25/composewright/internal/redact"
 )
 
 var update = flag.Bool("update", false, "rewrite testdata/corpus/*/expected.facts.json")
@@ -327,6 +329,92 @@ func TestExtractComposeReadsEmptyKeys(t *testing.T) {
 	}
 }
 
+// TestExtractComposeKeepsProfileServices: a service upstream starts only with
+// a profile is read like any other and carries its profiles.
+func TestExtractComposeKeepsProfileServices(t *testing.T) {
+	content := "services:\n  app:\n    image: example/app:1\n  tts:\n    image: example/tts:1\n    profiles: [gpu]\n    environment:\n      VOICE: ${TTS_VOICE:-alto}\n"
+	file, _, err := extractCompose(context.Background(), "compose.yaml", []byte(content), nil)
+	if err != nil || len(file.Services) != 2 {
+		t.Fatalf("file %+v, err %v", file, err)
+	}
+	app, tts := file.Services[0], file.Services[1]
+	if len(app.Profiles) != 0 || tts.Name != "tts" || !slices.Equal(tts.Profiles, []string{"gpu"}) || tts.Image != "example/tts:1" || len(tts.Environment) != 1 {
+		t.Fatalf("app %+v, tts %+v", app, tts)
+	}
+}
+
+// TestStartedLeavesOutSwitchedOffServices: the facts as Compose starts the
+// stack hold a profile service, its image and its variables only once it is
+// switched on, named in any case.
+func TestStartedLeavesOutSwitchedOffServices(t *testing.T) {
+	directory := t.TempDir()
+	content := "services:\n  app:\n    image: example/app:1\n  tts:\n    image: example/tts:1\n    profiles: [gpu]\n    environment:\n      VOICE: ${TTS_VOICE:-alto}\n"
+	if err := os.WriteFile(filepath.Join(directory, "compose.yaml"), []byte(content), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	facts, err := Extract(context.Background(), directory)
+	if err != nil {
+		t.Fatal(err)
+	}
+	shows := func(started *Facts) bool {
+		_, variable := started.Variable("TTS_VOICE")
+		image := slices.ContainsFunc(started.Images, func(mention ImageMention) bool { return mention.Reference == "example/tts:1" })
+		return len(started.ComposeFiles[0].Services) == 2 && variable && image
+	}
+	off, on := facts.Started(nil), facts.Started([]string{"TTS"})
+	_, voice := off.Variable("VOICE")
+	_, ttsVoice := off.Variable("TTS_VOICE")
+	offImage := slices.ContainsFunc(off.Images, func(mention ImageMention) bool { return mention.Reference == "example/tts:1" })
+	if !shows(facts) || !shows(on) || len(off.ComposeFiles[0].Services) != 1 || voice || ttsVoice || offImage {
+		t.Fatalf("off %+v, on %+v", off, on)
+	}
+	encoded, err := json.Marshal(off)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(encoded), "TTS_VOICE") {
+		t.Fatalf("a variable of the switched-off service is left: %s", encoded)
+	}
+}
+
+// TestStartedKeepsASharedImage: an optional service listed before the app
+// with the app's image holds the one mention of that image, which stays
+// while the app is started.
+func TestStartedKeepsASharedImage(t *testing.T) {
+	directory := t.TempDir()
+	content := "services:\n  worker:\n    image: example/app:1\n    profiles: [jobs]\n  app:\n    image: example/app:1\n"
+	if err := os.WriteFile(filepath.Join(directory, "compose.yaml"), []byte(content), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	facts, err := Extract(context.Background(), directory)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if started := facts.Started(nil); !slices.ContainsFunc(started.Images, func(mention ImageMention) bool { return mention.Reference == "example/app:1" }) {
+		t.Fatalf("the app's image mention is gone: %+v", started.Images)
+	}
+}
+
+// TestStartedKeepsASharedLine: in a flow-style file every service is on one
+// line; leaving out the one that is off keeps the app's variables.
+func TestStartedKeepsASharedLine(t *testing.T) {
+	directory := t.TempDir()
+	content := "services: {app: {image: example/app:1, environment: {MODE: \"${APP_MODE}\"}}, tts: {image: example/tts:1, profiles: [tts]}}\n"
+	if err := os.WriteFile(filepath.Join(directory, "compose.yaml"), []byte(content), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	facts, err := Extract(context.Background(), directory)
+	if err != nil {
+		t.Fatal(err)
+	}
+	started := facts.Started(nil)
+	_, variable := started.Variable("APP_MODE")
+	inFile := slices.ContainsFunc(started.ComposeFiles[0].Variables, func(mention Mention) bool { return mention.Name == "APP_MODE" })
+	if !variable || !inFile || len(started.ComposeFiles[0].Services) != 1 {
+		t.Fatalf("the app's variable went with the switched-off service: %+v", started.ComposeFiles[0])
+	}
+}
+
 // TestComposeDefaultsFollowTheDocument: a variable written with two defaults
 // takes the first, on every run (homarr's WORKSHOP_API_URL). Reading a map
 // picked either, so the check repeats.
@@ -362,6 +450,37 @@ func TestRedactedHidesSecretValues(t *testing.T) {
 	original, _ := facts.Variable("DATABASE_URL")
 	if !strings.Contains(string(encoded), "postgres://u:") || original.Default != "postgres://u:hunter3@db/x" {
 		t.Fatal("redaction changed the original or removed the URL structure")
+	}
+}
+
+// TestRedactedMasksFallbacksReadUnderSecretKeys: POSTGRES_PASSWORD:
+// ${PG:-hunter22secret} reads a harmless-sounding variable under a secret
+// key, so PG's default is the sample password and is masked as it.
+func TestRedactedMasksFallbacksReadUnderSecretKeys(t *testing.T) {
+	const sample = "hunter22secret"
+	mention := Mention{Name: "PG", Kind: KindCompose, Default: sample}
+	facts := &Facts{
+		Variables: mergeVariables([]Mention{mention}),
+		ComposeFiles: []ComposeFile{{Path: "compose.yaml", Variables: []Mention{mention}, Services: []ComposeService{{
+			Name: "db", Environment: []ComposeVariable{{Key: "POSTGRES_PASSWORD", Raw: "${PG:-" + sample + "}", HasValue: true}},
+		}}}},
+		EnvSamples: []EnvSample{{Path: ".env.example", Entries: []EnvSampleEntry{{Key: "PG", Value: sample}}}},
+	}
+	redacted, err := facts.Redacted()
+	if err != nil {
+		t.Fatal(err)
+	}
+	encoded, _ := json.Marshal(redacted)
+	if strings.Contains(string(encoded), sample) {
+		t.Fatalf("the fallback read under a secret key leaked: %s", encoded)
+	}
+	variable, _ := redacted.Variable("PG")
+	raw := redacted.ComposeFiles[0].Services[0].Environment[0].Raw
+	if !redact.IsMask(variable.Default) || raw != "${PG:-"+variable.Default+"}" {
+		t.Fatalf("PG default %q and environment %q should share one mask", variable.Default, raw)
+	}
+	if fileDefault := redacted.ComposeFiles[0].Variables[0].Default; fileDefault != variable.Default {
+		t.Fatalf("compose variable default %q, want %q", fileDefault, variable.Default)
 	}
 }
 

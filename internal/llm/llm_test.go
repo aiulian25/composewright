@@ -420,3 +420,23 @@ func TestHostileOutputIsRejected(t *testing.T) {
 		}
 	}
 }
+
+// TestPromptsLeaveOutOptionalServices: an optional service that is switched
+// off is not the model's to see, in a fill or a repair.
+func TestPromptsLeaveOutOptionalServices(t *testing.T) {
+	const switchedOff = "tts-switched-off"
+	plan := &ir.IR{IRVersion: ir.Version, App: ir.App{Name: "demo"}, Services: []ir.Service{{Name: "app", Role: ir.RoleApp}},
+		OptionalServices: []ir.OptionalService{{Name: switchedOff, Image: "example/" + switchedOff + ":1", Profiles: []string{"tts"}}}}
+	provider := &recording{answer: planText(t)}
+	assistant := NewAssistant(provider, "model", 60000)
+	if _, _, err := assistant.Fill(context.Background(), plan, []string{ir.SummaryField}, &extract.Facts{}, nil); err != nil {
+		t.Fatal(err)
+	}
+	filled := provider.request.System + provider.request.Prompt
+	if _, _, err := assistant.Repair(context.Background(), plan, sandbox.Verdict{Result: sandbox.ResultFail, Reason: sandbox.ReasonCrash}); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(filled, switchedOff) || strings.Contains(provider.request.Prompt, switchedOff) {
+		t.Fatal("a prompt shows the switched-off optional service")
+	}
+}

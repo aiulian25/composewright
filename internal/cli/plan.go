@@ -34,6 +34,14 @@ func (application *app) printPlan(output io.Writer, plan *ir.IR) error {
 			fmt.Fprintf(output, "%s %s: %s\n", application.colours.muted("note"), sanitize(service.Name), sanitize(note))
 		}
 	}
+	for _, service := range plan.OptionalServices {
+		if _, enabled := plan.Service(service.Name); enabled {
+			continue
+		}
+		name := sanitize(service.Name)
+		profiles := sanitize(ir.ProfileList(service.Profiles))
+		fmt.Fprintf(output, optionalServiceLine, application.colours.muted(optionalLabel), name, profiles, enableOptionalFlag, name)
+	}
 	for _, text := range plan.SuspiciousInstructions {
 		fmt.Fprintf(output, "%s %s\n", application.colours.danger("suspicious"), sanitize(text))
 	}

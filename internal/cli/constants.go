@@ -21,6 +21,16 @@ const (
 
 	jsonIndent = "  "
 
+	// optionalServiceLine and optionalLabel show a service upstream starts
+	// only with a Compose profile, switched on with enableOptionalFlag.
+	optionalServiceLine = "%s %s (upstream profile %s): --%s %s\n"
+	optionalLabel       = "optional"
+	enableOptionalFlag  = "enable-optional"
+	// optionalServiceKind and optionalServiceFact list such a service
+	// among the facts.
+	optionalServiceKind = "optional service"
+	optionalServiceFact = "%s (profile %s)"
+
 	// allowHostFlag is still accepted so older compose commands keep working.
 	allowHostFlag = "allow-host"
 

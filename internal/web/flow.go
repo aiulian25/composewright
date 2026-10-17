@@ -26,6 +26,7 @@ import (
 	"github.com/aiulian25/composewright/internal/pipeline"
 	"github.com/aiulian25/composewright/internal/policy"
 	"github.com/aiulian25/composewright/internal/render"
+	"github.com/aiulian25/composewright/internal/rules"
 	"github.com/aiulian25/composewright/internal/sandbox"
 	"github.com/aiulian25/composewright/internal/store"
 )
@@ -56,8 +57,10 @@ const (
 	// benignRemoveField names the ignored log pattern to stop ignoring on
 	// the Review page.
 	benignRemoveField = "benign_remove"
-	lineField         = "line"
-	emptyLineProblem  = "That log line has no text to ignore."
+	// optionalField holds the optional services ticked on the Review page.
+	optionalField    = "optional"
+	lineField        = "line"
+	emptyLineProblem = "That log line has no text to ignore."
 	// trustAlwaysProblem follows a revision that already went in, so it
 	// says what did change.
 	trustAlwaysProblem = "the changes were applied and %s is trusted for this project, but adding it to registries.allow failed: %w"
@@ -680,6 +683,11 @@ type reviewView struct {
 	// the plan was changed after it.
 	LastFailure  string
 	ChangedSince bool
+	// OptionalServices are the services upstream starts only with a
+	// Compose profile, each one to switch on; OptionalReadOnly says the
+	// source cannot be read again to do it.
+	OptionalServices []option
+	OptionalReadOnly bool
 }
 
 func (server *Server) reviewView(ctx context.Context, stored *pipeline.Stored, revealed bool) (reviewView, error) {
@@ -692,7 +700,7 @@ func (server *Server) reviewView(ctx context.Context, stored *pipeline.Stored, r
 		Warnings: report.Count(policy.Warn), Expose: portOptions(mode), Networks: networkOptions(profile, networks),
 		Storage: server.storageOptions(stored.Options.Storage), Env: envRows(plan, stored.Values, revealed), Optional: render.OptionalSettings(plan),
 		Needs: needViews(plan, stored.Options.AllowNeeds), Findings: findingViews(report, stored.Generation.ComposeYAML), Registries: stored.Options.AllowRegistries,
-		Benign:      stored.Options.BenignLogPatterns,
+		Benign: stored.Options.BenignLogPatterns, OptionalServices: optionalServiceOptions(plan, stored.Rereadable()), OptionalReadOnly: !stored.Rereadable(),
 		TrustOffers: trustOffers(plan, report, configuration.Registries.Allow), Revealed: revealed, Suspicious: plan.SuspiciousInstructions}
 	for _, note := range plan.PostInstallNotes {
 		view.Notes = append(view.Notes, noteView{Text: note, Suspicious: repeatsSuspicious(note, plan.SuspiciousInstructions)})
@@ -984,6 +992,10 @@ func (server *Server) review(writer http.ResponseWriter, request *http.Request, 
 			return err
 		}
 	}
+	enabled, switched, err := optionalSwitch(request.PostForm, stored)
+	if err != nil {
+		return server.reviewProblem(writer, request, current, name, err)
+	}
 	if changed(revision, stored, server.config().Profile) {
 		if _, err := server.revise(ctx, current.user.Username, name, revision); err != nil {
 			return server.reviewProblem(writer, request, current, name, err)
@@ -993,6 +1005,9 @@ func (server *Server) review(writer http.ResponseWriter, request *http.Request, 
 	// rejected page never leaves the namespace trusted everywhere.
 	if err := server.trustAlways(request, current, alwaysPattern); err != nil {
 		return server.reviewProblem(writer, request, current, name, fmt.Errorf(trustAlwaysProblem, alwaysPattern, err))
+	}
+	if switched {
+		return server.regenerate(writer, request, current, name, enabled)
 	}
 	switch action {
 	case actionValidate:
@@ -1024,6 +1039,28 @@ func (server *Server) reviewProblem(writer http.ResponseWriter, request *http.Re
 		return errors.Join(err, loadErr)
 	}
 	return server.renderReview(writer, request, current, stored, false, "", capitalised(err.Error())+".", http.StatusBadRequest)
+}
+
+// regenerate generates the project again from its source, as its latest
+// version was made, with the optional services enabled switched on. It runs
+// as a job, as the New page's do, and lands on the Review.
+func (server *Server) regenerate(writer http.ResponseWriter, request *http.Request, current *visit, name string, enabled []string) error {
+	stored, err := pipeline.Load(request.Context(), server.workspace(), name)
+	if err != nil {
+		return err
+	}
+	options, err := stored.Regeneration(enabled)
+	if err != nil {
+		return server.reviewProblem(writer, request, current, name, err)
+	}
+	username := current.user.Username
+	started, err := server.jobs.start(jobGenerate, stored.Project.SourceURL, stored.Project.Name, func(ctx context.Context, running *job) (string, *pipeline.Result, error) {
+		return server.generate(ctx, running, username, options, false)
+	})
+	if err != nil {
+		return err
+	}
+	return redirect(writer, request, "/jobs/"+started.ID)
 }
 
 func (server *Server) removeBenign(ctx context.Context, username, name, pattern string) error {
@@ -1068,6 +1105,19 @@ func changed(revision pipeline.Revision, stored *pipeline.Stored, profile config
 	edits := len(revision.Values) + len(revision.Secrets) + len(revision.Regenerate) + len(revision.Add)
 	return edits > 0 || revision.ExposeVia != mode || !sameSet(revision.Networks, networks) || revision.Storage != options.Storage ||
 		!sameSet(revision.AllowNeeds, options.AllowNeeds) || !sameSet(revision.AllowRegistries, options.AllowRegistries)
+}
+
+// optionalSwitch are the optional services the form has ticked, with those
+// they depend on, and whether they differ from those the plan runs: an
+// optional service another ticked one depends on is switched on whether
+// ticked or not. A source that cannot be read again shows them read-only,
+// so its form never switches.
+func optionalSwitch(form url.Values, stored *pipeline.Stored) (enabled []string, switched bool, err error) {
+	if !stored.Rereadable() {
+		return nil, false, nil
+	}
+	enabled, err = rules.Enabled(stored.Plan.OptionalServices, form[optionalField])
+	return enabled, err == nil && !sameSet(enabled, rules.Running(stored.Plan)), err
 }
 
 func sameSet(left, right []string) bool {

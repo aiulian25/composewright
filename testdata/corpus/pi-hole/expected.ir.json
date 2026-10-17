@@ -132,6 +132,7 @@
   ],
   "env_file": [],
   "optional_env": [],
+  "optional_services": [],
   "needs": [],
   "probe": {
     "service": "docker-pi-hole",

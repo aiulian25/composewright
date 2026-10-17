@@ -84,6 +84,11 @@ func extractCompose(ctx context.Context, relative string, content []byte, interp
 	for _, entry := range entries(services) {
 		service, found := project.Services[entry.key.Value]
 		if !found {
+			// compose-go moves a service behind a profile here, as no
+			// profile is enabled.
+			service, found = project.DisabledServices[entry.key.Value]
+		}
+		if !found {
 			continue
 		}
 		extractedService := composeService(relative, entry.key, entry.value, service)
@@ -175,6 +180,7 @@ func composeService(relative string, key, node *yaml.Node, service types.Service
 		Command: rawCommand(child(node, "command"), service.Command), Entrypoint: rawCommand(child(node, "entrypoint"), service.Entrypoint),
 		Environment: environmentEntries(relative, child(node, "environment")),
 		EnvFiles:    envFiles(child(node, "env_file")),
+		Profiles:    service.Profiles,
 	}
 	portItems := items(child(node, "ports"))
 	for index, port := range service.Ports {

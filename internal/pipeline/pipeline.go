@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"maps"
 	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 
@@ -67,6 +68,12 @@ type Options struct {
 	// BenignLogPatterns are log lines a person said are normal for this
 	// app: a matching line never fails a run.
 	BenignLogPatterns []string `json:"benign_log_patterns,omitempty"`
+	// EnabledOptional are the optional services, those upstream starts only
+	// with a Compose profile, that a person switched on.
+	EnabledOptional []string `json:"enabled_optional,omitempty"`
+	// Regenerating generates an existing project again from its own
+	// source: a source read elsewhere is refused, never moved to.
+	Regenerating bool `json:"-"`
 }
 
 // Files are the rendered artefacts. Env contains secrets in plain text.
@@ -130,6 +137,9 @@ func Generate(ctx context.Context, dependencies Dependencies, options Options) (
 	if err := options.Check(); err != nil {
 		return nil, err
 	}
+	if err := absolutePaths(&options); err != nil {
+		return nil, err
+	}
 	observer := dependencies.Observer
 	observer.step(StepFetch, StateRunning, "")
 	source, err := openSource(ctx, dependencies, options)
@@ -153,7 +163,10 @@ func Generate(ctx context.Context, dependencies Dependencies, options Options) (
 		return result, nil
 	}
 	result.Notices = append(result.Notices, facts.Problems...)
-	input := plan(ctx, dependencies, options, result)
+	input, err := plan(ctx, dependencies, &options, result)
+	if err != nil {
+		return nil, observer.failed(StepPlan, err)
+	}
 	if err := observer.project(result.Plan.App.Name); err != nil {
 		return nil, observer.failed(StepPlan, err)
 	}
@@ -164,8 +177,14 @@ func Generate(ctx context.Context, dependencies Dependencies, options Options) (
 		return nil, fmt.Errorf("%w: rendering needs `composewright init` first", workspace.ErrNotInitialised)
 	}
 	observer.step(StepRender, StateRunning, "")
-	if err := sameSource(ctx, dependencies.Workspace.Store, options, result); err != nil {
+	regeneration, err := sameSource(ctx, dependencies.Workspace.Store, options, result)
+	if err != nil {
 		return nil, observer.failed(StepRender, err)
+	}
+	if regeneration {
+		if err := keepDecisions(ctx, dependencies.Workspace.Store, result.Plan); err != nil {
+			return nil, observer.failed(StepRender, err)
+		}
 	}
 	own := rules.OwnSecrets(result.Facts, result.Source)
 	if err := renderAndGate(ctx, dependencies, options, result, input, own); err != nil {
@@ -181,42 +200,109 @@ func Generate(ctx context.Context, dependencies Dependencies, options Options) (
 	return result, approveAndValidate(ctx, dependencies, options, result)
 }
 
-// ErrNameTaken means another source owns the project name already.
-var ErrNameTaken = errors.New("project name taken")
+var (
+	// ErrNameTaken means another source owns the project name already.
+	ErrNameTaken = errors.New("project name taken")
+	// ErrSourceMoved means generating a project again read another source
+	// than the one it came from.
+	ErrSourceMoved = errors.New("the project's source is no longer where it was")
+)
 
 // sameSource keeps a second repository from taking over a project, and its
 // stored secrets, only because both derive the same name. A name given on
 // purpose moves the project to the new source, with a notice saying so.
-// Uploads are not compared: each is a new temporary folder.
-func sameSource(ctx context.Context, database *store.Store, options Options, result *Result) error {
+// Uploads are not compared: each is a new temporary folder. regeneration
+// is true for an existing project from the same source, or an upload.
+func sameSource(ctx context.Context, database *store.Store, options Options, result *Result) (regeneration bool, err error) {
 	name := result.Plan.App.Name
 	existing, err := database.FindProject(ctx, name)
 	if errors.Is(err, store.ErrNotFound) {
-		return nil
+		return false, nil
 	}
 	if err != nil {
-		return err
+		return false, err
 	}
 	moved := existing.SourceURL != "" && existing.SourceURL != result.Source.URL
 	if !moved || options.Uploaded {
-		return nil
+		return true, nil
+	}
+	if options.Regenerating {
+		return false, fmt.Errorf("%w: %s came from %s, but %s was read", ErrSourceMoved, name, existing.SourceURL, result.Source.URL)
 	}
 	if options.Name == "" {
-		return fmt.Errorf("%w: %s comes from %s; give this one another name (--name, or Project name on the New page)", ErrNameTaken, name, existing.SourceURL)
+		return false, fmt.Errorf("%w: %s comes from %s; give this one another name (--name, or Project name on the New page)", ErrNameTaken, name, existing.SourceURL)
 	}
 	result.Notices = append(result.Notices, fmt.Sprintf("%s came from %s and now comes from %s; its stored secrets were kept",
 		name, existing.SourceURL, result.Source.URL))
+	return false, nil
+}
+
+// keepDecisions carries onto a regenerated plan what a person decided on
+// the project's latest version: a value they set for a variable the plan
+// still has, also one of a service switched off since, and a variable they
+// added, which comes back when the plan lacks it. render.Values keeps the
+// secrets they typed in, by key.
+func keepDecisions(ctx context.Context, database *store.Store, plan *ir.IR) error {
+	_, generation, found, err := latestGeneration(ctx, database, plan.App.Name)
+	if err != nil || !found {
+		return err
+	}
+	stored, err := storedVariables(ctx, database, plan.App.Name)
+	if err != nil {
+		return err
+	}
+	// A stored plan that no longer loads keeps nothing: a regeneration is
+	// how such a version is mended.
+	previous, decodeErr := ir.Decode([]byte(generation.IRJSON))
+	if decodeErr != nil {
+		previous = &ir.IR{}
+	}
+	for _, entry := range userDecisions(previous, stored) {
+		current, inPlan := plan.EnvEntry(entry.Key)
+		if inPlan && Editable(*current) {
+			current.Value, current.Provenance = entry.Value, entry.Provenance
+		}
+		if inPlan || !slices.Contains(addedDescriptions, entry.Description) {
+			continue
+		}
+		// A plan without an app service has nowhere to put it.
+		if addVariable(plan, Variable{Key: entry.Key, Value: entry.Value}, entry.Provenance) == nil {
+			added, _ := plan.EnvEntry(entry.Key)
+			added.Description = entry.Description
+		}
+	}
 	return nil
 }
 
+// userDecisions are the variables a person set on the previous plan, and
+// those they set for a service that is off, which only the stored .env
+// records still hold.
+func userDecisions(previous *ir.IR, stored []store.EnvVar) []ir.EnvFileEntry {
+	decisions := slices.DeleteFunc(slices.Clone(previous.EnvFile), func(entry ir.EnvFileEntry) bool {
+		return entry.Provenance.Source != ir.SourceUser
+	})
+	for _, variable := range stored {
+		_, inPrevious := previous.EnvEntry(variable.Key)
+		if inPrevious || variable.Source != ir.SourceUser {
+			continue
+		}
+		decisions = append(decisions, ir.EnvFileEntry{Key: variable.Key, Value: variable.Value, Description: variable.Description,
+			Provenance: ir.Provenance{Source: variable.Source, SourceRef: variable.SourceRef, Confidence: ir.ConfidenceHigh}})
+	}
+	return decisions
+}
+
 // plan builds the plan with the chosen engine, verifies the images and runs
-// the policy gate, reporting each stage.
-func plan(ctx context.Context, dependencies Dependencies, options Options, result *Result) policy.Input {
+// the policy gate, reporting each stage. options.EnabledOptional becomes the
+// optional services switched on, as the plan names them.
+func plan(ctx context.Context, dependencies Dependencies, options *Options, result *Result) (policy.Input, error) {
 	observer := dependencies.Observer
 	observer.step(StepPlan, StateRunning, "")
-	draft(ctx, dependencies, options, result)
+	if err := draft(ctx, dependencies, options, result); err != nil {
+		return policy.Input{}, err
+	}
 	observer.step(StepPlan, StateDone, "")
-	input := policyInput(dependencies.Config, result.Plan, result.Source, options)
+	input := policyInput(dependencies.Config, result.Plan, result.Source, *options)
 	imagesState, imagesNote := StateRunning, ""
 	if dependencies.Inspector == nil {
 		imagesState, imagesNote = StateSkipped, "offline: images are not verified or pinned"
@@ -227,12 +313,12 @@ func plan(ctx context.Context, dependencies Dependencies, options Options, resul
 	if dependencies.Inspector != nil {
 		observer.step(StepImages, StateDone, "")
 	}
-	fill(ctx, dependencies, options, result)
+	fill(ctx, dependencies, *options, result)
 	observer.step(StepPolicy, StateRunning, "")
 	input.Plan, input.Images = result.Plan, result.Checks
 	result.Report = policy.Evaluate(input)
 	observer.step(StepPolicy, StateDone, "")
-	return input
+	return input, nil
 }
 
 // approveAndValidate asks for approval; nothing runs without it. A --yes
@@ -259,7 +345,7 @@ func openSource(ctx context.Context, dependencies Dependencies, options Options)
 	if isGitHub {
 		return fetch.GitHub(ctx, dependencies.Guard, dependencies.GitHubToken, owner, repository, options.Ref)
 	}
-	if strings.Contains(options.Source, "://") || strings.HasPrefix(options.Source, "git@") {
+	if remoteURL(options.Source) {
 		return nil, fmt.Errorf("%s: only https://github.com/<owner>/<repository> URLs, local directories and .zip or .tar.gz archives are supported", options.Source)
 	}
 	source, err := fetch.Local(options.Source, options.Upstream)
@@ -267,6 +353,28 @@ func openSource(ctx context.Context, dependencies Dependencies, options Options)
 		source.Repository = ""
 	}
 	return source, err
+}
+
+func remoteURL(source string) bool {
+	return strings.Contains(source, "://") || strings.HasPrefix(source, "git@")
+}
+
+// absolutePaths stores a local source and the profile file as absolute
+// paths, so generating again from another working directory, as the web
+// server does, reads the same files.
+func absolutePaths(options *Options) error {
+	var err error
+	if options.ProfileFile != "" {
+		if options.ProfileFile, err = filepath.Abs(options.ProfileFile); err != nil {
+			return err
+		}
+	}
+	_, _, isGitHub := fetch.ParseGitHub(options.Source)
+	if isGitHub || remoteURL(options.Source) {
+		return nil
+	}
+	options.Source, err = filepath.Abs(options.Source)
+	return err
 }
 
 // verifyImages asks the registry about every image the policy would allow
@@ -368,14 +476,7 @@ func loadProfile(configured config.Profile, file string) (config.Profile, error)
 // storedValues returns the .env values kept for an existing project, so a
 // regeneration reuses secrets that may already be deployed.
 func storedValues(ctx context.Context, database *store.Store, name string) (map[string]string, error) {
-	project, err := database.FindProject(ctx, name)
-	if errors.Is(err, store.ErrNotFound) {
-		return map[string]string{}, nil
-	}
-	if err != nil {
-		return nil, err
-	}
-	variables, err := database.EnvVars(ctx, project.ID)
+	variables, err := storedVariables(ctx, database, name)
 	if err != nil {
 		return nil, err
 	}
@@ -384,6 +485,41 @@ func storedValues(ctx context.Context, database *store.Store, name string) (map[
 		values[variable.Key] = variable.Value
 	}
 	return values, nil
+}
+
+// storedVariables are the .env records kept for an existing project.
+func storedVariables(ctx context.Context, database *store.Store, name string) ([]store.EnvVar, error) {
+	project, err := database.FindProject(ctx, name)
+	if errors.Is(err, store.ErrNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return database.EnvVars(ctx, project.ID)
+}
+
+// keptVariables are the stored .env records a new version may keep for keys
+// its plan lacks. An editor save drops those the edited .env showed, as the
+// person removed them; the others belong to a service that is off, which the
+// editor never showed.
+func keptVariables(ctx context.Context, database *store.Store, name, action string) ([]store.EnvVar, error) {
+	variables, err := storedVariables(ctx, database, name)
+	if err != nil || action != store.ActionEdit {
+		return variables, err
+	}
+	_, generation, found, err := latestGeneration(ctx, database, name)
+	if err != nil || !found {
+		return variables, err
+	}
+	shown, err := ir.Decode([]byte(generation.IRJSON))
+	if err != nil {
+		return nil, err
+	}
+	return slices.DeleteFunc(variables, func(variable store.EnvVar) bool {
+		_, wasShown := shown.EnvEntry(variable.Key)
+		return wasShown
+	}), nil
 }
 
 // persist stores the result as a new generation, audited as action, in one
@@ -405,8 +541,12 @@ func persist(ctx context.Context, dependencies Dependencies, options Options, re
 		}
 		return recorded
 	}
+	stored, err := keptVariables(ctx, dependencies.Workspace.Store, project.Name, action)
+	if err != nil {
+		return err
+	}
 	saved, generation, err := dependencies.Workspace.Store.RecordGeneration(ctx, project, generationRecord(options, result, iteration),
-		imageRecords(result.Plan, result.Inspected), envRecords(result.Plan, result.Values), dependencies.Workspace.Actor, events)
+		imageRecords(result.Plan, result.Inspected), envRecords(result.Plan, result.Values, stored), dependencies.Workspace.Actor, events)
 	if err != nil {
 		return err
 	}
@@ -451,13 +591,28 @@ func imageRecords(plan *ir.IR, inspected map[string]images.Metadata) []store.Ima
 	return records
 }
 
-func envRecords(plan *ir.IR, values map[string]string) []store.EnvVar {
+// envRecords are the .env records of plan with values, followed by the
+// stored secrets and values a person set of keys the plan no longer has: a
+// service switched off keeps them for when it is switched on again.
+func envRecords(plan *ir.IR, values map[string]string, stored []store.EnvVar) []store.EnvVar {
 	variables := make([]store.EnvVar, 0, len(plan.EnvFile))
 	for _, entry := range plan.EnvFile {
 		variables = append(variables, store.EnvVar{Key: entry.Key, Value: values[entry.Key], Secret: entry.Secret, Required: entry.Required,
 			Source: entry.Provenance.Source, SourceRef: entry.Provenance.SourceRef, Description: entry.Description})
 	}
+	for _, variable := range stored {
+		_, inPlan := plan.EnvEntry(variable.Key)
+		if !inPlan && keptWhileOff(variable) {
+			variables = append(variables, variable)
+		}
+	}
 	return variables
+}
+
+// keptWhileOff reports whether a stored record outlives its key leaving the
+// plan: a secret, or a value a person set.
+func keptWhileOff(variable store.EnvVar) bool {
+	return variable.Secret || variable.Source == ir.SourceUser
 }
 
 func header(version string, source *fetch.Source, plan *ir.IR) string {

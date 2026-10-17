@@ -75,6 +75,21 @@ All notable changes to this project are documented here. The format follows
   `composewright doctor --setup-runsc` prints the steps to install it on the
   host. The Validate page lists the runtime among the sandbox limits, and the
   generated `compose.yaml` stays the same.
+- Services the upstream compose file starts only with a Compose profile, such
+  as an optional text-to-speech or GPU service, no longer vanish. The Analyse
+  page lists each as an optional service with its profile, and the Review page
+  has an Optional services card where each can be ticked. They are off by
+  default. Ticking or unticking one and applying generates the project again
+  from the same repository commit or folder, with the ticked services, and the
+  optional services they depend on, in `compose.yaml` and the test run. Files
+  you uploaded or pasted are kept only for their run, so the card shows their
+  optional services without letting you switch them. A model never sees a
+  service that is off. `composewright gen --enable-optional <name>` does the
+  same from the command line, and a later `gen` keeps the choice. Generating
+  an existing project again now keeps the values you set and the variables you
+  added; a password the stack already had keeps its value, and a generated
+  password stays stored while its service is off, so switching it on again
+  reuses it.
 
 ### Changed
 
@@ -103,6 +118,12 @@ All notable changes to this project are documented here. The format follows
   beside that compose file sets it. A commented-out example for an outside
   database, or a subproject's development sample, no longer points the app at
   a database that is not in the stack.
+- A connection string to a database outside the stack always reads the
+  password you are asked for. When it was the app's only variable, `.env`
+  kept upstream's example password in it instead.
+- An example password upstream writes as a variable's default in a compose
+  file, as in `${DB_PASSWORD:-changeme}`, is no longer shown on the Analyse
+  page or sent to a model.
 
 ## [0.1.3] - 2026-10-12
 

@@ -15,6 +15,7 @@ var (
 	booleanValue  = regexp.MustCompile(`^(?i:true|false|yes|no|on|off)$`)
 	numberValue   = regexp.MustCompile(`^\d+(\.\d+)?[smhdw]?$`)
 	passwordName  = regexp.MustCompile(`(^|_)(PASSWORD|PASSWD|PASS|PWD)(_|$)`)
+	pathValue     = regexp.MustCompile(`^\.{0,2}/`)
 	// placeholderText marks a value someone left for others to replace.
 	placeholderText = regexp.MustCompile(`(?i)(change[_\- ]?(me|this|it)|your[_\- ]|example|placeholder|replace[_\- ]?me|xxx|todo|fixme|^<.*>$|^\.\.\.$|^\*+$)`)
 	// weakDefaults are values that are never a real secret.
@@ -32,6 +33,15 @@ func IsSecretSetting(name, value string) bool {
 	describesSecret := settingSuffix.MatchString(upper)
 	settingValue := booleanValue.MatchString(value) || (numberValue.MatchString(value) && !passwordName.MatchString(upper))
 	return redact.IsSecretName(name) && !describesSecret && !settingValue
+}
+
+// IsSettingValue reports whether value cannot be secret material, whatever
+// name holds it: a switch such as true, or a number or a path under a name
+// that describes a secret, as JWT_EXPIRES=3600 or
+// DB_PASSWORD_FILE=/run/secrets/db.
+func IsSettingValue(name, value string) bool {
+	describesSecret := settingSuffix.MatchString(strings.ToUpper(name))
+	return booleanValue.MatchString(value) || (describesSecret && (numberValue.MatchString(value) || pathValue.MatchString(value)))
 }
 
 // IsPlaceholderSecret reports whether a secret someone wrote is a stand-in

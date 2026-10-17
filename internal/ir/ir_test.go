@@ -53,6 +53,7 @@ func TestGoTypesMatchSchema(t *testing.T) {
 		"healthcheck": reflect.TypeFor[Healthcheck](), "resources": reflect.TypeFor[Resources](), "service": reflect.TypeFor[Service](),
 		"env_file_entry": reflect.TypeFor[EnvFileEntry](), "need": reflect.TypeFor[Need](), "probe": reflect.TypeFor[Probe](),
 		"evidence": reflect.TypeFor[Evidence](), "optional_setting": reflect.TypeFor[OptionalSetting](),
+		"optional_service": reflect.TypeFor[OptionalService](),
 	} {
 		pairs[name] = struct {
 			goType reflect.Type
@@ -173,6 +174,13 @@ func TestDecodeModelOutput(t *testing.T) {
 	}
 	if decoded.Confidence != ConfidenceHigh {
 		t.Fatalf("enum not normalised: %q", decoded.Confidence)
+	}
+	unlisted := strings.NewReplacer(`,"optional_env":[]`, ``, `,"optional_services":[]`, ``).Replace(string(valid))
+	if !strings.Contains(string(valid), `"optional_services":[]`) || strings.Contains(unlisted, `"optional_`) {
+		t.Fatal("fixture does not contain the optional fields the test removes")
+	}
+	if answered, err := DecodeModelOutput([]byte(unlisted)); err != nil || answered.OptionalServices == nil || len(answered.OptionalServices) != 0 {
+		t.Fatalf("an answer without the optional fields: %+v, %v", answered, err)
 	}
 	missing := strings.Replace(string(valid), `,"unfilled":[]`, ``, 1)
 	if !strings.Contains(string(valid), `"unfilled":[]`) || missing == string(valid) {

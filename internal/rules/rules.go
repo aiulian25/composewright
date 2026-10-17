@@ -35,6 +35,9 @@ type Input struct {
 	Facts  *extract.Facts
 	Source *fetch.Source
 	Name   string
+	// EnabledOptional are the optional services, those upstream starts only
+	// with a Compose profile, to switch on, with those they depend on.
+	EnabledOptional []string
 }
 
 type builder struct {
@@ -56,6 +59,8 @@ type builder struct {
 
 // Build turns facts into a plan. It never fails: gaps become plan.Unfilled
 // entries and low confidence, which the review step turns into questions.
+// Services upstream starts only with a profile are listed as optional
+// services; those switched on are built as the others are.
 func Build(ctx context.Context, input Input) *ir.IR {
 	builder := &builder{
 		ctx: ctx, input: input, facts: input.Facts, secretOwners: map[string]string{},
@@ -65,7 +70,10 @@ func Build(ctx context.Context, input Input) *ir.IR {
 	}
 	compose := chooseCompose(builder.facts, builder.identity)
 	if compose != nil {
-		builder.fromCompose(compose)
+		builder.plan.OptionalServices = optionalServices(compose)
+		// A name the plan does not offer is left out; Enabled reports it.
+		enabled, _ := Enabled(builder.plan.OptionalServices, input.EnabledOptional)
+		builder.fromCompose(compose, enabled)
 	} else {
 		builder.fromDocumentation()
 	}

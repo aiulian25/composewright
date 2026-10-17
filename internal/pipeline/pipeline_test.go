@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"reflect"
 	"slices"
 	"strings"
 	"sync"
@@ -14,8 +15,10 @@ import (
 	"time"
 
 	"github.com/aiulian25/composewright/internal/config"
+	"github.com/aiulian25/composewright/internal/fetch"
 	"github.com/aiulian25/composewright/internal/ir"
 	"github.com/aiulian25/composewright/internal/llm"
+	"github.com/aiulian25/composewright/internal/rules"
 	"github.com/aiulian25/composewright/internal/sandbox"
 	"github.com/aiulian25/composewright/internal/store"
 	"github.com/aiulian25/composewright/internal/workspace"
@@ -232,6 +235,307 @@ func TestValidationLoop(t *testing.T) {
 	}
 }
 
+// TestOptionalServicesSwitchOnAndOff: a model never sees an optional service
+// that is off, drafting or filling; a generation with it switched on adds
+// it and keeps what a person set, added and typed in on the Review; a name
+// matches in any case and is stored as the plan spells it; switching it off
+// keeps its generated password for when it is switched on again; and a
+// regeneration that names none keeps the choice.
+func TestOptionalServicesSwitchOnAndOff(t *testing.T) {
+	ctx := context.Background()
+	directory := t.TempDir()
+	const cacheImage = "docker.io/library/redis:7"
+	compose := "services:\n  app:\n    image: docker.io/library/nginx:1.27\n    ports: [\"8080:80\"]\n    environment:\n" +
+		"      SMTP_PASSWORD: ${SMTP_PASSWORD}\n      LOG_LEVEL: ${LOG_LEVEL:-info}\n" +
+		"  cache:\n    image: " + cacheImage + "\n    profiles: [cache]\n    environment:\n      REDIS_PASSWORD: ${REDIS_PASSWORD}\n"
+	if err := os.WriteFile(filepath.Join(directory, "compose.yaml"), []byte(compose), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	dependencies := testDependencies(t, &scriptedDocker{})
+	model := &scriptedModel{change: func(*ir.IR) {}}
+	dependencies.Assistant = llm.NewAssistant(model, "configured", 60000)
+	if _, err := Generate(ctx, dependencies, Options{Source: directory, Name: "talk", Engine: EngineModel}); err != nil {
+		t.Fatal(err)
+	}
+	result, err := Generate(ctx, dependencies, Options{Source: directory, Name: "talk", Engine: EngineAssisted})
+	if err != nil {
+		t.Fatal(err)
+	}
+	seen := slices.ContainsFunc(model.prompts, func(prompt string) bool { return strings.Contains(prompt, cacheImage) })
+	if seen || len(model.prompts) != 2 || result.Engine != EngineAssisted || len(result.Plan.OptionalServices) != 1 {
+		t.Fatalf("engine %s, the model saw the switched-off service: %t, optional %+v", result.Engine, seen, result.Plan.OptionalServices)
+	}
+	decided := Revision{Values: map[string]string{"LOG_LEVEL": "debug"}, Add: []Variable{{Key: "EXTRA_SETTING", Value: "on"}},
+		Secrets: map[string]string{"SMTP_PASSWORD": "typed-in-secret"}}
+	if _, err := Revise(ctx, dependencies, "talk", decided); err != nil {
+		t.Fatal(err)
+	}
+	switchTo := func(enabled []string) *Stored {
+		t.Helper()
+		if _, err := Generate(ctx, dependencies, Options{Source: directory, Name: "talk", EnabledOptional: enabled}); err != nil {
+			t.Fatal(err)
+		}
+		stored := load(t, dependencies, "talk")
+		app := stored.Plan.AppService()
+		added := slices.ContainsFunc(app.Env, func(variable ir.EnvRef) bool { return variable.Ref == "EXTRA_SETTING" })
+		if stored.Values["LOG_LEVEL"] != "debug" || stored.Values["EXTRA_SETTING"] != "on" || !added || stored.Values["SMTP_PASSWORD"] != "typed-in-secret" {
+			t.Fatalf("with %v what the person set, added or typed in was lost: %+v", enabled, stored.Values)
+		}
+		return stored
+	}
+	on := switchTo([]string{"CACHE"})
+	password := on.Values["REDIS_PASSWORD"]
+	if _, found := on.Plan.Service("cache"); !found || !slices.Equal(on.Options.EnabledOptional, []string{"cache"}) || password == "" {
+		t.Fatalf("switched on %v, password %t", on.Options.EnabledOptional, password != "")
+	}
+	off := switchTo([]string{})
+	if _, found := off.Plan.Service("cache"); found {
+		t.Fatalf("switched off: services %+v", off.Plan.Services)
+	}
+	if _, found := off.Plan.EnvEntry("REDIS_PASSWORD"); found {
+		t.Fatalf("the switched-off service left its variable: %+v", off.Plan.EnvFile)
+	}
+	if again := switchTo([]string{"cache"}); again.Values["REDIS_PASSWORD"] != password {
+		t.Fatal("switching the service off and on again made a new password")
+	}
+	if kept := switchTo(nil); !slices.Equal(kept.Options.EnabledOptional, []string{"cache"}) {
+		t.Fatalf("a regeneration lost the choice: %v", kept.Options.EnabledOptional)
+	}
+	if _, err := Generate(ctx, dependencies, Options{Source: directory, Name: "talk", EnabledOptional: []string{"gpu"}}); !errors.Is(err, rules.ErrNotOptional) {
+		t.Fatalf("an optional service the plan does not offer: %v", err)
+	}
+}
+
+// TestRegenerationReadsTheSameFiles: a project generates again with the
+// options of its latest version and a GitHub repository at the stored
+// commit; files someone uploaded cannot be read again.
+func TestRegenerationReadsTheSameFiles(t *testing.T) {
+	const commit = "0123456789abcdef0123456789abcdef01234567"
+	kept := Options{Engine: EngineAssisted, Source: "https://github.com/acme/notes", Ref: "main", ExposeVia: "lan", Networks: []string{"proxy"},
+		Storage: "bind", AllowNeeds: []string{ir.NeedDevices}, AllowRegistries: []string{"ghcr.io/acme/*"}, BenignLogPatterns: []string{"warn"},
+		ProfileFile: "profile.yaml", Upstream: "https://github.com/acme/notes", Owner: "acme", RunSandbox: true, Edited: true}
+	stored := &Stored{Project: store.Project{Name: "notes", SourceKind: fetch.SourceGitHub, SourceCommit: commit}, Options: kept}
+	options, err := stored.Regeneration([]string{"tts"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := kept
+	want.Name, want.Ref, want.EnabledOptional, want.RunSandbox, want.Edited = "notes", commit, []string{"tts"}, false, false
+	want.Regenerating = true
+	if !reflect.DeepEqual(options, want) {
+		t.Fatalf("got %+v\nwant %+v", options, want)
+	}
+	stored.Options.Uploaded = true
+	if _, err := stored.Regeneration(nil); !errors.Is(err, ErrNotRereadable) {
+		t.Fatalf("an upload: %v", err)
+	}
+}
+
+// TestSwitchedOffServiceSurvivesEdits: while an optional service is off, a
+// compose edit on the Review and a save in the editor keep its generated
+// password and the value a person set for it, as the editor never showed
+// them; switching it on again gets both back.
+func TestSwitchedOffServiceSurvivesEdits(t *testing.T) {
+	ctx := context.Background()
+	directory := t.TempDir()
+	compose := "services:\n  app:\n    image: docker.io/library/nginx:1.27\n    ports: [\"8080:80\"]\n" +
+		"  cache:\n    image: docker.io/library/redis:7\n    profiles: [cache]\n    environment:\n" +
+		"      REDIS_PASSWORD: ${REDIS_PASSWORD}\n      CACHE_MODE: ${CACHE_MODE:-lru}\n"
+	if err := os.WriteFile(filepath.Join(directory, "compose.yaml"), []byte(compose), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	dependencies := testDependencies(t, &scriptedDocker{})
+	generate := func(enabled []string) *Stored {
+		t.Helper()
+		if _, err := Generate(ctx, dependencies, Options{Source: directory, Name: "talk", EnabledOptional: enabled}); err != nil {
+			t.Fatal(err)
+		}
+		return load(t, dependencies, "talk")
+	}
+	password := generate([]string{"cache"}).Values["REDIS_PASSWORD"]
+	if _, err := Revise(ctx, dependencies, "talk", Revision{Values: map[string]string{"CACHE_MODE": "lfu"}}); err != nil {
+		t.Fatal(err)
+	}
+	off := generate([]string{})
+	if _, err := EditCompose(ctx, dependencies, "talk", []byte(off.Generation.ComposeYAML)); err != nil {
+		t.Fatal(err)
+	}
+	edited := load(t, dependencies, "talk")
+	env, err := edited.EnvFile(Revealed)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, check, err := SaveEdit(ctx, dependencies, "talk", Edit{Compose: []byte(edited.Generation.ComposeYAML), Env: string(env) + "OTHER_SETTING=x\n"}); err != nil {
+		t.Fatalf("%v: %+v", err, check.Problems)
+	}
+	again := generate([]string{"cache"})
+	if password == "" || again.Values["REDIS_PASSWORD"] != password || again.Values["CACHE_MODE"] != "lfu" {
+		t.Fatalf("an edit while the service was off lost what it had: password kept %t, CACHE_MODE %q",
+			again.Values["REDIS_PASSWORD"] == password, again.Values["CACHE_MODE"])
+	}
+}
+
+// TestRegenerationKeepsItsSource: a folder given by a relative path is
+// stored as an absolute one, so generating again from another working
+// directory reads the same files; a regeneration that reads another folder
+// is refused rather than moving the project there.
+func TestRegenerationKeepsItsSource(t *testing.T) {
+	ctx := context.Background()
+	write := func(root, image string) {
+		t.Helper()
+		folder := filepath.Join(root, "app")
+		if err := os.MkdirAll(folder, 0o700); err != nil {
+			t.Fatal(err)
+		}
+		compose := "services:\n  app:\n    image: " + image + "\n    ports: [\"8080:80\"]\n"
+		if err := os.WriteFile(filepath.Join(folder, "compose.yaml"), []byte(compose), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	first, second := t.TempDir(), t.TempDir()
+	write(first, "docker.io/library/nginx:1.27")
+	write(second, "docker.io/library/httpd:2.4")
+	dependencies := testDependencies(t, &scriptedDocker{})
+	t.Chdir(first)
+	if _, err := Generate(ctx, dependencies, Options{Source: "./app"}); err != nil {
+		t.Fatal(err)
+	}
+	t.Chdir(second)
+	stored := load(t, dependencies, "app")
+	options, err := stored.Regeneration(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	result, err := Generate(ctx, dependencies, options)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if options.Source != filepath.Join(first, "app") || result.Plan.AppService().Image.Repository != "library/nginx" {
+		t.Fatalf("the regeneration read %s: %+v", options.Source, result.Plan.AppService().Image)
+	}
+	options.Source = "./app"
+	if _, err := Generate(ctx, dependencies, options); !errors.Is(err, ErrSourceMoved) {
+		t.Fatalf("a regeneration from another folder: %v", err)
+	}
+}
+
+// TestModelLeavingOutASwitchedOnService: a model's whole plan that lacks an
+// optional service switched on says so.
+func TestModelLeavingOutASwitchedOnService(t *testing.T) {
+	directory := t.TempDir()
+	compose := "services:\n  app:\n    image: docker.io/library/nginx:1.27\n    ports: [\"8080:80\"]\n" +
+		"  cache:\n    image: docker.io/library/redis:7\n    profiles: [cache]\n"
+	if err := os.WriteFile(filepath.Join(directory, "compose.yaml"), []byte(compose), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	dependencies := testDependencies(t, &scriptedDocker{})
+	dependencies.Assistant = llm.NewAssistant(&scriptedModel{change: func(*ir.IR) {}}, "configured", 60000)
+	result, err := Generate(context.Background(), dependencies, Options{Source: directory, Name: "notes", Engine: EngineModel,
+		EnabledOptional: []string{"cache"}, StopAfter: StageIR})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Contains(result.Notices, modelLeftOut+"cache") {
+		t.Fatalf("no notice for the service the model left out: %v", result.Notices)
+	}
+}
+
+// TestEditorSaveDropsASecret: a secret removed in the editor stays gone
+// from the store; only other versions keep a secret the plan no longer has.
+func TestEditorSaveDropsASecret(t *testing.T) {
+	ctx := context.Background()
+	directory := t.TempDir()
+	compose := "services:\n  app:\n    image: docker.io/library/nginx:1.27\n    ports: [\"8080:80\"]\n    environment:\n      SECRET_KEY: ${SECRET_KEY}\n"
+	if err := os.WriteFile(filepath.Join(directory, "compose.yaml"), []byte(compose), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	dependencies := testDependencies(t, &scriptedDocker{})
+	if _, err := Generate(ctx, dependencies, Options{Source: directory, Name: "notes"}); err != nil {
+		t.Fatal(err)
+	}
+	stored := load(t, dependencies, "notes")
+	env, err := stored.EnvFile(Revealed)
+	if err != nil || stored.Values["SECRET_KEY"] == "" {
+		t.Fatalf("no generated key: %v", err)
+	}
+	var kept []string
+	for _, line := range strings.Split(string(env), "\n") {
+		if !strings.HasPrefix(line, "SECRET_KEY=") {
+			kept = append(kept, line)
+		}
+	}
+	edit := Edit{Compose: []byte(strings.ReplaceAll(stored.Generation.ComposeYAML, "SECRET_KEY", "OTHER_SETTING")), Env: strings.Join(append(kept, "OTHER_SETTING=x"), "\n")}
+	if _, check, err := SaveEdit(ctx, dependencies, "notes", edit); err != nil {
+		t.Fatalf("%v: %+v", err, check.Problems)
+	}
+	if _, found := load(t, dependencies, "notes").Values["SECRET_KEY"]; found {
+		t.Fatal("the secret removed in the editor is still stored")
+	}
+}
+
+// TestSwitchingOnKeepsTheDeployedPassword: an optional service listed first
+// that upstream gave the database's password reads the database's stored
+// password once switched on; the database stays its owner.
+func TestSwitchingOnKeepsTheDeployedPassword(t *testing.T) {
+	ctx := context.Background()
+	directory := t.TempDir()
+	const password = "Xk9pLm2qRt7v"
+	compose := "services:\n  backup:\n    image: docker.io/library/busybox:1.36\n    profiles: [backup]\n    environment:\n      BACKUP_DB_PASSWORD: " + password + "\n" +
+		"  db:\n    image: docker.io/library/postgres:16\n    environment:\n      POSTGRES_PASSWORD: " + password + "\n" +
+		"  app:\n    image: docker.io/library/nginx:1.27\n    ports: [\"8080:80\"]\n    environment:\n      DB_PASSWORD: " + password + "\n"
+	if err := os.WriteFile(filepath.Join(directory, "compose.yaml"), []byte(compose), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	dependencies := testDependencies(t, &scriptedDocker{})
+	if _, err := Generate(ctx, dependencies, Options{Source: directory, Name: "notes"}); err != nil {
+		t.Fatal(err)
+	}
+	deployed := load(t, dependencies, "notes").Values["POSTGRES_PASSWORD"]
+	if _, err := Generate(ctx, dependencies, Options{Source: directory, Name: "notes", EnabledOptional: []string{"backup"}}); err != nil {
+		t.Fatal(err)
+	}
+	stored := load(t, dependencies, "notes")
+	backup, _ := stored.Plan.EnvEntry("BACKUP_DB_PASSWORD")
+	if deployed == "" || stored.Values["POSTGRES_PASSWORD"] != deployed || backup == nil || backup.Value != "${POSTGRES_PASSWORD}" {
+		t.Fatalf("the deployed password changed hands: %+v", stored.Plan.EnvFile)
+	}
+}
+
+// TestModelDraftDropsOffDependencies: a model may copy the app's depends_on
+// onto a plan whose dependency is an optional service that is off; it is
+// dropped as the rules drop it.
+func TestModelDraftDropsOffDependencies(t *testing.T) {
+	ctx := context.Background()
+	directory := t.TempDir()
+	compose := "services:\n  app:\n    image: docker.io/library/nginx:1.27\n    ports: [\"8080:80\"]\n    depends_on: [cache]\n" +
+		"  cache:\n    image: docker.io/library/redis:7\n    profiles: [cache]\n"
+	if err := os.WriteFile(filepath.Join(directory, "compose.yaml"), []byte(compose), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	dependencies := testDependencies(t, &scriptedDocker{})
+	waitsForCache := func(plan *ir.IR) {
+		plan.Services[0].DependsOn = append(plan.Services[0].DependsOn, ir.Dependency{Service: "cache", Condition: "service_started"})
+	}
+	dependencies.Assistant = llm.NewAssistant(&scriptedModel{change: waitsForCache}, "configured", 60000)
+	result, err := Generate(ctx, dependencies, Options{Source: directory, Name: "notes", Engine: EngineModel, StopAfter: StageIR})
+	if err != nil {
+		t.Fatal(err)
+	}
+	drafted := result.Plan.Services[0]
+	if result.Engine != EngineModel || slices.ContainsFunc(drafted.DependsOn, func(dependency ir.Dependency) bool { return dependency.Service == "cache" }) {
+		t.Fatalf("engine %s, the drafted service still waits for the switched-off cache: %+v", result.Engine, drafted.DependsOn)
+	}
+}
+
+func load(t *testing.T, dependencies Dependencies, name string) *Stored {
+	t.Helper()
+	stored, err := Load(context.Background(), dependencies.Workspace, name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return stored
+}
+
 func TestRevalidateRecordsTheVerdict(t *testing.T) {
 	docker := &scriptedDocker{states: []string{healthy}}
 	dependencies := testDependencies(t, docker)
@@ -257,6 +561,7 @@ func TestRevalidateRecordsTheVerdict(t *testing.T) {
 // golden plan, or with an error.
 type scriptedModel struct {
 	requests int
+	prompts  []string
 	change   func(*ir.IR)
 	err      error
 }
@@ -265,6 +570,7 @@ func (model *scriptedModel) Name() string { return "scripted" }
 
 func (model *scriptedModel) Generate(_ context.Context, request llm.Request) (llm.Response, error) {
 	model.requests++
+	model.prompts = append(model.prompts, request.System+request.Prompt)
 	if model.err != nil {
 		return llm.Response{}, model.err
 	}
@@ -300,6 +606,11 @@ func fillAnswer(plan *ir.IR) ir.FillAnswer {
 	return answer
 }
 
+// offersOptional is a model that lists an optional service of its own.
+func offersOptional(plan *ir.IR) {
+	plan.OptionalServices = []ir.OptionalService{{Name: "extra", Image: "example/extra:1", Profiles: []string{"extra"}, DependsOn: []string{}}}
+}
+
 func TestEngines(t *testing.T) {
 	hostile := func(plan *ir.IR) {
 		plan.App.Summary = "A feed reader the model described."
@@ -333,8 +644,11 @@ func TestEngines(t *testing.T) {
 					t.Fatalf("no gap filled: %v", result.Notices)
 				}
 			}},
-		{name: "model drafts the plan", engine: EngineModel, model: &scriptedModel{change: func(*ir.IR) {}}, wantEngine: EngineModel,
+		{name: "model drafts the plan", engine: EngineModel, model: &scriptedModel{change: offersOptional}, wantEngine: EngineModel,
 			check: func(t *testing.T, result *Result) {
+				if len(result.Plan.OptionalServices) != 0 {
+					t.Fatalf("optional services came from the model, not the rules: %+v", result.Plan.OptionalServices)
+				}
 				for _, service := range result.Plan.Services {
 					if service.Provenance.Source != ir.SourceModel || service.Image.Provenance.Confidence == ir.ConfidenceHigh {
 						t.Fatalf("%s not stamped as model output: %+v", service.Name, service.Provenance)
