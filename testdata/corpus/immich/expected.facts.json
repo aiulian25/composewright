@@ -5303,7 +5303,7 @@
     },
     {
       "name": "TZ",
-      "default": "Etc/UTC",
+      "default": "\u003csup\u003e\\*1\u003c/sup\u003e",
       "description": "To set a timezone, uncomment the next line and change Etc/UTC to a TZ identifier from this list: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List",
       "required": false,
       "mentions": [
@@ -5311,6 +5311,7 @@
           "name": "TZ",
           "kind": "env_sample",
           "default": "Etc/UTC",
+          "commented": true,
           "text": "To set a timezone, uncomment the next line and change Etc/UTC to a TZ identifier from this list: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List",
           "location": {
             "file": "docker/example.env",

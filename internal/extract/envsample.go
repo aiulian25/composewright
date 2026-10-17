@@ -156,7 +156,7 @@ func isDecoration(text string) bool {
 func sampleMentions(sample EnvSample) []Mention {
 	mentions := make([]Mention, 0, len(sample.Entries))
 	for _, entry := range sample.Entries {
-		mentions = append(mentions, Mention{Name: entry.Key, Kind: KindEnvSample, Default: entry.Value, Text: entry.Comment, Location: entry.Location})
+		mentions = append(mentions, Mention{Name: entry.Key, Kind: KindEnvSample, Default: entry.Value, Commented: entry.Commented, Text: entry.Comment, Location: entry.Location})
 	}
 	return mentions
 }

@@ -14,6 +14,10 @@ import (
 
 const (
 	minimumSecretLength = 4
+	// requiredOperator and defaultOperator are Compose's ${NAME?message}
+	// and ${NAME-default}, each also with a colon.
+	requiredOperator = "?"
+	defaultOperator  = "-"
 	// ownEnvFile is where people keep their real values; samples such as
 	// .env.example only suggest them.
 	ownEnvFile = ".env"
@@ -60,11 +64,12 @@ func (builder *builder) composeEnvironment(file *extract.ComposeFile, service *i
 			builder.reference(service, variable.Key, variable.Key, builder.knownDefault(variable.Key), false, at)
 		case match != nil:
 			name, operator, fallback := match[1], match[2], match[3]
-			required := strings.Contains(operator, "?")
-			if strings.Contains(operator, "?") {
-				fallback = ""
+			required := strings.Contains(operator, requiredOperator)
+			value := builder.knownDefault(name)
+			if strings.Contains(operator, defaultOperator) {
+				value = builder.composeDefault(file, name, fallback)
 			}
-			builder.reference(service, variable.Key, name, firstNonEmpty(builder.knownDefault(name), fallback), required, at)
+			builder.reference(service, variable.Key, name, value, required, at)
 		default:
 			for _, name := range extract.References(variable.Raw) {
 				builder.ensureEntry(name, builder.knownDefault(name), false, at)
@@ -75,6 +80,29 @@ func (builder *builder) composeEnvironment(file *extract.ComposeFile, service *i
 	for _, sample := range builder.loadedSamples(file, upstream) {
 		builder.sampleEnvironment(file, service, sample)
 	}
+}
+
+// composeDefault is the value of ${name:-fallback}: the fallback upstream's
+// stack runs with, which also outranks a sample beside the compose file,
+// since such a sample is often written for running without Docker. Only an
+// empty fallback takes what that sample sets; a value from anywhere else, such
+// as a subproject's development sample, a docs page or a commented-out
+// example, would point the stack at the wrong place.
+func (builder *builder) composeDefault(file *extract.ComposeFile, name, fallback string) string {
+	if fallback != "" {
+		return fallback
+	}
+	interpolated := path.Join(path.Dir(file.Path), ownEnvFile)
+	for _, sample := range builder.facts.EnvSamples {
+		if !documents(sample.Path, interpolated) {
+			continue
+		}
+		set := slices.IndexFunc(sample.Entries, func(entry extract.EnvSampleEntry) bool { return entry.Key == name && !entry.Commented })
+		if set >= 0 {
+			return sample.Entries[set].Value
+		}
+	}
+	return fallback
 }
 
 // sampleEnvironment gives a service the variables of an env_file it loads,

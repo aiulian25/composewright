@@ -672,3 +672,28 @@ func TestOptionalDefaultsComeFromTheImage(t *testing.T) {
 		}
 	}
 }
+
+// TestExplicitComposeDefaultsFollowCompose: a compose fallback is the value,
+// ahead of a sample's, and an empty one such as ${DATABASE_URL:-} takes only
+// what the sample beside the compose file sets. Neither a commented-out
+// example for an outside database nor a subproject's development sample,
+// both in bookorbit, becomes its value, and no password for an outside
+// database is asked for.
+func TestExplicitComposeDefaultsFollowCompose(t *testing.T) {
+	facts := testFacts(t, map[string]string{
+		"docker-compose.yml": "services:\n  app:\n    image: example/app:1.0\n    environment:\n      DATABASE_URL: ${DATABASE_URL:-}\n" +
+			"      POSTGRES_HOST: ${POSTGRES_HOST:-postgres}\n      RATE_LIMIT: ${RATE_LIMIT:-1000}\n      SITE_TITLE: ${SITE_TITLE:-}\n",
+		".env.example":        "RATE_LIMIT=0\nSITE_TITLE=Library\n# Your own PostgreSQL instead:\n# DATABASE_URL=postgres://user:password@yourhost:5432/app\n",
+		"server/.env.example": "DATABASE_URL=postgres://dev:devpass@localhost:5432/app\nPOSTGRES_HOST=localhost\nSITE_TITLE=Dev\n",
+	})
+	plan := Build(context.Background(), Input{Facts: facts, Source: &fetch.Source{Owner: "example", Repository: "app"}})
+	want := map[string]string{"DATABASE_URL": "", "POSTGRES_HOST": "postgres", "RATE_LIMIT": "1000", "SITE_TITLE": "Library"}
+	for key, want := range want {
+		if entry, found := plan.EnvEntry(key); !found || entry.Value != want {
+			t.Errorf("%s = %+v, want %q", key, entry, want)
+		}
+	}
+	if _, found := plan.EnvEntry("DATABASE_URL_PASSWORD"); found {
+		t.Error("a password for an outside database was asked for")
+	}
+}

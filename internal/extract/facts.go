@@ -168,12 +168,15 @@ type Variable struct {
 }
 
 type Mention struct {
-	Name     string   `json:"name"`
-	Kind     string   `json:"kind"`
-	Default  string   `json:"default,omitempty"`
-	Required bool     `json:"required,omitempty"`
-	Text     string   `json:"text,omitempty"`
-	Location Location `json:"location"`
+	Name     string `json:"name"`
+	Kind     string `json:"kind"`
+	Default  string `json:"default,omitempty"`
+	Required bool   `json:"required,omitempty"`
+	// Commented marks a sample entry left commented out (# KEY=value):
+	// its value is an example, not what the sample sets.
+	Commented bool     `json:"commented,omitempty"`
+	Text      string   `json:"text,omitempty"`
+	Location  Location `json:"location"`
 }
 
 type ImageMention struct {
@@ -237,7 +240,9 @@ func mergeVariables(mentions []Mention) []Variable {
 		})
 		for _, mention := range variable.Mentions {
 			variable.Required = variable.Required || mention.Required
-			if variable.Default == "" {
+			// Copying the sample leaves a commented entry unset, so its value,
+			// such as a DATABASE_URL for an outside database, is no default.
+			if variable.Default == "" && !mention.Commented {
 				variable.Default = mention.Default
 			}
 			if variable.Description == "" {

@@ -13,6 +13,11 @@ All notable changes to this project are documented here. The format follows
   passes the rule that a healthcheck may only contact its own container,
   since Docker runs it whether or not compose.yaml repeats it. Healthchecks
   from documentation or a model are held to the rule as before.
+- A variable upstream's compose file leaves empty, such as
+  `DATABASE_URL: ${DATABASE_URL:-}`, stays empty unless the `.env` sample
+  beside that compose file sets it. A commented-out example for an outside
+  database, or a subproject's development sample, no longer points the app at
+  a database that is not in the stack.
 
 ## [0.1.3] - 2026-10-12
 

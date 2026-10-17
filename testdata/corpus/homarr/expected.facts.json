@@ -1879,7 +1879,7 @@
     },
     {
       "name": "BASE_URL",
-      "default": "https://homarr.example.com",
+      "default": "",
       "description": "Public URL contract. Values must be absolute HTTP(S) URLs without credentials, query strings, or fragments. Trailing slashes are normalized at startup. Public Homarr origin used by MCP OAuth metadata and redirects behind proxies.",
       "required": false,
       "mentions": [
@@ -1887,6 +1887,7 @@
           "name": "BASE_URL",
           "kind": "env_sample",
           "default": "https://homarr.example.com",
+          "commented": true,
           "text": "Public URL contract. Values must be absolute HTTP(S) URLs without credentials, query strings, or fragments. Trailing slashes are normalized at startup. Public Homarr origin used by MCP OAuth metadata and redirects behind proxies.",
           "location": {
             "file": ".env.example",
@@ -2196,6 +2197,7 @@
           "name": "DB_DRIVER",
           "kind": "env_sample",
           "default": "node-postgres",
+          "commented": true,
           "text": "The following is an example on how to use the node-postgres driver:",
           "location": {
             "file": ".env.example",
@@ -2223,7 +2225,7 @@
     },
     {
       "name": "DB_URL",
-      "default": "postgres://user:password@host:port/database",
+      "default": "/appdata/db/db.sqlite",
       "description": "Set an absolute writable SQLite path so migrations and the app use the same file. Their working directories differ; do not use a relative path here. Container images use /appdata/db/db.sqlite by default instead.",
       "required": false,
       "mentions": [
@@ -2240,6 +2242,7 @@
           "name": "DB_URL",
           "kind": "env_sample",
           "default": "postgres://user:password@host:port/database",
+          "commented": true,
           "location": {
             "file": ".env.example",
             "line": 26
@@ -2266,7 +2269,7 @@
     },
     {
       "name": "DEMO_MODE",
-      "default": "true",
+      "default": "",
       "description": "Enable demo mode (seeds a demo user \"demo\"/\"demo\", a sample board and a mock integration)",
       "required": false,
       "mentions": [
@@ -2274,6 +2277,7 @@
           "name": "DEMO_MODE",
           "kind": "env_sample",
           "default": "true",
+          "commented": true,
           "text": "Enable demo mode (seeds a demo user \"demo\"/\"demo\", a sample board and a mock integration)",
           "location": {
             "file": ".env.example",
@@ -2308,7 +2312,7 @@
     },
     {
       "name": "DEMO_READ_ONLY",
-      "default": "false",
+      "default": "",
       "description": "Whether demo mode is read-only. Defaults to true; Assistant conversation history remains writable for canned chats. Set to false for writable preview deployments so the demo user can modify the dashboard.",
       "required": false,
       "mentions": [
@@ -2316,6 +2320,7 @@
           "name": "DEMO_READ_ONLY",
           "kind": "env_sample",
           "default": "false",
+          "commented": true,
           "text": "Whether demo mode is read-only. Defaults to true; Assistant conversation history remains writable for canned chats. Set to false for writable preview deployments so the demo user can modify the dashboard.",
           "location": {
             "file": ".env.example",
@@ -2373,6 +2378,7 @@
         {
           "name": "DOCKER_SOCKET_PATHS",
           "kind": "env_sample",
+          "commented": true,
           "text": "Comma-separated paths to Docker-compatible Unix sockets. Useful for connecting to multiple runtimes (Docker + Podman) simultaneously. When unset and no TCP hosts configured, defaults to /var/run/docker.sock. Example: DOCKER_SOCKET_PATHS=/var/run/docker.sock,/run/user/1000/podman/podman.sock",
           "location": {
             "file": ".env.example",
@@ -2409,7 +2415,7 @@
     },
     {
       "name": "ENABLE_KUBERNETES",
-      "default": "true",
+      "default": "",
       "description": "Enable kubernetes tool",
       "required": false,
       "mentions": [
@@ -2417,6 +2423,7 @@
           "name": "ENABLE_KUBERNETES",
           "kind": "env_sample",
           "default": "true",
+          "commented": true,
           "text": "Enable kubernetes tool",
           "location": {
             "file": ".env.example",
@@ -2506,6 +2513,7 @@
         {
           "name": "GITHUB_CLIENT_ID",
           "kind": "env_sample",
+          "commented": true,
           "text": "Optional local GitHub OAuth application.",
           "location": {
             "file": "apps/workshop/.env.example",
@@ -2515,6 +2523,7 @@
         {
           "name": "GITHUB_CLIENT_ID",
           "kind": "env_sample",
+          "commented": true,
           "text": "Optional GitHub OAuth application for the preview hostname.",
           "location": {
             "file": "apps/workshop/.env.staging.example",
@@ -2572,6 +2581,7 @@
         {
           "name": "GITHUB_CLIENT_SECRET",
           "kind": "env_sample",
+          "commented": true,
           "location": {
             "file": "apps/workshop/.env.example",
             "line": 20
@@ -2580,6 +2590,7 @@
         {
           "name": "GITHUB_CLIENT_SECRET",
           "kind": "env_sample",
+          "commented": true,
           "location": {
             "file": "apps/workshop/.env.staging.example",
             "line": 19
@@ -2638,6 +2649,7 @@
           "name": "HOMARR_AI_ALLOW_INSECURE_UPSTREAM",
           "kind": "env_sample",
           "default": "false",
+          "commented": true,
           "location": {
             "file": "apps/workshop/.env.example",
             "line": 16
@@ -2833,6 +2845,7 @@
           "name": "HOMARR_AI_OPENROUTER_BASE_URL",
           "kind": "env_sample",
           "default": "https://openrouter.ai/api/v1",
+          "commented": true,
           "location": {
             "file": "apps/workshop/.env.example",
             "line": 14
@@ -2842,6 +2855,7 @@
           "name": "HOMARR_AI_OPENROUTER_BASE_URL",
           "kind": "env_sample",
           "default": "https://openrouter.ai/api/v1",
+          "commented": true,
           "location": {
             "file": "apps/workshop/.env.staging.example",
             "line": 14
@@ -2900,6 +2914,7 @@
         {
           "name": "HOMARR_AI_OPENROUTER_MODEL",
           "kind": "env_sample",
+          "commented": true,
           "location": {
             "file": "apps/workshop/.env.example",
             "line": 15
@@ -2908,6 +2923,7 @@
         {
           "name": "HOMARR_AI_OPENROUTER_MODEL",
           "kind": "env_sample",
+          "commented": true,
           "location": {
             "file": "apps/workshop/.env.staging.example",
             "line": 15
@@ -3016,6 +3032,7 @@
           "name": "HOMARR_WEBSITE_URL",
           "kind": "env_sample",
           "default": "http://127.0.0.1:3003",
+          "commented": true,
           "location": {
             "file": ".env.example",
             "line": 72
@@ -3108,7 +3125,7 @@
     },
     {
       "name": "LOCAL_CERTIFICATE_PATH",
-      "default": "FULL_PATH_TO_CERTIFICATES",
+      "default": "",
       "description": "The below path can be used to store trusted certificates, it is not required and can be left empty. If it is empty, it will default to `/appdata/trusted-certificates` in production. If it is used, please use the full path to the directory where the certificates are stored.",
       "required": false,
       "mentions": [
@@ -3116,6 +3133,7 @@
           "name": "LOCAL_CERTIFICATE_PATH",
           "kind": "env_sample",
           "default": "FULL_PATH_TO_CERTIFICATES",
+          "commented": true,
           "text": "The below path can be used to store trusted certificates, it is not required and can be left empty. If it is empty, it will default to `/appdata/trusted-certificates` in production. If it is used, please use the full path to the directory where the certificates are stored.",
           "location": {
             "file": ".env.example",
@@ -3423,6 +3441,7 @@
         {
           "name": "OPENROUTER_API_KEY",
           "kind": "env_sample",
+          "commented": true,
           "text": "Optional Homarr provider. The upstream key stays only in the Workshop server.",
           "location": {
             "file": "apps/workshop/.env.example",
@@ -3432,6 +3451,7 @@
         {
           "name": "OPENROUTER_API_KEY",
           "kind": "env_sample",
+          "commented": true,
           "text": "Set this secret in the deployment environment to enable the Homarr provider.",
           "location": {
             "file": "apps/workshop/.env.staging.example",
@@ -3564,6 +3584,7 @@
           "name": "PB_ALLOWED_ORIGINS",
           "kind": "env_sample",
           "default": "*",
+          "commented": true,
           "location": {
             "file": ".env.example",
             "line": 69
@@ -3906,7 +3927,7 @@
     },
     {
       "name": "TURBO_API",
-      "default": "https://your-cache-worker.workers.dev",
+      "default": "",
       "description": "Turborepo remote cache (optional, for faster CI/local builds) Uncomment and fill in to enable remote caching locally. CI uses GitHub secrets for these values automatically.",
       "required": false,
       "mentions": [
@@ -3914,6 +3935,7 @@
           "name": "TURBO_API",
           "kind": "env_sample",
           "default": "https://your-cache-worker.workers.dev",
+          "commented": true,
           "text": "Turborepo remote cache (optional, for faster CI/local builds) Uncomment and fill in to enable remote caching locally. CI uses GitHub secrets for these values automatically.",
           "location": {
             "file": ".env.example",
@@ -3924,7 +3946,7 @@
     },
     {
       "name": "TURBO_REMOTE_CACHE_SIGNATURE_KEY",
-      "default": "your-signature-key",
+      "default": "",
       "description": "",
       "required": false,
       "mentions": [
@@ -3932,6 +3954,7 @@
           "name": "TURBO_REMOTE_CACHE_SIGNATURE_KEY",
           "kind": "env_sample",
           "default": "your-signature-key",
+          "commented": true,
           "location": {
             "file": ".env.example",
             "line": 41
@@ -3941,7 +3964,7 @@
     },
     {
       "name": "TURBO_TEAM",
-      "default": "team_your_team",
+      "default": "",
       "description": "",
       "required": false,
       "mentions": [
@@ -3949,6 +3972,7 @@
           "name": "TURBO_TEAM",
           "kind": "env_sample",
           "default": "team_your_team",
+          "commented": true,
           "location": {
             "file": ".env.example",
             "line": 39
@@ -3975,7 +3999,7 @@
     },
     {
       "name": "TURBO_TOKEN",
-      "default": "your-turbo-token",
+      "default": "",
       "description": "",
       "required": false,
       "mentions": [
@@ -3983,6 +4007,7 @@
           "name": "TURBO_TOKEN",
           "kind": "env_sample",
           "default": "your-turbo-token",
+          "commented": true,
           "location": {
             "file": ".env.example",
             "line": 40
@@ -4092,6 +4117,7 @@
           "name": "WORKSHOP_API_URL",
           "kind": "env_sample",
           "default": "https://homarr.dev",
+          "commented": true,
           "text": "PocketBase API used by Homarr and by the standalone documentation site. Defaults to HOMARR_WEBSITE_URL.",
           "location": {
             "file": ".env.example",
@@ -4102,6 +4128,7 @@
           "name": "WORKSHOP_API_URL",
           "kind": "env_sample",
           "default": "http://127.0.0.1:8090",
+          "commented": true,
           "location": {
             "file": ".env.example",
             "line": 73
@@ -4256,6 +4283,7 @@
           "name": "WORKSHOP_PUBLIC_ORIGIN",
           "kind": "env_sample",
           "default": "https://homarr.dev",
+          "commented": true,
           "text": "Documentation and PocketBase deployment settings.",
           "location": {
             "file": ".env.example",
@@ -4266,6 +4294,7 @@
           "name": "WORKSHOP_PUBLIC_ORIGIN",
           "kind": "env_sample",
           "default": "http://127.0.0.1:3003",
+          "commented": true,
           "location": {
             "file": ".env.example",
             "line": 75
@@ -4375,6 +4404,7 @@
           "name": "WORKSHOP_WEB_URL",
           "kind": "env_sample",
           "default": "https://homarr.dev/workshop",
+          "commented": true,
           "text": "Public Workshop website used by links in Homarr, Custom Widgets, onboarding, and assistant context. Defaults to HOMARR_WEBSITE_URL/workshop.",
           "location": {
             "file": ".env.example",
@@ -4385,6 +4415,7 @@
           "name": "WORKSHOP_WEB_URL",
           "kind": "env_sample",
           "default": "http://127.0.0.1:3003/workshop",
+          "commented": true,
           "location": {
             "file": ".env.example",
             "line": 74

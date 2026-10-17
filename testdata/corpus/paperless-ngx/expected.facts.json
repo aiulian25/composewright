@@ -3760,7 +3760,7 @@
     },
     {
       "name": "PAPERLESS_OCR_LANGUAGE",
-      "default": "eng",
+      "default": "",
       "description": "The default language to use for OCR. Set this to the language most of your documents are written in.",
       "required": false,
       "mentions": [
@@ -3768,6 +3768,7 @@
           "name": "PAPERLESS_OCR_LANGUAGE",
           "kind": "env_sample",
           "default": "eng",
+          "commented": true,
           "text": "The default language to use for OCR. Set this to the language most of your documents are written in.",
           "location": {
             "file": "docker/compose/docker-compose.env",
@@ -3786,7 +3787,7 @@
     },
     {
       "name": "PAPERLESS_OCR_LANGUAGES",
-      "default": "tur ces",
+      "default": "",
       "description": "Additional languages to install for text recognition, separated by a whitespace. Note that this is different from PAPERLESS_OCR_LANGUAGE (default=eng), which defines the language used for OCR. The container installs English, German, Italian, Spanish and French by default. See https://packages.debian.org/search?keywords=tesseract-ocr-\u0026searchon=names for available languages.",
       "required": false,
       "mentions": [
@@ -3794,6 +3795,7 @@
           "name": "PAPERLESS_OCR_LANGUAGES",
           "kind": "env_sample",
           "default": "tur ces",
+          "commented": true,
           "text": "Additional languages to install for text recognition, separated by a whitespace. Note that this is different from PAPERLESS_OCR_LANGUAGE (default=eng), which defines the language used for OCR. The container installs English, German, Italian, Spanish and French by default. See https://packages.debian.org/search?keywords=tesseract-ocr-\u0026searchon=names for available languages.",
           "location": {
             "file": "docker/compose/docker-compose.env",
@@ -4310,7 +4312,7 @@
     },
     {
       "name": "PAPERLESS_TIME_ZONE",
-      "default": "America/Los_Angeles",
+      "default": "",
       "description": "Use this variable to set a timezone for the Paperless Docker containers. Defaults to UTC.",
       "required": false,
       "mentions": [
@@ -4318,6 +4320,7 @@
           "name": "PAPERLESS_TIME_ZONE",
           "kind": "env_sample",
           "default": "America/Los_Angeles",
+          "commented": true,
           "text": "Use this variable to set a timezone for the Paperless Docker containers. Defaults to UTC.",
           "location": {
             "file": "docker/compose/docker-compose.env",
@@ -4368,7 +4371,7 @@
     },
     {
       "name": "PAPERLESS_URL",
-      "default": "https://paperless.example.com",
+      "default": "",
       "description": "This is required if you will be exposing Paperless-ngx on a public domain (if doing so please consider security measures such as reverse proxy)",
       "required": false,
       "mentions": [
@@ -4376,6 +4379,7 @@
           "name": "PAPERLESS_URL",
           "kind": "env_sample",
           "default": "https://paperless.example.com",
+          "commented": true,
           "text": "This is required if you will be exposing Paperless-ngx on a public domain (if doing so please consider security measures such as reverse proxy)",
           "location": {
             "file": "docker/compose/docker-compose.env",
@@ -4669,7 +4673,7 @@
     },
     {
       "name": "USERMAP_GID",
-      "default": "1000",
+      "default": "",
       "description": "",
       "required": false,
       "mentions": [
@@ -4677,6 +4681,7 @@
           "name": "USERMAP_GID",
           "kind": "env_sample",
           "default": "1000",
+          "commented": true,
           "location": {
             "file": "docker/compose/docker-compose.env",
             "line": 11
@@ -4686,7 +4691,7 @@
     },
     {
       "name": "USERMAP_UID",
-      "default": "1000",
+      "default": "",
       "description": "The UID and GID of the user used to run paperless in the container. Set this to your UID and GID on the host so that you have write access to the consumption directory.",
       "required": false,
       "mentions": [
@@ -4694,6 +4699,7 @@
           "name": "USERMAP_UID",
           "kind": "env_sample",
           "default": "1000",
+          "commented": true,
           "text": "The UID and GID of the user used to run paperless in the container. Set this to your UID and GID on the host so that you have write access to the consumption directory.",
           "location": {
             "file": "docker/compose/docker-compose.env",

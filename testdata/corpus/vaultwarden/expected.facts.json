@@ -1913,7 +1913,7 @@
   "variables": [
     {
       "name": "ADMIN_RATELIMIT_MAX_BURST",
-      "default": "3",
+      "default": "",
       "description": "Allow a burst of requests of up to this size, while maintaining the average indicated by `ADMIN_RATELIMIT_SECONDS`.",
       "required": false,
       "mentions": [
@@ -1921,6 +1921,7 @@
           "name": "ADMIN_RATELIMIT_MAX_BURST",
           "kind": "env_sample",
           "default": "3",
+          "commented": true,
           "text": "Allow a burst of requests of up to this size, while maintaining the average indicated by `ADMIN_RATELIMIT_SECONDS`.",
           "location": {
             "file": ".env.template",
@@ -1931,7 +1932,7 @@
     },
     {
       "name": "ADMIN_RATELIMIT_SECONDS",
-      "default": "300",
+      "default": "",
       "description": "Number of seconds, on average, between admin login requests from the same IP address before rate limiting kicks in.",
       "required": false,
       "mentions": [
@@ -1939,6 +1940,7 @@
           "name": "ADMIN_RATELIMIT_SECONDS",
           "kind": "env_sample",
           "default": "300",
+          "commented": true,
           "text": "Number of seconds, on average, between admin login requests from the same IP address before rate limiting kicks in.",
           "location": {
             "file": ".env.template",
@@ -1949,7 +1951,7 @@
     },
     {
       "name": "ADMIN_SESSION_LIFETIME",
-      "default": "20",
+      "default": "",
       "description": "Set the lifetime of admin sessions to this value (in minutes).",
       "required": false,
       "mentions": [
@@ -1957,6 +1959,7 @@
           "name": "ADMIN_SESSION_LIFETIME",
           "kind": "env_sample",
           "default": "20",
+          "commented": true,
           "text": "Set the lifetime of admin sessions to this value (in minutes).",
           "location": {
             "file": ".env.template",
@@ -1967,7 +1970,7 @@
     },
     {
       "name": "ADMIN_TOKEN",
-      "default": "$argon2id$v=19$m=65540,t=3,p=4$MmeKRnGK5RW5mJS7h3TOL89GrpLPXJPAtTK8FTqj9HM$DqsstvoSAETl9YhnsXbf43WeaUwJC6JhViIvuPoig78",
+      "default": "",
       "description": "Token for the admin interface, preferably an Argon2 PCH string Vaultwarden has a built-in generator by calling `vaultwarden hash` For details see: https://github.com/dani-garcia/vaultwarden/wiki/Enabling-admin-page#secure-the-admin_token If not set, the admin panel is disabled New Argon2 PHC string Note that for some environments, like docker-compose you need to escape all the dollar signs `$` with an extra dollar sign like `$$` Also, use single quotes (') instead of double quotes (\") to enclose the string when needed",
       "required": false,
       "mentions": [
@@ -1975,6 +1978,7 @@
           "name": "ADMIN_TOKEN",
           "kind": "env_sample",
           "default": "$argon2id$v=19$m=65540,t=3,p=4$MmeKRnGK5RW5mJS7h3TOL89GrpLPXJPAtTK8FTqj9HM$DqsstvoSAETl9YhnsXbf43WeaUwJC6JhViIvuPoig78",
+          "commented": true,
           "text": "Token for the admin interface, preferably an Argon2 PCH string Vaultwarden has a built-in generator by calling `vaultwarden hash` For details see: https://github.com/dani-garcia/vaultwarden/wiki/Enabling-admin-page#secure-the-admin_token If not set, the admin panel is disabled New Argon2 PHC string Note that for some environments, like docker-compose you need to escape all the dollar signs `$` with an extra dollar sign like `$$` Also, use single quotes (') instead of double quotes (\") to enclose the string when needed",
           "location": {
             "file": ".env.template",
@@ -1985,6 +1989,7 @@
           "name": "ADMIN_TOKEN",
           "kind": "env_sample",
           "default": "Vy2VyYTTsKPv8W5aEOWUbB/Bt3DEKePbHmI4m9VcemUMS2rEviDowNAFqYi1xjmp",
+          "commented": true,
           "text": "Old plain text string (Will generate warnings in favor of Argon2)",
           "location": {
             "file": ".env.template",
@@ -2002,6 +2007,7 @@
         {
           "name": "ALLOWED_CONNECT_SRC",
           "kind": "env_sample",
+          "commented": true,
           "text": "Allowed connect-src (Know the risks!) https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/connect-src Allows other domains to URLs which can be loaded using script interfaces like the Forwarded email alias feature This adds the configured value to the 'Content-Security-Policy' headers 'connect-src' value. Multiple values must be separated with a whitespace. And only HTTPS values are allowed. Example: \"https://my-addy-io.domain.tld https://my-simplelogin.domain.tld\"",
           "location": {
             "file": ".env.template",
@@ -2019,6 +2025,7 @@
         {
           "name": "ALLOWED_IFRAME_ANCESTORS",
           "kind": "env_sample",
+          "commented": true,
           "text": "Allowed iframe ancestors (Know the risks!) https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/frame-ancestors Allows other domains to embed the web vault into an iframe, useful for embedding into secure intranets This adds the configured value to the 'Content-Security-Policy' headers 'frame-ancestors' value. Multiple values must be separated with a whitespace.",
           "location": {
             "file": ".env.template",
@@ -2029,7 +2036,7 @@
     },
     {
       "name": "ATTACHMENTS_FOLDER",
-      "default": "data/attachments",
+      "default": "",
       "description": "",
       "required": false,
       "mentions": [
@@ -2037,6 +2044,7 @@
           "name": "ATTACHMENTS_FOLDER",
           "kind": "env_sample",
           "default": "data/attachments",
+          "commented": true,
           "location": {
             "file": ".env.template",
             "line": 31
@@ -2046,7 +2054,7 @@
     },
     {
       "name": "AUTHENTICATOR_DISABLE_TIME_DRIFT",
-      "default": "false",
+      "default": "",
       "description": "Authenticator Settings Disable authenticator time drifted codes to be valid. TOTP codes of the previous and next 30 seconds will be invalid According to the RFC6238 (https://tools.ietf.org/html/rfc6238), we allow by default the TOTP code which was valid one step back and one in the future. This can however allow attackers to be a bit more lucky with their attempts because there are 3 valid codes. You can disable this, so that only the current TOTP Code is allowed. Keep in mind that when a sever drifts out of time, valid codes could be marked as invalid. In any case, if a code has been used it can not be used again, also codes which predates it will be invalid.",
       "required": false,
       "mentions": [
@@ -2054,6 +2062,7 @@
           "name": "AUTHENTICATOR_DISABLE_TIME_DRIFT",
           "kind": "env_sample",
           "default": "false",
+          "commented": true,
           "text": "Authenticator Settings Disable authenticator time drifted codes to be valid. TOTP codes of the previous and next 30 seconds will be invalid According to the RFC6238 (https://tools.ietf.org/html/rfc6238), we allow by default the TOTP code which was valid one step back and one in the future. This can however allow attackers to be a bit more lucky with their attempts because there are 3 valid codes. You can disable this, so that only the current TOTP Code is allowed. Keep in mind that when a sever drifts out of time, valid codes could be marked as invalid. In any case, if a code has been used it can not be used again, also codes which predates it will be invalid.",
           "location": {
             "file": ".env.template",
@@ -2064,7 +2073,7 @@
     },
     {
       "name": "AUTH_REQUEST_PURGE_SCHEDULE",
-      "default": "30 * * * * *",
+      "default": "",
       "description": "Cron schedule of the job that cleans old auth requests from the auth request. Defaults to every minute. Set blank to disable this job.",
       "required": false,
       "mentions": [
@@ -2072,6 +2081,7 @@
           "name": "AUTH_REQUEST_PURGE_SCHEDULE",
           "kind": "env_sample",
           "default": "30 * * * * *",
+          "commented": true,
           "text": "Cron schedule of the job that cleans old auth requests from the auth request. Defaults to every minute. Set blank to disable this job.",
           "location": {
             "file": ".env.template",
@@ -2134,7 +2144,7 @@
     },
     {
       "name": "CLIENT_SUPPRESS_ONBOARDING",
-      "default": "false",
+      "default": "",
       "description": "Control whether clients onboarding interstitials are suppressed (post-login welcome dialogs, extension install prompts, setup extension redirects, and premium upsell modals)",
       "required": false,
       "mentions": [
@@ -2142,6 +2152,7 @@
           "name": "CLIENT_SUPPRESS_ONBOARDING",
           "kind": "env_sample",
           "default": "false",
+          "commented": true,
           "text": "Control whether clients onboarding interstitials are suppressed (post-login welcome dialogs, extension install prompts, setup extension redirects, and premium upsell modals)",
           "location": {
             "file": ".env.template",
@@ -2177,6 +2188,7 @@
         {
           "name": "DATABASE_CONN_INIT",
           "kind": "env_sample",
+          "commented": true,
           "text": "Database connection initialization Allows SQL statements to be run whenever a new database connection is created. This is mainly useful for connection-scoped pragmas. If empty, a database-specific default is used: - SQLite: \"PRAGMA busy_timeout = 5000; PRAGMA synchronous = NORMAL;\" - MySQL: \"\" - PostgreSQL: \"\"",
           "location": {
             "file": ".env.template",
@@ -2187,7 +2199,7 @@
     },
     {
       "name": "DATABASE_IDLE_TIMEOUT",
-      "default": "600",
+      "default": "",
       "description": "Database idle timeout Timeout in seconds before idle connections to the database are closed.",
       "required": false,
       "mentions": [
@@ -2195,6 +2207,7 @@
           "name": "DATABASE_IDLE_TIMEOUT",
           "kind": "env_sample",
           "default": "600",
+          "commented": true,
           "text": "Database idle timeout Timeout in seconds before idle connections to the database are closed.",
           "location": {
             "file": ".env.template",
@@ -2205,7 +2218,7 @@
     },
     {
       "name": "DATABASE_MAX_CONNS",
-      "default": "10",
+      "default": "",
       "description": "Database max connections Define the maximum size of the connection pool used for connecting to the database.",
       "required": false,
       "mentions": [
@@ -2213,6 +2226,7 @@
           "name": "DATABASE_MAX_CONNS",
           "kind": "env_sample",
           "default": "10",
+          "commented": true,
           "text": "Database max connections Define the maximum size of the connection pool used for connecting to the database.",
           "location": {
             "file": ".env.template",
@@ -2223,7 +2237,7 @@
     },
     {
       "name": "DATABASE_MIN_CONNS",
-      "default": "2",
+      "default": "",
       "description": "Database min connections Define the minimum size of the connection pool used for connecting to the database.",
       "required": false,
       "mentions": [
@@ -2231,6 +2245,7 @@
           "name": "DATABASE_MIN_CONNS",
           "kind": "env_sample",
           "default": "2",
+          "commented": true,
           "text": "Database min connections Define the minimum size of the connection pool used for connecting to the database.",
           "location": {
             "file": ".env.template",
@@ -2241,7 +2256,7 @@
     },
     {
       "name": "DATABASE_TIMEOUT",
-      "default": "30",
+      "default": "",
       "description": "Database timeout Timeout when acquiring database connection",
       "required": false,
       "mentions": [
@@ -2249,6 +2264,7 @@
           "name": "DATABASE_TIMEOUT",
           "kind": "env_sample",
           "default": "30",
+          "commented": true,
           "text": "Database timeout Timeout when acquiring database connection",
           "location": {
             "file": ".env.template",
@@ -2259,7 +2275,7 @@
     },
     {
       "name": "DATABASE_URL",
-      "default": "sqlite://data/db.sqlite3",
+      "default": "",
       "description": "Database URL When using SQLite, this should use the sqlite:// scheme followed by the path to the DB file. It defaults to sqlite://%DATA_FOLDER%/db.sqlite3. Bare paths without the sqlite:// scheme are supported for backwards compatibility, but only if the database file already exists.",
       "required": false,
       "mentions": [
@@ -2267,6 +2283,7 @@
           "name": "DATABASE_URL",
           "kind": "env_sample",
           "default": "sqlite://data/db.sqlite3",
+          "commented": true,
           "text": "Database URL When using SQLite, this should use the sqlite:// scheme followed by the path to the DB file. It defaults to sqlite://%DATA_FOLDER%/db.sqlite3. Bare paths without the sqlite:// scheme are supported for backwards compatibility, but only if the database file already exists.",
           "location": {
             "file": ".env.template",
@@ -2277,6 +2294,7 @@
           "name": "DATABASE_URL",
           "kind": "env_sample",
           "default": "mysql://user:password@host[:port]/database_name",
+          "commented": true,
           "text": "When using MySQL, specify an appropriate connection URI. Details: https://docs.diesel.rs/2.1.x/diesel/mysql/struct.MysqlConnection.html",
           "location": {
             "file": ".env.template",
@@ -2287,6 +2305,7 @@
           "name": "DATABASE_URL",
           "kind": "env_sample",
           "default": "postgresql://user:password@host[:port]/database_name",
+          "commented": true,
           "text": "When using PostgreSQL, specify an appropriate connection URI (recommended) or keyword/value connection string. Details: - https://docs.diesel.rs/2.1.x/diesel/pg/struct.PgConnection.html - https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING",
           "location": {
             "file": ".env.template",
@@ -2297,7 +2316,7 @@
     },
     {
       "name": "DATA_FOLDER",
-      "default": "data",
+      "default": "",
       "description": "Main data folder This can be a path to local folder or a path to an external location depending on features enabled at build time. Possible external locations: - AWS S3 Bucket (via `s3` feature): s3://bucket-name/path/to/folder When using an external location, make sure to set TMP_FOLDER, TEMPLATES_FOLDER, and DATABASE_URL to local paths and/or a remote database location.",
       "required": false,
       "mentions": [
@@ -2305,6 +2324,7 @@
           "name": "DATA_FOLDER",
           "kind": "env_sample",
           "default": "data",
+          "commented": true,
           "text": "Main data folder This can be a path to local folder or a path to an external location depending on features enabled at build time. Possible external locations: - AWS S3 Bucket (via `s3` feature): s3://bucket-name/path/to/folder When using an external location, make sure to set TMP_FOLDER, TEMPLATES_FOLDER, and DATABASE_URL to local paths and/or a remote database location.",
           "location": {
             "file": ".env.template",
@@ -2333,7 +2353,7 @@
     },
     {
       "name": "DB_CONNECTION_RETRIES",
-      "default": "15",
+      "default": "",
       "description": "Database connection retries Number of times to retry the database connection during startup, with 1 second delay between each retry, set to 0 to retry indefinitely",
       "required": false,
       "mentions": [
@@ -2341,6 +2361,7 @@
           "name": "DB_CONNECTION_RETRIES",
           "kind": "env_sample",
           "default": "15",
+          "commented": true,
           "text": "Database connection retries Number of times to retry the database connection during startup, with 1 second delay between each retry, set to 0 to retry indefinitely",
           "location": {
             "file": ".env.template",
@@ -2368,7 +2389,7 @@
     },
     {
       "name": "DISABLE_2FA_REMEMBER",
-      "default": "false",
+      "default": "",
       "description": "Other MFA/2FA settings Disable 2FA remember Enabling this would force the users to use a second factor to login every time. Note that the checkbox would still be present, but ignored.",
       "required": false,
       "mentions": [
@@ -2376,6 +2397,7 @@
           "name": "DISABLE_2FA_REMEMBER",
           "kind": "env_sample",
           "default": "false",
+          "commented": true,
           "text": "Other MFA/2FA settings Disable 2FA remember Enabling this would force the users to use a second factor to login every time. Note that the checkbox would still be present, but ignored.",
           "location": {
             "file": ".env.template",
@@ -2386,7 +2408,7 @@
     },
     {
       "name": "DISABLE_ADMIN_TOKEN",
-      "default": "false",
+      "default": "true",
       "description": "Enable this to bypass the admin panel security. This option is only meant to be used with the use of a separate auth layer in front",
       "required": false,
       "mentions": [
@@ -2394,6 +2416,7 @@
           "name": "DISABLE_ADMIN_TOKEN",
           "kind": "env_sample",
           "default": "false",
+          "commented": true,
           "text": "Enable this to bypass the admin panel security. This option is only meant to be used with the use of a separate auth layer in front",
           "location": {
             "file": ".env.template",
@@ -2422,7 +2445,7 @@
     },
     {
       "name": "DISABLE_ICON_DOWNLOAD",
-      "default": "false",
+      "default": "",
       "description": "Disable icon downloading Set to true to disable icon downloading in the internal icon service. This still serves existing icons from $ICON_CACHE_FOLDER, without generating any external network requests. $ICON_CACHE_TTL must also be set to 0; otherwise, the existing icons will be deleted eventually, but won't be downloaded again.",
       "required": false,
       "mentions": [
@@ -2430,6 +2453,7 @@
           "name": "DISABLE_ICON_DOWNLOAD",
           "kind": "env_sample",
           "default": "false",
+          "commented": true,
           "text": "Disable icon downloading Set to true to disable icon downloading in the internal icon service. This still serves existing icons from $ICON_CACHE_FOLDER, without generating any external network requests. $ICON_CACHE_TTL must also be set to 0; otherwise, the existing icons will be deleted eventually, but won't be downloaded again.",
           "location": {
             "file": ".env.template",
@@ -2440,7 +2464,7 @@
     },
     {
       "name": "DNS_PREFER_IPV6",
-      "default": "false",
+      "default": "",
       "description": "Prefer IPv6 (AAAA) resolving This settings configures the DNS resolver to resolve IPv6 first, and if not available try IPv4 This could be useful in IPv6 only environments.",
       "required": false,
       "mentions": [
@@ -2448,6 +2472,7 @@
           "name": "DNS_PREFER_IPV6",
           "kind": "env_sample",
           "default": "false",
+          "commented": true,
           "text": "Prefer IPv6 (AAAA) resolving This settings configures the DNS resolver to resolve IPv6 first, and if not available try IPv4 This could be useful in IPv6 only environments.",
           "location": {
             "file": ".env.template",
@@ -2458,7 +2483,7 @@
     },
     {
       "name": "DOMAIN",
-      "default": "http://localhost",
+      "default": "https://vw.domain.tld",
       "description": "Domain settings The domain must match the address from where you access the server It's recommended to configure this value, otherwise certain functionality might not work, like attachment downloads, email links and U2F. For U2F to work, the server must use HTTPS, you can use Let's Encrypt for free certs To use HTTPS, the recommended way is to put Vaultwarden behind a reverse proxy Details: - https://github.com/dani-garcia/vaultwarden/wiki/Enabling-HTTPS - https://github.com/dani-garcia/vaultwarden/wiki/Proxy-examples For development",
       "required": false,
       "mentions": [
@@ -2466,6 +2491,7 @@
           "name": "DOMAIN",
           "kind": "env_sample",
           "default": "http://localhost",
+          "commented": true,
           "text": "Domain settings The domain must match the address from where you access the server It's recommended to configure this value, otherwise certain functionality might not work, like attachment downloads, email links and U2F. For U2F to work, the server must use HTTPS, you can use Let's Encrypt for free certs To use HTTPS, the recommended way is to put Vaultwarden behind a reverse proxy Details: - https://github.com/dani-garcia/vaultwarden/wiki/Enabling-HTTPS - https://github.com/dani-garcia/vaultwarden/wiki/Proxy-examples For development",
           "location": {
             "file": ".env.template",
@@ -2476,6 +2502,7 @@
           "name": "DOMAIN",
           "kind": "env_sample",
           "default": "https://vw.domain.tld",
+          "commented": true,
           "text": "For public server",
           "location": {
             "file": ".env.template",
@@ -2486,6 +2513,7 @@
           "name": "DOMAIN",
           "kind": "env_sample",
           "default": "https://vw.domain.tld:8443",
+          "commented": true,
           "text": "For public server (URL with port number)",
           "location": {
             "file": ".env.template",
@@ -2496,6 +2524,7 @@
           "name": "DOMAIN",
           "kind": "env_sample",
           "default": "https://domain.tld/vw",
+          "commented": true,
           "text": "For public server (URL with path)",
           "location": {
             "file": ".env.template",
@@ -2515,7 +2544,7 @@
     },
     {
       "name": "DUO_CONTEXT_PURGE_SCHEDULE",
-      "default": "30 * * * * *",
+      "default": "",
       "description": "Cron schedule of the job that cleans expired Duo contexts from the database. Does nothing if Duo MFA is disabled. Defaults to every minute. Set blank to disable this job.",
       "required": false,
       "mentions": [
@@ -2523,6 +2552,7 @@
           "name": "DUO_CONTEXT_PURGE_SCHEDULE",
           "kind": "env_sample",
           "default": "30 * * * * *",
+          "commented": true,
           "text": "Cron schedule of the job that cleans expired Duo contexts from the database. Does nothing if Duo MFA is disabled. Defaults to every minute. Set blank to disable this job.",
           "location": {
             "file": ".env.template",
@@ -2533,7 +2563,7 @@
     },
     {
       "name": "DUO_HOST",
-      "default": "\u003cAPI Hostname\u003e",
+      "default": "",
       "description": "",
       "required": false,
       "mentions": [
@@ -2541,6 +2571,7 @@
           "name": "DUO_HOST",
           "kind": "env_sample",
           "default": "\u003cAPI Hostname\u003e",
+          "commented": true,
           "location": {
             "file": ".env.template",
             "line": 581
@@ -2550,7 +2581,7 @@
     },
     {
       "name": "DUO_IKEY",
-      "default": "\u003cClient ID\u003e",
+      "default": "",
       "description": "Duo Settings You need to configure the DUO_IKEY, DUO_SKEY, and DUO_HOST options to enable global Duo support. Otherwise users will need to configure it themselves. Create an account and protect an application as mentioned in this link (only the first step, not the rest): https://help.bitwarden.com/article/setup-two-step-login-duo/#create-a-duo-security-account Then set the following options, based on the values obtained from the last step:",
       "required": false,
       "mentions": [
@@ -2558,6 +2589,7 @@
           "name": "DUO_IKEY",
           "kind": "env_sample",
           "default": "\u003cClient ID\u003e",
+          "commented": true,
           "text": "Duo Settings You need to configure the DUO_IKEY, DUO_SKEY, and DUO_HOST options to enable global Duo support. Otherwise users will need to configure it themselves. Create an account and protect an application as mentioned in this link (only the first step, not the rest): https://help.bitwarden.com/article/setup-two-step-login-duo/#create-a-duo-security-account Then set the following options, based on the values obtained from the last step:",
           "location": {
             "file": ".env.template",
@@ -2568,7 +2600,7 @@
     },
     {
       "name": "DUO_SKEY",
-      "default": "\u003cClient Secret\u003e",
+      "default": "",
       "description": "",
       "required": false,
       "mentions": [
@@ -2576,6 +2608,7 @@
           "name": "DUO_SKEY",
           "kind": "env_sample",
           "default": "\u003cClient Secret\u003e",
+          "commented": true,
           "location": {
             "file": ".env.template",
             "line": 580
@@ -2585,7 +2618,7 @@
     },
     {
       "name": "EMAIL_2FA_AUTO_FALLBACK",
-      "default": "false",
+      "default": "",
       "description": "Automatically setup email 2FA as fallback provider when needed",
       "required": false,
       "mentions": [
@@ -2593,6 +2626,7 @@
           "name": "EMAIL_2FA_AUTO_FALLBACK",
           "kind": "env_sample",
           "default": "false",
+          "commented": true,
           "text": "Automatically setup email 2FA as fallback provider when needed",
           "location": {
             "file": ".env.template",
@@ -2603,7 +2637,7 @@
     },
     {
       "name": "EMAIL_2FA_ENFORCE_ON_VERIFIED_INVITE",
-      "default": "false",
+      "default": "",
       "description": "Setup email 2FA on registration regardless of any organization policy",
       "required": false,
       "mentions": [
@@ -2611,6 +2645,7 @@
           "name": "EMAIL_2FA_ENFORCE_ON_VERIFIED_INVITE",
           "kind": "env_sample",
           "default": "false",
+          "commented": true,
           "text": "Setup email 2FA on registration regardless of any organization policy",
           "location": {
             "file": ".env.template",
@@ -2621,7 +2656,7 @@
     },
     {
       "name": "EMAIL_ATTEMPTS_LIMIT",
-      "default": "3",
+      "default": "",
       "description": "Maximum attempts before an email token is reset and a new email will need to be sent.",
       "required": false,
       "mentions": [
@@ -2629,6 +2664,7 @@
           "name": "EMAIL_ATTEMPTS_LIMIT",
           "kind": "env_sample",
           "default": "3",
+          "commented": true,
           "text": "Maximum attempts before an email token is reset and a new email will need to be sent.",
           "location": {
             "file": ".env.template",
@@ -2639,7 +2675,7 @@
     },
     {
       "name": "EMAIL_CHANGE_ALLOWED",
-      "default": "true",
+      "default": "",
       "description": "Controls whether users can change their email. This setting applies globally to all users",
       "required": false,
       "mentions": [
@@ -2647,6 +2683,7 @@
           "name": "EMAIL_CHANGE_ALLOWED",
           "kind": "env_sample",
           "default": "true",
+          "commented": true,
           "text": "Controls whether users can change their email. This setting applies globally to all users",
           "location": {
             "file": ".env.template",
@@ -2657,7 +2694,7 @@
     },
     {
       "name": "EMAIL_EXPIRATION_TIME",
-      "default": "600",
+      "default": "",
       "description": "Token expiration time Maximum time in seconds a token is valid. The time the user has to open email client and copy token.",
       "required": false,
       "mentions": [
@@ -2665,6 +2702,7 @@
           "name": "EMAIL_EXPIRATION_TIME",
           "kind": "env_sample",
           "default": "600",
+          "commented": true,
           "text": "Token expiration time Maximum time in seconds a token is valid. The time the user has to open email client and copy token.",
           "location": {
             "file": ".env.template",
@@ -2675,7 +2713,7 @@
     },
     {
       "name": "EMAIL_TOKEN_SIZE",
-      "default": "6",
+      "default": "",
       "description": "Email 2FA settings Email token size Number of digits in an email 2FA token (min: 6, max: 255). Note that the Bitwarden clients are hardcoded to mention 6 digit codes regardless of this setting!",
       "required": false,
       "mentions": [
@@ -2683,6 +2721,7 @@
           "name": "EMAIL_TOKEN_SIZE",
           "kind": "env_sample",
           "default": "6",
+          "commented": true,
           "text": "Email 2FA settings Email token size Number of digits in an email 2FA token (min: 6, max: 255). Note that the Bitwarden clients are hardcoded to mention 6 digit codes regardless of this setting!",
           "location": {
             "file": ".env.template",
@@ -2693,7 +2732,7 @@
     },
     {
       "name": "EMERGENCY_ACCESS_ALLOWED",
-      "default": "true",
+      "default": "",
       "description": "Controls whether users can enable emergency access to their accounts. This setting applies globally to all users.",
       "required": false,
       "mentions": [
@@ -2701,6 +2740,7 @@
           "name": "EMERGENCY_ACCESS_ALLOWED",
           "kind": "env_sample",
           "default": "true",
+          "commented": true,
           "text": "Controls whether users can enable emergency access to their accounts. This setting applies globally to all users.",
           "location": {
             "file": ".env.template",
@@ -2711,7 +2751,7 @@
     },
     {
       "name": "EMERGENCY_NOTIFICATION_REMINDER_SCHEDULE",
-      "default": "0 3 * * * *",
+      "default": "",
       "description": "Cron schedule of the job that sends expiration reminders to emergency access grantors. Defaults to hourly (3 minutes after the hour). Set blank to disable this job.",
       "required": false,
       "mentions": [
@@ -2719,6 +2759,7 @@
           "name": "EMERGENCY_NOTIFICATION_REMINDER_SCHEDULE",
           "kind": "env_sample",
           "default": "0 3 * * * *",
+          "commented": true,
           "text": "Cron schedule of the job that sends expiration reminders to emergency access grantors. Defaults to hourly (3 minutes after the hour). Set blank to disable this job.",
           "location": {
             "file": ".env.template",
@@ -2729,7 +2770,7 @@
     },
     {
       "name": "EMERGENCY_REQUEST_TIMEOUT_SCHEDULE",
-      "default": "0 7 * * * *",
+      "default": "",
       "description": "Cron schedule of the job that grants emergency access requests that have met the required wait time. Defaults to hourly (7 minutes after the hour). Set blank to disable this job.",
       "required": false,
       "mentions": [
@@ -2737,6 +2778,7 @@
           "name": "EMERGENCY_REQUEST_TIMEOUT_SCHEDULE",
           "kind": "env_sample",
           "default": "0 7 * * * *",
+          "commented": true,
           "text": "Cron schedule of the job that grants emergency access requests that have met the required wait time. Defaults to hourly (7 minutes after the hour). Set blank to disable this job.",
           "location": {
             "file": ".env.template",
@@ -2747,7 +2789,7 @@
     },
     {
       "name": "ENABLE_DB_WAL",
-      "default": "true",
+      "default": "",
       "description": "Enable WAL for the DB Set to false to avoid enabling WAL during startup. Note that if the DB already has WAL enabled, you will also need to disable WAL in the DB, this setting only prevents Vaultwarden from automatically enabling it on start. Please read project wiki page about this setting first before changing the value as it can cause performance degradation or might render the service unable to start.",
       "required": false,
       "mentions": [
@@ -2755,6 +2797,7 @@
           "name": "ENABLE_DB_WAL",
           "kind": "env_sample",
           "default": "true",
+          "commented": true,
           "text": "Enable WAL for the DB Set to false to avoid enabling WAL during startup. Note that if the DB already has WAL enabled, you will also need to disable WAL in the DB, this setting only prevents Vaultwarden from automatically enabling it on start. Please read project wiki page about this setting first before changing the value as it can cause performance degradation or might render the service unable to start.",
           "location": {
             "file": ".env.template",
@@ -2765,7 +2808,7 @@
     },
     {
       "name": "ENABLE_WEBSOCKET",
-      "default": "true",
+      "default": "",
       "description": "Enable websocket notifications",
       "required": false,
       "mentions": [
@@ -2773,6 +2816,7 @@
           "name": "ENABLE_WEBSOCKET",
           "kind": "env_sample",
           "default": "true",
+          "commented": true,
           "text": "Enable websocket notifications",
           "location": {
             "file": ".env.template",
@@ -2783,7 +2827,7 @@
     },
     {
       "name": "ENFORCE_SINGLE_ORG_WITH_RESET_PW_POLICY",
-      "default": "false",
+      "default": "",
       "description": "Enforce Single Org with Reset Password Policy Enforce that the Single Org policy is enabled before setting the Reset Password policy Bitwarden enforces this by default. In Vaultwarden we encouraged to use multiple organizations because groups were not available. Setting this to true will enforce the Single Org Policy to be enabled before you can enable the Reset Password policy.",
       "required": false,
       "mentions": [
@@ -2791,6 +2835,7 @@
           "name": "ENFORCE_SINGLE_ORG_WITH_RESET_PW_POLICY",
           "kind": "env_sample",
           "default": "false",
+          "commented": true,
           "text": "Enforce Single Org with Reset Password Policy Enforce that the Single Org policy is enabled before setting the Reset Password policy Bitwarden enforces this by default. In Vaultwarden we encouraged to use multiple organizations because groups were not available. Setting this to true will enforce the Single Org Policy to be enabled before you can enable the Reset Password policy.",
           "location": {
             "file": ".env.template",
@@ -2808,6 +2853,7 @@
         {
           "name": "EVENTS_DAYS_RETAIN",
           "kind": "env_sample",
+          "commented": true,
           "text": "Number of days to retain events stored in the database. If unset (the default), events are kept indefinitely and the scheduled job is disabled!",
           "location": {
             "file": ".env.template",
@@ -2818,7 +2864,7 @@
     },
     {
       "name": "EVENT_CLEANUP_SCHEDULE",
-      "default": "0 10 0 * * *",
+      "default": "",
       "description": "Cron schedule of the job that cleans old events from the event table. Defaults to daily. Set blank to disable this job. Also without EVENTS_DAYS_RETAIN set, this job will not start.",
       "required": false,
       "mentions": [
@@ -2826,6 +2872,7 @@
           "name": "EVENT_CLEANUP_SCHEDULE",
           "kind": "env_sample",
           "default": "0 10 0 * * *",
+          "commented": true,
           "text": "Cron schedule of the job that cleans old events from the event table. Defaults to daily. Set blank to disable this job. Also without EVENTS_DAYS_RETAIN set, this job will not start.",
           "location": {
             "file": ".env.template",
@@ -2843,6 +2890,7 @@
         {
           "name": "EXPERIMENTAL_CLIENT_FEATURE_FLAGS",
           "kind": "env_sample",
+          "commented": true,
           "text": "Client Settings Enable experimental feature flags for clients. This is a comma-separated list of flags, e.g. \"flag1,flag2,flag3\". Note that clients cache the /api/config endpoint for about 1 hour and it could take some time before they are enabled or disabled! The following flags are available: - \"pm-5594-safari-account-switching\": Enable account switching in Safari. (Safari \u003e= 2026.2.0) - \"pm-32413-multi-client-password-management\": Enable changing the master password directly in the client. (Desktop/Extension \u003e= 2026.4.0) - \"ssh-agent-v2\": Enable newer SSH agent support. (Desktop \u003e= 2026.2.1) - \"windows-desktop-autotype\": Enable the autotype feature preview on Windows. (Desktop \u003e= 2025.8.0) - \"windows-desktop-autotype-ga\": Enable the new, still in development, autotype implementation on Windows. (Desktop \u003e= 2026.9.1) Only enable one of the two autotype flags, the clients disable autotype completely when both are enabled. - \"pm-30529-webauthn-related-origins\": - \"pm-32009-new-item-types\": Enable new item types: Bank Account, Driver's License, and Passport (Clients \u003e= 2026.4.0) - \"pm-34171-card-scanner\": Enable the new card scanner feature on mobile (Android \u003e= 2026.4.1, iOS \u003e= 2026.4.1) - \"enable-basic-auth-response\": Enable HTTP Basic Auth autofill in the browser extension (Browser \u003e= 2026.9.0) - \"undetermined-cipher-scenario-logic\": Enable the rewritten add/update login notification triggering logic in the browser extension (Browser \u003e= 2026.2.0) - \"biometrics-sdk-ipc\": Enable biometric unlock over the SDK IPC framework (Desktop \u003e= 2026.9.0, Browser \u003e= 2026.9.0)",
           "location": {
             "file": ".env.template",
@@ -2853,7 +2901,7 @@
     },
     {
       "name": "EXTENDED_LOGGING",
-      "default": "true",
+      "default": "",
       "description": "Enable extended logging, which shows timestamps and targets in the logs",
       "required": false,
       "mentions": [
@@ -2861,6 +2909,7 @@
           "name": "EXTENDED_LOGGING",
           "kind": "env_sample",
           "default": "true",
+          "commented": true,
           "text": "Enable extended logging, which shows timestamps and targets in the logs",
           "location": {
             "file": ".env.template",
@@ -2878,6 +2927,7 @@
         {
           "name": "HELO_NAME",
           "kind": "env_sample",
+          "commented": true,
           "text": "Server name sent during the SMTP HELO By default this value should be the machine's hostname, but might need to be changed in case it trips some anti-spam filters",
           "location": {
             "file": ".env.template",
@@ -2895,6 +2945,7 @@
         {
           "name": "HIBP_API_KEY",
           "kind": "env_sample",
+          "commented": true,
           "text": "HIBP Api Key HaveIBeenPwned API Key, request it here: https://haveibeenpwned.com/API/Key",
           "location": {
             "file": ".env.template",
@@ -2937,7 +2988,7 @@
     },
     {
       "name": "HTTP_REQUEST_BLOCK_NON_GLOBAL_IPS",
-      "default": "true",
+      "default": "",
       "description": "Enabling this will cause the internal HTTP client to refuse to connect to any non-global IP address. Useful to secure your internal environment: See https://en.wikipedia.org/wiki/Reserved_IP_addresses for a list of IPs which it will block",
       "required": false,
       "mentions": [
@@ -2945,6 +2996,7 @@
           "name": "HTTP_REQUEST_BLOCK_NON_GLOBAL_IPS",
           "kind": "env_sample",
           "default": "true",
+          "commented": true,
           "text": "Enabling this will cause the internal HTTP client to refuse to connect to any non-global IP address. Useful to secure your internal environment: See https://en.wikipedia.org/wiki/Reserved_IP_addresses for a list of IPs which it will block",
           "location": {
             "file": ".env.template",
@@ -2955,7 +3007,7 @@
     },
     {
       "name": "HTTP_REQUEST_BLOCK_REGEX",
-      "default": "^(192\\.168\\.0\\.[0-9]+|192\\.168\\.1\\.[0-9]+)$",
+      "default": "",
       "description": "Block HTTP domains/IPs by Regex Any domains or IPs that match this regex won't be fetched by the internal HTTP client. Useful to hide other servers in the local network. Check the WIKI for more details NOTE: Always enclose this regex within single quotes!",
       "required": false,
       "mentions": [
@@ -2963,6 +3015,7 @@
           "name": "HTTP_REQUEST_BLOCK_REGEX",
           "kind": "env_sample",
           "default": "^(192\\.168\\.0\\.[0-9]+|192\\.168\\.1\\.[0-9]+)$",
+          "commented": true,
           "text": "Block HTTP domains/IPs by Regex Any domains or IPs that match this regex won't be fetched by the internal HTTP client. Useful to hide other servers in the local network. Check the WIKI for more details NOTE: Always enclose this regex within single quotes!",
           "location": {
             "file": ".env.template",
@@ -2973,7 +3026,7 @@
     },
     {
       "name": "ICON_CACHE_FOLDER",
-      "default": "data/icon_cache",
+      "default": "",
       "description": "",
       "required": false,
       "mentions": [
@@ -2981,6 +3034,7 @@
           "name": "ICON_CACHE_FOLDER",
           "kind": "env_sample",
           "default": "data/icon_cache",
+          "commented": true,
           "location": {
             "file": ".env.template",
             "line": 30
@@ -2990,7 +3044,7 @@
     },
     {
       "name": "ICON_CACHE_NEGTTL",
-      "default": "259200",
+      "default": "",
       "description": "Cache time-to-live for icons which weren't available, in seconds (0 is \"forever\") Default: 259200 (3 days)",
       "required": false,
       "mentions": [
@@ -2998,6 +3052,7 @@
           "name": "ICON_CACHE_NEGTTL",
           "kind": "env_sample",
           "default": "259200",
+          "commented": true,
           "text": "Cache time-to-live for icons which weren't available, in seconds (0 is \"forever\") Default: 259200 (3 days)",
           "location": {
             "file": ".env.template",
@@ -3008,7 +3063,7 @@
     },
     {
       "name": "ICON_CACHE_TTL",
-      "default": "2592000",
+      "default": "",
       "description": "Cache time-to-live for successfully obtained icons, in seconds (0 is \"forever\") Default: 2592000 (30 days)",
       "required": false,
       "mentions": [
@@ -3016,6 +3071,7 @@
           "name": "ICON_CACHE_TTL",
           "kind": "env_sample",
           "default": "2592000",
+          "commented": true,
           "text": "Cache time-to-live for successfully obtained icons, in seconds (0 is \"forever\") Default: 2592000 (30 days)",
           "location": {
             "file": ".env.template",
@@ -3026,7 +3082,7 @@
     },
     {
       "name": "ICON_DOWNLOAD_TIMEOUT",
-      "default": "10",
+      "default": "",
       "description": "Icon download timeout Configure the timeout value when downloading the favicons. The default is 10 seconds, but this could be too low on slower network connections",
       "required": false,
       "mentions": [
@@ -3034,6 +3090,7 @@
           "name": "ICON_DOWNLOAD_TIMEOUT",
           "kind": "env_sample",
           "default": "10",
+          "commented": true,
           "text": "Icon download timeout Configure the timeout value when downloading the favicons. The default is 10 seconds, but this could be too low on slower network connections",
           "location": {
             "file": ".env.template",
@@ -3044,7 +3101,7 @@
     },
     {
       "name": "ICON_REDIRECT_CODE",
-      "default": "302",
+      "default": "",
       "description": "Icon redirect code The HTTP status code to use for redirects to an external icon service. The supported codes are 301 (legacy permanent), 302 (legacy temporary), 307 (temporary), and 308 (permanent). Temporary redirects are useful while testing different icon services, but once a service has been decided on, consider using permanent redirects for cacheability. The legacy codes are currently better supported by the Bitwarden clients.",
       "required": false,
       "mentions": [
@@ -3052,6 +3109,7 @@
           "name": "ICON_REDIRECT_CODE",
           "kind": "env_sample",
           "default": "302",
+          "commented": true,
           "text": "Icon redirect code The HTTP status code to use for redirects to an external icon service. The supported codes are 301 (legacy permanent), 302 (legacy temporary), 307 (temporary), and 308 (permanent). Temporary redirects are useful while testing different icon services, but once a service has been decided on, consider using permanent redirects for cacheability. The legacy codes are currently better supported by the Bitwarden clients.",
           "location": {
             "file": ".env.template",
@@ -3062,7 +3120,7 @@
     },
     {
       "name": "ICON_SERVICE",
-      "default": "internal",
+      "default": "",
       "description": "Icon service The predefined icon services are: internal, bitwarden, duckduckgo, google. To specify a custom icon service, set a URL template with exactly one instance of `{}`, which is replaced with the domain. For example: `https://icon.example.com/domain/{}`. `internal` refers to Vaultwarden's built-in icon fetching implementation. If an external service is set, an icon request to Vaultwarden will return an HTTP redirect to the corresponding icon at the external service. An external service may be useful if your Vaultwarden instance has no external network connectivity, or if you are concerned that someone may probe your instance to try to detect whether icons for certain sites have been cached.",
       "required": false,
       "mentions": [
@@ -3070,6 +3128,7 @@
           "name": "ICON_SERVICE",
           "kind": "env_sample",
           "default": "internal",
+          "commented": true,
           "text": "Icon service The predefined icon services are: internal, bitwarden, duckduckgo, google. To specify a custom icon service, set a URL template with exactly one instance of `{}`, which is replaced with the domain. For example: `https://icon.example.com/domain/{}`. `internal` refers to Vaultwarden's built-in icon fetching implementation. If an external service is set, an icon request to Vaultwarden will return an HTTP redirect to the corresponding icon at the external service. An external service may be useful if your Vaultwarden instance has no external network connectivity, or if you are concerned that someone may probe your instance to try to detect whether icons for certain sites have been cached.",
           "location": {
             "file": ".env.template",
@@ -3080,7 +3139,7 @@
     },
     {
       "name": "INCOMPLETE_2FA_SCHEDULE",
-      "default": "30 * * * * *",
+      "default": "",
       "description": "Cron schedule of the job that checks for incomplete 2FA logins. Defaults to once every minute. Set blank to disable this job.",
       "required": false,
       "mentions": [
@@ -3088,6 +3147,7 @@
           "name": "INCOMPLETE_2FA_SCHEDULE",
           "kind": "env_sample",
           "default": "30 * * * * *",
+          "commented": true,
           "text": "Cron schedule of the job that checks for incomplete 2FA logins. Defaults to once every minute. Set blank to disable this job.",
           "location": {
             "file": ".env.template",
@@ -3098,7 +3158,7 @@
     },
     {
       "name": "INCOMPLETE_2FA_TIME_LIMIT",
-      "default": "3",
+      "default": "",
       "description": "Number of minutes to wait before a 2FA-enabled login is considered incomplete, resulting in an email notification. An incomplete 2FA login is one where the correct master password was provided but the required 2FA step was not completed, which potentially indicates a master password compromise. Set to 0 to disable this check. This setting applies globally to all users.",
       "required": false,
       "mentions": [
@@ -3106,6 +3166,7 @@
           "name": "INCOMPLETE_2FA_TIME_LIMIT",
           "kind": "env_sample",
           "default": "3",
+          "commented": true,
           "text": "Number of minutes to wait before a 2FA-enabled login is considered incomplete, resulting in an email notification. An incomplete 2FA login is one where the correct master password was provided but the required 2FA step was not completed, which potentially indicates a master password compromise. Set to 0 to disable this check. This setting applies globally to all users.",
           "location": {
             "file": ".env.template",
@@ -3116,7 +3177,7 @@
     },
     {
       "name": "INCREASE_NOTE_SIZE_LIMIT",
-      "default": "false",
+      "default": "",
       "description": "Increase secure note size limit (Know the risks!) Sets the secure note size limit to 100_000 instead of the default 10_000. WARNING: This could cause issues with clients. Also exports will not work on Bitwarden servers! KNOW WHAT YOU ARE DOING!",
       "required": false,
       "mentions": [
@@ -3124,6 +3185,7 @@
           "name": "INCREASE_NOTE_SIZE_LIMIT",
           "kind": "env_sample",
           "default": "false",
+          "commented": true,
           "text": "Increase secure note size limit (Know the risks!) Sets the secure note size limit to 100_000 instead of the default 10_000. WARNING: This could cause issues with clients. Also exports will not work on Bitwarden servers! KNOW WHAT YOU ARE DOING!",
           "location": {
             "file": ".env.template",
@@ -3134,7 +3196,7 @@
     },
     {
       "name": "INVITATIONS_ALLOWED",
-      "default": "true",
+      "default": "",
       "description": "Allows org admins to invite users, even when signups are disabled",
       "required": false,
       "mentions": [
@@ -3142,6 +3204,7 @@
           "name": "INVITATIONS_ALLOWED",
           "kind": "env_sample",
           "default": "true",
+          "commented": true,
           "text": "Allows org admins to invite users, even when signups are disabled",
           "location": {
             "file": ".env.template",
@@ -3152,7 +3215,7 @@
     },
     {
       "name": "INVITATION_EXPIRATION_HOURS",
-      "default": "120",
+      "default": "",
       "description": "The number of hours after which an organization invite token, emergency access invite token, email verification token and deletion request token will expire (must be at least 1)",
       "required": false,
       "mentions": [
@@ -3160,6 +3223,7 @@
           "name": "INVITATION_EXPIRATION_HOURS",
           "kind": "env_sample",
           "default": "120",
+          "commented": true,
           "text": "The number of hours after which an organization invite token, emergency access invite token, email verification token and deletion request token will expire (must be at least 1)",
           "location": {
             "file": ".env.template",
@@ -3170,7 +3234,7 @@
     },
     {
       "name": "INVITATION_ORG_NAME",
-      "default": "Vaultwarden",
+      "default": "",
       "description": "Name shown in the invitation emails that don't come from a specific organization",
       "required": false,
       "mentions": [
@@ -3178,6 +3242,7 @@
           "name": "INVITATION_ORG_NAME",
           "kind": "env_sample",
           "default": "Vaultwarden",
+          "commented": true,
           "text": "Name shown in the invitation emails that don't come from a specific organization",
           "location": {
             "file": ".env.template",
@@ -3188,7 +3253,7 @@
     },
     {
       "name": "IP_HEADER",
-      "default": "X-Real-IP",
+      "default": "",
       "description": "Client IP Header, used to identify the IP of the client, defaults to \"X-Real-IP\" Set to the string \"none\" (without quotes), to disable any headers and just use the remote IP",
       "required": false,
       "mentions": [
@@ -3196,6 +3261,7 @@
           "name": "IP_HEADER",
           "kind": "env_sample",
           "default": "X-Real-IP",
+          "commented": true,
           "text": "Client IP Header, used to identify the IP of the client, defaults to \"X-Real-IP\" Set to the string \"none\" (without quotes), to disable any headers and just use the remote IP",
           "location": {
             "file": ".env.template",
@@ -3206,7 +3272,7 @@
     },
     {
       "name": "IP_HEADER_TRUSTED_PROXIES",
-      "default": "local",
+      "default": "",
       "description": "Which addresses the header above is accepted from, defaults to \"local\". Anyone able to reach Vaultwarden can set the header, and the client IP is used for the login and admin rate limits, so it is only trusted when the request comes from a proxy listed here. \"local\" accepts it from any non global address, which covers a reverse proxy running on the same host or container network. Use \"all\" to accept it from anywhere, or list the addresses of your proxy as IPs and CIDR ranges if it connects from a public address. For a list header like X-Forwarded-For, the client IP is the rightmost address that isn't one of these proxies, so with several proxies in a row (a CDN in front of nginx, for example) list all of them.",
       "required": false,
       "mentions": [
@@ -3214,6 +3280,7 @@
           "name": "IP_HEADER_TRUSTED_PROXIES",
           "kind": "env_sample",
           "default": "local",
+          "commented": true,
           "text": "Which addresses the header above is accepted from, defaults to \"local\". Anyone able to reach Vaultwarden can set the header, and the client IP is used for the login and admin rate limits, so it is only trusted when the request comes from a proxy listed here. \"local\" accepts it from any non global address, which covers a reverse proxy running on the same host or container network. Use \"all\" to accept it from anywhere, or list the addresses of your proxy as IPs and CIDR ranges if it connects from a public address. For a list header like X-Forwarded-For, the client IP is the rightmost address that isn't one of these proxies, so with several proxies in a row (a CDN in front of nginx, for example) list all of them.",
           "location": {
             "file": ".env.template",
@@ -3258,7 +3325,7 @@
     },
     {
       "name": "JOB_POLL_INTERVAL_MS",
-      "default": "30000",
+      "default": "",
       "description": "Job scheduler settings Job schedules use a cron-like syntax (as parsed by https://crates.io/crates/cron), and are always in terms of UTC time (regardless of your local time zone settings). The schedule format is a bit different from crontab as crontab does not contains seconds. You can test the format here: https://crontab.guru, but remove the first digit! SEC  MIN   HOUR   DAY OF MONTH    MONTH   DAY OF WEEK \"0   30   9,12,15     1,15       May-Aug  Mon,Wed,Fri\" \"0   30     *          *            *          *     \" \"0   30     1          *            *          *     \" How often (in ms) the job scheduler thread checks for jobs that need running. Set to 0 to globally disable scheduled jobs.",
       "required": false,
       "mentions": [
@@ -3266,6 +3333,7 @@
           "name": "JOB_POLL_INTERVAL_MS",
           "kind": "env_sample",
           "default": "30000",
+          "commented": true,
           "text": "Job scheduler settings Job schedules use a cron-like syntax (as parsed by https://crates.io/crates/cron), and are always in terms of UTC time (regardless of your local time zone settings). The schedule format is a bit different from crontab as crontab does not contains seconds. You can test the format here: https://crontab.guru, but remove the first digit! SEC  MIN   HOUR   DAY OF MONTH    MONTH   DAY OF WEEK \"0   30   9,12,15     1,15       May-Aug  Mon,Wed,Fri\" \"0   30     *          *            *          *     \" \"0   30     1          *            *          *     \" How often (in ms) the job scheduler thread checks for jobs that need running. Set to 0 to globally disable scheduled jobs.",
           "location": {
             "file": ".env.template",
@@ -3276,7 +3344,7 @@
     },
     {
       "name": "LOGIN_RATELIMIT_MAX_BURST",
-      "default": "10",
+      "default": "",
       "description": "Allow a burst of requests of up to this size, while maintaining the average indicated by `LOGIN_RATELIMIT_SECONDS`. Note that this applies to both the login and the 2FA, so it's recommended to allow a burst size of at least 2.",
       "required": false,
       "mentions": [
@@ -3284,6 +3352,7 @@
           "name": "LOGIN_RATELIMIT_MAX_BURST",
           "kind": "env_sample",
           "default": "10",
+          "commented": true,
           "text": "Allow a burst of requests of up to this size, while maintaining the average indicated by `LOGIN_RATELIMIT_SECONDS`. Note that this applies to both the login and the 2FA, so it's recommended to allow a burst size of at least 2.",
           "location": {
             "file": ".env.template",
@@ -3294,7 +3363,7 @@
     },
     {
       "name": "LOGIN_RATELIMIT_SECONDS",
-      "default": "60",
+      "default": "",
       "description": "Number of seconds, on average, between login requests from the same IP address before rate limiting kicks in.",
       "required": false,
       "mentions": [
@@ -3302,6 +3371,7 @@
           "name": "LOGIN_RATELIMIT_SECONDS",
           "kind": "env_sample",
           "default": "60",
+          "commented": true,
           "text": "Number of seconds, on average, between login requests from the same IP address before rate limiting kicks in.",
           "location": {
             "file": ".env.template",
@@ -3312,7 +3382,7 @@
     },
     {
       "name": "LOG_FILE",
-      "default": "/path/to/log",
+      "default": "",
       "description": "Logging to file",
       "required": false,
       "mentions": [
@@ -3320,6 +3390,7 @@
           "name": "LOG_FILE",
           "kind": "env_sample",
           "default": "/path/to/log",
+          "commented": true,
           "text": "Logging to file",
           "location": {
             "file": ".env.template",
@@ -3330,7 +3401,7 @@
     },
     {
       "name": "LOG_LEVEL",
-      "default": "info",
+      "default": "",
       "description": "Log level Change the verbosity of the log output Valid values are \"trace\", \"debug\", \"info\", \"warn\", \"error\" and \"off\" Setting it to \"trace\" or \"debug\" would also show logs for mounted routes and static file, websocket and alive requests For a specific module append a comma separated `path::to::module=log_level` For example, to only see debug logs for icons use: LOG_LEVEL=\"info,vaultwarden::api::icons=debug\"",
       "required": false,
       "mentions": [
@@ -3338,6 +3409,7 @@
           "name": "LOG_LEVEL",
           "kind": "env_sample",
           "default": "info",
+          "commented": true,
           "text": "Log level Change the verbosity of the log output Valid values are \"trace\", \"debug\", \"info\", \"warn\", \"error\" and \"off\" Setting it to \"trace\" or \"debug\" would also show logs for mounted routes and static file, websocket and alive requests For a specific module append a comma separated `path::to::module=log_level` For example, to only see debug logs for icons use: LOG_LEVEL=\"info,vaultwarden::api::icons=debug\"",
           "location": {
             "file": ".env.template",
@@ -3348,7 +3420,7 @@
     },
     {
       "name": "LOG_TIMESTAMP_FORMAT",
-      "default": "%Y-%m-%d %H:%M:%S.%3f",
+      "default": "",
       "description": "Timestamp format used in extended logging. Format specifiers: https://docs.rs/chrono/latest/chrono/format/strftime",
       "required": false,
       "mentions": [
@@ -3356,6 +3428,7 @@
           "name": "LOG_TIMESTAMP_FORMAT",
           "kind": "env_sample",
           "default": "%Y-%m-%d %H:%M:%S.%3f",
+          "commented": true,
           "text": "Timestamp format used in extended logging. Format specifiers: https://docs.rs/chrono/latest/chrono/format/strftime",
           "location": {
             "file": ".env.template",
@@ -3373,6 +3446,7 @@
         {
           "name": "ORG_ATTACHMENT_LIMIT",
           "kind": "env_sample",
+          "commented": true,
           "text": "Per-organization attachment storage limit (KB) Max kilobytes of attachment storage allowed per organization. When this limit is reached, organization members will not be allowed to upload further attachments for ciphers owned by that organization.",
           "location": {
             "file": ".env.template",
@@ -3383,13 +3457,14 @@
     },
     {
       "name": "ORG_CREATION_USERS",
-      "default": "none",
+      "default": "",
       "description": "Controls which users can create new orgs. Blank or 'all' means all users can create orgs (this is the default):",
       "required": false,
       "mentions": [
         {
           "name": "ORG_CREATION_USERS",
           "kind": "env_sample",
+          "commented": true,
           "text": "Controls which users can create new orgs. Blank or 'all' means all users can create orgs (this is the default):",
           "location": {
             "file": ".env.template",
@@ -3400,6 +3475,7 @@
           "name": "ORG_CREATION_USERS",
           "kind": "env_sample",
           "default": "none",
+          "commented": true,
           "text": "'none' means no users can create orgs:",
           "location": {
             "file": ".env.template",
@@ -3410,6 +3486,7 @@
           "name": "ORG_CREATION_USERS",
           "kind": "env_sample",
           "default": "admin1@example.com,admin2@example.com",
+          "commented": true,
           "text": "A comma-separated list means only those users can create orgs:",
           "location": {
             "file": ".env.template",
@@ -3420,7 +3497,7 @@
     },
     {
       "name": "ORG_EVENTS_ENABLED",
-      "default": "false",
+      "default": "",
       "description": "Controls whether event logging is enabled for organizations This setting applies to organizations. Disabled by default. Also check the EVENT_CLEANUP_SCHEDULE and EVENTS_DAYS_RETAIN settings.",
       "required": false,
       "mentions": [
@@ -3428,6 +3505,7 @@
           "name": "ORG_EVENTS_ENABLED",
           "kind": "env_sample",
           "default": "false",
+          "commented": true,
           "text": "Controls whether event logging is enabled for organizations This setting applies to organizations. Disabled by default. Also check the EVENT_CLEANUP_SCHEDULE and EVENTS_DAYS_RETAIN settings.",
           "location": {
             "file": ".env.template",
@@ -3438,7 +3516,7 @@
     },
     {
       "name": "ORG_GROUPS_ENABLED",
-      "default": "false",
+      "default": "",
       "description": "BETA FEATURE: Groups Controls whether group support is enabled for organizations This setting applies to organizations. Disabled by default because this is a beta feature, it contains known issues! KNOW WHAT YOU ARE DOING!",
       "required": false,
       "mentions": [
@@ -3446,6 +3524,7 @@
           "name": "ORG_GROUPS_ENABLED",
           "kind": "env_sample",
           "default": "false",
+          "commented": true,
           "text": "BETA FEATURE: Groups Controls whether group support is enabled for organizations This setting applies to organizations. Disabled by default because this is a beta feature, it contains known issues! KNOW WHAT YOU ARE DOING!",
           "location": {
             "file": ".env.template",
@@ -3456,7 +3535,7 @@
     },
     {
       "name": "PASSWORD_HINTS_ALLOWED",
-      "default": "true",
+      "default": "",
       "description": "Controls whether users can set or show password hints. This setting applies globally to all users.",
       "required": false,
       "mentions": [
@@ -3464,6 +3543,7 @@
           "name": "PASSWORD_HINTS_ALLOWED",
           "kind": "env_sample",
           "default": "true",
+          "commented": true,
           "text": "Controls whether users can set or show password hints. This setting applies globally to all users.",
           "location": {
             "file": ".env.template",
@@ -3474,7 +3554,7 @@
     },
     {
       "name": "PASSWORD_ITERATIONS",
-      "default": "600000",
+      "default": "",
       "description": "Number of server-side passwords hashing iterations for the password hash. The default for new users. If changed, it will be updated during login for existing users.",
       "required": false,
       "mentions": [
@@ -3482,6 +3562,7 @@
           "name": "PASSWORD_ITERATIONS",
           "kind": "env_sample",
           "default": "600000",
+          "commented": true,
           "text": "Number of server-side passwords hashing iterations for the password hash. The default for new users. If changed, it will be updated during login for existing users.",
           "location": {
             "file": ".env.template",
@@ -3492,7 +3573,7 @@
     },
     {
       "name": "PURGE_INCOMPLETE_SSO_AUTH",
-      "default": "0 20 0 * * *",
+      "default": "",
       "description": "Cron schedule of the job that cleans sso auth from incomplete flow Defaults to daily (20 minutes after midnight). Set blank to disable this job.",
       "required": false,
       "mentions": [
@@ -3500,6 +3581,7 @@
           "name": "PURGE_INCOMPLETE_SSO_AUTH",
           "kind": "env_sample",
           "default": "0 20 0 * * *",
+          "commented": true,
           "text": "Cron schedule of the job that cleans sso auth from incomplete flow Defaults to daily (20 minutes after midnight). Set blank to disable this job.",
           "location": {
             "file": ".env.template",
@@ -3510,7 +3592,7 @@
     },
     {
       "name": "PUSH_ENABLED",
-      "default": "false",
+      "default": "",
       "description": "Enables push notifications (requires key and id from https://bitwarden.com/host) Details about mobile client push notification: - https://github.com/dani-garcia/vaultwarden/wiki/Enabling-Mobile-Client-push-notification",
       "required": false,
       "mentions": [
@@ -3518,6 +3600,7 @@
           "name": "PUSH_ENABLED",
           "kind": "env_sample",
           "default": "false",
+          "commented": true,
           "text": "Enables push notifications (requires key and id from https://bitwarden.com/host) Details about mobile client push notification: - https://github.com/dani-garcia/vaultwarden/wiki/Enabling-Mobile-Client-push-notification",
           "location": {
             "file": ".env.template",
@@ -3528,7 +3611,7 @@
     },
     {
       "name": "PUSH_IDENTITY_URI",
-      "default": "https://identity.bitwarden.com",
+      "default": "",
       "description": "",
       "required": false,
       "mentions": [
@@ -3536,6 +3619,7 @@
           "name": "PUSH_IDENTITY_URI",
           "kind": "env_sample",
           "default": "https://identity.bitwarden.com",
+          "commented": true,
           "location": {
             "file": ".env.template",
             "line": 126
@@ -3545,6 +3629,7 @@
           "name": "PUSH_IDENTITY_URI",
           "kind": "env_sample",
           "default": "https://identity.bitwarden.eu",
+          "commented": true,
           "location": {
             "file": ".env.template",
             "line": 130
@@ -3554,7 +3639,7 @@
     },
     {
       "name": "PUSH_INSTALLATION_ID",
-      "default": "CHANGEME",
+      "default": "",
       "description": "",
       "required": false,
       "mentions": [
@@ -3562,6 +3647,7 @@
           "name": "PUSH_INSTALLATION_ID",
           "kind": "env_sample",
           "default": "CHANGEME",
+          "commented": true,
           "location": {
             "file": ".env.template",
             "line": 120
@@ -3571,7 +3657,7 @@
     },
     {
       "name": "PUSH_INSTALLATION_KEY",
-      "default": "CHANGEME",
+      "default": "",
       "description": "",
       "required": false,
       "mentions": [
@@ -3579,6 +3665,7 @@
           "name": "PUSH_INSTALLATION_KEY",
           "kind": "env_sample",
           "default": "CHANGEME",
+          "commented": true,
           "location": {
             "file": ".env.template",
             "line": 121
@@ -3588,7 +3675,7 @@
     },
     {
       "name": "PUSH_RELAY_URI",
-      "default": "https://push.bitwarden.com",
+      "default": "",
       "description": "WARNING: Do not modify the following settings unless you fully understand their implications! Default Push Relay and Identity URIs",
       "required": false,
       "mentions": [
@@ -3596,6 +3683,7 @@
           "name": "PUSH_RELAY_URI",
           "kind": "env_sample",
           "default": "https://push.bitwarden.com",
+          "commented": true,
           "text": "WARNING: Do not modify the following settings unless you fully understand their implications! Default Push Relay and Identity URIs",
           "location": {
             "file": ".env.template",
@@ -3606,6 +3694,7 @@
           "name": "PUSH_RELAY_URI",
           "kind": "env_sample",
           "default": "https://api.bitwarden.eu",
+          "commented": true,
           "text": "European Union Data Region Settings If you have selected \"European Union\" as your data region, use the following URIs instead.",
           "location": {
             "file": ".env.template",
@@ -3616,7 +3705,7 @@
     },
     {
       "name": "RELOAD_TEMPLATES",
-      "default": "false",
+      "default": "",
       "description": "Automatically reload the templates for every request, slow, use only for development",
       "required": false,
       "mentions": [
@@ -3624,6 +3713,7 @@
           "name": "RELOAD_TEMPLATES",
           "kind": "env_sample",
           "default": "false",
+          "commented": true,
           "text": "Automatically reload the templates for every request, slow, use only for development",
           "location": {
             "file": ".env.template",
@@ -3634,7 +3724,7 @@
     },
     {
       "name": "REQUIRE_DEVICE_EMAIL",
-      "default": "false",
+      "default": "",
       "description": "Require new device emails. When a user logs in an email is required to be sent. If sending the email fails the login attempt will fail!!",
       "required": false,
       "mentions": [
@@ -3642,6 +3732,7 @@
           "name": "REQUIRE_DEVICE_EMAIL",
           "kind": "env_sample",
           "default": "false",
+          "commented": true,
           "text": "Require new device emails. When a user logs in an email is required to be sent. If sending the email fails the login attempt will fail!!",
           "location": {
             "file": ".env.template",
@@ -3660,6 +3751,7 @@
           "name": "ROCKET_ADDRESS",
           "kind": "env_sample",
           "default": "0.0.0.0",
+          "commented": true,
           "text": "Rocket specific settings See https://rocket.rs/v0.5/guide/configuration/ for more details.",
           "location": {
             "file": ".env.template",
@@ -3697,7 +3789,7 @@
     },
     {
       "name": "ROCKET_PORT",
-      "default": "8000",
+      "default": "80",
       "description": "The default port is 8000, unless running in a Docker container, in which case it is 80.",
       "required": false,
       "mentions": [
@@ -3705,6 +3797,7 @@
           "name": "ROCKET_PORT",
           "kind": "env_sample",
           "default": "8000",
+          "commented": true,
           "text": "The default port is 8000, unless running in a Docker container, in which case it is 80.",
           "location": {
             "file": ".env.template",
@@ -3777,7 +3870,7 @@
     },
     {
       "name": "ROCKET_TLS",
-      "default": "{certs=\"/path/to/certs.pem\",key=\"/path/to/key.pem\"}",
+      "default": "",
       "description": "",
       "required": false,
       "mentions": [
@@ -3785,6 +3878,7 @@
           "name": "ROCKET_TLS",
           "kind": "env_sample",
           "default": "{certs=\"/path/to/certs.pem\",key=\"/path/to/key.pem\"}",
+          "commented": true,
           "location": {
             "file": ".env.template",
             "line": 687
@@ -3810,7 +3904,7 @@
     },
     {
       "name": "RSA_KEY_FILENAME",
-      "default": "data/rsa_key",
+      "default": "",
       "description": "Individual folders, these override %DATA_FOLDER%",
       "required": false,
       "mentions": [
@@ -3818,6 +3912,7 @@
           "name": "RSA_KEY_FILENAME",
           "kind": "env_sample",
           "default": "data/rsa_key",
+          "commented": true,
           "text": "Individual folders, these override %DATA_FOLDER%",
           "location": {
             "file": ".env.template",
@@ -3828,7 +3923,7 @@
     },
     {
       "name": "SENDMAIL_COMMAND",
-      "default": "/path/to/sendmail",
+      "default": "",
       "description": "Which sendmail command to use. The one found in the $PATH is used if not specified.",
       "required": false,
       "mentions": [
@@ -3836,6 +3931,7 @@
           "name": "SENDMAIL_COMMAND",
           "kind": "env_sample",
           "default": "/path/to/sendmail",
+          "commented": true,
           "text": "Which sendmail command to use. The one found in the $PATH is used if not specified.",
           "location": {
             "file": ".env.template",
@@ -3846,7 +3942,7 @@
     },
     {
       "name": "SENDS_ALLOWED",
-      "default": "true",
+      "default": "",
       "description": "Controls whether users are allowed to create Bitwarden Sends. This setting applies globally to all users. To control this on a per-org basis instead, use the \"Disable Send\" org policy.",
       "required": false,
       "mentions": [
@@ -3854,6 +3950,7 @@
           "name": "SENDS_ALLOWED",
           "kind": "env_sample",
           "default": "true",
+          "commented": true,
           "text": "Controls whether users are allowed to create Bitwarden Sends. This setting applies globally to all users. To control this on a per-org basis instead, use the \"Disable Send\" org policy.",
           "location": {
             "file": ".env.template",
@@ -3864,7 +3961,7 @@
     },
     {
       "name": "SENDS_FOLDER",
-      "default": "data/sends",
+      "default": "",
       "description": "",
       "required": false,
       "mentions": [
@@ -3872,6 +3969,7 @@
           "name": "SENDS_FOLDER",
           "kind": "env_sample",
           "default": "data/sends",
+          "commented": true,
           "location": {
             "file": ".env.template",
             "line": 32
@@ -3881,7 +3979,7 @@
     },
     {
       "name": "SEND_PURGE_SCHEDULE",
-      "default": "0 5 * * * *",
+      "default": "",
       "description": "Cron schedule of the job that checks for Sends past their deletion date. Defaults to hourly (5 minutes after the hour). Set blank to disable this job.",
       "required": false,
       "mentions": [
@@ -3889,6 +3987,7 @@
           "name": "SEND_PURGE_SCHEDULE",
           "kind": "env_sample",
           "default": "0 5 * * * *",
+          "commented": true,
           "text": "Cron schedule of the job that checks for Sends past their deletion date. Defaults to hourly (5 minutes after the hour). Set blank to disable this job.",
           "location": {
             "file": ".env.template",
@@ -3899,7 +3998,7 @@
     },
     {
       "name": "SHOW_PASSWORD_HINT",
-      "default": "false",
+      "default": "",
       "description": "Controls whether a password hint should be shown directly in the web page if SMTP service is not configured and password hints are allowed. Not recommended for publicly-accessible instances because this provides unauthenticated access to potentially sensitive data.",
       "required": false,
       "mentions": [
@@ -3907,6 +4006,7 @@
           "name": "SHOW_PASSWORD_HINT",
           "kind": "env_sample",
           "default": "false",
+          "commented": true,
           "text": "Controls whether a password hint should be shown directly in the web page if SMTP service is not configured and password hints are allowed. Not recommended for publicly-accessible instances because this provides unauthenticated access to potentially sensitive data.",
           "location": {
             "file": ".env.template",
@@ -3917,7 +4017,7 @@
     },
     {
       "name": "SIGNUPS_ALLOWED",
-      "default": "true",
+      "default": "",
       "description": "Controls if new users can register",
       "required": false,
       "mentions": [
@@ -3925,6 +4025,7 @@
           "name": "SIGNUPS_ALLOWED",
           "kind": "env_sample",
           "default": "true",
+          "commented": true,
           "text": "Controls if new users can register",
           "location": {
             "file": ".env.template",
@@ -3935,7 +4036,7 @@
     },
     {
       "name": "SIGNUPS_DOMAINS_WHITELIST",
-      "default": "example.com,example.net,example.org",
+      "default": "",
       "description": "Controls if new users from a list of comma-separated domains can register even if SIGNUPS_ALLOWED is set to false",
       "required": false,
       "mentions": [
@@ -3943,6 +4044,7 @@
           "name": "SIGNUPS_DOMAINS_WHITELIST",
           "kind": "env_sample",
           "default": "example.com,example.net,example.org",
+          "commented": true,
           "text": "Controls if new users from a list of comma-separated domains can register even if SIGNUPS_ALLOWED is set to false",
           "location": {
             "file": ".env.template",
@@ -3953,7 +4055,7 @@
     },
     {
       "name": "SIGNUPS_VERIFY",
-      "default": "false",
+      "default": "",
       "description": "Controls if new users need to verify their email address upon registration On new client versions, this will require the user to verify their email at signup time. On older clients, it will require the user to verify their email before they can log in. The welcome email will include a verification link, and login attempts will periodically trigger another verification email to be sent.",
       "required": false,
       "mentions": [
@@ -3961,6 +4063,7 @@
           "name": "SIGNUPS_VERIFY",
           "kind": "env_sample",
           "default": "false",
+          "commented": true,
           "text": "Controls if new users need to verify their email address upon registration On new client versions, this will require the user to verify their email at signup time. On older clients, it will require the user to verify their email before they can log in. The welcome email will include a verification link, and login attempts will periodically trigger another verification email to be sent.",
           "location": {
             "file": ".env.template",
@@ -3971,7 +4074,7 @@
     },
     {
       "name": "SIGNUPS_VERIFY_RESEND_LIMIT",
-      "default": "6",
+      "default": "",
       "description": "If SIGNUPS_VERIFY is set to true, this limits how many times an email verification email will be re-sent upon an attempted login.",
       "required": false,
       "mentions": [
@@ -3979,6 +4082,7 @@
           "name": "SIGNUPS_VERIFY_RESEND_LIMIT",
           "kind": "env_sample",
           "default": "6",
+          "commented": true,
           "text": "If SIGNUPS_VERIFY is set to true, this limits how many times an email verification email will be re-sent upon an attempted login.",
           "location": {
             "file": ".env.template",
@@ -3989,7 +4093,7 @@
     },
     {
       "name": "SIGNUPS_VERIFY_RESEND_TIME",
-      "default": "3600",
+      "default": "",
       "description": "If SIGNUPS_VERIFY is set to true, this limits how many seconds after the last time an email verification link has been sent another verification email will be sent",
       "required": false,
       "mentions": [
@@ -3997,6 +4101,7 @@
           "name": "SIGNUPS_VERIFY_RESEND_TIME",
           "kind": "env_sample",
           "default": "3600",
+          "commented": true,
           "text": "If SIGNUPS_VERIFY is set to true, this limits how many seconds after the last time an email verification link has been sent another verification email will be sent",
           "location": {
             "file": ".env.template",
@@ -4007,7 +4112,7 @@
     },
     {
       "name": "SMTP_ACCEPT_INVALID_CERTS",
-      "default": "false",
+      "default": "",
       "description": "Accept Invalid Certificates DANGEROUS: This option introduces significant vulnerabilities to man-in-the-middle attacks! Only use this as a last resort if you are not able to use a valid certificate. If the Certificate is valid but the hostname doesn't match, please use SMTP_ACCEPT_INVALID_HOSTNAMES instead.",
       "required": false,
       "mentions": [
@@ -4015,6 +4120,7 @@
           "name": "SMTP_ACCEPT_INVALID_CERTS",
           "kind": "env_sample",
           "default": "false",
+          "commented": true,
           "text": "Accept Invalid Certificates DANGEROUS: This option introduces significant vulnerabilities to man-in-the-middle attacks! Only use this as a last resort if you are not able to use a valid certificate. If the Certificate is valid but the hostname doesn't match, please use SMTP_ACCEPT_INVALID_HOSTNAMES instead.",
           "location": {
             "file": ".env.template",
@@ -4025,7 +4131,7 @@
     },
     {
       "name": "SMTP_ACCEPT_INVALID_HOSTNAMES",
-      "default": "false",
+      "default": "",
       "description": "Accept Invalid Hostnames DANGEROUS: This option introduces significant vulnerabilities to man-in-the-middle attacks! Only use this as a last resort if you are not able to use a valid certificate.",
       "required": false,
       "mentions": [
@@ -4033,6 +4139,7 @@
           "name": "SMTP_ACCEPT_INVALID_HOSTNAMES",
           "kind": "env_sample",
           "default": "false",
+          "commented": true,
           "text": "Accept Invalid Hostnames DANGEROUS: This option introduces significant vulnerabilities to man-in-the-middle attacks! Only use this as a last resort if you are not able to use a valid certificate.",
           "location": {
             "file": ".env.template",
@@ -4050,6 +4157,7 @@
         {
           "name": "SMTP_AUTH_MECHANISM",
           "kind": "env_sample",
+          "commented": true,
           "text": "Defaults for SSL is \"Plain\" and \"Login\" and nothing for Non-SSL connections. Possible values: [\"Plain\", \"Login\", \"Xoauth2\"]. Multiple options need to be separated by a comma ','.",
           "location": {
             "file": ".env.template",
@@ -4060,7 +4168,7 @@
     },
     {
       "name": "SMTP_DEBUG",
-      "default": "false",
+      "default": "",
       "description": "SMTP debugging When set to true this will output very detailed SMTP messages. WARNING: This could contain sensitive information like passwords and usernames! Only enable this during troubleshooting!",
       "required": false,
       "mentions": [
@@ -4068,6 +4176,7 @@
           "name": "SMTP_DEBUG",
           "kind": "env_sample",
           "default": "false",
+          "commented": true,
           "text": "SMTP debugging When set to true this will output very detailed SMTP messages. WARNING: This could contain sensitive information like passwords and usernames! Only enable this during troubleshooting!",
           "location": {
             "file": ".env.template",
@@ -4078,7 +4187,7 @@
     },
     {
       "name": "SMTP_EMBED_IMAGES",
-      "default": "true",
+      "default": "",
       "description": "Embed images as email attachments",
       "required": false,
       "mentions": [
@@ -4086,6 +4195,7 @@
           "name": "SMTP_EMBED_IMAGES",
           "kind": "env_sample",
           "default": "true",
+          "commented": true,
           "text": "Embed images as email attachments",
           "location": {
             "file": ".env.template",
@@ -4096,7 +4206,7 @@
     },
     {
       "name": "SMTP_FROM",
-      "default": "vaultwarden@domain.tld",
+      "default": "",
       "description": "",
       "required": false,
       "mentions": [
@@ -4104,6 +4214,7 @@
           "name": "SMTP_FROM",
           "kind": "env_sample",
           "default": "vaultwarden@domain.tld",
+          "commented": true,
           "location": {
             "file": ".env.template",
             "line": 629
@@ -4113,7 +4224,7 @@
     },
     {
       "name": "SMTP_FROM_NAME",
-      "default": "Vaultwarden",
+      "default": "",
       "description": "",
       "required": false,
       "mentions": [
@@ -4121,6 +4232,7 @@
           "name": "SMTP_FROM_NAME",
           "kind": "env_sample",
           "default": "Vaultwarden",
+          "commented": true,
           "location": {
             "file": ".env.template",
             "line": 630
@@ -4130,7 +4242,7 @@
     },
     {
       "name": "SMTP_HOST",
-      "default": "smtp.domain.tld",
+      "default": "",
       "description": "Mail specific settings, set SMTP_FROM and either SMTP_HOST or USE_SENDMAIL to enable the mail service. To make sure the email links are pointing to the correct host, set the DOMAIN variable. Note: if SMTP_USERNAME is specified, SMTP_PASSWORD is mandatory",
       "required": false,
       "mentions": [
@@ -4138,6 +4250,7 @@
           "name": "SMTP_HOST",
           "kind": "env_sample",
           "default": "smtp.domain.tld",
+          "commented": true,
           "text": "Mail specific settings, set SMTP_FROM and either SMTP_HOST or USE_SENDMAIL to enable the mail service. To make sure the email links are pointing to the correct host, set the DOMAIN variable. Note: if SMTP_USERNAME is specified, SMTP_PASSWORD is mandatory",
           "location": {
             "file": ".env.template",
@@ -4148,7 +4261,7 @@
     },
     {
       "name": "SMTP_PASSWORD",
-      "default": "password",
+      "default": "",
       "description": "",
       "required": false,
       "mentions": [
@@ -4156,6 +4269,7 @@
           "name": "SMTP_PASSWORD",
           "kind": "env_sample",
           "default": "password",
+          "commented": true,
           "location": {
             "file": ".env.template",
             "line": 632
@@ -4165,7 +4279,7 @@
     },
     {
       "name": "SMTP_PORT",
-      "default": "587",
+      "default": "",
       "description": "",
       "required": false,
       "mentions": [
@@ -4173,6 +4287,7 @@
           "name": "SMTP_PORT",
           "kind": "env_sample",
           "default": "587",
+          "commented": true,
           "location": {
             "file": ".env.template",
             "line": 642
@@ -4182,7 +4297,7 @@
     },
     {
       "name": "SMTP_SECURITY",
-      "default": "starttls",
+      "default": "",
       "description": "Choose the type of secure connection for SMTP. The default is \"starttls\". The available options are: - \"starttls\": The default port is 587. - \"force_tls\": The default port is 465. - \"off\": The default port is 25. Ports 587 (submission) and 25 (smtp) are standard without encryption and with encryption via STARTTLS (Explicit TLS). Port 465 (submissions) is used for encrypted submission (Implicit TLS).",
       "required": false,
       "mentions": [
@@ -4190,6 +4305,7 @@
           "name": "SMTP_SECURITY",
           "kind": "env_sample",
           "default": "starttls",
+          "commented": true,
           "text": "Choose the type of secure connection for SMTP. The default is \"starttls\". The available options are: - \"starttls\": The default port is 587. - \"force_tls\": The default port is 465. - \"off\": The default port is 25. Ports 587 (submission) and 25 (smtp) are standard without encryption and with encryption via STARTTLS (Explicit TLS). Port 465 (submissions) is used for encrypted submission (Implicit TLS).",
           "location": {
             "file": ".env.template",
@@ -4200,7 +4316,7 @@
     },
     {
       "name": "SMTP_TIMEOUT",
-      "default": "15",
+      "default": "",
       "description": "",
       "required": false,
       "mentions": [
@@ -4208,6 +4324,7 @@
           "name": "SMTP_TIMEOUT",
           "kind": "env_sample",
           "default": "15",
+          "commented": true,
           "location": {
             "file": ".env.template",
             "line": 633
@@ -4217,7 +4334,7 @@
     },
     {
       "name": "SMTP_USERNAME",
-      "default": "username",
+      "default": "",
       "description": "",
       "required": false,
       "mentions": [
@@ -4225,6 +4342,7 @@
           "name": "SMTP_USERNAME",
           "kind": "env_sample",
           "default": "username",
+          "commented": true,
           "location": {
             "file": ".env.template",
             "line": 631
@@ -4305,7 +4423,7 @@
     },
     {
       "name": "SSO_ALLOW_UNKNOWN_EMAIL_VERIFICATION",
-      "default": "false",
+      "default": "",
       "description": "Allow unknown email verification status. Allowing this with `SSO_SIGNUPS_MATCH_EMAIL=true` open potential account takeover.",
       "required": false,
       "mentions": [
@@ -4313,6 +4431,7 @@
           "name": "SSO_ALLOW_UNKNOWN_EMAIL_VERIFICATION",
           "kind": "env_sample",
           "default": "false",
+          "commented": true,
           "text": "Allow unknown email verification status. Allowing this with `SSO_SIGNUPS_MATCH_EMAIL=true` open potential account takeover.",
           "location": {
             "file": ".env.template",
@@ -4323,7 +4442,7 @@
     },
     {
       "name": "SSO_AUDIENCE_TRUSTED",
-      "default": "^$",
+      "default": "",
       "description": "Regex for additional trusted Id token audience (by default only the client_id is trusted).",
       "required": false,
       "mentions": [
@@ -4331,6 +4450,7 @@
           "name": "SSO_AUDIENCE_TRUSTED",
           "kind": "env_sample",
           "default": "^$",
+          "commented": true,
           "text": "Regex for additional trusted Id token audience (by default only the client_id is trusted).",
           "location": {
             "file": ".env.template",
@@ -4341,7 +4461,7 @@
     },
     {
       "name": "SSO_AUTHORITY",
-      "default": "https://auth.example.com",
+      "default": "",
       "description": "Base URL of the OIDC server (auto-discovery is used) - Should not include the `/.well-known/openid-configuration` part and no trailing `/` - ${SSO_AUTHORITY}/.well-known/openid-configuration should return a json document: https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfigurationResponse",
       "required": false,
       "mentions": [
@@ -4349,6 +4469,7 @@
           "name": "SSO_AUTHORITY",
           "kind": "env_sample",
           "default": "https://auth.example.com",
+          "commented": true,
           "text": "Base URL of the OIDC server (auto-discovery is used) - Should not include the `/.well-known/openid-configuration` part and no trailing `/` - ${SSO_AUTHORITY}/.well-known/openid-configuration should return a json document: https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfigurationResponse",
           "location": {
             "file": ".env.template",
@@ -4359,7 +4480,7 @@
     },
     {
       "name": "SSO_AUTHORIZE_EXTRA_PARAMS",
-      "default": "access_type=offline\u0026prompt=consent",
+      "default": "",
       "description": "Additional authorization url parameters (ex: to obtain a `refresh_token` with Google Auth).",
       "required": false,
       "mentions": [
@@ -4367,6 +4488,7 @@
           "name": "SSO_AUTHORIZE_EXTRA_PARAMS",
           "kind": "env_sample",
           "default": "access_type=offline\u0026prompt=consent",
+          "commented": true,
           "text": "Additional authorization url parameters (ex: to obtain a `refresh_token` with Google Auth).",
           "location": {
             "file": ".env.template",
@@ -4377,7 +4499,7 @@
     },
     {
       "name": "SSO_AUTH_ONLY_NOT_SESSION",
-      "default": "false",
+      "default": "",
       "description": "Use sso only for authentication not the session lifecycle",
       "required": false,
       "mentions": [
@@ -4385,6 +4507,7 @@
           "name": "SSO_AUTH_ONLY_NOT_SESSION",
           "kind": "env_sample",
           "default": "false",
+          "commented": true,
           "text": "Use sso only for authentication not the session lifecycle",
           "location": {
             "file": ".env.template",
@@ -4395,7 +4518,7 @@
     },
     {
       "name": "SSO_CLIENT_CACHE_EXPIRATION",
-      "default": "0",
+      "default": "",
       "description": "Client cache for discovery endpoint. Duration in seconds (0 to disable).",
       "required": false,
       "mentions": [
@@ -4403,6 +4526,7 @@
           "name": "SSO_CLIENT_CACHE_EXPIRATION",
           "kind": "env_sample",
           "default": "0",
+          "commented": true,
           "text": "Client cache for discovery endpoint. Duration in seconds (0 to disable).",
           "location": {
             "file": ".env.template",
@@ -4413,7 +4537,7 @@
     },
     {
       "name": "SSO_CLIENT_ID",
-      "default": "11111",
+      "default": "",
       "description": "Set your Client ID and Client Key",
       "required": false,
       "mentions": [
@@ -4421,6 +4545,7 @@
           "name": "SSO_CLIENT_ID",
           "kind": "env_sample",
           "default": "11111",
+          "commented": true,
           "text": "Set your Client ID and Client Key",
           "location": {
             "file": ".env.template",
@@ -4431,7 +4556,7 @@
     },
     {
       "name": "SSO_CLIENT_SECRET",
-      "default": "AAAAAAAAAAAAAAAAAAAAAAAA",
+      "default": "",
       "description": "",
       "required": false,
       "mentions": [
@@ -4439,6 +4564,7 @@
           "name": "SSO_CLIENT_SECRET",
           "kind": "env_sample",
           "default": "AAAAAAAAAAAAAAAAAAAAAAAA",
+          "commented": true,
           "location": {
             "file": ".env.template",
             "line": 547
@@ -4448,7 +4574,7 @@
     },
     {
       "name": "SSO_DEBUG_TOKENS",
-      "default": "false",
+      "default": "",
       "description": "Log all the tokens, LOG_LEVEL=debug is required",
       "required": false,
       "mentions": [
@@ -4456,6 +4582,7 @@
           "name": "SSO_DEBUG_TOKENS",
           "kind": "env_sample",
           "default": "false",
+          "commented": true,
           "text": "Log all the tokens, LOG_LEVEL=debug is required",
           "location": {
             "file": ".env.template",
@@ -4466,7 +4593,7 @@
     },
     {
       "name": "SSO_ENABLED",
-      "default": "false",
+      "default": "",
       "description": "Controls whether users can login using an OpenID Connect identity provider",
       "required": false,
       "mentions": [
@@ -4474,6 +4601,7 @@
           "name": "SSO_ENABLED",
           "kind": "env_sample",
           "default": "false",
+          "commented": true,
           "text": "Controls whether users can login using an OpenID Connect identity provider",
           "location": {
             "file": ".env.template",
@@ -4484,7 +4612,7 @@
     },
     {
       "name": "SSO_MASTER_PASSWORD_POLICY",
-      "default": "{\"enforceOnLogin\":false,\"minComplexity\":3,\"minLength\":12,\"requireLower\":false,\"requireNumbers\":false,\"requireSpecial\":false,\"requireUpper\":false}",
+      "default": "",
       "description": "Optional Master password policy (minComplexity=[0-4]), `enforceOnLogin` is not supported at the moment.",
       "required": false,
       "mentions": [
@@ -4492,6 +4620,7 @@
           "name": "SSO_MASTER_PASSWORD_POLICY",
           "kind": "env_sample",
           "default": "{\"enforceOnLogin\":false,\"minComplexity\":3,\"minLength\":12,\"requireLower\":false,\"requireNumbers\":false,\"requireSpecial\":false,\"requireUpper\":false}",
+          "commented": true,
           "text": "Optional Master password policy (minComplexity=[0-4]), `enforceOnLogin` is not supported at the moment.",
           "location": {
             "file": ".env.template",
@@ -4502,7 +4631,7 @@
     },
     {
       "name": "SSO_ONLY",
-      "default": "false",
+      "default": "",
       "description": "Prevent users from logging in directly without going through SSO",
       "required": false,
       "mentions": [
@@ -4510,6 +4639,7 @@
           "name": "SSO_ONLY",
           "kind": "env_sample",
           "default": "false",
+          "commented": true,
           "text": "Prevent users from logging in directly without going through SSO",
           "location": {
             "file": ".env.template",
@@ -4520,7 +4650,7 @@
     },
     {
       "name": "SSO_PKCE",
-      "default": "true",
+      "default": "",
       "description": "Activate PKCE for the Auth Code flow.",
       "required": false,
       "mentions": [
@@ -4528,6 +4658,7 @@
           "name": "SSO_PKCE",
           "kind": "env_sample",
           "default": "true",
+          "commented": true,
           "text": "Activate PKCE for the Auth Code flow.",
           "location": {
             "file": ".env.template",
@@ -4538,7 +4669,7 @@
     },
     {
       "name": "SSO_SCOPES",
-      "default": "email profile",
+      "default": "",
       "description": "Authorization request scopes. Optional SSO scopes, override if email and profile are not enough (`openid` is implicit).",
       "required": false,
       "mentions": [
@@ -4546,6 +4677,7 @@
           "name": "SSO_SCOPES",
           "kind": "env_sample",
           "default": "email profile",
+          "commented": true,
           "text": "Authorization request scopes. Optional SSO scopes, override if email and profile are not enough (`openid` is implicit).",
           "location": {
             "file": ".env.template",
@@ -4556,7 +4688,7 @@
     },
     {
       "name": "SSO_SIGNUPS_ALLOWED",
-      "default": "true",
+      "default": "",
       "description": "Allow SSO flow to create account. You probably want to disable it when using a public provider.",
       "required": false,
       "mentions": [
@@ -4564,6 +4696,7 @@
           "name": "SSO_SIGNUPS_ALLOWED",
           "kind": "env_sample",
           "default": "true",
+          "commented": true,
           "text": "Allow SSO flow to create account. You probably want to disable it when using a public provider.",
           "location": {
             "file": ".env.template",
@@ -4574,7 +4707,7 @@
     },
     {
       "name": "SSO_SIGNUPS_MATCH_EMAIL",
-      "default": "true",
+      "default": "",
       "description": "On SSO Signup if a user with a matching email already exists make the association",
       "required": false,
       "mentions": [
@@ -4582,6 +4715,7 @@
           "name": "SSO_SIGNUPS_MATCH_EMAIL",
           "kind": "env_sample",
           "default": "true",
+          "commented": true,
           "text": "On SSO Signup if a user with a matching email already exists make the association",
           "location": {
             "file": ".env.template",
@@ -4592,7 +4726,7 @@
     },
     {
       "name": "TEMPLATES_FOLDER",
-      "default": "data/templates",
+      "default": "",
       "description": "HTML template overrides data folder Must be a local path.",
       "required": false,
       "mentions": [
@@ -4600,6 +4734,7 @@
           "name": "TEMPLATES_FOLDER",
           "kind": "env_sample",
           "default": "data/templates",
+          "commented": true,
           "text": "HTML template overrides data folder Must be a local path.",
           "location": {
             "file": ".env.template",
@@ -4610,7 +4745,7 @@
     },
     {
       "name": "TMP_FOLDER",
-      "default": "data/tmp",
+      "default": "",
       "description": "Temporary folder used for storing temporary file uploads Must be a local path.",
       "required": false,
       "mentions": [
@@ -4618,6 +4753,7 @@
           "name": "TMP_FOLDER",
           "kind": "env_sample",
           "default": "data/tmp",
+          "commented": true,
           "text": "Temporary folder used for storing temporary file uploads Must be a local path.",
           "location": {
             "file": ".env.template",
@@ -4635,6 +4771,7 @@
         {
           "name": "TRASH_AUTO_DELETE_DAYS",
           "kind": "env_sample",
+          "commented": true,
           "text": "Number of days to wait before auto-deleting a trashed item. If unset (the default), trashed items are not auto-deleted. This setting applies globally, so make sure to inform all users of any changes to this setting.",
           "location": {
             "file": ".env.template",
@@ -4645,7 +4782,7 @@
     },
     {
       "name": "TRASH_PURGE_SCHEDULE",
-      "default": "0 5 0 * * *",
+      "default": "",
       "description": "Cron schedule of the job that checks for trashed items to delete permanently. Defaults to daily (5 minutes after midnight). Set blank to disable this job.",
       "required": false,
       "mentions": [
@@ -4653,6 +4790,7 @@
           "name": "TRASH_PURGE_SCHEDULE",
           "kind": "env_sample",
           "default": "0 5 0 * * *",
+          "commented": true,
           "text": "Cron schedule of the job that checks for trashed items to delete permanently. Defaults to daily (5 minutes after midnight). Set blank to disable this job.",
           "location": {
             "file": ".env.template",
@@ -4687,7 +4825,7 @@
     },
     {
       "name": "UNAUTHENTICATED_RATELIMIT_MAX_BURST",
-      "default": "50",
+      "default": "",
       "description": "Allow a burst of requests of up to this size, while maintaining the average indicated by `UNAUTHENTICATED_RATELIMIT_SECONDS`. This budget is shared between all of those endpoints, so it is more lenient than the login one.",
       "required": false,
       "mentions": [
@@ -4695,6 +4833,7 @@
           "name": "UNAUTHENTICATED_RATELIMIT_MAX_BURST",
           "kind": "env_sample",
           "default": "50",
+          "commented": true,
           "text": "Allow a burst of requests of up to this size, while maintaining the average indicated by `UNAUTHENTICATED_RATELIMIT_SECONDS`. This budget is shared between all of those endpoints, so it is more lenient than the login one.",
           "location": {
             "file": ".env.template",
@@ -4705,7 +4844,7 @@
     },
     {
       "name": "UNAUTHENTICATED_RATELIMIT_SECONDS",
-      "default": "60",
+      "default": "",
       "description": "Number of seconds, on average, between requests from the same IP address to one of the rate limited unauthenticated endpoints, like the password hint, the account recovery mails or accessing a Send.",
       "required": false,
       "mentions": [
@@ -4713,6 +4852,7 @@
           "name": "UNAUTHENTICATED_RATELIMIT_SECONDS",
           "kind": "env_sample",
           "default": "60",
+          "commented": true,
           "text": "Number of seconds, on average, between requests from the same IP address to one of the rate limited unauthenticated endpoints, like the password hint, the account recovery mails or accessing a Send.",
           "location": {
             "file": ".env.template",
@@ -4730,6 +4870,7 @@
         {
           "name": "USER_ATTACHMENT_LIMIT",
           "kind": "env_sample",
+          "commented": true,
           "text": "Per-user attachment storage limit (KB) Max kilobytes of attachment storage allowed per user. When this limit is reached, the user will not be allowed to upload further attachments.",
           "location": {
             "file": ".env.template",
@@ -4747,6 +4888,7 @@
         {
           "name": "USER_SEND_LIMIT",
           "kind": "env_sample",
+          "commented": true,
           "text": "Per-user send storage limit (KB) Max kilobytes of send storage allowed per user. When this limit is reached, the user will not be allowed to upload further sends.",
           "location": {
             "file": ".env.template",
@@ -4757,7 +4899,7 @@
     },
     {
       "name": "USE_SENDMAIL",
-      "default": "false",
+      "default": "",
       "description": "Whether to send mail via the `sendmail` command",
       "required": false,
       "mentions": [
@@ -4765,6 +4907,7 @@
           "name": "USE_SENDMAIL",
           "kind": "env_sample",
           "default": "false",
+          "commented": true,
           "text": "Whether to send mail via the `sendmail` command",
           "location": {
             "file": ".env.template",
@@ -4775,7 +4918,7 @@
     },
     {
       "name": "USE_SYSLOG",
-      "default": "false",
+      "default": "",
       "description": "Logging to Syslog This requires extended logging",
       "required": false,
       "mentions": [
@@ -4783,6 +4926,7 @@
           "name": "USE_SYSLOG",
           "kind": "env_sample",
           "default": "false",
+          "commented": true,
           "text": "Logging to Syslog This requires extended logging",
           "location": {
             "file": ".env.template",
@@ -4819,7 +4963,7 @@
     },
     {
       "name": "WEB_VAULT_ENABLED",
-      "default": "true",
+      "default": "",
       "description": "",
       "required": false,
       "mentions": [
@@ -4827,6 +4971,7 @@
           "name": "WEB_VAULT_ENABLED",
           "kind": "env_sample",
           "default": "true",
+          "commented": true,
           "location": {
             "file": ".env.template",
             "line": 46
@@ -4836,7 +4981,7 @@
     },
     {
       "name": "WEB_VAULT_FOLDER",
-      "default": "web-vault/",
+      "default": "",
       "description": "",
       "required": false,
       "mentions": [
@@ -4844,6 +4989,7 @@
           "name": "WEB_VAULT_FOLDER",
           "kind": "env_sample",
           "default": "web-vault/",
+          "commented": true,
           "location": {
             "file": ".env.template",
             "line": 45
@@ -4853,7 +4999,7 @@
     },
     {
       "name": "YUBICO_CLIENT_ID",
-      "default": "11111",
+      "default": "",
       "description": "Yubico (Yubikey) Settings Set your Client ID and Secret Key for Yubikey OTP You can generate it here: https://upgrade.yubico.com/getapikey/ You can optionally specify a custom OTP server",
       "required": false,
       "mentions": [
@@ -4861,6 +5007,7 @@
           "name": "YUBICO_CLIENT_ID",
           "kind": "env_sample",
           "default": "11111",
+          "commented": true,
           "text": "Yubico (Yubikey) Settings Set your Client ID and Secret Key for Yubikey OTP You can generate it here: https://upgrade.yubico.com/getapikey/ You can optionally specify a custom OTP server",
           "location": {
             "file": ".env.template",
@@ -4871,7 +5018,7 @@
     },
     {
       "name": "YUBICO_SECRET_KEY",
-      "default": "AAAAAAAAAAAAAAAAAAAAAAAA",
+      "default": "",
       "description": "",
       "required": false,
       "mentions": [
@@ -4879,6 +5026,7 @@
           "name": "YUBICO_SECRET_KEY",
           "kind": "env_sample",
           "default": "AAAAAAAAAAAAAAAAAAAAAAAA",
+          "commented": true,
           "location": {
             "file": ".env.template",
             "line": 570
@@ -4888,7 +5036,7 @@
     },
     {
       "name": "YUBICO_SERVER",
-      "default": "http://yourdomain.com/wsapi/2.0/verify",
+      "default": "",
       "description": "",
       "required": false,
       "mentions": [
@@ -4896,6 +5044,7 @@
           "name": "YUBICO_SERVER",
           "kind": "env_sample",
           "default": "http://yourdomain.com/wsapi/2.0/verify",
+          "commented": true,
           "location": {
             "file": ".env.template",
             "line": 571
