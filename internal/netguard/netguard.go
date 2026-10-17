@@ -167,9 +167,14 @@ func (transport roundTripper) RoundTrip(request *http.Request) (*http.Response, 
 	return transport.base.RoundTrip(request)
 }
 
+// Allows reports whether host is on the purpose's allowlist.
+func (guard *Guard) Allows(purpose Purpose, host string) bool {
+	return slices.Contains(guard.policy.Hosts[purpose], strings.ToLower(host))
+}
+
 func (guard *Guard) allow(purpose Purpose, target *url.URL) error {
 	host := strings.ToLower(target.Hostname())
-	if !slices.Contains(guard.policy.Hosts[purpose], host) {
+	if !guard.Allows(purpose, host) {
 		return fmt.Errorf("%s (%s): %w", host, purpose, ErrHostNotAllowed)
 	}
 	if target.Scheme == httpsScheme {

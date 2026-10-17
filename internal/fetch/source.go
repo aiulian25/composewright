@@ -37,7 +37,7 @@ type Source struct {
 	Owner      string `json:"owner"`
 	Repository string `json:"repository"`
 	Directory  string `json:"-"`
-	// Note says how an archive was unpacked, for the fetch step.
+	// Note says how the source was fetched or unpacked, for the fetch step.
 	Note    string `json:"-"`
 	cleanup func() error
 }

@@ -33,6 +33,7 @@ scm:
     - github.com
     - api.github.com
     - codeload.github.com
+    - raw.githubusercontent.com  # single files of a repository too large for a tarball
   github_token_ref: ""       # optional keyring:<name> or env:<VARIABLE>; raises the GitHub API limit from 60 to 5000 requests per hour
 network:
   allow_private_targets: []  # explicit opt-in for LAN or loopback services, e.g. ["192.168.1.10:3000"]

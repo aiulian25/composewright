@@ -22,9 +22,8 @@ const (
 	maxExpandedBytes = 1 << 30
 	// MaxArchiveBytes caps the compressed download. Apps that ship sample
 	// media or screenshots run to hundreds of megabytes although only their
-	// small text files are kept, so it matches the expansion cap.
-	// ponytail: the whole archive is streamed to keep a few files; fetch just
-	// those through the git trees API if large downloads get too slow.
+	// small text files are kept, so it matches the expansion cap. A GitHub
+	// repository past it is fetched file by file through the trees API.
 	MaxArchiveBytes = maxExpandedBytes
 	maxEntries      = 200000
 	maxKeptFiles    = 5000

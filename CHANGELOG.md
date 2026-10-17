@@ -67,6 +67,17 @@ All notable changes to this project are documented here. The format follows
   token, encrypted like model keys. The Environment profile page downloads
   and imports `profile.yaml`, as `composewright profile export` and
   `import` do.
+- A GitHub repository whose tarball is past the size or file-count limits
+  is no longer refused: composewright lists its files through the Git trees
+  API and downloads only the ones it reads, each within its size limit and
+  50 MB in all. Files come from raw.githubusercontent.com, now in the
+  default `scm.allow_hosts`, up to 2000 of them; an install whose list
+  lacks it uses the GitHub API, one request per file, up to 400 and within
+  the hourly limit left. README, compose, Dockerfile, env samples and docs
+  are always downloaded and the run stops with a clear message when they
+  alone pass that; source files fill what is left and the rest are skipped.
+  The Fetch step says how many files it fetched this way and how many
+  source files it skipped.
 - Try it on the Model providers page sends a connection one tiny request and
   says whether it answered: the model name it answered as, the tokens in and
   out and the time, or the provider's error with the key left out. It works

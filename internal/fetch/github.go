@@ -60,8 +60,14 @@ func originRemote(directory string) string {
 	return ""
 }
 
-const (
+// githubAPI and tarballLimit are variables so tests can point them at a
+// fake GitHub with a small cap.
+var (
 	githubAPI          = "https://api.github.com/repos/"
+	tarballLimit int64 = MaxArchiveBytes
+)
+
+const (
 	githubAccept       = "application/vnd.github+json"
 	githubVersion      = "2022-11-28"
 	githubVersionField = "X-GitHub-Api-Version"
@@ -77,6 +83,8 @@ var refPattern = regexp.MustCompile(`^[A-Za-z0-9._/-]{1,200}$`)
 // GitHub downloads a repository tarball through the guarded SCM client
 // (api.github.com redirects once to codeload.github.com) and keeps only the
 // files extraction reads in a private temporary directory. git is never run.
+// A tarball past the size or file-count limits is fetched again file by file
+// through the trees API, keeping only the files extraction reads.
 // Without a ref it reads the latest release, whose compose file and README
 // describe the image people pull; the default branch can be ahead of it.
 func GitHub(ctx context.Context, guard *netguard.Guard, token, owner, repository, ref string) (*Source, error) {
@@ -108,11 +116,16 @@ func GitHub(ctx context.Context, guard *netguard.Guard, token, owner, repository
 	}
 	source := &Source{Kind: SourceGitHub, URL: CanonicalGitHubURL(owner, repository), Ref: ref, Owner: owner, Repository: repository,
 		Directory: directory, cleanup: func() error { return os.RemoveAll(directory) }}
-	extracted, err := Untar(response.Body, directory)
+	extracted, err := untar(response.Body, directory, tarballLimit)
+	source.Commit = extracted.Commit
+	tooLarge := errors.Is(err, ErrTooLarge)
+	if tooLarge {
+		_ = response.Body.Close()
+		source.Note, err = sparse(ctx, guard, token, owner, repository, treeRef(source.Commit, ref), directory)
+	}
 	if err != nil {
 		return nil, errors.Join(fmt.Errorf("unpack %s/%s: %w", owner, repository, err), source.Close())
 	}
-	source.Commit = extracted.Commit
 	return source, nil
 }
 
@@ -126,11 +139,17 @@ func repositoryAPI(owner, repository string) string {
 
 // githubGet asks the GitHub API through the guarded SCM client.
 func githubGet(ctx context.Context, guard *netguard.Guard, token, address string) (*http.Response, error) {
+	return githubGetAs(ctx, guard, token, address, githubAccept)
+}
+
+// githubGetAs is githubGet asking for the accept media type, such as a raw
+// file instead of its JSON description.
+func githubGetAs(ctx context.Context, guard *netguard.Guard, token, address, accept string) (*http.Response, error) {
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, address, nil)
 	if err != nil {
 		return nil, err
 	}
-	request.Header.Set("Accept", githubAccept)
+	request.Header.Set("Accept", accept)
 	request.Header.Set(githubVersionField, githubVersion)
 	if token != "" {
 		request.Header.Set("Authorization", "Bearer "+token)
