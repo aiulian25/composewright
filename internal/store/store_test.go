@@ -250,6 +250,58 @@ func TestPruneGenerationsKeepsTestedOnes(t *testing.T) {
 	}
 }
 
+// TestRemoveDraftsKeepsTestedAndLaterVersions: a pass removes only the
+// untested versions numbered before it, with their images; tested ones,
+// later ones and other projects' stay, and numbering goes on.
+func TestRemoveDraftsKeepsTestedAndLaterVersions(t *testing.T) {
+	ctx := context.Background()
+	store, _, _ := openTestStore(t)
+	noEvents := func(Project, Generation) []Event { return nil }
+	images := []Image{{Service: "app", Reference: "docker.io/library/nginx:1"}}
+	record := func(name string) Generation {
+		project := Project{Name: name, Slug: name, SourceKind: "github", Status: StatusGenerated}
+		_, added, err := store.RecordGeneration(ctx, project, Generation{Engine: "rules", IRJSON: "{}"}, images, nil, "cli:test", noEvents)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return added
+	}
+	var versions []Generation
+	for range 5 {
+		versions = append(versions, record("app"))
+	}
+	other := record("other")
+	for _, tested := range []Generation{versions[1], versions[3]} {
+		if err := store.RecordValidation(ctx, tested.ID, `{"result":"pass"}`, "", ""); err != nil {
+			t.Fatal(err)
+		}
+	}
+	passed := versions[3]
+	if removed, err := store.RemoveDrafts(ctx, passed.ProjectID, passed.Number); err != nil || removed != 2 {
+		t.Fatalf("removed %d drafts: %v", removed, err)
+	}
+	generations, err := store.Generations(ctx, passed.ProjectID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var kept []int
+	for _, generation := range generations {
+		kept = append(kept, generation.Number)
+	}
+	if !slices.Equal(kept, []int{5, 4, 2}) {
+		t.Fatalf("kept versions %v", kept)
+	}
+	if left, err := store.Images(ctx, versions[0].ID); err != nil || len(left) != 0 {
+		t.Fatalf("a removed draft's images stayed: %v %v", left, err)
+	}
+	if others, err := store.Generations(ctx, other.ProjectID); err != nil || len(others) != 1 {
+		t.Fatalf("another project's draft was touched: %v %v", others, err)
+	}
+	if next := record("app"); next.Number != 6 {
+		t.Fatalf("the next version is v%d", next.Number)
+	}
+}
+
 // TestMigrationNumbersExistingGenerations: a database from before version
 // numbers numbers each project's generations in the order they were made,
 // equal times in the order they were stored, and goes on from there.

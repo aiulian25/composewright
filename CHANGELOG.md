@@ -6,6 +6,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Once a version passes its test, the untested versions before it are removed,
+  so History lists what was tested and the work since; the audit log counts
+  them.
+
 ### Fixed
 
 - The healthcheck an app's image ships with no longer blocks the stack: one

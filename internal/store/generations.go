@@ -134,6 +134,18 @@ func pruneGenerations(ctx context.Context, transaction *sql.Tx, projectID string
 	return err
 }
 
+// RemoveDrafts deletes a project's versions numbered below before that were
+// never tested, with their images: once a later version passes, a draft it
+// replaced is only clutter. It returns how many it removed.
+func (store *Store) RemoveDrafts(ctx context.Context, projectID string, before int) (int64, error) {
+	removed, err := store.database.ExecContext(ctx, `DELETE FROM generations WHERE project_id=? AND validation_verdict_json='' AND number < ?`,
+		projectID, before)
+	if err != nil {
+		return 0, err
+	}
+	return removed.RowsAffected()
+}
+
 // RecordValidation stores a verdict, where its logs are, and the DEPLOY.md
 // carrying the validation status line.
 func (store *Store) RecordValidation(ctx context.Context, generationID, verdictJSON, logsPath, deploy string) error {

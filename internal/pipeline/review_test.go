@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"slices"
@@ -162,6 +163,33 @@ func TestApproveAndValidate(t *testing.T) {
 	}
 	if approvals != 1 {
 		t.Fatalf("%d web approvals audited", approvals)
+	}
+}
+
+// TestPassRemovesEarlierDrafts: two untested versions, then a pass of the
+// newest: the draft before it is removed and the run's audit entry counts it.
+func TestPassRemovesEarlierDrafts(t *testing.T) {
+	ctx := context.Background()
+	dependencies := testDependencies(t, &scriptedDocker{states: []string{healthy}})
+	generated(t, dependencies)
+	generated(t, dependencies)
+	result, err := ApproveAndValidate(ctx, dependencies, "miniflux", "web")
+	if err != nil {
+		t.Fatal(err)
+	}
+	generations, err := dependencies.Workspace.Store.Generations(ctx, result.Project.ID)
+	if err != nil || len(generations) != 1 || generations[0].Number != 2 {
+		t.Fatalf("versions after the pass: %+v %v", generations, err)
+	}
+	entries, err := dependencies.Workspace.Store.AuditEntries(ctx, result.Project.ID, 20)
+	if err != nil {
+		t.Fatal(err)
+	}
+	counted := slices.ContainsFunc(entries, func(entry store.AuditEntry) bool {
+		return entry.Action == store.ActionValidate && fmt.Sprint(entry.Details[draftsRemovedKey]) == "1"
+	})
+	if !counted {
+		t.Fatalf("no validate entry counts the removed draft: %+v", entries)
 	}
 }
 

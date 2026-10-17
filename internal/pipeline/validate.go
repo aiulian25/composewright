@@ -34,6 +34,9 @@ const (
 	logsHeader       = "\n== docker compose logs\n"
 	statusLinePrefix = "Validation: "
 	minimumSecret    = 4
+	// draftsRemovedKey counts, in a passing run's audit entry, the untested
+	// versions before it that the pass removed.
+	draftsRemovedKey = "drafts_removed"
 )
 
 // Repairer proposes a corrected plan after a failed run; llm.Assistant is
@@ -257,7 +260,8 @@ func httpProbe(plan *ir.IR) ir.Probe {
 }
 
 // record keeps the verdict with its generation, the scrubbed logs in a 0600
-// file, the project status, and an audit entry.
+// file, the project status, and an audit entry. A pass also removes the
+// untested versions before it, and the audit entry counts them.
 func record(ctx context.Context, workspace *workspace.Workspace, project store.Project, generation store.Generation, verdict sandbox.Verdict, status string) error {
 	directory := filepath.Join(workspace.Paths.ProjectsDir(), project.Slug, logsDirName)
 	if err := os.MkdirAll(directory, logDirMode); err != nil {
@@ -282,6 +286,14 @@ func record(ctx context.Context, workspace *workspace.Workspace, project store.P
 	}
 	details := map[string]any{"generation": generation.ID, "iteration": verdict.Iteration, "result": verdict.Result, "reason": verdict.Reason,
 		"sandbox": verdict.Project, "limits_enforced": verdict.Sandbox.LimitsEnforced, "rootless": verdict.Sandbox.Rootless}
+	if status != store.StatusPassed {
+		return database.Audit(ctx, workspace.Actor, store.ActionValidate, project.ID, details)
+	}
+	removed, err := database.RemoveDrafts(ctx, project.ID, generation.Number)
+	if err != nil {
+		return err
+	}
+	details[draftsRemovedKey] = removed
 	return database.Audit(ctx, workspace.Actor, store.ActionValidate, project.ID, details)
 }
 
