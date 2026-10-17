@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- The healthcheck an app's image ships with no longer blocks the stack: one
+  read from the image itself, such as a probe of the address the app binds,
+  passes the rule that a healthcheck may only contact its own container,
+  since Docker runs it whether or not compose.yaml repeats it. Healthchecks
+  from documentation or a model are held to the rule as before.
+
 ## [0.1.3] - 2026-10-12
 
 Generated stacks get each service a password of its own, the paths the image

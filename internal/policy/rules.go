@@ -231,7 +231,27 @@ func (check *checker) healthcheck(service *ir.Service, field string) {
 	if healthcheck.Retries < 0 {
 		check.add("P3", Deny, service.Name, field+".retries", "healthcheck retries must not be negative")
 	}
-	check.probeTargets(service, field, strings.Join(healthcheck.Test[1:], " "))
+	test := strings.Join(healthcheck.Test[1:], " ")
+	if healthcheck.Provenance.Source == ir.SourceOCILabel {
+		check.imageHealthcheck(service, field, test)
+		return
+	}
+	check.probeTargets(service, field, test)
+}
+
+// imageHealthcheck lets the image's own HEALTHCHECK through P6. Only the rules
+// give a healthcheck this source, from the image config the registry serves
+// for the digest the stack pins; a model's answer never carries it. Docker
+// runs that HEALTHCHECK whether or not compose.yaml repeats it, so P6, which
+// stops a healthcheck that documentation or a model would add, has nothing
+// to stop. When P6 would have objected, an OK finding says what was let
+// through and why.
+func (check *checker) imageHealthcheck(service *ir.Service, field, test string) {
+	probe := &checker{input: check.input}
+	probe.probeTargets(service, field, test)
+	if len(probe.findings) > 0 {
+		check.add("P6", OK, service.Name, field+".test", "healthcheck is the image's own HEALTHCHECK, which Docker runs whether or not compose.yaml repeats it")
+	}
 }
 
 // probeTargets is P6 for healthchecks: they may only contact the container

@@ -23,6 +23,11 @@ var generate = flag.Bool("generate", false, "rewrite testdata/adversarial from t
 
 const adversarialDir = "../../testdata/adversarial"
 
+// imageProbe is bookorbit's Dockerfile HEALTHCHECK as compose.yaml carries it:
+// it probes the address the app binds, which P6 cannot see in ${host}.
+const imageProbe = `host="$$(printf '%s' "$${HOST:-}" | tr -d '[:space:]')"; case "$$host" in ''|0.0.0.0) host=127.0.0.1 ;; esac; ` +
+	`wget -q -T 4 -O /dev/null "http://$${host}:$${PORT:-3000}/api/v1/health"`
+
 // goodPlan passes every rule: an app with a healthcheck, a postgres sidecar
 // with pg_isready, a generated secret, a derived secret DSN, one named volume.
 func goodPlan() *ir.IR {
@@ -220,6 +225,16 @@ var planCases = []planCase{
 	{name: "P6 healthcheck script with a dotted name fine", rule: "P6", want: policy.OK,
 		mutate: func(plan *ir.IR) {
 			plan.Services[0].Healthcheck.Test = []string{"CMD", "healthcheck.sh", "--connect", "--innodb_initialized"}
+		}},
+	{name: "P6 the image's own healthcheck may probe the address it computes", rule: "P6", want: policy.OK,
+		mutate: func(plan *ir.IR) {
+			plan.Services[0].Healthcheck.Test = []string{"CMD-SHELL", imageProbe}
+			plan.Services[0].Healthcheck.Provenance = ir.Provenance{Source: ir.SourceOCILabel, SourceRef: "docker.io/miniflux/miniflux:2.2.0", Confidence: ir.ConfidenceHigh}
+		}},
+	{name: "P6 the same healthcheck from documentation denied", rule: "P6", want: policy.Deny, blocked: true,
+		mutate: func(plan *ir.IR) {
+			plan.Services[0].Healthcheck.Test = []string{"CMD-SHELL", imageProbe}
+			plan.Services[0].Healthcheck.Provenance = ir.Provenance{Source: ir.SourceReadme, SourceRef: "README.md:12", Confidence: ir.ConfidenceMedium}
 		}},
 	{name: "P6 healthcheck dns query with substitution fine", rule: "P6", want: policy.OK,
 		mutate: func(plan *ir.IR) {
