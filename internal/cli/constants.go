@@ -33,6 +33,11 @@ const (
 	optionalServiceKind = "optional service"
 	optionalServiceFact = "%s (profile %s)"
 
+	// portFlag chooses a host port; portSuggestion follows a finding on a
+	// host port something else takes.
+	portFlag       = "port"
+	portSuggestion = "%s; use --%s %s"
+
 	// allowHostFlag is still accepted so older compose commands keep working.
 	allowHostFlag = "allow-host"
 

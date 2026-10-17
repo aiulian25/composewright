@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -744,5 +745,24 @@ func TestOverrideCapsSharedMemory(t *testing.T) {
 	large, small, plain := merged.Services["large"].ShmSize, merged.Services["small"].ShmSize, merged.Services["plain"].ShmSize
 	if int64(large) != limits.MemoryBytes || small != 64*units.MiB || plain != 0 {
 		t.Fatalf("shm_size large %d, small %d, plain %d\n%s", large, small, plain, override)
+	}
+}
+
+func TestParseContainersReadsHostPortsAndLabels(t *testing.T) {
+	output := `{"Names":"uptime-kuma","Image":"louislam/uptime-kuma:1","Networks":"bridge","Ports":"0.0.0.0:3001->3001/tcp, [::]:3001->3001/tcp","Labels":"com.docker.compose.project=kuma,maintainer=x"}
+{"Names":"db","Image":"postgres:16","Networks":"","Ports":"5432/tcp","Labels":""}
+{"Names":"range","Image":"nginx","Networks":"","Ports":"127.0.0.1:8000-8001->8000-8001/tcp","Labels":""}`
+	containers, err := parseContainers([]byte(output))
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantPorts := [][]int{{3001}, nil, {8000, 8001}}
+	for index, container := range containers {
+		if !slices.Equal(container.Ports, wantPorts[index]) {
+			t.Errorf("%s ports = %v, want %v", container.Name, container.Ports, wantPorts[index])
+		}
+	}
+	if project := containers[0].Labels[LabelComposeProject]; project != "kuma" {
+		t.Errorf("compose project label = %q, want kuma", project)
 	}
 }

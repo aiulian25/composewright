@@ -30,6 +30,16 @@ All notable changes to this project are documented here. The format follows
   measured even on a daemon that does not enforce limits, and a run never
   fails because they could not be measured; a slow daemon delays it by ten
   seconds at most.
+- A host port another project already publishes, or a running container on
+  the Docker host already binds, is now a P4 warning, as "host port 8080 is
+  also published by project linkding (v3)". The Review page offers Use 8081,
+  the next port nothing takes, which publishes the app there as a new
+  version; `composewright gen` prints the same warning, and
+  `--port SERVICE:CONTAINER=HOST` chooses a host port from the command line.
+  A regeneration keeps the chosen port. The project's own deployed
+  containers and sandbox runs are left out, a Docker daemon that does not
+  answer never holds up a plan, and `gen --offline --no-validate` does not
+  ask Docker at all.
 - Expose via on the Review page has a Public address field: a host name such
   as rss.example.com, or one with a path such as home.example.com/rss. It
   replaces the derived <project>.<domain> in the Traefik rule, the proxy

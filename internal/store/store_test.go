@@ -525,3 +525,27 @@ func TestBackupWritesAPrivateCopy(t *testing.T) {
 		t.Fatalf("backup mode %04o", info.Mode().Perm())
 	}
 }
+
+func TestPublishedPortsReadTheLatestVersion(t *testing.T) {
+	ctx := context.Background()
+	store, _, _ := openTestStore(t)
+	noEvents := func(Project, Generation) []Event { return nil }
+	record := func(name, compose string) {
+		t.Helper()
+		project := Project{Name: name, Slug: name, SourceKind: "github", Status: StatusGenerated}
+		if _, _, err := store.RecordGeneration(ctx, project, Generation{Engine: "rules", IRJSON: "{}", ComposeYAML: compose}, nil, nil, "cli:test", noEvents); err != nil {
+			t.Fatal(err)
+		}
+	}
+	record("linkding", "services:\n  app:\n    image: nginx\n    ports: [\"127.0.0.1:9090:9090/tcp\"]\n")
+	record("linkding", "services:\n  app:\n    image: nginx\n    ports: [\"127.0.0.1:8080:9090/tcp\"]\n  db:\n    image: postgres\n")
+	record("broken", "services: [")
+	published, err := store.PublishedPorts(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []PublishedPort{{Project: "linkding", Version: 2, Port: 8080}}
+	if !slices.Equal(published, want) {
+		t.Errorf("PublishedPorts = %+v, want %+v", published, want)
+	}
+}

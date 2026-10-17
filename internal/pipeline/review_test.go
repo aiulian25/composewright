@@ -141,6 +141,9 @@ func TestReviseRendersANewGeneration(t *testing.T) {
 			t.Errorf("%s accepted", name)
 		}
 	}
+	if _, err := Revise(ctx, dependencies, "miniflux", Revision{Ports: map[string]int{"miniflux:9999": 8081}}); !errors.Is(err, ErrUnknownPort) {
+		t.Errorf("a host port for a port the plan lacks: %v", err)
+	}
 }
 
 func TestObservedPeakOffersALargerLimit(t *testing.T) {

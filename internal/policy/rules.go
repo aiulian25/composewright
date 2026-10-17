@@ -297,11 +297,11 @@ func (check *checker) probeHost(service *ir.Service, field, host string) {
 func (check *checker) ports(service *ir.Service, field string) {
 	for index, port := range service.Ports {
 		portField := fmt.Sprintf("%s.ports.%d", field, index)
-		if port.Container < 1 || port.Container > maxPort {
-			check.add("P4", Deny, service.Name, portField, "container port %d is outside 1-%d", port.Container, maxPort)
+		if port.Container < 1 || port.Container > composefile.MaxPort {
+			check.add("P4", Deny, service.Name, portField, "container port %d is outside 1-%d", port.Container, composefile.MaxPort)
 		}
-		if port.HostPort < 0 || port.HostPort > maxPort {
-			check.add("P4", Deny, service.Name, portField, "host port %d is outside 0-%d", port.HostPort, maxPort)
+		if port.HostPort < 0 || port.HostPort > composefile.MaxPort {
+			check.add("P4", Deny, service.Name, portField, "host port %d is outside 0-%d", port.HostPort, composefile.MaxPort)
 		}
 		if !slices.Contains(ir.Protocols, port.Protocol) {
 			check.add("P4", Deny, service.Name, portField, "protocol %q must be tcp or udp", port.Protocol)

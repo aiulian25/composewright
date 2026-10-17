@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"regexp"
 	"time"
+
+	"github.com/aiulian25/composewright/internal/composefile"
 )
 
 const (
@@ -39,6 +41,16 @@ type ProjectSummary struct {
 	Engine      string `json:"engine"`
 	Images      string `json:"images"`
 }
+
+// PublishedPort is a host port the latest version of a project publishes.
+type PublishedPort struct {
+	Project string
+	Version int
+	Port    int
+}
+
+// latestComposeFile names the stored compose.yaml for compose-go's errors.
+const latestComposeFile = "compose.yaml"
 
 // projectNamePattern is what a project may be called. The name also names
 // the folder its runs and logs live in, so it holds no path separator.
@@ -136,6 +148,45 @@ func (store *Store) ListProjects(ctx context.Context) ([]ProjectSummary, error) 
 		summaries = append(summaries, summary)
 	}
 	return summaries, rows.Err()
+}
+
+// PublishedPorts are the host ports every project's latest compose.yaml
+// publishes, read from the file as docker compose up reads it. A file that
+// no longer loads publishes nothing here.
+func (store *Store) PublishedPorts(ctx context.Context) ([]PublishedPort, error) {
+	rows, err := store.database.QueryContext(ctx, `SELECT p.name, g.number, g.compose_yaml FROM projects p
+		JOIN generations g ON g.id = (SELECT id FROM generations latest WHERE latest.project_id = p.id ORDER BY created_at DESC, rowid DESC LIMIT 1)
+		ORDER BY p.name`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var published []PublishedPort
+	for rows.Next() {
+		var name, compose string
+		var version int
+		if err := rows.Scan(&name, &version, &compose); err != nil {
+			return nil, err
+		}
+		for _, port := range hostPorts(ctx, compose) {
+			published = append(published, PublishedPort{Project: name, Version: version, Port: port})
+		}
+	}
+	return published, rows.Err()
+}
+
+func hostPorts(ctx context.Context, compose string) []int {
+	project, err := composefile.Load(ctx, latestComposeFile, []byte(compose), nil, false)
+	if err != nil {
+		return nil
+	}
+	var ports []int
+	for _, service := range project.Services {
+		for _, port := range service.Ports {
+			ports = append(ports, composefile.HostPorts(port.Published)...)
+		}
+	}
+	return ports
 }
 
 // DeleteProject removes the project; generations, images and every sealed

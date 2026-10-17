@@ -138,7 +138,7 @@ func regate(ctx context.Context, dependencies Dependencies, stored *Stored) (pol
 	if err != nil {
 		return policy.Report{}, err
 	}
-	input := policyInput(dependencies.Config, stored.Plan, stored.source(), stored.Options)
+	input := policyInput(ctx, dependencies, stored.Plan, stored.source(), stored.Options)
 	_, input.Images = stored.verifiedImages()
 	input.Profile = profile
 	return policy.Evaluate(input).Merge(policy.EvaluateYAML(ctx, project, []byte(stored.Generation.ComposeYAML), input)), nil
@@ -192,13 +192,16 @@ func repaired(ctx context.Context, dependencies Dependencies, options Options, r
 		return call, nil, fmt.Errorf("%w: %w", ErrNoRepair, err)
 	}
 	plan, rejected := ir.MergeRepair(result.Plan, proposal)
+	for _, key := range setHostPorts(plan, options.Ports, chosenPort) {
+		result.Notices = append(result.Notices, fmt.Sprintf(unmatchedPortNote, key))
+	}
 	if samePlan(plan, result.Plan) {
 		return call, rejected, fmt.Errorf("%w: it changes nothing a repair may change", ErrNoRepair)
 	}
 	plan.Unfilled = rules.Gaps(plan)
 	result.Plan, result.Call = plan, call
 	options.Edited = false
-	input := policyInput(dependencies.Config, plan, result.Source, options)
+	input := policyInput(ctx, dependencies, plan, result.Source, options)
 	input.Images = result.Checks
 	return call, rejected, renderAndGate(ctx, dependencies, options, result, input, nil)
 }

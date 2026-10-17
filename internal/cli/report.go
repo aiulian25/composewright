@@ -1,8 +1,10 @@
 package cli
 
 import (
+	"fmt"
 	"io"
 
+	"github.com/aiulian25/composewright/internal/pipeline"
 	"github.com/aiulian25/composewright/internal/policy"
 )
 
@@ -27,7 +29,11 @@ func (application *app) printFindings(output io.Writer, report policy.Report) er
 		if finding.Severity == policy.Fix {
 			continue
 		}
-		rows = append(rows, []string{"  " + application.severityLabel(finding.Severity), finding.Rule, sanitize(finding.Service), sanitize(finding.Message)})
+		message := finding.Message
+		if finding.FreePort > 0 {
+			message = fmt.Sprintf(portSuggestion, message, portFlag, pipeline.PortChoice(finding.Service, finding.ContainerPort, finding.FreePort))
+		}
+		rows = append(rows, []string{"  " + application.severityLabel(finding.Severity), finding.Rule, sanitize(finding.Service), sanitize(message)})
 	}
 	return table(output, rows...)
 }

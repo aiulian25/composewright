@@ -155,7 +155,7 @@ func applyEdit(ctx context.Context, dependencies Dependencies, stored *Stored, e
 	if err != nil {
 		return nil, check, err
 	}
-	input := policyInput(dependencies.Config, plan, result.Source, stored.Options)
+	input := policyInput(ctx, dependencies, plan, result.Source, stored.Options)
 	input.Images, input.Profile = result.Checks, profile
 	result.Report = policy.Evaluate(input).Merge(policy.EvaluateYAML(ctx, project, edit.Compose, input))
 	check.RulesPassed = check.Rules - len(failingRules(result.Report))
@@ -396,7 +396,7 @@ func EditCompose(ctx context.Context, dependencies Dependencies, name string, co
 	if err != nil {
 		return nil, err
 	}
-	input := policyInput(dependencies.Config, result.Plan, result.Source, options)
+	input := policyInput(ctx, dependencies, result.Plan, result.Source, options)
 	input.Images, input.Profile = result.Checks, profile
 	result.Report = policy.Evaluate(input).Merge(policy.EvaluateYAML(ctx, project, compose, input))
 	result.Files.Compose, result.Engine = compose, EngineManual

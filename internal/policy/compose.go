@@ -30,6 +30,7 @@ func EvaluateYAML(ctx context.Context, project *types.Project, content []byte, i
 		names = append(names, name)
 	}
 	sort.Strings(names)
+	check.ownPorts = publishedPorts(project)
 	for _, name := range names {
 		check.composeService(name, project.Services[name])
 	}
@@ -227,30 +228,56 @@ func (check *checker) bindSource(service, field, source string) {
 
 func (check *checker) composePorts(name string, service types.ServiceConfig) {
 	for _, port := range service.Ports {
-		lowest, readable := lowestPublished(port.Published)
-		if !readable || lowest == 0 || lowest >= lowPortLimit {
+		hostPorts := composefile.HostPorts(port.Published)
+		check.portTaken(name, port, hostPorts)
+		if len(hostPorts) == 0 || hostPorts[0] >= lowPortLimit {
 			continue
 		}
 		check.need("P4", ir.NeedLowPort, name, "services."+name+".ports", "%s publishes host port %s, below %d", name, port.Published, lowPortLimit)
 	}
 }
 
-// lowestPublished is the lowest host port of "8080", or of a range such as
-// "80-90", from which Docker may pick any port.
-func lowestPublished(published string) (int, bool) {
-	start, end, isRange := strings.Cut(published, "-")
-	first, err := strconv.Atoi(start)
-	if err != nil {
-		return 0, false
+// portTaken warns about each host port of port another project or a
+// running container publishes too; docker compose up would fail on it. A
+// single port gets the next free one to use instead.
+func (check *checker) portTaken(name string, port types.ServicePortConfig, hostPorts []int) {
+	for _, hostPort := range hostPorts {
+		takers := check.input.TakenPorts[hostPort]
+		if len(takers) == 0 {
+			continue
+		}
+		finding := Finding{Rule: "P4", Severity: Warn, Service: name, Path: "services." + name + ".ports",
+			Message: fmt.Sprintf(portTakenMessage, hostPort, strings.Join(takers, portTakersSeparator))}
+		if len(hostPorts) == 1 {
+			finding.ContainerPort, finding.FreePort = int(port.Target), check.nextFreePort(hostPort)
+		}
+		check.findings = append(check.findings, finding)
 	}
-	if !isRange {
-		return first, true
+}
+
+// nextFreePort is the first host port above port that neither another
+// stack nor this one publishes; 0 when none is left.
+func (check *checker) nextFreePort(port int) int {
+	for candidate := port + 1; candidate <= composefile.MaxPort; candidate++ {
+		_, taken := check.input.TakenPorts[candidate]
+		if !taken && !check.ownPorts[candidate] {
+			return candidate
+		}
 	}
-	last, err := strconv.Atoi(end)
-	if err != nil {
-		return 0, false
+	return 0
+}
+
+// publishedPorts are the host ports the project publishes.
+func publishedPorts(project *types.Project) map[int]bool {
+	ports := map[int]bool{}
+	for _, service := range project.Services {
+		for _, port := range service.Ports {
+			for _, hostPort := range composefile.HostPorts(port.Published) {
+				ports[hostPort] = true
+			}
+		}
 	}
-	return min(first, last), true
+	return ports
 }
 
 func (check *checker) composeImage(name string, service types.ServiceConfig) {

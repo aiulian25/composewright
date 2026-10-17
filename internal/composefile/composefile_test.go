@@ -2,6 +2,7 @@ package composefile
 
 import (
 	"context"
+	"slices"
 	"testing"
 )
 
@@ -44,6 +45,16 @@ func TestLoadKeepsReferencesVerbatim(t *testing.T) {
 		}
 		if image := project.Services["app"].Image; image != want {
 			t.Errorf("interpolate %v: image %q, want %q", interpolate, image, want)
+		}
+	}
+}
+
+func TestHostPorts(t *testing.T) {
+	cases := map[string][]int{"8080": {8080}, "8000-8002": {8000, 8001, 8002}, "": nil, "0": nil, "${PORT}": nil, "9-x": nil,
+		"1-2000000000": nil, "70000": nil, "5-0": nil}
+	for published, want := range cases {
+		if got := HostPorts(published); !slices.Equal(got, want) {
+			t.Errorf("HostPorts(%q) = %v, want %v", published, got, want)
 		}
 	}
 }

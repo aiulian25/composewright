@@ -377,13 +377,28 @@ func AtLeast(version string, minimum []int) bool {
 	return true
 }
 
-// Container is a running container on the daemon: what it runs and the
-// networks it is attached to.
+// Container is a running container on the daemon: what it runs, the
+// networks it is attached to, the host ports it binds and its labels.
 type Container struct {
 	Name     string
 	Image    string
 	Networks []string
+	Ports    []int
+	Labels   map[string]string
 }
+
+// LabelComposeProject names the Compose project a container belongs to.
+const LabelComposeProject = "com.docker.compose.project"
+
+const (
+	// listedPortsSeparator parts the entries of docker ps's Ports, as in
+	// "0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp".
+	listedPortsSeparator = ", "
+	// publishedArrow follows the host side of a published entry; an
+	// entry without one, as "8080/tcp", publishes nothing.
+	publishedArrow = "->"
+	hostPortColon  = ":"
+)
 
 // Containers lists the running containers on the daemon.
 func (sandbox *Sandbox) Containers(ctx context.Context) ([]Container, error) {
@@ -402,14 +417,30 @@ func parseContainers(output []byte) ([]Container, error) {
 		if strings.TrimSpace(line) == "" {
 			continue
 		}
-		var listed struct{ Names, Image, Networks string }
+		var listed struct{ Names, Image, Networks, Ports, Labels string }
 		if err := json.Unmarshal([]byte(line), &listed); err != nil {
 			return nil, fmt.Errorf("unexpected docker ps output: %w", err)
 		}
 		networks := strings.FieldsFunc(listed.Networks, func(character rune) bool { return character == ',' })
-		containers = append(containers, Container{Name: listed.Names, Image: listed.Image, Networks: networks})
+		containers = append(containers, Container{Name: listed.Names, Image: listed.Image, Networks: networks,
+			Ports: listedHostPorts(listed.Ports), Labels: parseLabels(listed.Labels)})
 	}
 	return containers, nil
+}
+
+// listedHostPorts are the host ports of docker ps's Ports, each once
+// though IPv4 and IPv6 both list it.
+func listedHostPorts(listed string) []int {
+	var ports []int
+	for _, entry := range strings.Split(listed, listedPortsSeparator) {
+		host, _, published := strings.Cut(entry, publishedArrow)
+		if !published {
+			continue
+		}
+		ports = append(ports, composefile.HostPorts(host[strings.LastIndex(host, hostPortColon)+1:])...)
+	}
+	slices.Sort(ports)
+	return slices.Compact(ports)
 }
 
 // Networks lists the Docker networks that exist on the daemon.

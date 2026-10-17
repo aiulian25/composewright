@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"context"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -43,8 +44,32 @@ func TestConnectChoosesTheEngine(t *testing.T) {
 			if !strings.Contains(connection.Note, testCase.wantNote) || (testCase.wantNote == "") != (connection.Note == "") {
 				t.Fatalf("note %q, want %q", connection.Note, testCase.wantNote)
 			}
-			if dependencies.Sandbox != nil {
-				t.Fatal("a sandbox was built for a run that does not validate")
+		})
+	}
+}
+
+func TestConnectBuildsTheDockerClientForTheHostPortCheck(t *testing.T) {
+	withDocker := config.Default()
+	withDocker.Docker.CLIPath = filepath.Join(t.TempDir(), "docker")
+	cases := []struct {
+		name        string
+		setup       Setup
+		wantSandbox bool
+	}{
+		{"without validation", Setup{Config: withDocker, Engine: EngineRules}, true},
+		{"offline without validation", Setup{Config: withDocker, Engine: EngineRules, Offline: true}, false},
+		{"offline validation", Setup{Config: withDocker, Engine: EngineRules, Offline: true, Validate: true}, true},
+		{"no docker CLI", Setup{Config: config.Default(), Engine: EngineRules}, false},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Setenv("PATH", t.TempDir())
+			connection, err := Connect(context.Background(), testCase.setup)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if built := connection.Dependencies.Sandbox != nil; built != testCase.wantSandbox {
+				t.Fatalf("sandbox built %v, want %v", built, testCase.wantSandbox)
 			}
 		})
 	}

@@ -343,6 +343,10 @@ type findingView struct {
 	// how the button names it.
 	MemoryLimit     string
 	MemoryLimitText string
+	// FreePort is the host port offered for a port another stack takes,
+	// and PortChoice the form value that chooses it.
+	FreePort   int
+	PortChoice string
 }
 
 var severityViews = map[policy.Severity][2]string{
@@ -360,8 +364,12 @@ func findingViews(report policy.Report, compose string) []findingView {
 				continue
 			}
 			style, line := severityViews[severity], finding.Line(lines)
-			views = append(views, findingView{Rule: finding.Rule, Service: finding.Service, Message: finding.Message, Tone: style[0], Label: style[1],
-				Line: line, Code: lineText(texts, line), MemoryLimit: finding.MemoryLimit, MemoryLimitText: sizeText(finding.MemoryLimit)})
+			view := findingView{Rule: finding.Rule, Service: finding.Service, Message: finding.Message, Tone: style[0], Label: style[1],
+				Line: line, Code: lineText(texts, line), MemoryLimit: finding.MemoryLimit, MemoryLimitText: sizeText(finding.MemoryLimit), FreePort: finding.FreePort}
+			if finding.FreePort > 0 {
+				view.PortChoice = pipeline.PortChoice(finding.Service, finding.ContainerPort, finding.FreePort)
+			}
+			views = append(views, view)
 		}
 	}
 	return views

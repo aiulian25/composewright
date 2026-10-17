@@ -49,6 +49,11 @@ type Finding struct {
 	// MemoryLimit is a mem_limit, such as 1024m, that fits what the
 	// service was seen to use.
 	MemoryLimit string `json:"memory_limit,omitempty"`
+	// ContainerPort and FreePort are set on a host port another stack
+	// takes: the container port published there, and the next host port
+	// nothing takes.
+	ContainerPort int `json:"container_port,omitempty"`
+	FreePort      int `json:"free_port,omitempty"`
 }
 
 type Report struct {
@@ -65,6 +70,10 @@ type Input struct {
 	// Images holds registry verification results keyed by
 	// registry/repository:tag; an image missing from the map was not checked.
 	Images map[string]ImageCheck
+	// TakenPorts are the host ports other projects and running containers
+	// publish, each with what takes it, as "published by project linkding
+	// (v3)".
+	TakenPorts map[int][]string
 }
 
 // ImageCheck is what the registry said about one image.
@@ -124,6 +133,8 @@ func (report Report) Merge(other Report) Report {
 type checker struct {
 	input    Input
 	findings []Finding
+	// ownPorts are the host ports the checked compose file publishes.
+	ownPorts map[int]bool
 }
 
 func (check *checker) add(rule string, severity Severity, service, path, format string, arguments ...any) {

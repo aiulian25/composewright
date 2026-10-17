@@ -25,7 +25,9 @@ type Setup struct {
 	// fetch, no image check and no model.
 	Offline      bool
 	NoLabelCheck bool
-	// Validate builds the sandbox, which needs the docker CLI.
+	// Validate makes a missing docker CLI an error; without it the sandbox
+	// is still built when it can be, for the host-port check, unless the
+	// run is offline.
 	Validate bool
 }
 
@@ -39,8 +41,9 @@ type Connection struct {
 
 // Connect builds the dependencies of a run from the configuration: the
 // egress guard and image inspector unless offline, the model unless the
-// rules work alone, and the sandbox when the run validates. The CLI and the
-// web UI share it so both reach exactly the same hosts.
+// rules work alone, and the Docker client unless an offline run does not
+// validate. The CLI and the web UI share it so both reach exactly the same
+// hosts.
 func Connect(ctx context.Context, setup Setup) (Connection, error) {
 	dependencies := Dependencies{Config: setup.Config, Workspace: setup.Workspace, Version: setup.Version}
 	policy, err := netguard.PolicyFromConfig(setup.Config, setup.ExtraRegistries, setup.Version)
@@ -60,10 +63,14 @@ func Connect(ctx context.Context, setup Setup) (Connection, error) {
 	}
 	connection := Connection{Dependencies: dependencies}
 	connection.Engine, connection.Note = connectModel(ctx, &connection.Dependencies, setup, guard)
-	if !setup.Validate {
+	if setup.Offline && !setup.Validate {
 		return connection, nil
 	}
 	connection.Dependencies.Sandbox, err = sandbox.FromConfig(setup.Config, setup.Paths.ProjectsDir())
+	// A FromConfig error is ignored when nothing validates.
+	if !setup.Validate {
+		return connection, nil
+	}
 	return connection, err
 }
 

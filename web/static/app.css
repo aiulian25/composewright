@@ -2168,6 +2168,10 @@ legend {
   color: var(--warn);
 }
 
+.finding .button {
+  justify-self: start;
+}
+
 .finding-rule {
   font-weight: 600;
   font-size: 12.5px;

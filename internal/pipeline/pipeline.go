@@ -80,6 +80,9 @@ type Options struct {
 	// its path in the repository; empty, the rules choose. The generation
 	// stores the one the plan was built from.
 	ComposeFile string `json:"compose_file,omitempty"`
+	// Ports are the host ports a person chose, keyed by service and
+	// container port as app:8080.
+	Ports map[string]int `json:"ports,omitempty"`
 	// Regenerating generates an existing project again from its own
 	// source: a source read elsewhere is refused, never moved to.
 	Regenerating bool `json:"-"`
@@ -314,7 +317,7 @@ func plan(ctx context.Context, dependencies Dependencies, options *Options, resu
 		return policy.Input{}, err
 	}
 	observer.step(StepPlan, StateDone, "")
-	input := policyInput(dependencies.Config, result.Plan, result.Source, *options)
+	input := policyInput(ctx, dependencies, result.Plan, result.Source, *options)
 	imagesState, imagesNote := StateRunning, ""
 	if dependencies.Inspector == nil {
 		imagesState, imagesNote = StateSkipped, "offline: images are not verified or pinned"
@@ -326,6 +329,9 @@ func plan(ctx context.Context, dependencies Dependencies, options *Options, resu
 		observer.step(StepImages, StateDone, "")
 	}
 	fill(ctx, dependencies, *options, result)
+	for _, key := range setHostPorts(result.Plan, options.Ports, chosenPort) {
+		result.Notices = append(result.Notices, fmt.Sprintf(unmatchedPortNote, key))
+	}
 	observer.step(StepPolicy, StateRunning, "")
 	input.Plan, input.Images = result.Plan, result.Checks
 	result.Report = policy.Evaluate(input)
@@ -427,9 +433,11 @@ func verifyImages(ctx context.Context, inspector *images.Inspector, plan *ir.IR,
 	return inspected, checks
 }
 
-func policyInput(configuration config.Config, plan *ir.IR, source *fetch.Source, options Options) policy.Input {
+func policyInput(ctx context.Context, dependencies Dependencies, plan *ir.IR, source *fetch.Source, options Options) policy.Input {
+	configuration := dependencies.Config
 	return policy.Input{Plan: plan, Profile: configuration.Profile, AllowRegistries: configuration.Registries.Allow,
-		ExtraRegistries: options.AllowRegistries, RepositoryOwner: source.Owner, GrantedNeeds: options.AllowNeeds}
+		ExtraRegistries: options.AllowRegistries, RepositoryOwner: source.Owner, GrantedNeeds: options.AllowNeeds,
+		TakenPorts: takenPorts(ctx, dependencies, plan.App.Name)}
 }
 
 // renderAndGate runs the plan gate, renders the files and runs the YAML gate

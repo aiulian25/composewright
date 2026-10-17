@@ -142,10 +142,9 @@ func docker(_ context.Context, directory string, live io.Writer, arguments ...st
 
 // offline connects every run offline, with the scripted Docker as sandbox.
 func offline(ctx context.Context, setup pipeline.Setup) (pipeline.Connection, error) {
-	validate := setup.Validate
 	setup.Offline, setup.Validate = true, false
 	connection, err := pipeline.Connect(ctx, setup)
-	if err != nil || !validate {
+	if err != nil {
 		return connection, err
 	}
 	limits, _ := sandbox.ParseLimits("1g", 1, 128)
@@ -1053,6 +1052,37 @@ func TestPublicAddressOnReview(t *testing.T) {
 	status(t, response, http.StatusBadRequest, page)
 	if stored = harness.reviewWith("rss", nil, url.Values{publicHostField: {""}}); stored.Values["BASE_URL"] != "http://localhost:8080" {
 		t.Fatalf("a blank address kept %q", stored.Values["BASE_URL"])
+	}
+}
+
+// TestTakenHostPortOnReview: a second project publishing the host port of
+// the first is warned about on its Review, and Use takes the next free port.
+func TestTakenHostPortOnReview(t *testing.T) {
+	harness := newHarness(t)
+	harness.signUp()
+	directory := t.TempDir()
+	compose := "services:\n  app:\n    image: docker.io/library/nginx:1.27\n    ports: [\"8080:80\"]\n"
+	if err := os.WriteFile(filepath.Join(directory, "compose.yaml"), []byte(compose), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"linkding", "second"} {
+		response, page := harness.post("/new", url.Values{"source": {directory}, "name": {name}, "engine": {pipeline.EngineRules}})
+		status(t, response, http.StatusSeeOther, page)
+		if job := harness.waitForJob(response.Header.Get("Location")); job.Failure != "" {
+			t.Fatal(job.Failure)
+		}
+	}
+	response, page := harness.get(projectURL("second", pageReview))
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, "host port 8080 is also published by project linkding (v1)") || !strings.Contains(page, `name="port" value="app:80=8081">Use 8081`) {
+		t.Fatal("the Review does not warn about the taken port or offer the next free one")
+	}
+	stored := harness.reviewWith("second", nil, url.Values{portField: {"app:80=8081"}})
+	if !strings.Contains(stored.Generation.ComposeYAML, `"127.0.0.1:8081:80/tcp"`) || stored.Options.Ports["app:80"] != 8081 {
+		t.Fatalf("the chosen port did not reach the project: %v\n%s", stored.Options.Ports, stored.Generation.ComposeYAML)
+	}
+	if stored.Report.Has("P4", policy.Warn) {
+		t.Fatalf("the free port still warns: %+v", stored.Report.Findings)
 	}
 }
 

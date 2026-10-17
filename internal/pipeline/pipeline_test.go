@@ -19,6 +19,7 @@ import (
 	"github.com/aiulian25/composewright/internal/fetch"
 	"github.com/aiulian25/composewright/internal/ir"
 	"github.com/aiulian25/composewright/internal/llm"
+	"github.com/aiulian25/composewright/internal/policy"
 	"github.com/aiulian25/composewright/internal/rules"
 	"github.com/aiulian25/composewright/internal/sandbox"
 	"github.com/aiulian25/composewright/internal/store"
@@ -45,6 +46,8 @@ type scriptedDocker struct {
 	logs   string
 	stats  string
 	runs   int
+	// running answers docker ps for the running containers.
+	running string
 }
 
 func (docker *scriptedDocker) run(_ context.Context, _ string, _ io.Writer, arguments ...string) ([]byte, []byte, error) {
@@ -69,6 +72,8 @@ func (docker *scriptedDocker) run(_ context.Context, _ string, _ io.Writer, argu
 		return []byte(`{"CgroupVersion":"2","CgroupDriver":"systemd"}`), nil, nil
 	case strings.Contains(command, probeRun):
 		return []byte(probeAnswer), nil, nil
+	case strings.HasPrefix(command, "ps --format"):
+		return []byte(docker.running), nil, nil
 	}
 	return nil, nil, nil
 }
@@ -798,5 +803,69 @@ func TestEngines(t *testing.T) {
 				t.Fatalf("generation record: engine %s, model %q, hash %q", stored.Engine, stored.Model, stored.PromptHash)
 			}
 		})
+	}
+}
+
+// TestRunningContainerPortWarns: a running container binding the plan's
+// host port is warned about, the project's own deployed containers and
+// sandbox runs are not, and a chosen port is kept by a regeneration.
+func TestRunningContainerPortWarns(t *testing.T) {
+	running := `{"Names":"kuma","Ports":"0.0.0.0:8080->3001/tcp, [::]:8080->3001/tcp","Labels":""}
+{"Names":"miniflux-miniflux-1","Ports":"127.0.0.1:8080->8080/tcp","Labels":"com.docker.compose.project=miniflux"}
+{"Names":"cw-miniflux-1-miniflux-1","Ports":"127.0.0.1:8080->8080/tcp","Labels":"io.composewright.sandbox=cw-miniflux-1"}`
+	dependencies := testDependencies(t, &scriptedDocker{running: running})
+	result := generated(t, dependencies)
+	var warnings []string
+	for _, finding := range result.Report.Findings {
+		if finding.Rule == "P4" && finding.FreePort > 0 {
+			warnings = append(warnings, finding.Message)
+		}
+	}
+	if want := []string{"host port 8080 is also bound by running container kuma on this Docker host"}; !slices.Equal(warnings, want) {
+		t.Fatalf("P4 port warnings = %q, want %q", warnings, want)
+	}
+	options := testOptions()
+	options.RunSandbox, options.Ports = false, map[string]int{"miniflux:8080": 8081, "miniflux:1": 9}
+	chosen, err := Generate(context.Background(), dependencies, options)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(chosen.Files.Compose), "127.0.0.1:8081:8080/tcp") || chosen.Report.Has("P4", policy.Warn) {
+		t.Fatalf("the chosen port was not published or still warns:\n%s", chosen.Files.Compose)
+	}
+	if !slices.ContainsFunc(chosen.Notices, func(notice string) bool { return strings.Contains(notice, "miniflux:1") }) {
+		t.Fatalf("a port the plan lacks was dropped silently: %v", chosen.Notices)
+	}
+	regeneration, err := load(t, dependencies, "miniflux").Regeneration(nil, "")
+	if err != nil || regeneration.Ports["miniflux:8080"] != 8081 {
+		t.Fatalf("a regeneration lost the chosen port: %v %v", regeneration.Ports, err)
+	}
+}
+
+// TestRepairKeepsTheChosenPort: a repair that publishes the container port
+// on another host port gets the chosen one back.
+func TestRepairKeepsTheChosenPort(t *testing.T) {
+	dependencies := testDependencies(t, &scriptedDocker{states: []string{unhealthy, healthy}})
+	dependencies.Approve = func(*Result) (bool, error) { return true, nil }
+	dependencies.Repairer = &fakeRepairer{mutate: func(plan *ir.IR) { plan.Services[0].Ports[0].HostPort = 8080 }}
+	options := testOptions()
+	options.Ports = map[string]int{"miniflux:8080": 8081}
+	result, err := Generate(context.Background(), dependencies, options)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(result.Verdicts) != 2 || !strings.Contains(string(result.Files.Compose), "127.0.0.1:8081:8080/tcp") {
+		t.Fatalf("verdicts %d, the repair lost the chosen port:\n%s", len(result.Verdicts), result.Files.Compose)
+	}
+}
+
+func TestParsePortChoice(t *testing.T) {
+	if key, host, err := ParsePortChoice(PortChoice("app", 8080, 8081)); key != "app:8080" || host != 8081 || err != nil {
+		t.Fatalf("ParsePortChoice = %q, %d, %v", key, host, err)
+	}
+	for _, text := range []string{"app:8080", "app=8081", ":8080=8081", "app:x=8081", "app:8080=0", "app:8080=65536"} {
+		if _, _, err := ParsePortChoice(text); err == nil {
+			t.Errorf("ParsePortChoice(%q) accepted it", text)
+		}
 	}
 }

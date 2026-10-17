@@ -56,6 +56,9 @@ type Revision struct {
 	Add []Variable
 	// MemoryLimits are new mem_limit values by service, such as 1024m.
 	MemoryLimits map[string]string
+	// Ports are host ports to publish container ports on, keyed as
+	// Options.Ports.
+	Ports map[string]int
 }
 
 type Variable struct {
@@ -80,6 +83,7 @@ func Revise(ctx context.Context, dependencies Dependencies, name string, revisio
 	options.Edited = false
 	options.ExposeVia, options.Networks, options.Storage, options.AllowNeeds = revision.ExposeVia, revision.Networks, revision.Storage, revision.AllowNeeds
 	options.AllowRegistries, options.PublicHost = revision.AllowRegistries, revision.PublicHost
+	options.Ports = chosenPorts(stored.Options.Ports, revision.Ports)
 	if err := options.Check(); err != nil {
 		return nil, err
 	}
@@ -102,7 +106,7 @@ func Revise(ctx context.Context, dependencies Dependencies, name string, revisio
 	if err := dependencies.Workspace.Store.ReplaceEnvVars(ctx, stored.Project.ID, envRecords(result.Plan, values, variables)); err != nil {
 		return nil, err
 	}
-	input := policyInput(dependencies.Config, result.Plan, result.Source, options)
+	input := policyInput(ctx, dependencies, result.Plan, result.Source, options)
 	if dependencies.Inspector != nil {
 		result.Inspected, result.Checks = verifyImages(ctx, dependencies.Inspector, result.Plan, input)
 		rules.ApplyImages(result.Plan, result.Inspected, result.Source.URL)
@@ -227,6 +231,9 @@ func (revision Revision) apply(plan *ir.IR) error {
 		if err := setMemoryLimit(plan, name, limit, edited); err != nil {
 			return err
 		}
+	}
+	if unmatched := setHostPorts(plan, revision.Ports, edited); len(unmatched) > 0 {
+		return fmt.Errorf("%w: %s", ErrUnknownPort, strings.Join(unmatched, ", "))
 	}
 	return nil
 }

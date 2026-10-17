@@ -5,7 +5,6 @@ import "github.com/docker/go-units"
 const (
 	maxServices       = 8
 	lowPortLimit      = 1024
-	maxPort           = 65535
 	defaultRegistry   = "docker.io"
 	officialNamespace = "docker.io/library/"
 	hostWideSuffix    = "/*"
@@ -39,6 +38,13 @@ var ownerRegistries = []string{"docker.io", "ghcr.io", "quay.io"}
 // trusted by that name alone gets a P1 warning. ghcr.io namespaces are the
 // GitHub accounts themselves.
 var nameOnlyRegistries = []string{"docker.io", "quay.io"}
+
+// portTakenMessage warns that a host port is taken, by what
+// TakenPorts says, joined by portTakersSeparator.
+const (
+	portTakenMessage    = "host port %d is also %s"
+	portTakersSeparator = " and "
+)
 
 // OutsideAllowlist and NotGitHubAccounts mark the P1 findings a person
 // settles by trusting the image's namespace on the Review page.

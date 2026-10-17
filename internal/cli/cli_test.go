@@ -43,6 +43,9 @@ func isolate(t *testing.T) string {
 	t.Helper()
 	root := t.TempDir()
 	t.Setenv("HOME", root)
+	// No Docker daemon answers, so the host's running containers never
+	// reach a test.
+	t.Setenv("DOCKER_HOST", "unix://"+filepath.Join(root, "no-docker.sock"))
 	for _, variable := range []string{"XDG_CONFIG_HOME", "XDG_DATA_HOME", "COMPOSEWRIGHT_CONFIG", "COMPOSEWRIGHT_DATA_DIR", "COMPOSEWRIGHT_MASTER_KEY_FILE"} {
 		t.Setenv(variable, "")
 	}
@@ -449,6 +452,34 @@ func TestGenComposeFile(t *testing.T) {
 	}
 	if shown := run(t, environment, "show", "notesweb"); shown.code == exitOK {
 		t.Fatal("a gen without the flag made another project")
+	}
+}
+
+// TestGenSuggestsAndTakesAFreePort: a host port another project publishes
+// gets a --port suggestion, and --port publishes the chosen one.
+func TestGenSuggestsAndTakesAFreePort(t *testing.T) {
+	environment := isolate(t)
+	directory := filepath.Join(environment, "web")
+	if err := os.MkdirAll(directory, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	compose := "services:\n  app:\n    image: docker.io/library/nginx:1.27\n    ports: [\"8080:80\"]\n"
+	if err := os.WriteFile(filepath.Join(directory, "compose.yaml"), []byte(compose), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	run(t, environment, "init")
+	arguments := []string{"gen", "--offline", "--no-llm", "--no-validate"}
+	if result := run(t, environment, append(arguments, "--name", "first", directory)...); result.code != exitOK {
+		t.Fatalf("gen first: %+v", result)
+	}
+	if second := run(t, environment, append(arguments, "--name", "second", directory)...); !strings.Contains(second.stdout, "use --port app:80=8081") {
+		t.Fatalf("gen did not suggest a free port: %+v", second)
+	}
+	if result := run(t, environment, append(arguments, "--name", "second", "--port", "app:80=8081", directory)...); result.code != exitOK {
+		t.Fatalf("gen --port: %+v", result)
+	}
+	if shown := run(t, environment, "show", "second", "--file", "compose"); !strings.Contains(shown.stdout, "127.0.0.1:8081:80/tcp") {
+		t.Fatalf("--port did not publish the chosen port:\n%s", shown.stdout)
 	}
 }
 

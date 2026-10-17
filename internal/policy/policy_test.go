@@ -742,3 +742,29 @@ func TestMergeListsARepeatedFindingOnce(t *testing.T) {
 		t.Fatalf("merged: %+v", merged.Findings)
 	}
 }
+
+func TestTakenHostPortWarnsAndSuggestsTheNextFree(t *testing.T) {
+	compose := "services:\n  app:\n    image: " + nginx + "\n    ports: ['127.0.0.1:8080:80', '127.0.0.1:8082:81']\n" +
+		"  other:\n    image: " + nginx + "\n    ports: ['127.0.0.1:9000:9000']\n"
+	input := baseInput(goodPlan())
+	input.TakenPorts = map[int][]string{8080: {"published by project linkding (v3)"}, 8081: {"bound by running container kuma on this Docker host"}}
+	report := policy.EvaluateYAML(context.Background(), loadCompose(t, compose), []byte(compose), input)
+	var warnings []policy.Finding
+	for _, finding := range report.Findings {
+		if finding.Rule == "P4" && finding.Severity == policy.Warn {
+			warnings = append(warnings, finding)
+		}
+	}
+	if len(warnings) != 1 {
+		t.Fatalf("P4 warnings = %+v, want one for 8080", warnings)
+	}
+	want := policy.Finding{Rule: "P4", Severity: policy.Warn, Service: "app", Path: "services.app.ports",
+		Message: "host port 8080 is also published by project linkding (v3)", ContainerPort: 80, FreePort: 8083}
+	if warnings[0] != want {
+		t.Errorf("warning = %+v, want %+v", warnings[0], want)
+	}
+	input.TakenPorts = nil
+	if report := policy.EvaluateYAML(context.Background(), loadCompose(t, compose), []byte(compose), input); report.Has("P4", policy.Warn) {
+		t.Errorf("unique ports warn: %+v", report.Findings)
+	}
+}

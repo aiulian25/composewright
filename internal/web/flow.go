@@ -60,6 +60,8 @@ const (
 	// optionalField holds the optional services ticked on the Review page.
 	optionalField   = "optional"
 	publicHostField = "public_host"
+	// portField chooses a host port on the Review page, as app:8080=8081.
+	portField = "port"
 	// publishedPortHint and noAddressHint say what a blank public address
 	// gives when the app joins no network.
 	publishedPortHint = "the published port"
@@ -1024,6 +1026,13 @@ func (server *Server) review(writer http.ResponseWriter, request *http.Request, 
 			revision.AllowRegistries, action = append(revision.AllowRegistries, pattern), actionApply
 		}
 	}
+	if choice := request.PostFormValue(portField); choice != "" {
+		key, host, err := pipeline.ParsePortChoice(choice)
+		if err != nil {
+			return server.reviewProblem(writer, request, current, name, err)
+		}
+		revision.Ports, action = map[string]int{key: host}, actionApply
+	}
 	if pattern := request.PostFormValue(benignRemoveField); pattern != "" {
 		if err := server.removeBenign(ctx, current.user.Username, name, pattern); err != nil {
 			return err
@@ -1159,7 +1168,7 @@ func revisionFrom(form url.Values, stored *pipeline.Stored) pipeline.Revision {
 func changed(revision pipeline.Revision, stored *pipeline.Stored, profile config.Profile) bool {
 	options := stored.Options
 	mode, networks := render.Exposure(profile, options.ExposeVia, options.Networks)
-	edits := len(revision.Values) + len(revision.Secrets) + len(revision.Regenerate) + len(revision.Add) + len(revision.MemoryLimits)
+	edits := len(revision.Values) + len(revision.Secrets) + len(revision.Regenerate) + len(revision.Add) + len(revision.MemoryLimits) + len(revision.Ports)
 	return edits > 0 || revision.ExposeVia != mode || !sameSet(revision.Networks, networks) || revision.PublicHost != options.PublicHost ||
 		revision.Storage != options.Storage ||
 		!sameSet(revision.AllowNeeds, options.AllowNeeds) || !sameSet(revision.AllowRegistries, options.AllowRegistries)
