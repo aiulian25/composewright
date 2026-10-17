@@ -39,13 +39,17 @@ const (
 	pastedCompose  = "compose.yaml"
 	pastedEnv      = ".env"
 	uploadedTitle  = "the files you gave"
-	actionApply    = "apply"
-	actionValidate = "validate"
-	actionFiles    = "files"
-	viaWeb         = "web"
-	valuePrefix    = "value:"
-	secretPrefix   = "secret:"
-	trustField     = "trust"
+	// mixedUploadProblem refuses an archive given with other files or a
+	// pasted compose file: which of them is the repository is unclear.
+	mixedUploadProblem = "Give one archive, or loose files, not both."
+	archiveKindProblem = "%s cannot be unpacked: give the repository as one .zip or .tar.gz."
+	actionApply        = "apply"
+	actionValidate     = "validate"
+	actionFiles        = "files"
+	viaWeb             = "web"
+	valuePrefix        = "value:"
+	secretPrefix       = "secret:"
+	trustField         = "trust"
 	// trustAlwaysField trusts the namespace in config.yaml as well, for
 	// every project from now on.
 	trustAlwaysField = "trust_always"
@@ -90,6 +94,8 @@ var failureHints = map[string]string{
 		"When it answered with an error, the probe path above may not be the app's health endpoint.",
 }
 
+// archiveExtension are the archives people may drop; only those
+// fetch.IsArchive accepts can be unpacked.
 var archiveExtension = []string{".zip", ".tar", ".gz", ".tgz", ".xz", ".bz2", ".7z", ".rar"}
 
 type option struct {
@@ -173,7 +179,44 @@ func (ask generationRequest) problem() string {
 	case len(ask.files) > maxUploadFiles:
 		return fmt.Sprintf("At most %d files at a time.", maxUploadFiles)
 	}
+	return ask.archiveProblem()
+}
+
+// archiveProblem says why the archives among the files cannot be used:
+// one .zip or .tar.gz, given alone, is unpacked as the repository.
+func (ask generationRequest) archiveProblem() string {
+	archives := slices.DeleteFunc(slices.Clone(ask.files), func(header *multipart.FileHeader) bool { return !isArchive(header) })
+	if len(archives) == 0 {
+		return ""
+	}
+	for _, header := range archives {
+		if !fetch.IsArchive(uploadName(header)) {
+			return fmt.Sprintf(archiveKindProblem, uploadName(header))
+		}
+	}
+	pasted := strings.TrimSpace(ask.compose) != "" || strings.TrimSpace(ask.env) != ""
+	if len(ask.files) > 1 || pasted {
+		return mixedUploadProblem
+	}
 	return ""
+}
+
+// archive is the one archive given as the repository, if it was.
+func (ask generationRequest) archive() *multipart.FileHeader {
+	if len(ask.files) != 1 || !isArchive(ask.files[0]) {
+		return nil
+	}
+	return ask.files[0]
+}
+
+func isArchive(header *multipart.FileHeader) bool {
+	name := strings.ToLower(header.Filename)
+	return slices.ContainsFunc(archiveExtension, func(extension string) bool { return strings.HasSuffix(name, extension) })
+}
+
+// uploadName is an uploaded file's base name, without any folder it gave.
+func uploadName(header *multipart.FileHeader) string {
+	return filepath.Base(filepath.Clean("/" + header.Filename))
 }
 
 func uploadedFiles(request *http.Request) []*multipart.FileHeader {
@@ -207,6 +250,10 @@ func (server *Server) launch(writer http.ResponseWriter, request *http.Request, 
 			return err
 		}
 		source, title = uploads, uploadedTitle
+		if archive := ask.archive(); archive != nil {
+			title = uploadName(archive)
+			source = filepath.Join(uploads, title)
+		}
 	}
 	options := pipeline.Options{Source: source, Ref: ask.ref, Name: ask.name, Engine: ask.engine, Uploaded: ask.given()}
 	username, filesOnly := current.user.Username, ask.filesOnly
@@ -256,10 +303,33 @@ func (server *Server) connect(ctx context.Context, username, engine string, vali
 		Version: server.options.Version, Engine: engine, Validate: validate})
 }
 
-// saveUploads writes the given files into a private folder under the data
-// directory: base names only, no archives, no overwriting one another.
-func (server *Server) saveUploads(files []*multipart.FileHeader, compose, env string) (string, error) {
+// uploadsRoot holds a private folder for each run's uploaded files. It is
+// absolute, as the source a run reports is.
+func (server *Server) uploadsRoot() string {
 	root := filepath.Join(server.paths().DataDir, uploadsDir)
+	if absolute, err := filepath.Abs(root); err == nil {
+		return absolute
+	}
+	return root
+}
+
+// shownSource is a job's source as people see it: an upload is named by its
+// title, not by the private folder it was saved in.
+func (server *Server) shownSource(snapshot snapshot) *fetch.Source {
+	uploaded := snapshot.Source != nil && strings.HasPrefix(snapshot.Source.URL, server.uploadsRoot()+string(filepath.Separator))
+	if !uploaded {
+		return snapshot.Source
+	}
+	shown := *snapshot.Source
+	shown.URL = snapshot.Title
+	return &shown
+}
+
+// saveUploads writes the given files into a private folder under the data
+// directory: base names only, no overwriting one another. An archive is
+// kept as it is; the analysis unpacks it.
+func (server *Server) saveUploads(files []*multipart.FileHeader, compose, env string) (string, error) {
+	root := server.uploadsRoot()
 	if err := os.MkdirAll(root, uploadDirMode); err != nil {
 		return "", err
 	}
@@ -292,9 +362,8 @@ func (server *Server) saveUploads(files []*multipart.FileHeader, compose, env st
 }
 
 func saveUpload(directory string, header *multipart.FileHeader) error {
-	name := filepath.Base(filepath.Clean("/" + header.Filename))
-	archive := slices.ContainsFunc(archiveExtension, func(extension string) bool { return strings.HasSuffix(strings.ToLower(name), extension) })
-	if name == "/" || name == "." || archive {
+	name := uploadName(header)
+	if name == "/" || name == "." {
 		return nil
 	}
 	source, err := header.Open()
@@ -320,7 +389,7 @@ func (server *Server) removeUploads(directory string) {
 // sweepUploads removes the upload folders a crash left behind, which may
 // hold a .env. No job runs before the server starts, so each one is stale.
 func (server *Server) sweepUploads() {
-	root := filepath.Join(server.paths().DataDir, uploadsDir)
+	root := server.uploadsRoot()
 	entries, err := os.ReadDir(root)
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		server.options.Logger.Warn("uploads left by a crash were not looked for", "directory", root, "error", err)
@@ -425,14 +494,15 @@ type analyseView struct {
 func (server *Server) analyseView(snapshot snapshot) analyseView {
 	rows, chips := factRows(snapshot.Facts)
 	settings := server.config().LLM
+	source := server.shownSource(snapshot)
 	details := map[string]string{
-		pipeline.StepFetch:   sourceText(snapshot.Source),
+		pipeline.StepFetch:   sourceText(source),
 		pipeline.StepExtract: extractSummary(snapshot.Facts),
 		pipeline.StepModel:   providerNames[settings.Provider] + " · " + settings.Model + " · structured JSON",
 	}
 	heading := "Analysing " + snapshot.Title
-	if snapshot.Source != nil && snapshot.Source.URL != "" && snapshot.Title != uploadedTitle {
-		heading = "Analysing " + strings.TrimPrefix(snapshot.Source.URL, githubPrefix)
+	if source != nil && source.URL != "" {
+		heading = "Analysing " + strings.TrimPrefix(source.URL, githubPrefix)
 	}
 	end := snapshot.Ended
 	if end.IsZero() {
@@ -441,8 +511,8 @@ func (server *Server) analyseView(snapshot snapshot) analyseView {
 	elapsed := end.Sub(snapshot.Started).Round(time.Second)
 	view := analyseView{Job: snapshot, Heading: heading, Steps: steps(generationSteps, snapshot, details), Facts: rows, FactChips: chips,
 		Events: "/jobs/" + snapshot.ID + "/events", Elapsed: elapsed.String(), Seconds: int(elapsed.Seconds()), Live: true}
-	if snapshot.Source != nil && snapshot.Source.Commit != "" {
-		view.Ref = sourceText(snapshot.Source)
+	if source != nil && source.Commit != "" {
+		view.Ref = sourceText(source)
 	}
 	if snapshot.Facts != nil {
 		view.Files, view.Suspicious = filesRead(snapshot.Facts.Files, nil), snapshot.Facts.Suspicious

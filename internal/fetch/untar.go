@@ -1,5 +1,6 @@
-// Package fetch turns a source (GitHub repository, local directory) into a
-// private directory that holds only the files fact extraction reads.
+// Package fetch turns a source (GitHub repository, local directory, local
+// .zip or .tar.gz archive) into a private directory that holds only the
+// files fact extraction reads.
 package fetch
 
 import (
@@ -35,6 +36,9 @@ const (
 var (
 	ErrTooLarge   = errors.New("archive exceeds the size or file-count limits")
 	ErrUnsafePath = errors.New("archive entry has an unsafe path")
+	// ErrSeveralFolders is a harmless archive packed from inside the
+	// repository folder, or of several folders.
+	ErrSeveralFolders = errors.New("the archive should hold one folder with the repository in it")
 )
 
 // Extracted describes the result of unpacking an archive.
@@ -72,52 +76,72 @@ func untar(reader io.Reader, destination string, maxDownload int64) (Extracted, 
 	defer root.Close()
 	expanded := &countingReader{reader: compressed, limit: maxExpandedBytes}
 	archive := tar.NewReader(expanded)
-	var result Extracted
-	var keptBytes int64
+	unpacking := &extraction{root: root}
 	for entries := 0; ; entries++ {
 		header, err := archive.Next()
 		if errors.Is(err, io.EOF) {
-			return result, nil
+			return unpacking.result, nil
 		}
 		if err != nil {
-			return result, fmt.Errorf("read archive: %w", err)
+			return unpacking.result, fmt.Errorf("read archive: %w", err)
 		}
 		if entries >= maxEntries {
-			return result, ErrTooLarge
+			return unpacking.result, ErrTooLarge
 		}
 		if header.Typeflag == tar.TypeXGlobalHeader {
 			if comment := header.PAXRecords["comment"]; commitPattern.MatchString(comment) {
-				result.Commit = comment
+				unpacking.result.Commit = comment
 			}
 			continue
 		}
-		name, err := relativeName(header.Name, &result.RootName)
-		if err != nil {
-			return result, err
+		content := func() (io.ReadCloser, error) { return io.NopCloser(archive), nil }
+		regular, directory := header.Typeflag == tar.TypeReg, header.Typeflag == tar.TypeDir
+		if err := unpacking.add(header.Name, directory, regular, header.Size, content); err != nil {
+			return unpacking.result, err
 		}
-		if name == "" || header.Typeflag != tar.TypeReg {
-			result.Skipped++
-			continue
-		}
-		kind := Classify(name)
-		if kind == Skip || header.Size > Limit(kind) {
-			result.Skipped++
-			continue
-		}
-		if len(result.Kept) >= maxKeptFiles || keptBytes+header.Size > maxKeptBytes {
-			return result, ErrTooLarge
-		}
-		kept, err := keep(root, name, kind, archive, header.Size)
-		if err != nil {
-			return result, err
-		}
-		if !kept {
-			result.Skipped++
-			continue
-		}
-		keptBytes += header.Size
-		result.Kept = append(result.Kept, name)
 	}
+}
+
+// extraction keeps the entries of one archive that Classify wants, within
+// the kept-file limits.
+type extraction struct {
+	root      *os.Root
+	result    Extracted
+	keptBytes int64
+}
+
+// add checks one entry's name and keeps it if it is a regular file worth
+// reading; open is called only for a file that is read. Directories are
+// not counted as skipped files.
+func (unpacking *extraction) add(entryName string, directory, regular bool, size int64, open func() (io.ReadCloser, error)) error {
+	name, err := relativeName(entryName, &unpacking.result.RootName)
+	if err != nil || directory {
+		return err
+	}
+	if name == "" || !regular {
+		unpacking.result.Skipped++
+		return nil
+	}
+	kind := Classify(name)
+	if kind == Skip || size > Limit(kind) {
+		unpacking.result.Skipped++
+		return nil
+	}
+	if len(unpacking.result.Kept) >= maxKeptFiles || unpacking.keptBytes+size > maxKeptBytes {
+		return ErrTooLarge
+	}
+	content, err := open()
+	if err != nil {
+		return err
+	}
+	kept, err := keep(unpacking.root, name, kind, content, size)
+	if err = errors.Join(err, content.Close()); err != nil || !kept {
+		unpacking.result.Skipped++
+		return err
+	}
+	unpacking.keptBytes += size
+	unpacking.result.Kept = append(unpacking.result.Kept, name)
+	return nil
 }
 
 // relativeName strips the archive's top-level directory and rejects any name
@@ -132,7 +156,7 @@ func relativeName(name string, rootName *string) (string, error) {
 		*rootName = top
 	}
 	if top != *rootName {
-		return "", fmt.Errorf("%w: %q is outside the top-level directory %q", ErrUnsafePath, name, *rootName)
+		return "", fmt.Errorf("%w: %q is outside %q", ErrSeveralFolders, name, *rootName)
 	}
 	rest = strings.TrimSuffix(rest, "/")
 	if rest == "" {

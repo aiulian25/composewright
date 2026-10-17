@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html/template"
 	"io"
 	"io/fs"
 	"log/slog"
@@ -760,28 +761,77 @@ func TestEventsStream(t *testing.T) {
 	}
 }
 
-func TestUploadsBecomeASource(t *testing.T) {
-	harness := newHarness(t)
-	harness.signUp()
+// uploadForm posts fields and files to path as a multipart form.
+func (harness *harness) uploadForm(path string, fields map[string]string, files map[string][]byte) (*http.Response, string) {
+	harness.t.Helper()
 	var body bytes.Buffer
 	writer := multipart.NewWriter(&body)
 	_ = writer.WriteField(csrfField, harness.token)
-	_ = writer.WriteField("engine", pipeline.EngineRules)
-	_ = writer.WriteField("name", "pasted")
-	_ = writer.WriteField("compose", "services:\n  web:\n    image: docker.io/library/nginx:1.27\n    ports: [\"8080:80\"]\n")
-	part, _ := writer.CreateFormFile("files", "../../README.md")
-	_, _ = part.Write([]byte("# Pasted\n\nA test page.\n"))
-	archive, _ := writer.CreateFormFile("files", "evil.tar.gz")
-	_, _ = archive.Write([]byte("ignored"))
+	for name, value := range fields {
+		_ = writer.WriteField(name, value)
+	}
+	for name, content := range files {
+		part, _ := writer.CreateFormFile("files", name)
+		_, _ = part.Write(content)
+	}
 	_ = writer.Close()
-	request, _ := http.NewRequest(http.MethodPost, harness.http.URL+"/new", &body)
+	request, _ := http.NewRequest(http.MethodPost, harness.http.URL+path, &body)
 	request.Header.Set("Content-Type", writer.FormDataContentType())
 	response, err := harness.client.Do(request)
 	if err != nil {
+		harness.t.Fatal(err)
+	}
+	defer response.Body.Close()
+	page, _ := io.ReadAll(response.Body)
+	return response, string(page)
+}
+
+// zipCommit is the commit GitHub writes as a zip's comment.
+const zipCommit = "c52bdef6e9811f7c20cebc034a6c0ec6799dc6df"
+
+// zipFolder packs a folder the way GitHub does, under one top-level folder
+// and with the commit as the comment.
+func zipFolder(t *testing.T, folder, top string) ([]byte, int) {
+	t.Helper()
+	var buffer bytes.Buffer
+	writer := zip.NewWriter(&buffer)
+	if err := writer.SetComment(zipCommit); err != nil {
 		t.Fatal(err)
 	}
-	response.Body.Close()
-	status(t, response, http.StatusSeeOther, "")
+	count := 0
+	err := filepath.WalkDir(folder, func(path string, entry fs.DirEntry, err error) error {
+		if err != nil || entry.IsDir() {
+			return err
+		}
+		relative, _ := filepath.Rel(folder, path)
+		content, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		file, err := writer.Create(top + "/" + filepath.ToSlash(relative))
+		if err != nil {
+			return err
+		}
+		count++
+		_, err = file.Write(content)
+		return err
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatal(err)
+	}
+	return buffer.Bytes(), count
+}
+
+func TestUploadsBecomeASource(t *testing.T) {
+	harness := newHarness(t)
+	harness.signUp()
+	compose := "services:\n  web:\n    image: docker.io/library/nginx:1.27\n    ports: [\"8080:80\"]\n"
+	fields := map[string]string{"engine": pipeline.EngineRules, "name": "pasted", "compose": compose}
+	response, page := harness.uploadForm("/new", fields, map[string][]byte{"../../README.md": []byte("# Pasted\n\nA test page.\n")})
+	status(t, response, http.StatusSeeOther, page)
 	job := harness.waitForJob(response.Header.Get("Location"))
 	if job.Failure != "" || !strings.HasPrefix(job.Next, "/projects/pasted/review?job=") {
 		t.Fatalf("upload generation: %q %q", job.Failure, job.Next)
@@ -790,10 +840,102 @@ func TestUploadsBecomeASource(t *testing.T) {
 	if len(leftovers) != 0 {
 		t.Fatalf("%d upload folders left behind", len(leftovers))
 	}
-	response, page := harness.post("/new", url.Values{"source": {minifluxPath}, "compose": {"services: {}"}})
+	response, page = harness.post("/new", url.Values{"source": {minifluxPath}, "compose": {"services: {}"}})
 	status(t, response, http.StatusBadRequest, page)
 	response, page = harness.post("/new", url.Values{"source": {minifluxPath}, "name": {"Bad Name"}})
 	status(t, response, http.StatusBadRequest, page)
+}
+
+// TestArchiveUploadBecomesASource: one .zip of a repository is unpacked
+// like a GitHub tarball and reads the same facts as the folder it holds;
+// other archives, and an archive mixed with loose files, are refused.
+func TestArchiveUploadBecomesASource(t *testing.T) {
+	harness := newHarness(t)
+	harness.signUp()
+	response, page := harness.post("/new", url.Values{"source": {minifluxPath}, "engine": {pipeline.EngineRules}, "test": {skipTest}})
+	status(t, response, http.StatusSeeOther, page)
+	folder := harness.waitForJob(response.Header.Get("Location"))
+	if folder.Failure != "" {
+		t.Fatalf("folder generation: %s", folder.Failure)
+	}
+	content, count := zipFolder(t, minifluxPath, "v2-main")
+	fields := map[string]string{"engine": pipeline.EngineRules, "name": "zipped", "test": skipTest}
+	response, page = harness.uploadForm("/new", fields, map[string][]byte{"miniflux-main.zip": content})
+	status(t, response, http.StatusSeeOther, page)
+	zipped := harness.waitForJob(response.Header.Get("Location"))
+	if zipped.Failure != "" || zipped.Title != "miniflux-main.zip" {
+		t.Fatalf("zip generation: %q, title %q", zipped.Failure, zipped.Title)
+	}
+	want, _ := json.Marshal(folder.Facts)
+	got, _ := json.Marshal(zipped.Facts)
+	if string(got) != string(want) {
+		t.Fatalf("the zip's facts differ from the folder's:\n%s\n%s", got, want)
+	}
+	if note := zipped.Steps[pipeline.StepFetch].Note; note != fmt.Sprintf("unpacked %d files, kept %d", count, count) {
+		t.Fatalf("fetch note %q for %d files", note, count)
+	}
+	view := harness.server.analyseView(zipped)
+	if view.Heading != "Analysing miniflux-main.zip" || view.Steps[0].Detail != zipped.Steps[pipeline.StepFetch].Note {
+		t.Fatalf("the analysis names %q, fetch says %q", view.Heading, view.Steps[0].Detail)
+	}
+	if view.Ref != "miniflux-main.zip @ "+zipCommit[:commitLength] {
+		t.Fatalf("the analysis shows the source as %q", view.Ref)
+	}
+	leftovers, _ := os.ReadDir(filepath.Join(harness.root, "data", uploadsDir))
+	if len(leftovers) != 0 {
+		t.Fatalf("%d upload folders left behind", len(leftovers))
+	}
+	rules := map[string]string{"engine": pipeline.EngineRules}
+	pastedCompose := map[string]string{"engine": pipeline.EngineRules, "compose": "services: {}"}
+	refusals := []struct {
+		problem string
+		fields  map[string]string
+		files   map[string][]byte
+	}{
+		{mixedUploadProblem, rules, map[string][]byte{"miniflux-main.zip": content, "README.md": []byte("# app")}},
+		{mixedUploadProblem, pastedCompose, map[string][]byte{"miniflux-main.zip": content}},
+		{fmt.Sprintf(archiveKindProblem, "app.7z"), rules, map[string][]byte{"app.7z": []byte("7z")}},
+		{fmt.Sprintf(archiveKindProblem, "app.tar"), rules, map[string][]byte{"app.tar": []byte("tar")}},
+	}
+	for _, refusal := range refusals {
+		response, page = harness.uploadForm("/new", refusal.fields, refusal.files)
+		status(t, response, http.StatusBadRequest, page)
+		if !strings.Contains(page, template.HTMLEscapeString(refusal.problem)) {
+			t.Fatalf("refusal does not say %q:\n%s", refusal.problem, page)
+		}
+	}
+	response, page = harness.uploadForm("/start", rules, map[string][]byte{"miniflux-main.zip": content})
+	status(t, response, http.StatusSeeOther, page)
+	if home := harness.waitForJob(response.Header.Get("Location")); home.Failure != "" || home.Title != "miniflux-main.zip" {
+		t.Fatalf("a zip dropped on Home: %q, title %q", home.Failure, home.Title)
+	}
+	if !strings.Contains(archiveKindProblem, ".zip") || !strings.Contains(archiveKindProblem, ".tar.gz") {
+		t.Fatal("the refusal does not name the archives that are accepted")
+	}
+	evil := map[string][]byte{"evil.zip": zipBytes(t, "repo/README.md", "../etc/passwd")}
+	response, page = harness.uploadForm("/new", map[string]string{"engine": pipeline.EngineRules}, evil)
+	status(t, response, http.StatusSeeOther, page)
+	escaped := harness.waitForJob(response.Header.Get("Location"))
+	if !strings.Contains(escaped.Failure, "unsafe path") || escaped.Steps[pipeline.StepFetch].State != pipeline.StateFailed {
+		t.Fatalf("an escaping zip: %q", escaped.Failure)
+	}
+}
+
+func zipBytes(t *testing.T, names ...string) []byte {
+	t.Helper()
+	var buffer bytes.Buffer
+	writer := zip.NewWriter(&buffer)
+	for _, name := range names {
+		file, err := writer.Create(name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, _ = file.Write([]byte("x"))
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatal(err)
+	}
+	return buffer.Bytes()
 }
 
 // TestFilesOnly: a pasted compose and the person's own .env, with "just the

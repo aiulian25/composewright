@@ -34,11 +34,11 @@ func (application *app) genCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "gen <url|path>",
 		Short: "Generate a validated compose.yaml and .env for a repository",
-		Long: `Run the pipeline for a repository (a local checkout; GitHub URLs are fetched as
-a tarball): extract deployment facts with their file and line, build a plan
-with deterministic rules, gate it with the policy, render compose.yaml, .env
-and DEPLOY.md with the environment profile, re-check the rendered file, and
-store the result with secrets encrypted.
+		Long: `Run the pipeline for a repository (a local checkout or a .zip or .tar.gz of
+one; GitHub URLs are fetched as a tarball): extract deployment facts with
+their file and line, build a plan with deterministic rules, gate it with the
+policy, render compose.yaml, .env and DEPLOY.md with the environment profile,
+re-check the rendered file, and store the result with secrets encrypted.
 
 --engine picks who writes the plan, by default llm.engine ("rules" unless you
 change it): "rules" uses deterministic rules only; "assisted" lets the
@@ -56,6 +56,7 @@ still stored so you can inspect it, and gen exits with status 2.
 --stop-after ir prints the plan without rendering or storing it.`,
 		Example: `  composewright gen https://github.com/miniflux/v2
   composewright gen ./my-checkout --upstream https://github.com/myorg/myapp
+  composewright gen ./v2-main.zip --upstream https://github.com/miniflux/v2
   composewright gen ./homeassistant --allow-need host_network
   composewright gen ./app --expose-via npm_default --storage bind
   composewright gen --stop-after facts ./my-checkout`,

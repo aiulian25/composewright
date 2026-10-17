@@ -38,7 +38,7 @@
 
   <div class="dropzone" data-dropzone>
     {{template "icon-upload"}}
-    <span class="grow"><strong>Drop files anywhere in this window.</strong> README, compose.yaml, .env, Dockerfile; up to 50 files, archives are ignored.</span>
+    <span class="grow"><strong>Drop files anywhere in this window.</strong> README, compose.yaml, .env, Dockerfile, up to 50 files, or one .zip/.tar.gz of the repository.</span>
     <label class="button" for="files">Choose files</label>
     <input class="visually-hidden" id="files" name="files" type="file" multiple data-file-input>
     <ul class="file-list" data-file-list aria-live="polite"></ul>
@@ -78,6 +78,7 @@
   <ul class="context-list">
     <li>github.com/&lt;owner&gt;/&lt;repo&gt;</li>
     <li>/path/to/a/folder on this machine</li>
+    <li>one .zip or .tar.gz of a repository</li>
     <li>files you drop or paste</li>
   </ul>
 </div>

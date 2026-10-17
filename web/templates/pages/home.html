@@ -11,7 +11,7 @@
   <form class="ask" id="ask-form" method="post" action="/start" enctype="multipart/form-data" data-dropzone data-dropzone-form>
     <input type="hidden" name="csrf" value="{{$.CSRF}}">
     <label class="visually-hidden" for="ask">What to self-host</label>
-    <textarea id="ask" name="ask" rows="2" placeholder="Paste a GitHub link, drop files here, or paste a compose file and .env…" spellcheck="false" autocomplete="off" autofocus>{{.Ask}}</textarea>
+    <textarea id="ask" name="ask" rows="2" placeholder="Paste a GitHub link, drop files or one .zip/.tar.gz of the repository here, or paste a compose file and .env…" spellcheck="false" autocomplete="off" autofocus>{{.Ask}}</textarea>
     <ul class="file-list" data-file-list aria-live="polite"></ul>
     <div class="ask-bar">
       <label class="button button-small" for="files">{{template "icon-paperclip"}}Add files</label>

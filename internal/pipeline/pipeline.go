@@ -140,7 +140,7 @@ func Generate(ctx context.Context, dependencies Dependencies, options Options) (
 	if options.Owner != "" {
 		source.Owner = options.Owner
 	}
-	observer.step(StepFetch, StateDone, "")
+	observer.step(StepFetch, StateDone, source.Note)
 	observer.step(StepExtract, StateRunning, "")
 	facts, err := extract.Extract(ctx, source.Directory)
 	if err != nil {
@@ -250,7 +250,7 @@ func approveAndValidate(ctx context.Context, dependencies Dependencies, options 
 }
 
 // openSource fetches a GitHub repository as a tarball, or uses a local
-// directory as it is.
+// directory as it is, or unpacks a local .zip or .tar.gz.
 func openSource(ctx context.Context, dependencies Dependencies, options Options) (*fetch.Source, error) {
 	owner, repository, isGitHub := fetch.ParseGitHub(options.Source)
 	if isGitHub && dependencies.Guard == nil {
@@ -260,7 +260,7 @@ func openSource(ctx context.Context, dependencies Dependencies, options Options)
 		return fetch.GitHub(ctx, dependencies.Guard, dependencies.GitHubToken, owner, repository, options.Ref)
 	}
 	if strings.Contains(options.Source, "://") || strings.HasPrefix(options.Source, "git@") {
-		return nil, fmt.Errorf("%s: only https://github.com/<owner>/<repository> URLs and local directories are supported", options.Source)
+		return nil, fmt.Errorf("%s: only https://github.com/<owner>/<repository> URLs, local directories and .zip or .tar.gz archives are supported", options.Source)
 	}
 	source, err := fetch.Local(options.Source, options.Upstream)
 	if err == nil && options.Uploaded {

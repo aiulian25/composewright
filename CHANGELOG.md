@@ -47,6 +47,15 @@ All notable changes to this project are documented here. The format follows
   previous instructions", are now listed with their file and line on the
   Analyse and Review pages instead of only being counted, and a note for
   deployment that repeats one is marked.
+- A repository downloaded as one `.zip` or `.tar.gz` can be dropped on Home or
+  New as it is. It is unpacked with the same limits and path checks as a
+  GitHub tarball, keeping the same files, and the Fetch step says how many
+  files it held and how many were kept. An archive with a path that leads
+  outside it is refused, links in it and the `__MACOSX` folder Finder adds
+  are skipped, one without a single folder for the repository is refused
+  with a plain message, and other kinds such as `.7z` or `.rar`, or an
+  archive given with loose files, are refused with a message saying what to
+  give instead. `composewright gen ./repo.zip` reads one the same way.
 
 ### Changed
 
