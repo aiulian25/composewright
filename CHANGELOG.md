@@ -140,6 +140,10 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- An app port that the upstream compose file writes without a host side,
+  such as `"80"`, is now published on a port of its own, as Compose would
+  publish it; a database or cache written that way stays inside the stack.
+  `DEPLOY.md` no longer sends you to port 0 when nothing is published.
 - The file panel's buttons wrap onto a second row instead of running off a
   narrow panel.
 - The healthcheck an app's image ships with no longer blocks the stack: one

@@ -882,3 +882,20 @@ func TestUpstreamPrivilegesBecomeNeeds(t *testing.T) {
 		t.Fatalf("a folder bind should stay a named volume: %+v", app.Volumes)
 	}
 }
+
+// TestTargetOnlyPortOfTheAppIsPublished: Compose publishes "80" on any free
+// host port, so the app's port is published on one of its own, while a
+// database written as "5432" stays inside the stack.
+func TestTargetOnlyPortOfTheAppIsPublished(t *testing.T) {
+	plan := Build(context.Background(), Input{Source: notesSource, Facts: testFacts(t, map[string]string{"docker-compose.yml": "services:\n" +
+		"  app:\n    image: example/notes:1.0\n    ports: [\"80\"]\n" +
+		"  db:\n    image: docker.io/library/postgres:16\n    ports: [\"5432\"]\n"})})
+	app, _ := plan.Service("app")
+	database, _ := plan.Service("db")
+	if len(app.Ports) != 1 || !app.Ports[0].Publish || HostPort(app.Ports[0]) != 8080 {
+		t.Fatalf("app ports %+v, want 80 published on host port 8080", app.Ports)
+	}
+	if len(database.Ports) != 1 || database.Ports[0].Publish {
+		t.Fatalf("database ports %+v, want 5432 kept inside the stack", database.Ports)
+	}
+}

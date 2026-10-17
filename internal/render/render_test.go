@@ -256,6 +256,25 @@ func TestDeployFolderOwner(t *testing.T) {
 	}
 }
 
+// TestDeployNeverOpensPortZero: an app with no published port is not sent
+// to http://localhost:0.
+func TestDeployNeverOpensPortZero(t *testing.T) {
+	options := testOptions(t, variants[0])
+	for name, ports := range map[string][]ir.Port{
+		"an internal web port": {{Container: 8080, Protocol: ir.ProtocolTCP}},
+		"no port at all":       nil,
+	} {
+		plan := &ir.IR{App: ir.App{Name: "demo"}, Services: []ir.Service{{Name: "app", Role: ir.RoleApp, Ports: ports}}}
+		deploy := string(Deploy(plan, options, "not validated yet"))
+		if strings.Contains(deploy, ":0") || !strings.Contains(deploy, "No port is published") {
+			t.Errorf("%s: DEPLOY.md:\n%s", name, deploy)
+		}
+		if len(ports) > 0 && !strings.Contains(deploy, "http://app:8080") {
+			t.Errorf("%s: DEPLOY.md does not say where another container reaches it:\n%s", name, deploy)
+		}
+	}
+}
+
 // TestGrantedDockerSocketIsMountedWithAComment: the socket appears only once
 // granted, from the host's socket to where the app asked for it, and the
 // YAML gate accepts what the renderer writes.

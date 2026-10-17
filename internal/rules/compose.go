@@ -23,6 +23,7 @@ const (
 	scoreIdentity      = 3
 	scoreAddon         = 5
 	lowPortLimit       = 1024
+	targetOnlyPortNote = "upstream publishes container port %d on any free host port; host port %d is used so the address stays the same"
 	volumeBind         = "bind"
 	volumeTmpfs        = "tmpfs"
 	// A tmpfs entry's options are size=bytes,mode=octal.
@@ -296,7 +297,7 @@ func (builder *builder) composeService(file *extract.ComposeFile, service extrac
 	}
 	composeLimits(&result, service)
 	composeHardening(&result, service)
-	builder.composePorts(&result, service)
+	builder.composePorts(&result, service, isApp)
 	builder.composeVolumes(&result, service)
 	builder.composeEnvironment(file, &result, service)
 	builder.needsFromCompose(&result, service)
@@ -357,12 +358,20 @@ func (builder *builder) documentedImageOf(accept func(ir.Image) bool) (ir.Image,
 	return ir.Image{}, false
 }
 
-func (builder *builder) composePorts(result *ir.Service, service extract.ComposeService) {
+// composePorts keeps upstream's ports. A port written without a host side,
+// such as "80", Compose publishes on any free host port: the app's is
+// published on a port of its own, while a database or cache written that way
+// stays inside the stack.
+func (builder *builder) composePorts(result *ir.Service, service extract.ComposeService, isApp bool) {
 	for _, port := range service.Ports {
 		published, _ := strconv.Atoi(port.Published)
+		targetOnly := port.Published == ""
 		converted := ir.Port{
-			Container: port.Target, Protocol: port.Protocol, Publish: port.Published != "",
+			Container: port.Target, Protocol: port.Protocol, Publish: !targetOnly || isApp,
 			Provenance: provenance(ir.SourceCompose, port.Location, ir.ConfidenceHigh),
+		}
+		if targetOnly && isApp {
+			builder.note(result, targetOnlyPortNote, port.Target, HostPort(converted))
 		}
 		if published >= lowPortLimit {
 			converted.HostPort = published

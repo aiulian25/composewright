@@ -9,6 +9,10 @@ import (
 	"github.com/aiulian25/composewright/internal/rules"
 )
 
+// noWebPortLine is the Open it line for an app that has neither a published
+// port nor a web port another container could reach.
+const noWebPortLine = "No port is published, and the app has no web port to open."
+
 // Deploy writes DEPLOY.md: how to start the stack, where it is reached, what
 // to do on the proxy side, storage preparation and first-login steps.
 func Deploy(plan *ir.IR, options Options, status string) []byte {
@@ -65,15 +69,20 @@ func (options Options) reachSection(plan *ir.IR, write func(string, ...any)) {
 		write("These networks must exist before the stack starts; create one your proxy has not made yet with `docker network create <name>`.")
 		write("")
 	}
+	hostPort := publishedHostPort(app)
+	internalPort, hasInternalPort := containerWebPort(app)
+	unpublished := options.ExposeVia == ExposeNone || hostPort == 0
 	switch {
-	case options.ExposeVia == ExposeNone && len(networks) > 0:
+	case unpublished && len(networks) > 0:
 		write("No port is published; the networks above are the way in.")
-	case options.ExposeVia == ExposeNone:
-		write("No port is published. Reach it from another container on the same network at http://%s:%d.", app.Name, port)
+	case unpublished && !hasInternalPort:
+		write(noWebPortLine)
+	case unpublished:
+		write("No port is published. Reach it from another container on the same network at http://%s:%d.", app.Name, internalPort)
 	case options.ExposeVia == ExposeLAN:
-		write("Published on every interface: http://<this-host>:%d. Put a reverse proxy with TLS in front before exposing it further.", publishedHostPort(app))
+		write("Published on every interface: http://<this-host>:%d. Put a reverse proxy with TLS in front before exposing it further.", hostPort)
 	default:
-		write("Published on this machine only: http://localhost:%d", publishedHostPort(app))
+		write("Published on this machine only: http://localhost:%d", hostPort)
 	}
 	write("")
 }
@@ -169,6 +178,17 @@ func notesSection(plan *ir.IR, write func(string, ...any)) {
 		write("- %s", singleLine(note))
 	}
 	write("")
+}
+
+// containerWebPort is the first TCP port the app listens on, published or
+// not: where another container on its network reaches it.
+func containerWebPort(service *ir.Service) (int, bool) {
+	for _, port := range service.Ports {
+		if port.Protocol == ir.ProtocolTCP {
+			return port.Container, true
+		}
+	}
+	return 0, false
 }
 
 func publishedHostPort(service *ir.Service) int {
