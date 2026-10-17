@@ -120,7 +120,23 @@
       "resources": {
         "memory_limit": "2g",
         "cpus": "",
-        "pids_limit": 0
+        "pids_limit": 0,
+        "shm_size": "",
+        "provenance": {
+          "source": "default",
+          "source_ref": "",
+          "confidence": "low"
+        }
+      },
+      "hardening": {
+        "cap_drop": [],
+        "read_only": false,
+        "tmpfs": [],
+        "provenance": {
+          "source": "default",
+          "source_ref": "",
+          "confidence": "low"
+        }
       },
       "notes": [
         "upstream bind mount ./library:/data is a named volume here (use --storage bind for a host folder)",
@@ -220,7 +236,23 @@
       "resources": {
         "memory_limit": "2g",
         "cpus": "",
-        "pids_limit": 0
+        "pids_limit": 0,
+        "shm_size": "",
+        "provenance": {
+          "source": "default",
+          "source_ref": "",
+          "confidence": "low"
+        }
+      },
+      "hardening": {
+        "cap_drop": [],
+        "read_only": false,
+        "tmpfs": [],
+        "provenance": {
+          "source": "default",
+          "source_ref": "",
+          "confidence": "low"
+        }
       },
       "notes": [],
       "provenance": {
@@ -280,7 +312,23 @@
       "resources": {
         "memory_limit": "",
         "cpus": "",
-        "pids_limit": 0
+        "pids_limit": 0,
+        "shm_size": "",
+        "provenance": {
+          "source": "default",
+          "source_ref": "",
+          "confidence": "low"
+        }
+      },
+      "hardening": {
+        "cap_drop": [],
+        "read_only": false,
+        "tmpfs": [],
+        "provenance": {
+          "source": "default",
+          "source_ref": "",
+          "confidence": "low"
+        }
       },
       "notes": [],
       "provenance": {
@@ -390,7 +438,23 @@
       "resources": {
         "memory_limit": "2g",
         "cpus": "",
-        "pids_limit": 0
+        "pids_limit": 0,
+        "shm_size": "128mb",
+        "provenance": {
+          "source": "default",
+          "source_ref": "",
+          "confidence": "low"
+        }
+      },
+      "hardening": {
+        "cap_drop": [],
+        "read_only": false,
+        "tmpfs": [],
+        "provenance": {
+          "source": "default",
+          "source_ref": "",
+          "confidence": "low"
+        }
       },
       "notes": [
         "upstream bind mount ./postgres:/var/lib/postgresql/data is a named volume here (use --storage bind for a host folder)"

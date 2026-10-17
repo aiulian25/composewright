@@ -56,6 +56,8 @@ func TestDocker(t *testing.T) {
 		{"crash", "services:\n  job:\n    image: " + alpine + "\n    command: [\"sh\", \"-c\", \"echo boom; exit 3\"]\n", ir.Probe{}, ResultFail, ReasonCrash},
 		{"unhealthy", "services:\n  app:\n    image: " + alpine + "\n    command: [\"sleep\", \"300\"]\n    healthcheck: {test: [\"CMD\", \"false\"], interval: 1s, timeout: 1s, retries: 2}\n", ir.Probe{}, ResultFail, ReasonUnhealthy},
 		{"timeout", "services:\n  app:\n    image: " + alpine + "\n    command: [\"sleep\", \"300\"]\n    healthcheck: {test: [\"CMD\", \"sleep\", \"60\"], interval: 60s, timeout: 90s, retries: 1}\n", ir.Probe{}, ResultFail, ReasonTimeout},
+		{"upstream hardening", "services:\n  app:\n    image: " + alpine + "\n    command: [\"sleep\", \"300\"]\n    read_only: true\n    cap_drop: [ALL]\n" +
+			"    tmpfs: [/tmp]\n    shm_size: 1g\n    healthcheck: {test: [\"CMD\", \"touch\", \"/tmp/ready\"], interval: 1s, timeout: 1s, retries: 5}\n", ir.Probe{}, ResultPass, ""},
 		{"fatal log line", "services:\n  app:\n    image: " + alpine + "\n    command: [\"sh\", \"-c\", \"echo 'panic: test failure'; sleep 300\"]\n", ir.Probe{}, ResultFail, ReasonLogs},
 	}
 	for _, testCase := range cases {

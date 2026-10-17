@@ -132,6 +132,11 @@ func (check *checker) composeLogging(name string, service types.ServiceConfig) {
 }
 
 func (check *checker) composeVolumes(name string, service types.ServiceConfig) {
+	for _, entry := range service.Tmpfs {
+		if target, _, _ := strings.Cut(entry, composefile.TmpfsOptionsSeparator); ForbiddenTarget(target) {
+			check.add("P13", Deny, name, "services."+name+".tmpfs", "tmpfs target %s is reserved for the host", target)
+		}
+	}
 	for _, volume := range service.Volumes {
 		field := "services." + name + ".volumes"
 		if check.grantedSocket(name, volume) {

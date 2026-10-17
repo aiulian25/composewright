@@ -49,7 +49,8 @@ type Limits struct {
 // sandbox run. It reads the compose model of the rendered file, so the run
 // always validates exactly what the user deploys, and it:
 //   - disables restarts so a crash loop surfaces as an exited container,
-//   - keeps only no-new-privileges and caps memory, CPUs and processes,
+//   - keeps only no-new-privileges and caps memory, shared memory, CPUs
+//     and processes,
 //   - rebinds every published port to an ephemeral loopback port,
 //   - leaves external proxy networks and host bind mounts out of the run,
 //   - labels containers so the janitor can find stale runs,
@@ -106,6 +107,9 @@ func serviceOverride(service types.ServiceConfig, published []string, limits Lim
 		scalar("logging"), tagged(tagOverride, mapping(scalar("driver"), scalar(logDriver),
 			scalar("options"), mapping(scalar("max-size"), quoted(logMaxSize), scalar("max-file"), quoted(logMaxFile)))),
 	)
+	if service.ShmSize > 0 {
+		node.Content = append(node.Content, scalar("shm_size"), scalar(strconv.FormatInt(capped(int64(service.ShmSize), limits.MemoryBytes), 10)))
+	}
 	if service.NetworkMode == "" {
 		node.Content = append(node.Content, scalar("ports"), tagged(tagOverride, loopbackPorts(published)))
 		node.Content = append(node.Content, scalar("networks"), tagged(tagOverride, sequence(scalar(defaultNetwork))))

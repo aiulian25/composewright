@@ -40,8 +40,11 @@ func (builder *builder) enrich() {
 		}
 		builder.sidecar(service)
 		builder.catalogueHealthcheck(service)
-		if service.Resources.MemoryLimit == "" {
-			service.Resources.MemoryLimit = known.appMemory(service.Image)
+		// The catalogue's figure fills only a limit upstream left out; one
+		// upstream wrote is kept, even when it is smaller.
+		if memory := known.appMemory(service.Image); service.Resources.MemoryLimit == "" && memory != "" {
+			service.Resources.MemoryLimit = memory
+			service.Resources.Provenance = ir.Provenance{Source: ir.SourceDefault, Confidence: ir.ConfidenceLow}
 		}
 	}
 	builder.waitForHealthy()

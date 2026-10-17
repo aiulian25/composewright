@@ -196,6 +196,8 @@ func FromModel(proposal *IR) *IR {
 		service.Provenance = fromModel(service.Provenance)
 		service.Image.Provenance = fromModel(service.Image.Provenance)
 		service.Healthcheck.Provenance = fromModel(service.Healthcheck.Provenance)
+		service.Resources.Provenance = fromModel(service.Resources.Provenance)
+		service.Hardening.Provenance = fromModel(service.Hardening.Provenance)
 		service.Ports = modelPorts(service.Ports)
 		for item := range service.Env {
 			service.Env[item].Provenance = fromModel(service.Env[item].Provenance)

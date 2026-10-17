@@ -89,9 +89,20 @@ type Healthcheck struct {
 }
 
 type Resources struct {
-	MemoryLimit string `json:"memory_limit"`
-	CPUs        string `json:"cpus"`
-	PIDsLimit   int    `json:"pids_limit"`
+	MemoryLimit string     `json:"memory_limit"`
+	CPUs        string     `json:"cpus"`
+	PIDsLimit   int        `json:"pids_limit"`
+	ShmSize     string     `json:"shm_size"`
+	Provenance  Provenance `json:"provenance"`
+}
+
+// Hardening is what upstream takes away from a service: capabilities it
+// drops, a read-only root filesystem and the tmpfs mounts it writes to.
+type Hardening struct {
+	CapDrop    []string   `json:"cap_drop"`
+	ReadOnly   bool       `json:"read_only"`
+	Tmpfs      []string   `json:"tmpfs"`
+	Provenance Provenance `json:"provenance"`
 }
 
 type Service struct {
@@ -107,6 +118,7 @@ type Service struct {
 	Healthcheck Healthcheck  `json:"healthcheck"`
 	User        string       `json:"user"`
 	Resources   Resources    `json:"resources"`
+	Hardening   Hardening    `json:"hardening"`
 	Notes       []string     `json:"notes"`
 	Provenance  Provenance   `json:"provenance"`
 }

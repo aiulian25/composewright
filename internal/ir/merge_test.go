@@ -139,7 +139,8 @@ func TestFromModelStampsEverything(t *testing.T) {
 	proposal := hostileProposal()
 	plan := FromModel(proposal)
 	for _, service := range plan.Services {
-		for _, provenance := range []Provenance{service.Provenance, service.Image.Provenance, service.Healthcheck.Provenance} {
+		stamped := []Provenance{service.Provenance, service.Image.Provenance, service.Healthcheck.Provenance, service.Resources.Provenance, service.Hardening.Provenance}
+		for _, provenance := range stamped {
 			if provenance.Source != SourceModel || Rank(provenance.Confidence) > Rank(ConfidenceMedium) {
 				t.Fatalf("%s provenance %+v", service.Name, provenance)
 			}

@@ -217,7 +217,23 @@
       "resources": {
         "memory_limit": "",
         "cpus": "",
-        "pids_limit": 0
+        "pids_limit": 0,
+        "shm_size": "",
+        "provenance": {
+          "source": "default",
+          "source_ref": "",
+          "confidence": "low"
+        }
+      },
+      "hardening": {
+        "cap_drop": [],
+        "read_only": false,
+        "tmpfs": [],
+        "provenance": {
+          "source": "default",
+          "source_ref": "",
+          "confidence": "low"
+        }
       },
       "notes": [
         "DB_HOST was left for a database you run; the stack runs docker.io/library/mariadb:11.8 as mariadb and points DB_HOST at it"
@@ -334,7 +350,23 @@
       "resources": {
         "memory_limit": "",
         "cpus": "",
-        "pids_limit": 0
+        "pids_limit": 0,
+        "shm_size": "",
+        "provenance": {
+          "source": "default",
+          "source_ref": "",
+          "confidence": "low"
+        }
+      },
+      "hardening": {
+        "cap_drop": [],
+        "read_only": false,
+        "tmpfs": [],
+        "provenance": {
+          "source": "default",
+          "source_ref": "",
+          "confidence": "low"
+        }
       },
       "notes": [],
       "provenance": {

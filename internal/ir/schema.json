@@ -281,9 +281,37 @@
         "pids_limit": {
           "type": "integer",
           "description": "Maximum number of processes, e.g. 256. 0 lets composewright apply the default."
-        }
+        },
+        "shm_size": {
+          "type": "string",
+          "description": "Size of /dev/shm with unit, e.g. \"128mb\", only when the upstream compose file sets shm_size; empty keeps the Docker default."
+        },
+        "provenance": { "$ref": "#/$defs/provenance" }
       },
-      "required": ["memory_limit", "cpus", "pids_limit"],
+      "required": ["memory_limit", "cpus", "pids_limit", "shm_size", "provenance"],
+      "additionalProperties": false
+    },
+    "hardening": {
+      "type": "object",
+      "description": "What the upstream compose file takes away from the service; only copy what it writes, as it writes it.",
+      "properties": {
+        "cap_drop": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Linux capabilities the service drops, e.g. [\"ALL\"]."
+        },
+        "read_only": {
+          "type": "boolean",
+          "description": "True when the container's root filesystem is read-only."
+        },
+        "tmpfs": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Container paths mounted as tmpfs, e.g. \"/tmp\", optionally with options such as \"/run:size=64m\"."
+        },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      },
+      "required": ["cap_drop", "read_only", "tmpfs", "provenance"],
       "additionalProperties": false
     },
     "service": {
@@ -335,6 +363,7 @@
           "description": "Numeric \"uid:gid\" only when the upstream documentation states the container must run as that user; empty keeps the image default. \"0:0\" or \"root\" triggers a warning (policy P5)."
         },
         "resources": { "$ref": "#/$defs/resources" },
+        "hardening": { "$ref": "#/$defs/hardening" },
         "notes": {
           "type": "array",
           "items": { "type": "string" },
@@ -344,7 +373,7 @@
       },
       "required": [
         "name", "role", "image", "command", "entrypoint", "env", "ports", "volumes",
-        "depends_on", "healthcheck", "user", "resources", "notes", "provenance"
+        "depends_on", "healthcheck", "user", "resources", "hardening", "notes", "provenance"
       ],
       "additionalProperties": false
     },

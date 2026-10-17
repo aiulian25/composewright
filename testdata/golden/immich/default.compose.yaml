@@ -131,6 +131,7 @@ services:
     mem_limit: 2g
     cpus: "1"
     pids_limit: 256
+    shm_size: 128mb
     logging:
       driver: json-file
       options:

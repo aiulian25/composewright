@@ -11,6 +11,7 @@ import (
 
 	"github.com/docker/go-units"
 
+	"github.com/aiulian25/composewright/internal/composefile"
 	"github.com/aiulian25/composewright/internal/ir"
 )
 
@@ -477,6 +478,21 @@ func (check *checker) volumes(service *ir.Service, field string) {
 		}
 		targets[target] = true
 	}
+	for index, entry := range service.Hardening.Tmpfs {
+		tmpfsField := fmt.Sprintf("%s.hardening.tmpfs.%d", field, index)
+		mountPath, _, _ := strings.Cut(entry, composefile.TmpfsOptionsSeparator)
+		target := path.Clean(mountPath)
+		if !path.IsAbs(mountPath) || target == "/" {
+			check.add("P8", Deny, service.Name, tmpfsField, "tmpfs path %q must be an absolute path below /", mountPath)
+		}
+		if ForbiddenTarget(target) {
+			check.add("P8", Deny, service.Name, tmpfsField, "tmpfs path %s is reserved for the host", target)
+		}
+		if targets[target] {
+			check.add("P8", Deny, service.Name, tmpfsField, "container path %s is mounted twice", target)
+		}
+		targets[target] = true
+	}
 }
 
 // ForbiddenTarget reports container paths that must never receive a mount.
@@ -490,11 +506,19 @@ func ForbiddenTarget(target string) bool {
 func (check *checker) resources(service *ir.Service, field string) {
 	resources := service.Resources
 	field += ".resources"
-	if resources.MemoryLimit == "" || resources.CPUs == "" || resources.PIDsLimit == 0 {
+	upstreamMemory := resources.MemoryLimit != "" && resources.Provenance.Source == ir.SourceCompose
+	missing := resources.MemoryLimit == "" || resources.CPUs == "" || resources.PIDsLimit == 0
+	switch {
+	case upstreamMemory:
+		check.add("P10", OK, service.Name, field, "memory limit for %s from upstream", service.Name)
+	case missing:
 		check.add("P10", Fix, service.Name, field, "missing limits for %s are filled from the profile defaults", service.Name)
 	}
 	if _, err := units.RAMInBytes(resources.MemoryLimit); resources.MemoryLimit != "" && err != nil {
 		check.add("P10", Deny, service.Name, field+".memory_limit", "memory limit %q is not a size such as 512m", resources.MemoryLimit)
+	}
+	if _, err := units.RAMInBytes(resources.ShmSize); resources.ShmSize != "" && err != nil {
+		check.add("P10", Deny, service.Name, field+".shm_size", "shm_size %q is not a size such as 128mb", resources.ShmSize)
 	}
 	if cpus, err := strconv.ParseFloat(resources.CPUs, 64); resources.CPUs != "" && (err != nil || cpus <= 0) {
 		check.add("P10", Deny, service.Name, field+".cpus", "cpus %q must be a positive number", resources.CPUs)

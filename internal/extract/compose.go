@@ -1,11 +1,14 @@
 package extract
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -37,6 +40,13 @@ const scalarKey = "value"
 // nonComposeKeys mark YAML documents that have a services key but are
 // something else (CI workflows, Kubernetes manifests).
 var nonComposeKeys = []string{"jobs", "on", "apiVersion", "kind", "steps", "stages"}
+
+// maxPIDsLimit is the most processes Linux allows, which bounds an upstream
+// pids_limit before it becomes an int.
+const maxPIDsLimit int64 = 1 << 22
+
+// cpusBits formats an upstream cpus value at the precision compose-go reads.
+const cpusBits = 32
 
 var referenceName = regexp.MustCompile(`\$\{?([A-Za-z_][A-Za-z0-9_]*)`)
 
@@ -191,10 +201,24 @@ func composeService(relative string, key, node *yaml.Node, service types.Service
 	}
 	volumeItems := items(child(node, "volumes"))
 	for index, volume := range service.Volumes {
+		tmpfs := cmp.Or(volume.Tmpfs, &types.ServiceVolumeTmpfs{})
 		result.Volumes = append(result.Volumes, ComposeVolume{
 			Type: volume.Type, Source: volume.Source, Target: volume.Target, ReadOnly: volume.ReadOnly,
+			TmpfsSize: int64(tmpfs.Size), TmpfsMode: tmpfs.Mode,
 			Location: at(itemOrKey(volumeItems, index, keyNode(node, "volumes"))),
 		})
+	}
+	if source := earliest(composeLimits(&result, node, service)); source != nil {
+		result.LimitsAt = at(source)
+	}
+	result.CapDrop, result.ReadOnly, result.Tmpfs = service.CapDrop, service.ReadOnly, service.Tmpfs
+	hardeningSources := []*yaml.Node{
+		setKey(node, composefile.KeyCapDrop, len(service.CapDrop) > 0),
+		setKey(node, composefile.KeyReadOnly, service.ReadOnly),
+		setKey(node, composefile.KeyTmpfs, len(service.Tmpfs) > 0),
+	}
+	if source := earliest(hardeningSources); source != nil {
+		result.HardeningAt = at(source)
 	}
 	for _, name := range sortedDependencies(service.DependsOn) {
 		result.DependsOn = append(result.DependsOn, ComposeDependency{Service: name, Condition: service.DependsOn[name].Condition})
@@ -204,6 +228,61 @@ func composeService(relative string, key, node *yaml.Node, service types.Service
 		result.Healthcheck.Test = rawTest(child(child(node, "healthcheck"), "test"), result.Healthcheck.Test)
 	}
 	return result
+}
+
+// composeLimits reads the limits a service sets, each from deploy's
+// resource limits when the service key is not set, and returns the keys
+// that supplied one. A negative pids_limit means no limit, which is the
+// same as none.
+func composeLimits(result *ComposeService, node *yaml.Node, service types.ServiceConfig) []*yaml.Node {
+	var deployed types.Resource
+	if service.Deploy != nil && service.Deploy.Resources.Limits != nil {
+		deployed = *service.Deploy.Resources.Limits
+	}
+	deployedNode := child(child(child(node, "deploy"), "resources"), "limits")
+	result.MemoryLimit = cmp.Or(sizeText(child(node, composefile.KeyMemLimit), service.MemLimit), sizeText(child(deployedNode, "memory"), deployed.MemoryBytes))
+	if cpus := cmp.Or(service.CPUS, float32(deployed.NanoCPUs)); cpus > 0 {
+		result.CPUs = strconv.FormatFloat(float64(cpus), 'f', -1, cpusBits)
+	}
+	result.PIDsLimit = int(min(max(cmp.Or(service.PidsLimit, deployed.Pids), 0), maxPIDsLimit))
+	result.ShmSize = sizeText(child(node, composefile.KeyShmSize), service.ShmSize)
+	return []*yaml.Node{
+		cmp.Or(setKey(node, composefile.KeyMemLimit, service.MemLimit > 0), setKey(deployedNode, "memory", deployed.MemoryBytes > 0)),
+		cmp.Or(setKey(node, composefile.KeyCPUs, service.CPUS > 0), setKey(deployedNode, composefile.KeyCPUs, deployed.NanoCPUs > 0)),
+		cmp.Or(setKey(node, composefile.KeyPIDsLimit, service.PidsLimit > 0), setKey(deployedNode, "pids", service.PidsLimit == 0 && deployed.Pids > 0)),
+		setKey(node, composefile.KeyShmSize, service.ShmSize > 0),
+	}
+}
+
+// sizeText is a size as upstream wrote it, such as 128mb, or its count of
+// bytes when upstream wrote it through a variable.
+func sizeText(node *yaml.Node, size types.UnitBytes) string {
+	if size <= 0 {
+		return ""
+	}
+	if node != nil && node.Kind == yaml.ScalarNode && !strings.Contains(node.Value, "$") {
+		return node.Value
+	}
+	return strconv.FormatInt(int64(size), 10)
+}
+
+// setKey is the mapping's key when it supplied a value.
+func setKey(mapping *yaml.Node, key string, set bool) *yaml.Node {
+	if !set {
+		return nil
+	}
+	return keyNode(mapping, key)
+}
+
+// earliest is the first of nodes in document order.
+func earliest(nodes []*yaml.Node) *yaml.Node {
+	nodes = slices.DeleteFunc(nodes, func(node *yaml.Node) bool { return node == nil })
+	if len(nodes) == 0 {
+		return nil
+	}
+	return slices.MinFunc(nodes, func(first, second *yaml.Node) int {
+		return cmp.Or(cmp.Compare(first.Line, second.Line), cmp.Compare(first.Column, second.Column))
+	})
 }
 
 // rawCommand is a command as upstream wrote it, before interpolation, so a

@@ -143,7 +143,12 @@
           "depends_on": null,
           "command": null,
           "entrypoint": null,
-          "user": ""
+          "user": "",
+          "read_only": true,
+          "hardening_at": {
+            "file": "contrib/docker-compose/docker-compose-caddy.yml",
+            "line": 13
+          }
         },
         {
           "name": "navidrome",
@@ -186,7 +191,12 @@
           "depends_on": null,
           "command": null,
           "entrypoint": null,
-          "user": ""
+          "user": "",
+          "read_only": true,
+          "hardening_at": {
+            "file": "contrib/docker-compose/docker-compose-caddy.yml",
+            "line": 25
+          }
         }
       ],
       "variables": []
@@ -243,7 +253,12 @@
             "--certificatesresolvers.tc.acme.storage=/letsencrypt/acme.json"
           ],
           "entrypoint": null,
-          "user": ""
+          "user": "",
+          "read_only": true,
+          "hardening_at": {
+            "file": "contrib/docker-compose/docker-compose-traefik.yml",
+            "line": 13
+          }
         },
         {
           "name": "navidrome",
@@ -323,7 +338,12 @@
           "depends_on": null,
           "command": null,
           "entrypoint": null,
-          "user": ""
+          "user": "",
+          "read_only": true,
+          "hardening_at": {
+            "file": "contrib/docker-compose/docker-compose-traefik.yml",
+            "line": 33
+          }
         }
       ],
       "variables": []
@@ -372,7 +392,12 @@
           "depends_on": null,
           "command": null,
           "entrypoint": null,
-          "user": ""
+          "user": "",
+          "read_only": true,
+          "hardening_at": {
+            "file": "contrib/docker-compose/docker-compose.yml",
+            "line": 12
+          }
         }
       ],
       "variables": []

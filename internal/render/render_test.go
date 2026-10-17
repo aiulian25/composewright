@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/docker/go-units"
+
 	"github.com/aiulian25/composewright/internal/composefile"
 	"github.com/aiulian25/composewright/internal/config"
 	"github.com/aiulian25/composewright/internal/corpus"
@@ -325,5 +327,30 @@ func TestOptionalSettingsArePassedThroughAndCommented(t *testing.T) {
 	}
 	if value, set := project.Services["uptime-kuma"].Environment["UPTIME_KUMA_PORT"]; !set || value != nil {
 		t.Fatalf("UPTIME_KUMA_PORT = %v (set %v), want no value", value, set)
+	}
+}
+
+// TestUpstreamHardeningIsRendered: shm_size, read_only, tmpfs and cap_drop
+// are written as upstream wrote them, and compose-go reads them back.
+func TestUpstreamHardeningIsRendered(t *testing.T) {
+	plan := loadPlan(t, "../../testdata/corpus/miniflux/expected.ir.json")
+	app := plan.AppService()
+	app.Resources.ShmSize = "128mb"
+	app.Hardening = ir.Hardening{CapDrop: []string{"ALL"}, ReadOnly: true, Tmpfs: []string{"/tmp", "/run:size=64m"}}
+	compose, err := Compose(plan, testOptions(t, variants[0]))
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "    security_opt: [\"no-new-privileges:true\"]\n    read_only: true\n    tmpfs: [\"/tmp\", \"/run:size=64m\"]\n    cap_drop: [\"ALL\"]\n"
+	if !strings.Contains(string(compose), want) || !strings.Contains(string(compose), "    shm_size: 128mb\n") {
+		t.Fatalf("hardening not rendered as upstream wrote it:\n%s", compose)
+	}
+	project, err := composefile.Load(context.Background(), "compose.yaml", compose, nil, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	service := project.Services[app.Name]
+	if !service.ReadOnly || service.ShmSize != 128*units.MiB || len(service.Tmpfs) != 2 || service.CapDrop[0] != "ALL" {
+		t.Fatalf("compose-go reads %+v", service)
 	}
 }

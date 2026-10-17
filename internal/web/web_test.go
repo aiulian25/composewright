@@ -31,6 +31,7 @@ import (
 	"time"
 
 	"github.com/aiulian25/composewright/internal/backup"
+	"github.com/aiulian25/composewright/internal/composefile"
 	"github.com/aiulian25/composewright/internal/config"
 	"github.com/aiulian25/composewright/internal/doctor"
 	"github.com/aiulian25/composewright/internal/ir"
@@ -2366,5 +2367,36 @@ func TestKeepCurrent(t *testing.T) {
 	nuc.BaseURL, nuc.Model = "http://192.168.1.123:11434", "qwen2.5-coder:7b"
 	if kept := keepCurrent(nuc); len(kept.Connections) != 1 || kept.Connections[0].BaseURL != nuc.BaseURL {
 		t.Fatalf("a changed setup was not kept: %+v", kept.Connections)
+	}
+}
+
+// TestLimitAndHardeningBadgesFollowTheirSource: Immich's shm_size is badged
+// as read from upstream's compose file, the catalogue's memory figure and
+// the profile's limits as the profile's, and hardening by its source.
+func TestLimitAndHardeningBadgesFollowTheirSource(t *testing.T) {
+	content, err := os.ReadFile("../../testdata/corpus/immich/expected.ir.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	plan, err := ir.Decode(content)
+	if err != nil {
+		t.Fatal(err)
+	}
+	const database = "database"
+	upstreamBadge := sourceBadges[ir.SourceCompose]
+	cases := map[string]string{composefile.KeyShmSize: upstreamBadge, composefile.KeyMemLimit: badgeProfile,
+		composefile.KeyCPUs: badgeProfile, composefile.KeyReadOnly: badgeProfile}
+	for key, want := range cases {
+		if got := badgeFor(plan, []string{keyServices, database, key}); got != want {
+			t.Errorf("%s badge %q, want %q", key, got, want)
+		}
+	}
+	service, _ := plan.Service(database)
+	service.Hardening.Provenance = ir.Provenance{Source: ir.SourceCompose}
+	service.Resources = ir.Resources{CPUs: "2", Provenance: ir.Provenance{Source: ir.SourceCompose}}
+	if badgeFor(plan, []string{keyServices, database, composefile.KeyReadOnly}) != upstreamBadge ||
+		badgeFor(plan, []string{keyServices, database, composefile.KeyCPUs}) != upstreamBadge ||
+		badgeFor(plan, []string{keyServices, database, composefile.KeyPIDsLimit}) != badgeProfile {
+		t.Fatal("upstream hardening or limits not badged as upstream's")
 	}
 }

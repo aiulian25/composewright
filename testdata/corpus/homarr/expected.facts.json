@@ -1080,7 +1080,12 @@
           "depends_on": null,
           "command": null,
           "entrypoint": null,
-          "user": ""
+          "user": "",
+          "shm_size": "128mb",
+          "limits_at": {
+            "file": "development/development.docker-compose.yml",
+            "line": 20
+          }
         }
       ],
       "variables": []

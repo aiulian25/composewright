@@ -50,7 +50,7 @@ func TestGoTypesMatchSchema(t *testing.T) {
 	for name, goType := range map[string]reflect.Type{
 		"provenance": reflect.TypeFor[Provenance](), "image": reflect.TypeFor[Image](), "env_ref": reflect.TypeFor[EnvRef](),
 		"port": reflect.TypeFor[Port](), "volume": reflect.TypeFor[Volume](), "dependency": reflect.TypeFor[Dependency](),
-		"healthcheck": reflect.TypeFor[Healthcheck](), "resources": reflect.TypeFor[Resources](), "service": reflect.TypeFor[Service](),
+		"healthcheck": reflect.TypeFor[Healthcheck](), "resources": reflect.TypeFor[Resources](), "hardening": reflect.TypeFor[Hardening](), "service": reflect.TypeFor[Service](),
 		"env_file_entry": reflect.TypeFor[EnvFileEntry](), "need": reflect.TypeFor[Need](), "probe": reflect.TypeFor[Probe](),
 		"evidence": reflect.TypeFor[Evidence](), "optional_setting": reflect.TypeFor[OptionalSetting](),
 		"optional_service": reflect.TypeFor[OptionalService](),

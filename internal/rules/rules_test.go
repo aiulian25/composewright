@@ -756,3 +756,44 @@ func TestProbeFollowsTheEvidence(t *testing.T) {
 		}
 	}
 }
+
+// TestUpstreamLimitsAndHardeningAreKept: R1 carries upstream's limits and
+// hardening with their lines, a tmpfs volume becomes a tmpfs mount, and the
+// catalogue's memory figure never replaces one upstream wrote and is not
+// said to be upstream's.
+func TestUpstreamLimitsAndHardeningAreKept(t *testing.T) {
+	facts := testFacts(t, map[string]string{"docker-compose.yml": `services:
+  immich-server:
+    image: ghcr.io/immich-app/immich-server:v1.0.0
+    mem_limit: 1g
+    read_only: true
+    cap_drop: [ALL]
+    tmpfs: [/run]
+    volumes:
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 64m
+          mode: 0o1777
+  database:
+    image: ghcr.io/immich-app/postgres:14
+    shm_size: 128mb
+`})
+	plan := Build(context.Background(), Input{Facts: facts, Source: &fetch.Source{Owner: "immich-app", Repository: "immich"}})
+	server, _ := plan.Service("immich-server")
+	database, _ := plan.Service("database")
+	if server == nil || database == nil {
+		t.Fatalf("services %+v", plan.Services)
+	}
+	hardening := server.Hardening
+	if !hardening.ReadOnly || !slices.Equal(hardening.CapDrop, []string{"ALL"}) || !slices.Equal(hardening.Tmpfs, []string{"/run", "/tmp:size=67108864,mode=1777"}) ||
+		hardening.Provenance.Source != ir.SourceCompose || hardening.Provenance.SourceRef != "docker-compose.yml:5" {
+		t.Fatalf("server hardening %+v", hardening)
+	}
+	if server.Resources.MemoryLimit != "1g" || server.Resources.Provenance.SourceRef != "docker-compose.yml:4" || len(server.Volumes) != 0 {
+		t.Fatalf("server %+v", server)
+	}
+	if database.Resources.ShmSize != "128mb" || database.Resources.MemoryLimit != "2g" || database.Resources.Provenance.Source != ir.SourceDefault {
+		t.Fatalf("database resources %+v", database.Resources)
+	}
+}

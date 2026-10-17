@@ -1,6 +1,7 @@
 package web
 
 import (
+	"slices"
 	"strings"
 
 	"go.yaml.in/yaml/v3"
@@ -39,11 +40,11 @@ var (
 	// profile or the gate, whatever the plan says.
 	serviceKeyBadges = map[string]string{
 		"container_name": badgeYou, "restart": badgeProfile, "networks": badgeProfile, "logging": badgeProfile,
-		"mem_limit": badgeProfile, "cpus": badgeProfile, "pids_limit": badgeProfile, "env_file": badgeGate,
-		"security_opt": badgeGate, "ports": badgeProfile,
+		"env_file": badgeGate, "security_opt": badgeGate, "ports": badgeProfile,
 	}
-	topKeyBadges = map[string]string{"name": badgeYou, "networks": badgeProfile, "volumes": badgeProfile}
-	badgeTones   = map[string]string{badgeProfile: toneProfile, badgeGate: toneGate, badgeYou: toneYou, badgeModel: toneYou}
+	hardeningKeys = []string{composefile.KeyCapDrop, composefile.KeyReadOnly, composefile.KeyTmpfs}
+	topKeyBadges  = map[string]string{"name": badgeYou, "networks": badgeProfile, "volumes": badgeProfile}
+	badgeTones    = map[string]string{badgeProfile: toneProfile, badgeGate: toneGate, badgeYou: toneYou, badgeModel: toneYou}
 )
 
 // ruleNames are the rules in the order they run.
@@ -214,7 +215,35 @@ func serviceBadge(plan *ir.IR, service *ir.Service, path []string) string {
 	case keyEnv:
 		return environmentBadge(plan, service, path[1:])
 	}
+	if planned, isLimit := plannedLimits(service.Resources)[path[0]]; isLimit {
+		return limitBadge(service.Resources, planned)
+	}
+	if slices.Contains(hardeningKeys, path[0]) {
+		return sourceBadges[service.Hardening.Provenance.Source]
+	}
 	return sourceBadges[service.Provenance.Source]
+}
+
+// plannedLimits says, for each limit the renderer writes, whether the plan
+// holds a value for it; the profile fills the others. shm_size is not
+// among them: only upstream or a model sets it, as the service's source.
+func plannedLimits(resources ir.Resources) map[string]bool {
+	return map[string]bool{
+		composefile.KeyMemLimit: resources.MemoryLimit != "", composefile.KeyCPUs: resources.CPUs != "", composefile.KeyPIDsLimit: resources.PIDsLimit > 0,
+	}
+}
+
+// limitBadge is where a limit came from: the plan's source when it holds
+// one, else the profile. Resources' provenance is the memory limit's, so
+// the catalogue's memory figure is the profile's.
+// ponytail: a plan's memory below the profile default renders the
+// default yet keeps the plan's badge, and upstream cpus beside a catalogue
+// memory figure show P; give each limit its own provenance if that matters.
+func limitBadge(resources ir.Resources, planned bool) string {
+	if !planned {
+		return badgeProfile
+	}
+	return sourceBadges[resources.Provenance.Source]
 }
 
 func environmentBadge(plan *ir.IR, service *ir.Service, path []string) string {

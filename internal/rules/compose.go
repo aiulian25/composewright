@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/aiulian25/composewright/internal/composefile"
 	"github.com/aiulian25/composewright/internal/extract"
 	"github.com/aiulian25/composewright/internal/ir"
 )
@@ -22,6 +23,11 @@ const (
 	lowPortLimit       = 1024
 	volumeBind         = "bind"
 	volumeTmpfs        = "tmpfs"
+	// A tmpfs entry's options are size=bytes,mode=octal.
+	tmpfsOptionSeparator = ","
+	tmpfsSizeOption      = "size="
+	tmpfsModeOption      = "mode="
+	octalBase            = 8
 )
 
 var (
@@ -242,6 +248,8 @@ func (builder *builder) composeService(file *extract.ComposeFile, service extrac
 	if service.User != "" && result.User == "" {
 		builder.note(&result, "upstream runs it as user %q; the image default user is kept", service.User)
 	}
+	composeLimits(&result, service)
+	composeHardening(&result, service)
 	builder.composePorts(&result, service)
 	builder.composeVolumes(&result, service)
 	builder.composeEnvironment(file, &result, service)
@@ -327,6 +335,7 @@ func (builder *builder) composeVolumes(result *ir.Service, service extract.Compo
 		at := provenance(ir.SourceCompose, volume.Location, ir.ConfidenceHigh)
 		switch {
 		case volume.Type == volumeTmpfs:
+			addTmpfs(result, volume, at)
 			continue
 		case volume.Type == volumeBind && ir.IsDockerSocket(volume.Source):
 			builder.needDockerSocket(result, volume.Target, at)
@@ -341,6 +350,44 @@ func (builder *builder) composeVolumes(result *ir.Service, service extract.Compo
 			builder.bindNote(result, volume)
 		}
 		mountVolume(result, ir.Volume{Name: builder.composeVolumeName(result, volume), ContainerPath: volume.Target, Provenance: at})
+	}
+}
+
+// composeLimits copies the limits upstream sets.
+func composeLimits(result *ir.Service, service extract.ComposeService) {
+	if service.LimitsAt == (extract.Location{}) {
+		return
+	}
+	result.Resources = ir.Resources{MemoryLimit: service.MemoryLimit, CPUs: service.CPUs, PIDsLimit: service.PIDsLimit,
+		ShmSize: service.ShmSize, Provenance: provenance(ir.SourceCompose, service.LimitsAt, ir.ConfidenceHigh)}
+}
+
+// composeHardening copies what upstream takes away from the service.
+func composeHardening(result *ir.Service, service extract.ComposeService) {
+	if service.HardeningAt == (extract.Location{}) {
+		return
+	}
+	result.Hardening = ir.Hardening{CapDrop: slices.Clone(service.CapDrop), ReadOnly: service.ReadOnly,
+		Tmpfs: slices.Clone(service.Tmpfs), Provenance: provenance(ir.SourceCompose, service.HardeningAt, ir.ConfidenceHigh)}
+}
+
+// addTmpfs keeps a tmpfs volume as one of the service's tmpfs mounts, with
+// the size and mode upstream gave it.
+func addTmpfs(service *ir.Service, volume extract.ComposeVolume, at ir.Provenance) {
+	var options []string
+	if volume.TmpfsSize > 0 {
+		options = append(options, tmpfsSizeOption+strconv.FormatInt(volume.TmpfsSize, 10))
+	}
+	if volume.TmpfsMode > 0 {
+		options = append(options, tmpfsModeOption+strconv.FormatUint(uint64(volume.TmpfsMode), octalBase))
+	}
+	entry := volume.Target
+	if len(options) > 0 {
+		entry += composefile.TmpfsOptionsSeparator + strings.Join(options, tmpfsOptionSeparator)
+	}
+	service.Hardening.Tmpfs = append(service.Hardening.Tmpfs, entry)
+	if service.Hardening.Provenance.Source == "" {
+		service.Hardening.Provenance = at
 	}
 }
 

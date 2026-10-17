@@ -292,7 +292,14 @@
           "user": "",
           "profiles": [
             "_base"
-          ]
+          ],
+          "tmpfs": [
+            "/tmp"
+          ],
+          "hardening_at": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 19
+          }
         },
         {
           "name": "immich-init",
@@ -839,7 +846,12 @@
           },
           "command": null,
           "entrypoint": null,
-          "user": ""
+          "user": "",
+          "shm_size": "128mb",
+          "limits_at": {
+            "file": "docker/docker-compose.dev.yml",
+            "line": 175
+          }
         }
       ],
       "variables": [
@@ -1141,7 +1153,12 @@
           },
           "command": null,
           "entrypoint": null,
-          "user": ""
+          "user": "",
+          "shm_size": "128mb",
+          "limits_at": {
+            "file": "docker/docker-compose.prod.yml",
+            "line": 78
+          }
         },
         {
           "name": "immich-prometheus",
@@ -1355,7 +1372,14 @@
           },
           "command": null,
           "entrypoint": null,
-          "user": "1000:1000"
+          "user": "1000:1000",
+          "cap_drop": [
+            "NET_RAW"
+          ],
+          "hardening_at": {
+            "file": "docker/docker-compose.rootless.yml",
+            "line": 22
+          }
         },
         {
           "name": "immich-machine-learning",
@@ -1401,7 +1425,14 @@
           },
           "command": null,
           "entrypoint": null,
-          "user": "1000:1000"
+          "user": "1000:1000",
+          "cap_drop": [
+            "NET_RAW"
+          ],
+          "hardening_at": {
+            "file": "docker/docker-compose.rootless.yml",
+            "line": 50
+          }
         },
         {
           "name": "redis",
@@ -1448,7 +1479,14 @@
           },
           "command": null,
           "entrypoint": null,
-          "user": "1000:1000"
+          "user": "1000:1000",
+          "cap_drop": [
+            "NET_RAW"
+          ],
+          "hardening_at": {
+            "file": "docker/docker-compose.rootless.yml",
+            "line": 66
+          }
         },
         {
           "name": "database",
@@ -1529,7 +1567,19 @@
           },
           "command": null,
           "entrypoint": null,
-          "user": "1000:1000"
+          "user": "1000:1000",
+          "shm_size": "128mb",
+          "limits_at": {
+            "file": "docker/docker-compose.rootless.yml",
+            "line": 92
+          },
+          "cap_drop": [
+            "NET_RAW"
+          ],
+          "hardening_at": {
+            "file": "docker/docker-compose.rootless.yml",
+            "line": 80
+          }
         }
       ],
       "variables": [
@@ -1824,7 +1874,12 @@
           },
           "command": null,
           "entrypoint": null,
-          "user": ""
+          "user": "",
+          "shm_size": "128mb",
+          "limits_at": {
+            "file": "docker/docker-compose.yml",
+            "line": 70
+          }
         }
       ],
       "variables": [

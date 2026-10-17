@@ -15,6 +15,7 @@ services:
     volumes:
       - "navidrome_data:/data"
     security_opt: ["no-new-privileges:true"]
+    read_only: true
     mem_limit: 512m
     cpus: "1"
     pids_limit: 256

@@ -90,6 +90,15 @@ All notable changes to this project are documented here. The format follows
   added; a password the stack already had keeps its value, and a generated
   password stays stored while its service is off, so switching it on again
   reuses it.
+- Limits and hardening that the upstream compose file sets now reach the
+  generated `compose.yaml`: `shm_size` as written, such as Immich's 128mb for
+  its database; `mem_limit`, `cpus` and `pids_limit`, or the same limits under
+  `deploy.resources.limits`, merged with the profile defaults as before, so a
+  memory limit below the default still rises to it; and `cap_drop`,
+  `read_only` and `tmpfs` as written, with tmpfs volumes among the tmpfs
+  mounts. The Review page badges these lines R1 when upstream set them. The
+  test run keeps them and lowers a larger `shm_size` to the sandbox memory
+  limit.
 
 ### Changed
 

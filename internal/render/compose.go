@@ -12,6 +12,7 @@ import (
 	"github.com/docker/go-units"
 	"go.yaml.in/yaml/v3"
 
+	"github.com/aiulian25/composewright/internal/composefile"
 	"github.com/aiulian25/composewright/internal/config"
 	"github.com/aiulian25/composewright/internal/ir"
 	"github.com/aiulian25/composewright/internal/rules"
@@ -157,6 +158,7 @@ func (options Options) service(plan *ir.IR, service *ir.Service, volumes *yaml.N
 		node.Content = append(node.Content, key("healthcheck"), healthcheck)
 	}
 	node.Content = append(node.Content, key("security_opt"), flowSequence(noNewPrivileges))
+	hardening(service.Hardening, node)
 	options.limits(service, node)
 	node.Content = append(node.Content, key("logging"), mapping(key("driver"), scalar(logDriver), key("options"),
 		mapping(key("max-size"), scalar(options.Profile.Defaults.LogMaxSize), key("max-file"), quoted(strconv.Itoa(options.Profile.Defaults.LogMaxFile)))))
@@ -291,7 +293,23 @@ func (options Options) limits(service *ir.Service, node *yaml.Node) {
 	if pids == 0 {
 		pids = defaults.PIDsLimit
 	}
-	node.Content = append(node.Content, key("mem_limit"), scalar(memory), key("cpus"), quoted(cpus), key("pids_limit"), integer(pids))
+	node.Content = append(node.Content, key(composefile.KeyMemLimit), scalar(memory), key(composefile.KeyCPUs), quoted(cpus), key(composefile.KeyPIDsLimit), integer(pids))
+	if service.Resources.ShmSize != "" {
+		node.Content = append(node.Content, key(composefile.KeyShmSize), scalar(service.Resources.ShmSize))
+	}
+}
+
+// hardening writes what upstream takes away from the service as it wrote it.
+func hardening(hardening ir.Hardening, node *yaml.Node) {
+	if hardening.ReadOnly {
+		node.Content = append(node.Content, key(composefile.KeyReadOnly), boolean(true))
+	}
+	if len(hardening.Tmpfs) > 0 {
+		node.Content = append(node.Content, key(composefile.KeyTmpfs), flowSequence(hardening.Tmpfs...))
+	}
+	if len(hardening.CapDrop) > 0 {
+		node.Content = append(node.Content, key(composefile.KeyCapDrop), flowSequence(hardening.CapDrop...))
+	}
 }
 
 // largerMemory is the profile's default unless the plan needs more: a

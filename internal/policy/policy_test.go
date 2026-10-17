@@ -277,6 +277,12 @@ var planCases = []planCase{
 	{name: "P8 duplicate target denied", rule: "P8", want: policy.Deny, blocked: true, mutate: func(plan *ir.IR) {
 		plan.Services[1].Volumes = append(plan.Services[1].Volumes, ir.Volume{Name: "other", ContainerPath: "/var/lib/postgresql/data/"})
 	}},
+	{name: "P8 tmpfs on /dev denied", rule: "P8", want: policy.Deny, blocked: true, mutate: func(plan *ir.IR) {
+		plan.Services[0].Hardening.Tmpfs = []string{"/dev/shm:size=65536"}
+	}},
+	{name: "P8 tmpfs over a volume denied", rule: "P8", want: policy.Deny, blocked: true, mutate: func(plan *ir.IR) {
+		plan.Services[1].Hardening.Tmpfs = []string{"/var/lib/postgresql/data"}
+	}},
 
 	{name: "P7 optional setting with an invalid name denied", rule: "P7", want: policy.Deny, blocked: true,
 		mutate: func(plan *ir.IR) {
@@ -323,6 +329,7 @@ var planCases = []planCase{
 	{name: "P10 missing limits are filled", rule: "P10", want: policy.Fix, mutate: func(plan *ir.IR) { plan.Services[0].Resources = ir.Resources{} }},
 	{name: "P10 bad memory denied", rule: "P10", want: policy.Deny, blocked: true, mutate: func(plan *ir.IR) { plan.Services[0].Resources.MemoryLimit = "lots" }},
 	{name: "P10 bad cpus denied", rule: "P10", want: policy.Deny, blocked: true, mutate: func(plan *ir.IR) { plan.Services[0].Resources.CPUs = "-1" }},
+	{name: "P10 bad shm_size denied", rule: "P10", want: policy.Deny, blocked: true, mutate: func(plan *ir.IR) { plan.Services[0].Resources.ShmSize = "plenty" }},
 
 	{name: "P11 missing target denied", rule: "P11", want: policy.Deny, blocked: true, mutate: func(plan *ir.IR) { plan.Services[0].DependsOn[0].Service = "ghost" }},
 	{name: "P11 cycle denied", rule: "P11", want: policy.Deny, blocked: true, scenario: "dependency-cycle",
@@ -354,6 +361,18 @@ var planCases = []planCase{
 	{name: "C probe on a port nobody listens on denied", rule: "C", want: policy.Deny, blocked: true, mutate: func(plan *ir.IR) { plan.Probe.Port = 9999 }},
 	{name: "C bad app name denied", rule: "C", want: policy.Deny, blocked: true, mutate: func(plan *ir.IR) { plan.App.Name = "Mini Flux!" }},
 	{name: "C unknown ir_version denied", rule: "C", want: policy.Deny, blocked: true, mutate: func(plan *ir.IR) { plan.IRVersion = "2" }},
+}
+
+// TestUpstreamMemoryLimitIsNotAFix: a memory limit the upstream compose
+// file sets is reported as upstream's, not as one the profile fills.
+func TestUpstreamMemoryLimitIsNotAFix(t *testing.T) {
+	plan := goodPlan()
+	plan.Services[0].Resources = ir.Resources{MemoryLimit: "1g",
+		Provenance: ir.Provenance{Source: ir.SourceCompose, SourceRef: "compose.yaml:9", Confidence: ir.ConfidenceHigh}}
+	report := policy.Evaluate(baseInput(plan))
+	if !report.Has("P10", policy.OK) || report.Has("P10", policy.Fix) {
+		t.Fatalf("P10 findings %+v", report.Findings)
+	}
 }
 
 func TestEvaluate(t *testing.T) {
@@ -444,6 +463,10 @@ func at(t *testing.T, document map[string]any, location string) map[string]any {
 	return node.(map[string]any)
 }
 
+// hardeningTmpfs is the one structural name the plan may hold: tmpfs paths
+// upstream writes to, which only take away from what a container can do.
+const hardeningTmpfs = "$defs.hardening.tmpfs"
+
 func TestSchemaNamesNoStructuralKey(t *testing.T) {
 	var schema map[string]any
 	if err := json.Unmarshal(ir.SchemaJSON(), &schema); err != nil {
@@ -454,7 +477,7 @@ func TestSchemaNamesNoStructuralKey(t *testing.T) {
 		properties, _ := node["properties"].(map[string]any)
 		for name, child := range properties {
 			for _, key := range structuralKeys {
-				if name == key {
+				if name == key && path+"."+name != hardeningTmpfs {
 					t.Errorf("%s defines structural property %q", path, name)
 				}
 			}
@@ -552,6 +575,8 @@ func TestEvaluateYAML(t *testing.T) {
 		{"include behind a merge key", "x-base: &base\n  include:\n    - other.yaml\n<<: *base\n" + service(""), policy.Deny, nil, nil},
 		{"include behind an alias key", "x-key: &key include\n*key :\n  - other.yaml\n" + service(""), policy.Deny, nil, nil},
 		{"include only inside an extension", "x-notes:\n  include: other.yaml\n" + service(""), policy.OK, nil, nil},
+		{"tmpfs on a host path", service("    tmpfs: [/sys/fs:size=65536]\n"), policy.Deny, nil, nil},
+		{"upstream shm_size and hardening", service("    shm_size: 128mb\n    read_only: true\n    tmpfs: [/tmp]\n    cap_drop: [ALL]\n"), policy.OK, nil, nil},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {

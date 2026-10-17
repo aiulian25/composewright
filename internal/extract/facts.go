@@ -80,6 +80,16 @@ type ComposeService struct {
 	// Profiles are the Compose profiles that start the service; without
 	// one enabled, Compose leaves it out.
 	Profiles []string `json:"profiles,omitempty"`
+	// MemoryLimit and ShmSize are sizes as upstream wrote them, such as 2g.
+	MemoryLimit string   `json:"memory_limit,omitempty"`
+	CPUs        string   `json:"cpus,omitempty"`
+	PIDsLimit   int      `json:"pids_limit,omitempty"`
+	ShmSize     string   `json:"shm_size,omitempty"`
+	LimitsAt    Location `json:"limits_at,omitzero"`
+	CapDrop     []string `json:"cap_drop,omitempty"`
+	ReadOnly    bool     `json:"read_only,omitempty"`
+	Tmpfs       []string `json:"tmpfs,omitempty"`
+	HardeningAt Location `json:"hardening_at,omitzero"`
 }
 
 type ComposePort struct {
@@ -91,11 +101,14 @@ type ComposePort struct {
 }
 
 type ComposeVolume struct {
-	Type     string   `json:"type"`
-	Source   string   `json:"source"`
-	Target   string   `json:"target"`
-	ReadOnly bool     `json:"read_only"`
-	Location Location `json:"location"`
+	Type     string `json:"type"`
+	Source   string `json:"source"`
+	Target   string `json:"target"`
+	ReadOnly bool   `json:"read_only"`
+	// TmpfsSize, in bytes, and TmpfsMode are a tmpfs volume's options.
+	TmpfsSize int64    `json:"tmpfs_size,omitempty"`
+	TmpfsMode uint32   `json:"tmpfs_mode,omitempty"`
+	Location  Location `json:"location"`
 }
 
 // ComposeVariable is one environment entry as written upstream; Raw keeps

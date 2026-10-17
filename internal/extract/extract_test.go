@@ -329,6 +329,73 @@ func TestExtractComposeReadsEmptyKeys(t *testing.T) {
 	}
 }
 
+// TestExtractComposeReadsLimitsAndHardening: limits come from the service
+// keys, else from deploy's resource limits; a size keeps the text upstream
+// wrote; pids_limit -1 is no limit; each group is located at the first key
+// that set something in it; a tmpfs volume keeps its size and mode.
+func TestExtractComposeReadsLimitsAndHardening(t *testing.T) {
+	content := `services:
+  db:
+    image: postgres:17
+    shm_size: 128mb
+    mem_limit: ${DB_MEMORY:-1g}
+    pids_limit: -1
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          pids: 100
+    read_only: true
+    cap_drop: [ALL]
+    tmpfs: /run
+  app:
+    image: example/app:1
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+  plain:
+    image: example/plain:1
+  worker:
+    image: example/worker:1
+    deploy:
+      replicas: 1
+    read_only: false
+    pids_limit: -1
+    shm_size: 64m
+    cap_drop: [NET_RAW]
+    volumes:
+      - type: tmpfs
+        target: /cache
+        tmpfs:
+          size: 1048576
+          mode: 0o1777
+`
+	file, _, err := extractCompose(context.Background(), "compose.yaml", []byte(content), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	db, app, plain, worker := file.Services[0], file.Services[1], file.Services[2], file.Services[3]
+	if db.ShmSize != "128mb" || db.MemoryLimit != "1073741824" || db.CPUs != "0.5" || db.PIDsLimit != 0 || db.LimitsAt.Line != 4 {
+		t.Fatalf("db limits %+v", db)
+	}
+	if !db.ReadOnly || !slices.Equal(db.CapDrop, []string{"ALL"}) || !slices.Equal(db.Tmpfs, []string{"/run"}) || db.HardeningAt.Line != 12 {
+		t.Fatalf("db hardening %+v", db)
+	}
+	if app.MemoryLimit != "2G" || app.CPUs != "" || app.LimitsAt.Line != 20 || app.HardeningAt != (Location{}) {
+		t.Fatalf("app %+v", app)
+	}
+	if plain.LimitsAt != (Location{}) || plain.HardeningAt != (Location{}) {
+		t.Fatalf("plain %+v", plain)
+	}
+	if worker.LimitsAt.Line != 29 || worker.HardeningAt.Line != 30 {
+		t.Fatalf("worker located at %+v and %+v", worker.LimitsAt, worker.HardeningAt)
+	}
+	if volume := worker.Volumes[0]; volume.TmpfsSize != 1048576 || volume.TmpfsMode != 0o1777 {
+		t.Fatalf("worker tmpfs volume %+v", volume)
+	}
+}
+
 // TestExtractComposeKeepsProfileServices: a service upstream starts only with
 // a profile is read like any other and carries its profiles.
 func TestExtractComposeKeepsProfileServices(t *testing.T) {

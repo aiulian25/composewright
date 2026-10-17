@@ -16,6 +16,7 @@ import (
 
 	"github.com/compose-spec/compose-go/v2/loader"
 	"github.com/compose-spec/compose-go/v2/types"
+	"github.com/docker/go-units"
 	"go.yaml.in/yaml/v3"
 
 	"github.com/aiulian25/composewright/internal/composefile"
@@ -677,5 +678,40 @@ func TestValidateRunsUnderGVisorOnTheRunscTier(t *testing.T) {
 	}
 	if !upRan || verdict.Sandbox.Tier != runscRuntime {
 		t.Fatalf("up ran %v, verdict tier %q", upRan, verdict.Sandbox.Tier)
+	}
+}
+
+// TestOverrideCapsSharedMemory: merged the way Compose merges, a shm_size
+// above the sandbox memory limit is lowered to it, a smaller one is kept,
+// and a service without one gets none.
+func TestOverrideCapsSharedMemory(t *testing.T) {
+	compose := []byte(`services:
+  large:
+    image: example/large:1
+    shm_size: 1g
+  small:
+    image: example/small:1
+    shm_size: 64m
+  plain:
+    image: example/plain:1
+`)
+	project, err := composefile.Load(context.Background(), composeFile, compose, nil, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	limits, _ := ParseLimits("256m", 1, 128)
+	override, err := Override(project, nil, limits, "cw-app-1234", 0, false, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	details := types.ConfigDetails{WorkingDir: t.TempDir(), Environment: types.Mapping{},
+		ConfigFiles: []types.ConfigFile{{Filename: composeFile, Content: compose}, {Filename: overrideFile, Content: override}}}
+	merged, err := loader.LoadWithContext(context.Background(), details, func(options *loader.Options) { options.SetProjectName("cw-app-1234", true) })
+	if err != nil {
+		t.Fatalf("%v\n%s", err, override)
+	}
+	large, small, plain := merged.Services["large"].ShmSize, merged.Services["small"].ShmSize, merged.Services["plain"].ShmSize
+	if int64(large) != limits.MemoryBytes || small != 64*units.MiB || plain != 0 {
+		t.Fatalf("shm_size large %d, small %d, plain %d\n%s", large, small, plain, override)
 	}
 }
