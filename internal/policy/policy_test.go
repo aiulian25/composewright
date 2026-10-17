@@ -311,6 +311,15 @@ var planCases = []planCase{
 		mutate: func(plan *ir.IR) {
 			plan.Needs = []ir.Need{{Capability: ir.NeedPrivileged, Service: "miniflux", Reason: "README says so"}}
 		}},
+	{name: "P9 upstream device blocks until granted", rule: "P9", want: policy.Need, blocked: true,
+		mutate: func(plan *ir.IR) {
+			plan.Needs = []ir.Need{{Capability: ir.NeedDevices, Service: "miniflux", Detail: "/dev/ttyUSB0:/dev/ttyUSB0", Reason: "upstream compose asks for it (docker-compose.yml:14)"}}
+		}},
+	{name: "P9 granted upstream devices pass", rule: "P9", want: policy.OK, granted: []string{ir.NeedDevices},
+		mutate: func(plan *ir.IR) {
+			plan.Needs = []ir.Need{{Capability: ir.NeedDevices, Service: "miniflux", Detail: "/dev/ttyUSB0:/dev/ttyUSB0", Reason: "upstream compose asks for it (docker-compose.yml:14)"},
+				{Capability: ir.NeedDevices, Service: "miniflux", Detail: "/dev/ttyACM0:/dev/ttyACM0", Reason: "upstream compose asks for it (docker-compose.yml:15)"}}
+		}},
 	{name: "P9 need for unknown service denied", rule: "P9", want: policy.Deny, blocked: true,
 		mutate: func(plan *ir.IR) {
 			plan.Needs = []ir.Need{{Capability: ir.NeedDevices, Service: "ghost", Detail: "/dev/ttyUSB0", Reason: "zigbee"}}
@@ -527,6 +536,12 @@ func TestEvaluateYAML(t *testing.T) {
 		{"privileged granted but never requested", service("    privileged: true\n"), policy.Deny, []string{ir.NeedPrivileged}, nil},
 		{"cap_add", service("    cap_add: [NET_ADMIN]\n"), policy.Deny, nil, nil},
 		{"network_mode host", service("    network_mode: host\n"), policy.Deny, nil, nil},
+		{"merged devices granted and requested", service("    devices: ['/dev/ttyUSB0:/dev/ttyUSB0', '/dev/ttyACM0:/dev/ttyACM0']\n"), policy.OK, []string{ir.NeedDevices},
+			[]ir.Need{{Capability: ir.NeedDevices, Service: "app", Detail: "/dev/ttyUSB0:/dev/ttyUSB0"}, {Capability: ir.NeedDevices, Service: "app", Detail: "/dev/ttyACM0:/dev/ttyACM0"}}},
+		{"merged cap_add granted and requested", service("    cap_add: [NET_ADMIN, NET_RAW]\n"), policy.OK, []string{ir.NeedCapAdd},
+			[]ir.Need{{Capability: ir.NeedCapAdd, Service: "app", Detail: "NET_ADMIN"}, {Capability: ir.NeedCapAdd, Service: "app", Detail: "NET_RAW"}}},
+		{"network_mode host granted and requested", service("    network_mode: host\n"), policy.OK, []string{ir.NeedHostNetwork},
+			[]ir.Need{{Capability: ir.NeedHostNetwork, Service: "app"}}},
 		{"network_mode container", service("    network_mode: container:other\n"), policy.Deny, nil, nil},
 		{"pid host", service("    pid: host\n"), policy.Deny, nil, nil},
 		{"ipc host", service("    ipc: host\n"), policy.Deny, nil, nil},

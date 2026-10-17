@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"os"
 	"path/filepath"
 	"slices"
@@ -795,5 +796,55 @@ func TestUpstreamLimitsAndHardeningAreKept(t *testing.T) {
 	}
 	if database.Resources.ShmSize != "128mb" || database.Resources.MemoryLimit != "2g" || database.Resources.Provenance.Source != ir.SourceDefault {
 		t.Fatalf("database resources %+v", database.Resources)
+	}
+}
+
+// TestUpstreamPrivilegesBecomeNeeds: each device, capability, privileged and
+// a host network upstream gives a service becomes one need with the line it
+// came from, a device named twice is asked for once, and a docker socket
+// bind stays a docker_socket need whose reason names its line.
+func TestUpstreamPrivilegesBecomeNeeds(t *testing.T) {
+	facts := testFacts(t, map[string]string{"docker-compose.yml": `services:
+  app:
+    image: example/app:1.0
+    devices: ["/dev/ttyUSB0:/dev/ttyUSB0", /dev/ttyACM0, /dev/ttyUSB0]
+    cap_add:
+      - NET_ADMIN
+      - SYS_TIME
+    privileged: true
+    network_mode: host
+    volumes: ["/var/run/docker.sock:/var/run/docker.sock", "./data:/data"]
+`})
+	plan := Build(context.Background(), Input{Facts: facts, Source: &fetch.Source{Owner: "example", Repository: "app"}})
+	reason := func(line int) string {
+		return fmt.Sprintf("upstream compose asks for it (docker-compose.yml:%d)", line)
+	}
+	want := []ir.Need{
+		{Capability: ir.NeedDevices, Service: "app", Detail: "/dev/ttyUSB0:/dev/ttyUSB0", Reason: reason(4)},
+		{Capability: ir.NeedDevices, Service: "app", Detail: "/dev/ttyACM0:/dev/ttyACM0", Reason: reason(4)},
+		{Capability: ir.NeedCapAdd, Service: "app", Detail: "NET_ADMIN", Reason: reason(6)},
+		{Capability: ir.NeedCapAdd, Service: "app", Detail: "SYS_TIME", Reason: reason(7)},
+		{Capability: ir.NeedPrivileged, Service: "app", Reason: reason(8)},
+		{Capability: ir.NeedHostNetwork, Service: "app", Reason: reason(9)},
+	}
+	var upstream []ir.Need
+	socket := false
+	for _, need := range plan.Needs {
+		if need.Capability == ir.NeedDockerSocket {
+			socket = strings.HasSuffix(need.Reason, "(docker-compose.yml:10)")
+			continue
+		}
+		if need.Provenance.Source != ir.SourceCompose || !strings.HasSuffix(need.Reason, "("+need.Provenance.SourceRef+")") {
+			t.Errorf("need %+v: provenance does not match the reason", need)
+		}
+		need.Provenance = ir.Provenance{}
+		upstream = append(upstream, need)
+	}
+	if !socket || !slices.Equal(upstream, want) {
+		t.Fatalf("needs %+v, want the docker socket and %+v", plan.Needs, want)
+	}
+	app, _ := plan.Service("app")
+	if len(app.Volumes) != 1 || app.Volumes[0].ContainerPath != "/data" {
+		t.Fatalf("a folder bind should stay a named volume: %+v", app.Volumes)
 	}
 }

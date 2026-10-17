@@ -143,7 +143,11 @@ func needsSection(plan *ir.IR, options Options, write func(string, ...any)) {
 		if options.isGranted(need.Capability) {
 			state = "granted by you"
 		}
-		write("- %s for %s (%s): %s", need.Capability, need.Service, state, singleLine(need.Reason))
+		capability := need.Capability
+		if need.Detail != "" {
+			capability += " `" + need.Detail + "`"
+		}
+		write("- %s for %s (%s): %s", capability, need.Service, state, singleLine(need.Reason))
 	}
 	write("")
 }

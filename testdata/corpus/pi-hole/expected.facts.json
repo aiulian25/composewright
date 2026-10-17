@@ -176,7 +176,16 @@
           ],
           "command": null,
           "entrypoint": null,
-          "user": ""
+          "user": "",
+          "cap_add": [
+            {
+              "value": "NET_ADMIN",
+              "location": {
+                "file": "examples/docker-compose-caddy-proxy.yml",
+                "line": 47
+              }
+            }
+          ]
         }
       ],
       "variables": []

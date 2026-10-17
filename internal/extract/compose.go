@@ -45,6 +45,10 @@ var nonComposeKeys = []string{"jobs", "on", "apiVersion", "kind", "steps", "stag
 // pids_limit before it becomes an int.
 const maxPIDsLimit int64 = 1 << 22
 
+// defaultDevicePermissions are what compose-go fills in for a device
+// mapping that names none, so they are left out of the mapping again.
+const defaultDevicePermissions = "rwm"
+
 // cpusBits formats an upstream cpus value at the precision compose-go reads.
 const cpusBits = 32
 
@@ -220,6 +224,7 @@ func composeService(relative string, key, node *yaml.Node, service types.Service
 	if source := earliest(hardeningSources); source != nil {
 		result.HardeningAt = at(source)
 	}
+	composePrivileges(&result, node, service, at)
 	for _, name := range sortedDependencies(service.DependsOn) {
 		result.DependsOn = append(result.DependsOn, ComposeDependency{Service: name, Condition: service.DependsOn[name].Condition})
 	}
@@ -228,6 +233,38 @@ func composeService(relative string, key, node *yaml.Node, service types.Service
 		result.Healthcheck.Test = rawTest(child(child(node, "healthcheck"), "test"), result.Healthcheck.Test)
 	}
 	return result
+}
+
+// composePrivileges reads the privileges a service asks for, each with the
+// line upstream wrote it on.
+func composePrivileges(result *ComposeService, node *yaml.Node, service types.ServiceConfig, at func(*yaml.Node) Location) {
+	deviceItems := items(child(node, composefile.KeyDevices))
+	for index, device := range service.Devices {
+		result.Devices = append(result.Devices, ComposeEntry{Value: deviceMapping(device),
+			Location: at(itemOrKey(deviceItems, index, keyNode(node, composefile.KeyDevices)))})
+	}
+	capabilityItems := items(child(node, composefile.KeyCapAdd))
+	for index, capability := range service.CapAdd {
+		result.CapAdd = append(result.CapAdd, ComposeEntry{Value: capability,
+			Location: at(itemOrKey(capabilityItems, index, keyNode(node, composefile.KeyCapAdd)))})
+	}
+	result.Privileged, result.NetworkMode = service.Privileged, service.NetworkMode
+	if service.Privileged {
+		result.PrivilegedAt = at(keyNode(node, composefile.KeyPrivileged))
+	}
+	if service.NetworkMode != "" {
+		result.NetworkModeAt = at(keyNode(node, composefile.KeyNetworkMode))
+	}
+}
+
+// deviceMapping is a device as host:container, with the permissions when
+// upstream narrows them.
+func deviceMapping(device types.DeviceMapping) string {
+	parts := []string{device.Source, cmp.Or(device.Target, device.Source)}
+	if device.Permissions != "" && device.Permissions != defaultDevicePermissions {
+		parts = append(parts, device.Permissions)
+	}
+	return strings.Join(parts, composefile.DeviceSeparator)
 }
 
 // composeLimits reads the limits a service sets, each from deploy's

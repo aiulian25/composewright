@@ -5,6 +5,7 @@ import (
 	"flag"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -352,5 +353,72 @@ func TestUpstreamHardeningIsRendered(t *testing.T) {
 	service := project.Services[app.Name]
 	if !service.ReadOnly || service.ShmSize != 128*units.MiB || len(service.Tmpfs) != 2 || service.CapDrop[0] != "ALL" {
 		t.Fatalf("compose-go reads %+v", service)
+	}
+}
+
+// TestGrantedNeedsOfOneCapabilityMerge: several devices or capabilities of
+// one service render as one key each, a device as upstream mapped it, and
+// both gates accept what the renderer writes.
+func TestGrantedNeedsOfOneCapabilityMerge(t *testing.T) {
+	plan := loadPlan(t, "../../testdata/corpus/uptime-kuma/expected.ir.json")
+	plan.Needs = []ir.Need{
+		{Capability: ir.NeedDevices, Service: "uptime-kuma", Detail: "/dev/ttyUSB0:/dev/ttyACM0", Reason: "zigbee adapter"},
+		{Capability: ir.NeedCapAdd, Service: "uptime-kuma", Detail: "NET_ADMIN", Reason: "upstream compose asks for it (compose.yaml:7)"},
+		{Capability: ir.NeedDevices, Service: "uptime-kuma", Detail: "/dev/ttyUSB1", Reason: "second adapter"},
+		{Capability: ir.NeedCapAdd, Service: "uptime-kuma", Detail: "NET_RAW", Reason: "upstream compose asks for it (compose.yaml:8)"},
+		{Capability: ir.NeedPrivileged, Service: "uptime-kuma", Reason: "upstream compose asks for it (compose.yaml:9)"},
+		{Capability: ir.NeedDevices, Service: "uptime-kuma", Detail: "/dev/ttyUSB1", Reason: "second adapter"},
+	}
+	options := testOptions(t, variants[0])
+	ungranted, _ := Compose(plan, options)
+	for _, key := range []string{"devices:", "cap_add:", "privileged:"} {
+		if strings.Contains(string(ungranted), key) {
+			t.Fatalf("an ungranted %s was rendered:\n%s", key, ungranted)
+		}
+	}
+	options.GrantedNeeds = []string{ir.NeedDevices, ir.NeedCapAdd, ir.NeedPrivileged}
+	granted, err := Compose(plan, options)
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := string(granted)
+	for _, key := range []string{"devices:", "cap_add:", "privileged:"} {
+		if strings.Count(text, key) != 1 {
+			t.Fatalf("%s rendered %d times:\n%s", key, strings.Count(text, key), text)
+		}
+	}
+	if strings.Count(text, "/dev/ttyUSB1:/dev/ttyUSB1") != 1 || strings.Count(text, "devices (second adapter)") != 1 {
+		t.Fatalf("a repeated device should render once with one comment:\n%s", text)
+	}
+	deploy := string(Deploy(plan, options, "not validated yet"))
+	if !strings.Contains(deploy, "- cap_add `NET_RAW` for uptime-kuma (granted by you)") {
+		t.Fatalf("DEPLOY.md does not name the granted capability:\n%s", deploy)
+	}
+	for _, comment := range []string{"# NEED GRANTED BY USER: devices (zigbee adapter)\n    # NEED GRANTED BY USER: devices (second adapter)\n    devices:",
+		"# NEED GRANTED BY USER: cap_add (upstream compose asks for it (compose.yaml:7))"} {
+		if !strings.Contains(text, comment) {
+			t.Fatalf("missing %q:\n%s", comment, text)
+		}
+	}
+	project, err := composefile.Load(context.Background(), "compose.yaml", granted, nil, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	service := project.Services["uptime-kuma"]
+	devices := []string{}
+	for _, device := range service.Devices {
+		devices = append(devices, device.Source+":"+device.Target)
+	}
+	if strings.Join(devices, ",") != "/dev/ttyUSB0:/dev/ttyACM0,/dev/ttyUSB1:/dev/ttyUSB1" ||
+		strings.Join(service.CapAdd, ",") != "NET_ADMIN,NET_RAW" || !service.Privileged {
+		t.Fatalf("rendered devices %v, cap_add %v, privileged %v", devices, service.CapAdd, service.Privileged)
+	}
+	input := policy.Input{Plan: plan, Profile: options.Profile, GrantedNeeds: options.GrantedNeeds,
+		AllowRegistries: config.Default().Registries.Allow, RepositoryOwner: "louislam"}
+	findings := append(policy.EvaluateYAML(context.Background(), project, granted, input).Findings, policy.Evaluate(input).Findings...)
+	for _, finding := range findings {
+		if slices.Contains([]string{"P9", "P13"}, finding.Rule) && finding.Severity != policy.OK {
+			t.Fatalf("a gate refuses the granted needs: %+v", finding)
+		}
 	}
 }

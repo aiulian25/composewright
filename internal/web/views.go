@@ -265,10 +265,15 @@ func envRows(plan *ir.IR, values map[string]string, revealed bool) []envRow {
 type needView struct {
 	Capability string
 	Label      string
-	Service    string
-	Reason     string
-	Requested  bool
+	Requests   []needRequest
 	Granted    bool
+}
+
+// needRequest is one service's request for a capability.
+type needRequest struct {
+	Service string
+	Detail  string
+	Reason  string
 }
 
 var capabilityLabels = map[string]string{ir.NeedHostNetwork: "Host network", ir.NeedDevices: "Devices", ir.NeedPrivileged: "Privileged",
@@ -289,15 +294,14 @@ func optionalServiceOptions(plan *ir.IR, switchable bool) []option {
 }
 
 func needViews(plan *ir.IR, granted []string) []needView {
-	requested := map[string]ir.Need{}
+	requested := map[string][]needRequest{}
 	for _, need := range plan.Needs {
-		requested[need.Capability] = need
+		requested[need.Capability] = append(requested[need.Capability], needRequest{Service: need.Service, Detail: need.Detail, Reason: need.Reason})
 	}
 	views := make([]needView, 0, len(ir.Capabilities))
 	for _, capability := range ir.Capabilities {
-		need, asked := requested[capability]
-		views = append(views, needView{Capability: capability, Label: capabilityLabels[capability], Service: need.Service, Reason: need.Reason,
-			Requested: asked, Granted: slices.Contains(granted, capability)})
+		views = append(views, needView{Capability: capability, Label: capabilityLabels[capability], Requests: requested[capability],
+			Granted: slices.Contains(granted, capability)})
 	}
 	return views
 }

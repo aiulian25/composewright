@@ -327,28 +327,85 @@ func largerMemory(planned, profile string) string {
 	return profile
 }
 
-// needs renders only what the user granted, each with a loud comment.
+// needs renders only what the user granted, each with a loud comment. The
+// granted needs of one capability merge into one key, so several devices
+// or capabilities of one service are one sequence.
 func (options Options) needs(plan *ir.IR, service *ir.Service, node *yaml.Node) {
+	granted := map[string][]ir.Need{}
 	for _, need := range plan.Needs {
-		if need.Service != service.Name || !options.isGranted(need.Capability) {
+		if need.Service == service.Name && options.isGranted(need.Capability) {
+			granted[need.Capability] = append(granted[need.Capability], need)
+		}
+	}
+	for _, capability := range ir.Capabilities {
+		needs := granted[capability]
+		value := needValue(capability, needs)
+		if value == nil {
 			continue
 		}
-		var field, value *yaml.Node
-		switch need.Capability {
-		case ir.NeedHostNetwork:
-			field, value = key("network_mode"), scalar("host")
-		case ir.NeedPrivileged:
-			field, value = key("privileged"), boolean(true)
-		case ir.NeedDevices:
-			field, value = key("devices"), flowSequence(need.Detail+":"+need.Detail)
-		case ir.NeedCapAdd:
-			field, value = key("cap_add"), flowSequence(need.Detail)
-		default:
-			continue
+		field := key(capabilityKeys[capability])
+		comments := make([]string, 0, len(needs))
+		for _, need := range needs {
+			comments = append(comments, grantedComment(need))
 		}
-		field.HeadComment = grantedComment(need)
+		field.HeadComment = strings.Join(distinct(comments), "\n")
 		node.Content = append(node.Content, field, value)
 	}
+}
+
+// capabilityKeys are the service keys the needs rendered here set; the
+// mounts are rendered with the volumes.
+var capabilityKeys = map[string]string{ir.NeedHostNetwork: composefile.KeyNetworkMode, ir.NeedPrivileged: composefile.KeyPrivileged,
+	ir.NeedDevices: composefile.KeyDevices, ir.NeedCapAdd: composefile.KeyCapAdd}
+
+// needValue is what the granted needs of one capability set, or nil when
+// they set nothing here.
+func needValue(capability string, needs []ir.Need) *yaml.Node {
+	if len(needs) == 0 {
+		return nil
+	}
+	switch capability {
+	case ir.NeedHostNetwork:
+		return scalar(composefile.NetworkModeHost)
+	case ir.NeedPrivileged:
+		return boolean(true)
+	case ir.NeedDevices, ir.NeedCapAdd:
+		return detailSequence(capability, needs)
+	}
+	return nil
+}
+
+// detailSequence lists each device or capability the needs name once.
+func detailSequence(capability string, needs []ir.Need) *yaml.Node {
+	var details []string
+	for _, need := range needs {
+		if need.Detail != "" {
+			details = append(details, needDetail(capability, need.Detail))
+		}
+	}
+	if len(details) == 0 {
+		return nil
+	}
+	return flowSequence(distinct(details)...)
+}
+
+// needDetail is a device as host:container, as upstream wrote it; a bare
+// path maps to the same path in the container.
+func needDetail(capability, detail string) string {
+	if capability != ir.NeedDevices || strings.Contains(detail, composefile.DeviceSeparator) {
+		return detail
+	}
+	return detail + composefile.DeviceSeparator + detail
+}
+
+// distinct keeps the first of each value, in order.
+func distinct(values []string) []string {
+	seen := map[string]bool{}
+	return slices.DeleteFunc(values, func(value string) bool {
+		repeated := seen[value]
+		seen[value] = true
+		return repeated
+	})
 }
 
 func grantedComment(need ir.Need) string {

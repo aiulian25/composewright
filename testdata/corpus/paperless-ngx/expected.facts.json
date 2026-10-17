@@ -71,7 +71,12 @@
             "--log-format=text"
           ],
           "entrypoint": null,
-          "user": ""
+          "user": "",
+          "network_mode": "host",
+          "network_mode_at": {
+            "file": "docker/compose/docker-compose.ci-test.yml",
+            "line": 10
+          }
         },
         {
           "name": "tika",
@@ -92,7 +97,12 @@
           "depends_on": null,
           "command": null,
           "entrypoint": null,
-          "user": ""
+          "user": "",
+          "network_mode": "host",
+          "network_mode_at": {
+            "file": "docker/compose/docker-compose.ci-test.yml",
+            "line": 24
+          }
         },
         {
           "name": "greenmail",

@@ -107,7 +107,7 @@ func (check *checker) composeGrants(name string, service types.ServiceConfig) {
 	}
 	switch service.NetworkMode {
 	case "":
-	case networkModeHost:
+	case composefile.NetworkModeHost:
 		check.grantedOrDeny(ir.NeedHostNetwork, name, "network_mode: host")
 	default:
 		check.add("P13", Deny, name, "services."+name, "network_mode %q is not allowed", service.NetworkMode)

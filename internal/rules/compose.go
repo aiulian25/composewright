@@ -14,7 +14,9 @@ import (
 )
 
 const (
-	dockerSocketReason = "upstream mounts the Docker socket, so the app manages containers; granting it gives the app control of this host"
+	dockerSocketReason = "upstream mounts the Docker socket, so the app manages containers; granting it gives the app control of this host (%s)"
+	upstreamNeedReason = "upstream compose asks for it (%s)"
+	upstreamNeedClaim  = "%s asks for %s %s"
 	scoreDepth         = 2
 	scorePreferred     = 5
 	scoreMentioned     = 8
@@ -253,6 +255,7 @@ func (builder *builder) composeService(file *extract.ComposeFile, service extrac
 	builder.composePorts(&result, service)
 	builder.composeVolumes(&result, service)
 	builder.composeEnvironment(file, &result, service)
+	builder.needsFromCompose(&result, service)
 	for _, dependency := range service.DependsOn {
 		result.DependsOn = append(result.DependsOn, ir.Dependency{Service: strings.ToLower(dependency.Service), Condition: dependency.Condition})
 	}
@@ -402,7 +405,32 @@ func (builder *builder) needDockerSocket(service *ir.Service, target string, at 
 		return
 	}
 	builder.plan.Needs = append(builder.plan.Needs, ir.Need{Capability: ir.NeedDockerSocket, Service: service.Name,
-		Detail: path.Clean(target), Reason: dockerSocketReason, Provenance: at})
+		Detail: path.Clean(target), Reason: fmt.Sprintf(dockerSocketReason, at.SourceRef), Provenance: at})
+}
+
+// needsFromCompose asks for each privilege upstream gives the service, as
+// upstream wrote it; none is rendered unless the user grants it.
+func (builder *builder) needsFromCompose(service *ir.Service, upstream extract.ComposeService) {
+	for _, device := range upstream.Devices {
+		builder.upstreamNeed(service, ir.NeedDevices, device.Value, device.Location)
+	}
+	for _, capability := range upstream.CapAdd {
+		builder.upstreamNeed(service, ir.NeedCapAdd, capability.Value, capability.Location)
+	}
+	if upstream.Privileged {
+		builder.upstreamNeed(service, ir.NeedPrivileged, "", upstream.PrivilegedAt)
+	}
+	if upstream.NetworkMode == composefile.NetworkModeHost {
+		builder.upstreamNeed(service, ir.NeedHostNetwork, "", upstream.NetworkModeAt)
+	}
+}
+
+// upstreamNeed records one privilege upstream asks for. Compose already
+// merges a device or capability written twice, so each arrives once.
+func (builder *builder) upstreamNeed(service *ir.Service, capability, detail string, location extract.Location) {
+	builder.plan.Needs = append(builder.plan.Needs, ir.Need{Capability: capability, Service: service.Name, Detail: detail,
+		Reason: fmt.Sprintf(upstreamNeedReason, location), Provenance: provenance(ir.SourceCompose, location, ir.ConfidenceHigh)})
+	builder.evidence(strings.TrimSpace(fmt.Sprintf(upstreamNeedClaim, service.Name, capability, detail)), location)
 }
 
 // composeVolumeName names the volume behind an upstream mount. A named

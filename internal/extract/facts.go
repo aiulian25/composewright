@@ -90,6 +90,20 @@ type ComposeService struct {
 	ReadOnly    bool     `json:"read_only,omitempty"`
 	Tmpfs       []string `json:"tmpfs,omitempty"`
 	HardeningAt Location `json:"hardening_at,omitzero"`
+	// Devices are host:container[:permissions] mappings; they, CapAdd,
+	// Privileged and a host NetworkMode are privileges the user grants.
+	Devices       []ComposeEntry `json:"devices,omitempty"`
+	CapAdd        []ComposeEntry `json:"cap_add,omitempty"`
+	Privileged    bool           `json:"privileged,omitempty"`
+	PrivilegedAt  Location       `json:"privileged_at,omitzero"`
+	NetworkMode   string         `json:"network_mode,omitempty"`
+	NetworkModeAt Location       `json:"network_mode_at,omitzero"`
+}
+
+// ComposeEntry is one item of a list upstream wrote, with its line.
+type ComposeEntry struct {
+	Value    string   `json:"value"`
+	Location Location `json:"location"`
 }
 
 type ComposePort struct {

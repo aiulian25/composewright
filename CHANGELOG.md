@@ -99,6 +99,18 @@ All notable changes to this project are documented here. The format follows
   mounts. The Review page badges these lines R1 when upstream set them. The
   test run keeps them and lowers a larger `shm_size` to the sandbox memory
   limit.
+- Devices, `cap_add`, `privileged: true` and `network_mode: host` in the
+  upstream compose file no longer vanish from the plan. Each becomes a
+  request on the Review page's Needs card, with the service, the device or
+  capability and the file and line upstream wrote it on, and every request
+  of one kind is listed, not only the last. Until you grant it the policy
+  gate blocks the plan; granted, `compose.yaml` carries it as upstream wrote
+  it under a NEED GRANTED BY USER comment, with all the devices or
+  capabilities of one service in one list, and DEPLOY.md names each device
+  or capability. The Docker socket request names its line too.
+  `composewright gen --allow-need devices` grants it from the command line.
+  A device given as host:container is now written as given instead of being
+  doubled.
 
 ### Changed
 

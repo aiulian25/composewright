@@ -396,6 +396,44 @@ func TestExtractComposeReadsLimitsAndHardening(t *testing.T) {
 	}
 }
 
+// TestExtractComposeReadsPrivileges: devices, cap_add, privileged and
+// network_mode are read with the line of each entry, a device as
+// host:container with permissions only when upstream narrows them.
+func TestExtractComposeReadsPrivileges(t *testing.T) {
+	content := `services:
+  zigbee:
+    image: example/zigbee:1
+    devices:
+      - /dev/ttyUSB0:/dev/ttyACM0
+      - /dev/ttyUSB1
+      - /dev/video0:/dev/video0:r
+    cap_add: [NET_ADMIN, SYS_TIME]
+    privileged: true
+    network_mode: host
+  plain:
+    image: example/plain:1
+`
+	file, _, err := extractCompose(context.Background(), "compose.yaml", []byte(content), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	zigbee, plain := file.Services[0], file.Services[1]
+	wantDevices := []ComposeEntry{{"/dev/ttyUSB0:/dev/ttyACM0", Location{"compose.yaml", 5}}, {"/dev/ttyUSB1:/dev/ttyUSB1", Location{"compose.yaml", 6}},
+		{"/dev/video0:/dev/video0:r", Location{"compose.yaml", 7}}}
+	if !slices.Equal(zigbee.Devices, wantDevices) {
+		t.Fatalf("devices %+v", zigbee.Devices)
+	}
+	if !slices.Equal(zigbee.CapAdd, []ComposeEntry{{"NET_ADMIN", Location{"compose.yaml", 8}}, {"SYS_TIME", Location{"compose.yaml", 8}}}) {
+		t.Fatalf("cap_add %+v", zigbee.CapAdd)
+	}
+	if !zigbee.Privileged || zigbee.PrivilegedAt.Line != 9 || zigbee.NetworkMode != "host" || zigbee.NetworkModeAt.Line != 10 {
+		t.Fatalf("zigbee %+v", zigbee)
+	}
+	if plain.Devices != nil || plain.CapAdd != nil || plain.Privileged || plain.NetworkMode != "" || plain.PrivilegedAt != (Location{}) {
+		t.Fatalf("plain %+v", plain)
+	}
+}
+
 // TestExtractComposeKeepsProfileServices: a service upstream starts only with
 // a profile is read like any other and carries its profiles.
 func TestExtractComposeKeepsProfileServices(t *testing.T) {

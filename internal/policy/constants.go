@@ -15,7 +15,6 @@ const (
 	composeFileName   = "compose.yaml"
 	rootUser          = "root"
 	rootUID           = "0"
-	networkModeHost   = "host"
 	volumeTypeBind    = "bind"
 	volumeTypeVolume  = "volume"
 	volumeTypeTmpfs   = "tmpfs"

@@ -1064,6 +1064,33 @@ func TestOptionalServicesOfAnUpload(t *testing.T) {
 	}
 }
 
+// TestUpstreamDevicesAreNeedsOnReview: each device upstream mounts is listed
+// under one Devices row with its reason, and granting it renders them all.
+func TestUpstreamDevicesAreNeedsOnReview(t *testing.T) {
+	harness := newHarness(t)
+	harness.signUp()
+	compose := "services:\n  app:\n    image: docker.io/library/nginx:1.27\n    ports: [\"8080:80\"]\n" +
+		"    devices:\n      - /dev/ttyUSB0:/dev/ttyUSB0\n      - /dev/ttyACM0\n"
+	response, page := harness.post("/new", url.Values{"compose": {compose}, "name": {"zigbee"}, "engine": {pipeline.EngineRules}})
+	status(t, response, http.StatusSeeOther, page)
+	if job := harness.waitForJob(response.Header.Get("Location")); job.Failure != "" {
+		t.Fatal(job.Failure)
+	}
+	response, page = harness.get(projectURL("zigbee", pageReview))
+	status(t, response, http.StatusOK, page)
+	for _, want := range []string{`name="need" value="devices">`, "/dev/ttyUSB0:/dev/ttyUSB0</span>: upstream compose asks for it (",
+		"/dev/ttyACM0:/dev/ttyACM0</span>: upstream compose asks for it ("} {
+		if !strings.Contains(page, want) {
+			t.Fatalf("the Review lacks %q", want)
+		}
+	}
+	stored := harness.reviewWith("zigbee", nil, url.Values{"need": {ir.NeedDevices}})
+	if !strings.Contains(stored.Generation.ComposeYAML, "# NEED GRANTED BY USER: devices") ||
+		strings.Count(stored.Generation.ComposeYAML, "devices:") != 1 || !strings.Contains(stored.Generation.ComposeYAML, "/dev/ttyACM0:/dev/ttyACM0") {
+		t.Fatalf("granted devices not rendered:\n%s", stored.Generation.ComposeYAML)
+	}
+}
+
 // reviewWith applies the Review form of the project name, as the page
 // renders it with the optional services given ticked and the extra fields,
 // waits for a generation it starts, and loads the result.

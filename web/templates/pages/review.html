@@ -49,7 +49,7 @@
       <div class="card-head"><h2 id="needs-title">{{template "icon-shield"}}Needs</h2>{{if .Needed}}<span class="chip chip-danger push-right">{{plural .Needed "request" "requests"}}</span>{{else}}<span class="chip chip-ok push-right">none requested</span>{{end}}</div>
       <fieldset class="option-list">
         <legend class="visually-hidden">Privileges you grant</legend>
-        {{range .Needs}}<label class="option{{if not .Requested}} option-off{{end}}"><input type="checkbox" name="need" value="{{.Capability}}"{{if .Granted}} checked{{end}}{{if not .Requested}} disabled{{end}}><span class="option-text"><span>{{.Label}}</span>{{if .Requested}}<span class="option-sub">{{.Service}}: {{.Reason}}</span>{{end}}</span></label>{{end}}
+        {{range .Needs}}<label class="option{{if not .Requests}} option-off{{end}}"><input type="checkbox" name="need" value="{{.Capability}}"{{if .Granted}} checked{{end}}{{if not .Requests}} disabled{{end}}><span class="option-text"><span>{{.Label}}</span>{{range .Requests}}<span class="option-sub">{{.Service}}{{if .Detail}} <span class="mono">{{.Detail}}</span>{{end}}: {{.Reason}}</span>{{end}}</span></label>{{end}}
       </fieldset>
       <p class="card-body muted small">Grant only with a reason. The policy gate blocks the rest, and a model can never grant one.</p>
     </section>
