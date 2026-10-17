@@ -309,11 +309,18 @@ func findingViews(report policy.Report, compose string) []findingView {
 	return views
 }
 
+// trustOffer is an image namespace a person could trust; Permanent says
+// registries.allow already holds it, so only the per-project trust is offered.
+type trustOffer struct {
+	Pattern   string
+	Permanent bool
+}
+
 // trustOffers are the image namespaces a person could trust, one per image:
 // to lift a registry-allowlist block, or to vouch for a namespace trusted
 // only by the owner's name.
-func trustOffers(plan *ir.IR, report policy.Report) []string {
-	var offers []string
+func trustOffers(plan *ir.IR, report policy.Report, allow []string) []trustOffer {
+	var offers []trustOffer
 	for _, finding := range report.Findings {
 		settledByTrust := strings.Contains(finding.Message, policy.OutsideAllowlist) || strings.Contains(finding.Message, policy.NotGitHubAccounts)
 		if finding.Rule != "P1" || !settledByTrust {
@@ -325,8 +332,9 @@ func trustOffers(plan *ir.IR, report policy.Report) []string {
 		}
 		namespace, _, _ := strings.Cut(service.Image.Repository, "/")
 		pattern := service.Image.Registry + "/" + namespace + "/*"
-		if !slices.Contains(offers, pattern) {
-			offers = append(offers, pattern)
+		offered := slices.ContainsFunc(offers, func(offer trustOffer) bool { return offer.Pattern == pattern })
+		if !offered {
+			offers = append(offers, trustOffer{Pattern: pattern, Permanent: slices.Contains(allow, pattern)})
 		}
 	}
 	return offers

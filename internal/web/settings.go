@@ -21,13 +21,14 @@ import (
 )
 
 const (
-	sectionProfile    = "profile"
-	sectionEngine     = "engine"
-	sectionAppearance = "appearance"
-	sectionAccount    = "account"
-	sectionBackup     = "backup"
-	themeKey          = "ui.theme"
-	maxNetworkRows    = 20
+	sectionProfile     = "profile"
+	sectionEngine      = "engine"
+	sectionAppearance  = "appearance"
+	sectionAccount     = "account"
+	sectionBackup      = "backup"
+	themeKey           = "ui.theme"
+	registriesAllowKey = "registries.allow"
+	maxNetworkRows     = 20
 	// newRowIndex stands for the row number in the network row app.js
 	// copies when someone adds a network.
 	newRowIndex = "__index__"
@@ -407,7 +408,7 @@ func engineValues(configuration config.Config) map[string]string {
 	return map[string]string{
 		"llm.engine":                    quote(configuration.LLM.Engine),
 		"network.allow_private_targets": jsonText(configuration.Network.AllowPrivateTargets),
-		"registries.allow":              jsonText(configuration.Registries.Allow),
+		registriesAllowKey:              jsonText(configuration.Registries.Allow),
 	}
 }
 

@@ -43,14 +43,21 @@ const (
 	viaWeb         = "web"
 	valuePrefix    = "value:"
 	secretPrefix   = "secret:"
-	storageVolumes = "volumes"
-	storageBind    = "bind"
-	appliedNotice  = "Changes applied. The plan was gated and rendered again as a new version."
-	editedNotice   = "Saved compose.yaml as a new version. The policy gate checked it; the test runs exactly this file."
-	blockedNotice  = "Saved compose.yaml as a new version, but the policy gate blocks it: see the findings below."
-	paneCompose    = "compose"
-	paneEnv        = "env"
-	paneDeploy     = "deploy"
+	trustField     = "trust"
+	// trustAlwaysField trusts the namespace in config.yaml as well, for
+	// every project from now on.
+	trustAlwaysField = "trust_always"
+	// trustAlwaysProblem follows a revision that already went in, so it
+	// says what did change.
+	trustAlwaysProblem = "the changes were applied and %s is trusted for this project, but adding it to registries.allow failed: %w"
+	storageVolumes     = "volumes"
+	storageBind        = "bind"
+	appliedNotice      = "Changes applied. The plan was gated and rendered again as a new version."
+	editedNotice       = "Saved compose.yaml as a new version. The policy gate checked it; the test runs exactly this file."
+	blockedNotice      = "Saved compose.yaml as a new version, but the policy gate blocks it: see the findings below."
+	paneCompose        = "compose"
+	paneEnv            = "env"
+	paneDeploy         = "deploy"
 	// durationPrecision is how finely a run's time is shown: 14.2s.
 	durationPrecision = 100 * time.Millisecond
 	generationQuery   = "generation"
@@ -577,7 +584,7 @@ type reviewView struct {
 	Needs       []needView
 	Findings    []findingView
 	Registries  []string
-	TrustOffers []string
+	TrustOffers []trustOffer
 	Revealed    bool
 	Running     string
 	Notes       []string
@@ -590,14 +597,15 @@ type reviewView struct {
 
 func (server *Server) reviewView(ctx context.Context, stored *pipeline.Stored, revealed bool) (reviewView, error) {
 	report, plan := stored.Report, stored.Plan
-	profile := server.config().Profile
+	configuration := server.config()
+	profile := configuration.Profile
 	mode, networks := render.Exposure(profile, stored.Options.ExposeVia, stored.Options.Networks)
 	view := reviewView{Project: stored.Project, Source: sourceText(storedSource(stored)), Confidence: plan.Confidence,
 		Engine: engineText(stored.Generation), Blocked: report.Blocked(), Denied: report.Count(policy.Deny), Needed: report.Count(policy.Need),
 		Warnings: report.Count(policy.Warn), Expose: portOptions(mode), Networks: networkOptions(profile, networks),
 		Storage: server.storageOptions(stored.Options.Storage), Env: envRows(plan, stored.Values, revealed), Optional: render.OptionalSettings(plan),
 		Needs: needViews(plan, stored.Options.AllowNeeds), Findings: findingViews(report, stored.Generation.ComposeYAML), Registries: stored.Options.AllowRegistries,
-		TrustOffers: trustOffers(plan, report), Revealed: revealed, Notes: plan.PostInstallNotes}
+		TrustOffers: trustOffers(plan, report, configuration.Registries.Allow), Revealed: revealed, Notes: plan.PostInstallNotes}
 	for _, entry := range plan.EnvFile {
 		if entry.Generate != "" {
 			view.Generated++
@@ -850,13 +858,21 @@ func (server *Server) review(writer http.ResponseWriter, request *http.Request, 
 	if key := request.PostFormValue("regenerate"); key != "" {
 		revision.Regenerate, action = []string{key}, actionApply
 	}
-	if pattern := request.PostFormValue("trust"); pattern != "" {
-		revision.AllowRegistries, action = append(revision.AllowRegistries, pattern), actionApply
+	alwaysPattern := request.PostFormValue(trustAlwaysField)
+	for _, pattern := range []string{alwaysPattern, request.PostFormValue(trustField)} {
+		if pattern != "" {
+			revision.AllowRegistries, action = append(revision.AllowRegistries, pattern), actionApply
+		}
 	}
 	if changed(revision, stored, server.config().Profile) {
 		if _, err := server.revise(ctx, current.user.Username, name, revision); err != nil {
 			return server.reviewProblem(writer, request, current, name, err)
 		}
+	}
+	// registries.allow is written only once the revision is in, so a
+	// rejected page never leaves the namespace trusted everywhere.
+	if err := server.trustAlways(request, current, alwaysPattern); err != nil {
+		return server.reviewProblem(writer, request, current, name, fmt.Errorf(trustAlwaysProblem, alwaysPattern, err))
 	}
 	switch action {
 	case actionValidate:
@@ -865,6 +881,19 @@ func (server *Server) review(writer http.ResponseWriter, request *http.Request, 
 		return redirect(writer, request, projectURL(name, pageFiles))
 	}
 	return redirect(writer, request, projectURL(name, pageReview)+"?applied")
+}
+
+// trustAlways adds an image namespace to registries.allow the way the
+// Engine settings page saves it.
+func (server *Server) trustAlways(request *http.Request, current *visit, pattern string) error {
+	server.settingsMutex.Lock()
+	defer server.settingsMutex.Unlock()
+	allow := server.config().Registries.Allow
+	if pattern == "" || slices.Contains(allow, pattern) {
+		return nil
+	}
+	allow = append(slices.Clone(allow), pattern)
+	return server.update(request, current, map[string]string{registriesAllowKey: jsonText(allow)})
 }
 
 // reviewProblem shows the Review page again with what went wrong; the

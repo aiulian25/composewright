@@ -15,6 +15,11 @@ All notable changes to this project are documented here. The format follows
   typed there is used for that one request and kept nowhere.
   `composewright doctor --contact-model` does the same for the model in use;
   plain `composewright doctor` still never contacts the model.
+- An image namespace blocked by the registry allowlist can now be trusted for
+  good from the Review page: Always trust adds it to `registries.allow`, as
+  Settings › Engine would, and gates the plan again, so later projects from
+  the same namespace are not blocked. Trust for this project still trusts it
+  for that project only.
 
 ### Changed
 

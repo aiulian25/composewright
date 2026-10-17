@@ -1030,8 +1030,80 @@ func TestTrustOffers(t *testing.T) {
 		{Name: "web", Image: ir.Image{Registry: "ghcr.io", Repository: "miniflux/web", Tag: "1"}},
 	}}
 	report := policy.Evaluate(policy.Input{Plan: plan, AllowRegistries: config.Default().Registries.Allow, RepositoryOwner: "miniflux"})
-	if offers := slices.Sorted(slices.Values(trustOffers(plan, report))); !slices.Equal(offers, []string{"docker.io/miniflux/*", "evil.example/someone/*"}) {
-		t.Fatalf("offers %v", offers)
+	offers := trustOffers(plan, report, []string{"evil.example/someone/*"})
+	slices.SortFunc(offers, func(left, right trustOffer) int { return strings.Compare(left.Pattern, right.Pattern) })
+	want := []trustOffer{{Pattern: "docker.io/miniflux/*"}, {Pattern: "evil.example/someone/*", Permanent: true}}
+	if !slices.Equal(offers, want) {
+		t.Fatalf("offers %+v", offers)
+	}
+}
+
+// TestTrustingANamespaceAlways: trusting for one project leaves
+// registries.allow alone; the Always button writes the namespace there,
+// audits the change and lifts the block on this project at once, and the
+// next project from the same namespace is not blocked at all. A pattern
+// config.yaml cannot hold is refused and the file stays as it was.
+func TestTrustingANamespaceAlways(t *testing.T) {
+	const pattern = "docker.io/miniflux/*"
+	harness := newHarness(t)
+	harness.signUp()
+	generate := func(project string) {
+		response, _ := harness.post("/new", url.Values{"source": {minifluxPath}, "name": {project}, "engine": {pipeline.EngineRules}})
+		harness.waitForJob(response.Header.Get("Location"))
+	}
+	heldByP1 := func(project string) bool {
+		stored, err := pipeline.Load(context.Background(), harness.server.workspace(), project)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return slices.ContainsFunc(stored.Report.Findings, func(finding policy.Finding) bool { return finding.Rule == "P1" })
+	}
+	defaults := config.Default().Registries.Allow
+	generate("miniflux")
+	generate("miniflux-here")
+	response, page := harness.post("/projects/miniflux-here/review", url.Values{trustField: {pattern}})
+	status(t, response, http.StatusSeeOther, page)
+	if allow := harness.server.config().Registries.Allow; !slices.Equal(allow, defaults) {
+		t.Fatalf("trusting for one project changed registries.allow: %v", allow)
+	}
+	response, page = harness.get("/projects/miniflux/review")
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, `name="`+trustAlwaysField+`" value="`+pattern+`"`) || !strings.Contains(page, "Always trust "+pattern) {
+		t.Fatalf("the Review offers no permanent trust:\n%s", page)
+	}
+	response, page = harness.post("/projects/miniflux/review", url.Values{trustAlwaysField: {"not a pattern"}})
+	status(t, response, http.StatusBadRequest, page)
+	if !strings.Contains(page, "adding it to registries.allow failed") {
+		t.Fatalf("the refusal does not say registries.allow was left alone:\n%s", page)
+	}
+	flags := config.Flags{ConfigFile: harness.server.paths().ConfigFile, DataDir: harness.server.paths().DataDir}
+	written, err := config.Load(flags)
+	if err != nil || !slices.Equal(written.Config.Registries.Allow, defaults) || !heldByP1("miniflux") {
+		t.Fatalf("a refused pattern changed registries.allow or lifted P1: %v %v", written.Config.Registries.Allow, err)
+	}
+	response, page = harness.post("/projects/miniflux/review", url.Values{trustAlwaysField: {pattern}})
+	status(t, response, http.StatusSeeOther, page)
+	written, err = config.Load(flags)
+	if err != nil || !slices.Equal(written.Config.Registries.Allow, append(slices.Clone(defaults), pattern)) {
+		t.Fatalf("registries.allow in config.yaml: %v %v", written.Config.Registries.Allow, err)
+	}
+	latest, err := harness.server.workspace().Store.AuditEntries(context.Background(), "", 2)
+	audited := slices.ContainsFunc(latest, func(entry store.AuditEntry) bool {
+		return entry.Action == store.ActionSettings && fmt.Sprint(entry.Details["keys"]) == "["+registriesAllowKey+"]"
+	})
+	if err != nil || !audited {
+		t.Fatalf("trusting always was not audited as a settings change: %+v %v", latest, err)
+	}
+	generate("miniflux-again")
+	for _, project := range []string{"miniflux", "miniflux-again"} {
+		if heldByP1(project) {
+			t.Fatalf("%s is still held by P1", project)
+		}
+	}
+	response, page = harness.post("/projects/miniflux/review", url.Values{trustAlwaysField: {pattern}})
+	status(t, response, http.StatusSeeOther, page)
+	if written, err = config.Load(flags); err != nil || len(written.Config.Registries.Allow) != len(defaults)+1 {
+		t.Fatalf("trusting twice wrote the namespace twice: %v %v", written.Config.Registries.Allow, err)
 	}
 }
 
