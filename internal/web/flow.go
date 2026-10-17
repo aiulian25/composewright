@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strings"
 	"time"
@@ -47,6 +48,11 @@ const (
 	// trustAlwaysField trusts the namespace in config.yaml as well, for
 	// every project from now on.
 	trustAlwaysField = "trust_always"
+	// benignRemoveField names the ignored log pattern to stop ignoring on
+	// the Review page.
+	benignRemoveField = "benign_remove"
+	lineField         = "line"
+	emptyLineProblem  = "That log line has no text to ignore."
 	// trustAlwaysProblem follows a revision that already went in, so it
 	// says what did change.
 	trustAlwaysProblem = "the changes were applied and %s is trusted for this project, but adding it to registries.allow failed: %w"
@@ -473,6 +479,8 @@ type validateView struct {
 	Attempt string
 	Steps   []runStep
 	Matches []string
+	// Ignorable offers to keep each matched line as normal for the app.
+	Ignorable bool
 	// Hint, Service, HealthSaid and Tail explain a failed run: what it
 	// usually means, the service it points at, that service's last
 	// healthcheck answer and its last lines.
@@ -509,6 +517,7 @@ func (server *Server) validateView(snapshot snapshot) validateView {
 		failing, _ := failingState(verdict)
 		view.Title, view.Hint, view.Service, view.HealthSaid = failureText(verdict), failureHints[verdict.Reason], failing.Service, failing.HealthOutput
 		view.Detail, view.Tail = "The sandbox has been removed; its logs are kept with the project.", tailOf(view.Lines, failing.Service)
+		view.Ignorable = verdict.Reason == sandbox.ReasonLogs
 	}
 	return view
 }
@@ -585,6 +594,7 @@ type reviewView struct {
 	Needs       []needView
 	Findings    []findingView
 	Registries  []string
+	Benign      []string
 	TrustOffers []trustOffer
 	Revealed    bool
 	Running     string
@@ -606,6 +616,7 @@ func (server *Server) reviewView(ctx context.Context, stored *pipeline.Stored, r
 		Warnings: report.Count(policy.Warn), Expose: portOptions(mode), Networks: networkOptions(profile, networks),
 		Storage: server.storageOptions(stored.Options.Storage), Env: envRows(plan, stored.Values, revealed), Optional: render.OptionalSettings(plan),
 		Needs: needViews(plan, stored.Options.AllowNeeds), Findings: findingViews(report, stored.Generation.ComposeYAML), Registries: stored.Options.AllowRegistries,
+		Benign:      stored.Options.BenignLogPatterns,
 		TrustOffers: trustOffers(plan, report, configuration.Registries.Allow), Revealed: revealed, Notes: plan.PostInstallNotes}
 	for _, entry := range plan.EnvFile {
 		if entry.Generate != "" {
@@ -865,6 +876,11 @@ func (server *Server) review(writer http.ResponseWriter, request *http.Request, 
 			revision.AllowRegistries, action = append(revision.AllowRegistries, pattern), actionApply
 		}
 	}
+	if pattern := request.PostFormValue(benignRemoveField); pattern != "" {
+		if err := server.removeBenign(ctx, current.user.Username, name, pattern); err != nil {
+			return err
+		}
+	}
 	if changed(revision, stored, server.config().Profile) {
 		if _, err := server.revise(ctx, current.user.Username, name, revision); err != nil {
 			return server.reviewProblem(writer, request, current, name, err)
@@ -905,6 +921,14 @@ func (server *Server) reviewProblem(writer http.ResponseWriter, request *http.Re
 		return errors.Join(err, loadErr)
 	}
 	return server.renderReview(writer, request, current, stored, false, "", capitalised(err.Error())+".", http.StatusBadRequest)
+}
+
+func (server *Server) removeBenign(ctx context.Context, username, name, pattern string) error {
+	connection, err := server.connect(ctx, username, pipeline.EngineRules, false)
+	if err != nil {
+		return err
+	}
+	return pipeline.RemoveBenignPattern(ctx, connection.Dependencies, name, pattern)
 }
 
 func (server *Server) revise(ctx context.Context, username, name string, revision pipeline.Revision) (*pipeline.Result, error) {
@@ -964,6 +988,29 @@ func (server *Server) reveal(writer http.ResponseWriter, request *http.Request, 
 		return server.renderFiles(writer, request, current, stored, filesState{revealed: true, tab: fileEnv})
 	}
 	return server.renderReview(writer, request, current, stored, true, "", "", http.StatusOK)
+}
+
+// markBenign keeps a log line that failed a run as normal for this app,
+// matched as literal text without its container and time, and runs the
+// test again.
+func (server *Server) markBenign(writer http.ResponseWriter, request *http.Request, current *visit) error {
+	ctx := request.Context()
+	name := request.PathValue("name")
+	if err := server.busy(name); err != nil {
+		return err
+	}
+	message := sandbox.LogMessage(request.PostFormValue(lineField))
+	if message == "" {
+		return badRequest(emptyLineProblem)
+	}
+	connection, err := server.connect(ctx, current.user.Username, pipeline.EngineRules, false)
+	if err != nil {
+		return err
+	}
+	if err := pipeline.AddBenignPattern(ctx, connection.Dependencies, name, regexp.QuoteMeta(message)); err != nil {
+		return err
+	}
+	return server.startValidation(writer, request, current, name)
 }
 
 // validate approves and runs the latest generation from the project or

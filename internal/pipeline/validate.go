@@ -67,7 +67,7 @@ func validationLoop(ctx context.Context, dependencies Dependencies, options Opti
 	limit := max(options.MaxIterations, 1)
 	for iteration := first; ; iteration++ {
 		observer.step(StepValidate, StateRunning, fmt.Sprintf("run %d of at most %d", iteration, limit))
-		input := sandboxInput(result.Plan, result.Files, result.Values, iteration)
+		input := sandboxInput(result.Plan, result.Files, result.Values, iteration, options.BenignLogPatterns)
 		input.Live = observer.Line
 		verdict, err := runner.Validate(ctx, input)
 		if err != nil {
@@ -216,7 +216,7 @@ func Revalidate(ctx context.Context, dependencies Dependencies, name string) (*S
 		return stored, sandbox.Verdict{}, err
 	}
 	files := Files{Compose: []byte(stored.Generation.ComposeYAML), Env: env}
-	verdict, err := dependencies.Sandbox.Validate(ctx, sandboxInput(stored.Plan, files, stored.Values, stored.Generation.Iteration))
+	verdict, err := dependencies.Sandbox.Validate(ctx, sandboxInput(stored.Plan, files, stored.Values, stored.Generation.Iteration, stored.Options.BenignLogPatterns))
 	if err != nil {
 		return stored, verdict, err
 	}
@@ -224,9 +224,9 @@ func Revalidate(ctx context.Context, dependencies Dependencies, name string) (*S
 	return stored, verdict, err
 }
 
-func sandboxInput(plan *ir.IR, files Files, values map[string]string, iteration int) sandbox.Input {
+func sandboxInput(plan *ir.IR, files Files, values map[string]string, iteration int, benign []string) sandbox.Input {
 	input := sandbox.Input{Project: plan.App.Name, Compose: files.Compose, Env: files.Env, Iteration: iteration,
-		Published: map[string][]string{}, CompletedOK: map[string]bool{}, Probe: httpProbe(plan)}
+		Published: map[string][]string{}, CompletedOK: map[string]bool{}, Probe: httpProbe(plan), Benign: benign}
 	for _, service := range plan.Services {
 		for _, port := range service.Ports {
 			if port.Publish {

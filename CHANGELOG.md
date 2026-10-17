@@ -28,6 +28,14 @@ All notable changes to this project are documented here. The format follows
   there fails the run as unreachable, and the Validate page says what was
   asked and what answered. Without such evidence it asks / and takes
   any answer, as before.
+- A run that failed because of a log line now offers Not a failure for this
+  app next to each line that failed it. The line's text, without the
+  container name and time, is kept as normal for that project and the test
+  runs again; a matching line never fails its runs after that. The Review
+  page lists these under Ignored log lines, where each one can be removed,
+  and they travel with the project in backups.
+  `composewright validate <project> --ignore-log 'pattern'` does the same from
+  the command line with a regular expression over that same text.
 
 ### Changed
 

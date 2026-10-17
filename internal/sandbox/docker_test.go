@@ -3,6 +3,7 @@ package sandbox
 import (
 	"context"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -78,6 +79,35 @@ func TestDocker(t *testing.T) {
 				t.Fatalf("containers of %s survived the run: %s", verdict.Project, output)
 			}
 		})
+	}
+}
+
+// TestDockerIgnoredLogLine: the text of a line that failed a real run,
+// kept as normal for the app, lets the same stack pass.
+func TestDockerIgnoredLogLine(t *testing.T) {
+	if os.Getenv("COMPOSEWRIGHT_DOCKER_TESTS") == "" {
+		t.Skip("set COMPOSEWRIGHT_DOCKER_TESTS=1 to run against a real Docker daemon")
+	}
+	docker, err := FindDocker("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	limits, _ := ParseLimits("256m", 1, 128)
+	sandbox := New(ExecRunner(docker, ""), limits, 15*time.Second, "policy", t.TempDir())
+	input := Input{Project: "dockertest-ignored", Env: []byte(""),
+		Compose: []byte("services:\n  app:\n    image: docker.io/library/alpine:3.20\n    command: [\"sh\", \"-c\", \"echo 'FATAL: optional plugin missing'; sleep 300\"]\n")}
+	failed, err := sandbox.Validate(context.Background(), input)
+	if err != nil || failed.Reason != ReasonLogs || len(failed.LogMatches) != 1 {
+		t.Fatalf("first run: %+v %v", failed, err)
+	}
+	message := LogMessage(failed.LogMatches[0])
+	if message != "FATAL: optional plugin missing" {
+		t.Fatalf("the line %q reads as %q", failed.LogMatches[0], message)
+	}
+	input.Benign = []string{regexp.QuoteMeta(message)}
+	passed, err := sandbox.Validate(context.Background(), input)
+	if err != nil || !passed.Passed() {
+		t.Fatalf("with the line ignored: %s/%s %v %v", passed.Result, passed.Reason, passed.LogMatches, err)
 	}
 }
 

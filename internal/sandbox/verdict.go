@@ -6,10 +6,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 const (
@@ -35,6 +37,7 @@ const (
 	refusedRepeated  = 3
 	maxMatches       = 20
 	maxMatchLength   = 300
+	clipMarker       = "…"
 	tailPerService   = 8 << 10
 	logPrefixPattern = `^(\S+?)(-\d+)?\s+\|\s?`
 )
@@ -128,8 +131,9 @@ func (verdict Verdict) Passed() bool {
 // judge applies the verdict rules in order: a crashed container, an
 // unhealthy one, the wait timing out, the stack never starting, a fatal log
 // line; otherwise the run passes. completedOK names one-shot init services
-// that may exit 0.
-func judge(states []ServiceState, upErr error, upOutput, logs string, completedOK map[string]bool) Verdict {
+// that may exit 0; benign lines are ones the person said are normal for
+// this app.
+func judge(states []ServiceState, upErr error, upOutput, logs string, completedOK map[string]bool, benign []*regexp.Regexp) Verdict {
 	verdict := Verdict{Result: ResultPass, Services: states}
 	for _, state := range states {
 		exited := state.State == stateExited || state.State == stateDead
@@ -149,7 +153,7 @@ func judge(states []ServiceState, upErr error, upOutput, logs string, completedO
 	if upErr != nil {
 		return fail(verdict, ReasonStart, lastLine(upOutput))
 	}
-	if matches := fatalLines(logs); len(matches) > 0 {
+	if matches := fatalLines(logs, benign); len(matches) > 0 {
 		verdict = fail(verdict, ReasonLogs, matches[0])
 		verdict.LogMatches = matches
 	}
@@ -161,10 +165,13 @@ func fail(verdict Verdict, reason, detail string) Verdict {
 	return verdict
 }
 
-func fatalLines(logs string) []string {
+func fatalLines(logs string, benign []*regexp.Regexp) []string {
 	var matches []string
 	refused := 0
 	for _, line := range strings.Split(logs, "\n") {
+		if matchesAny(LogMessage(line), benign) {
+			continue
+		}
 		if strings.Contains(strings.ToLower(line), refusedPattern) {
 			refused++
 			if refused == refusedRepeated {
@@ -182,17 +189,45 @@ func isFatal(line string) bool {
 	if nonErrorLevel.MatchString(line) {
 		return false
 	}
-	for _, benign := range benignPatterns {
-		if benign.MatchString(line) {
-			return false
+	return !matchesAny(line, benignPatterns) && matchesAny(line, fatalPatterns)
+}
+
+func matchesAny(line string, patterns []*regexp.Regexp) bool {
+	return slices.ContainsFunc(patterns, func(pattern *regexp.Regexp) bool { return pattern.MatchString(line) })
+}
+
+// compileBenign reads each of a project's ignored log patterns as a
+// regular expression, or as literal text when it is not a valid one. They
+// match a line's text without its container name and timestamp.
+func compileBenign(patterns []string) []*regexp.Regexp {
+	compiled := make([]*regexp.Regexp, 0, len(patterns))
+	for _, pattern := range patterns {
+		if pattern == "" {
+			continue
 		}
-	}
-	for _, pattern := range fatalPatterns {
-		if pattern.MatchString(line) {
-			return true
+		expression, err := regexp.Compile(pattern)
+		if err != nil {
+			expression, err = regexp.Compile(regexp.QuoteMeta(pattern))
 		}
+		if err != nil {
+			continue
+		}
+		compiled = append(compiled, expression)
 	}
-	return false
+	return compiled
+}
+
+// LogMessage is a kept log line without its container prefix, timestamp
+// and clipping mark: the text an app printed.
+func LogMessage(line string) string {
+	line = strings.TrimSuffix(strings.TrimSpace(line), clipMarker)
+	if _, _, _, message, ok := splitLogLine(line); ok {
+		return strings.TrimSpace(message)
+	}
+	if prefix := logPrefix.FindString(line); prefix != "" {
+		line = line[len(prefix):]
+	}
+	return strings.TrimSpace(line)
 }
 
 // parseStates reads `docker compose ps -a --format json`, which prints JSON
@@ -270,10 +305,14 @@ func lastHealthOutput(inspected []byte, secrets []string) string {
 
 func clip(line string) string {
 	line = strings.TrimSpace(line)
-	if len(line) > maxMatchLength {
-		return line[:maxMatchLength] + "…"
+	if len(line) <= maxMatchLength {
+		return line
 	}
-	return line
+	cut := maxMatchLength
+	for cut > 0 && !utf8.RuneStart(line[cut]) {
+		cut--
+	}
+	return line[:cut] + clipMarker
 }
 
 func lastLine(output string) string {

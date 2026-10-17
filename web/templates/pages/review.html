@@ -126,6 +126,16 @@
   </section>
   {{end}}
 
+  {{if .Benign}}
+  <section class="card" aria-labelledby="benign-title">
+    <div class="card-head"><h2 id="benign-title">{{template "icon-logs"}}Ignored log lines</h2><span class="note">{{plural (len .Benign) "pattern" "patterns"}}</span></div>
+    <div class="card-body stack">
+      <p class="muted small">A log line matching one of these never fails a test run of this project.</p>
+      {{range .Benign}}<div class="command"><code class="grow">{{.}}</code><button class="button button-small" type="submit" name="benign_remove" value="{{.}}">Remove</button></div>{{end}}
+    </div>
+  </section>
+  {{end}}
+
   {{if .Notes}}
   <section class="card" aria-labelledby="notes-title">
     <div class="card-head"><h2 id="notes-title">{{template "icon-book"}}Notes for deployment</h2></div>

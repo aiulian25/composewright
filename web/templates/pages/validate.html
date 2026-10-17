@@ -48,8 +48,13 @@
     {{end}}
     {{if .Matches}}
     <p class="muted small">The log lines that failed the run:</p>
+    {{if .Ignorable}}
+    {{range .Matches}}<form class="command" method="post" action="/projects/{{$.Data.Project}}/benign"><input type="hidden" name="csrf" value="{{$csrf}}"><input type="hidden" name="line" value="{{.}}"><code class="grow">{{.}}</code><button class="button button-small" type="submit">Not a failure for this app</button></form>{{end}}
+    <p class="muted small">If a line is normal for this app, mark it: the test runs again, and that line never fails this project's runs. You can remove it on the Review page.</p>
+    {{else}}
     <pre class="terminal">{{range .Matches}}{{.}}
 {{end}}</pre>
+    {{end}}
     {{end}}
     <p class="muted">Fix it on the Review page, or in compose.yaml yourself, then run the test again. The whole log is on the right; <span class="strong">Errors only</span> shows just the lines that look like errors.</p>
   </div>

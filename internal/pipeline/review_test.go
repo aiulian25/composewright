@@ -395,3 +395,44 @@ func TestEditCompose(t *testing.T) {
 		t.Fatal("a Review change kept the edited file instead of rendering the plan")
 	}
 }
+
+// TestBenignPatternsTravelWithTheProject: a stored pattern stops its line
+// failing the next run, keeps the files as they were, survives a Review
+// change and can be removed again.
+func TestBenignPatternsTravelWithTheProject(t *testing.T) {
+	const pattern = "FATAL: optional plugin missing"
+	docker := &scriptedDocker{states: []string{healthy}, logs: "miniflux-1  | 2026-10-10T08:15:02Z " + pattern + "\n"}
+	dependencies := testDependencies(t, docker)
+	first := generated(t, dependencies)
+	ctx := context.Background()
+	if _, verdict, err := Revalidate(ctx, dependencies, "miniflux"); err != nil || verdict.Reason != sandbox.ReasonLogs {
+		t.Fatalf("before the pattern: %+v %v", verdict, err)
+	}
+	if err := AddBenignPattern(ctx, dependencies, "miniflux", " "); !errors.Is(err, ErrEmptyPattern) {
+		t.Fatalf("an empty pattern: %v", err)
+	}
+	for range 2 {
+		if err := AddBenignPattern(ctx, dependencies, "miniflux", pattern); err != nil {
+			t.Fatal(err)
+		}
+	}
+	stored, verdict, err := Revalidate(ctx, dependencies, "miniflux")
+	if err != nil || !verdict.Passed() {
+		t.Fatalf("with the pattern: %+v %v", verdict, err)
+	}
+	if !slices.Equal(stored.Options.BenignLogPatterns, []string{pattern}) || stored.Generation.ComposeYAML != string(first.Files.Compose) {
+		t.Fatalf("patterns %q, compose changed: %v", stored.Options.BenignLogPatterns, stored.Generation.ComposeYAML != string(first.Files.Compose))
+	}
+	if _, err := Revise(ctx, dependencies, "miniflux", Revision{}); err != nil {
+		t.Fatal(err)
+	}
+	if stored, _ = Load(ctx, dependencies.Workspace, "miniflux"); !slices.Equal(stored.Options.BenignLogPatterns, []string{pattern}) {
+		t.Fatalf("a Review change dropped the pattern: %q", stored.Options.BenignLogPatterns)
+	}
+	if err := RemoveBenignPattern(ctx, dependencies, "miniflux", pattern); err != nil {
+		t.Fatal(err)
+	}
+	if stored, _ = Load(ctx, dependencies.Workspace, "miniflux"); len(stored.Options.BenignLogPatterns) != 0 {
+		t.Fatalf("a removed pattern stayed: %q", stored.Options.BenignLogPatterns)
+	}
+}

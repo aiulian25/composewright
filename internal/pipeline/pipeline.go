@@ -64,6 +64,9 @@ type Options struct {
 	// Uploaded marks a source of files someone gave, kept in a folder only
 	// for the run: the folder's name says nothing about the app.
 	Uploaded bool `json:"uploaded,omitempty"`
+	// BenignLogPatterns are log lines a person said are normal for this
+	// app: a matching line never fails a run.
+	BenignLogPatterns []string `json:"benign_log_patterns,omitempty"`
 }
 
 // Files are the rendered artefacts. Env contains secrets in plain text.

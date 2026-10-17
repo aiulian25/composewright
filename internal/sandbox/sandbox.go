@@ -64,8 +64,8 @@ func New(run Runner, limits Limits, timeout time.Duration, tier, projectsDir str
 
 // Input is one run: the user's rendered compose.yaml and .env, the secret
 // values to scrub from logs, which services publish which ports, which
-// one-shot services may exit 0, and where the app should answer from the
-// network once every service is up.
+// one-shot services may exit 0, where the app should answer from the
+// network once every service is up, and which log lines are normal for it.
 type Input struct {
 	Project     string
 	Compose     []byte
@@ -74,6 +74,7 @@ type Input struct {
 	Published   map[string][]string
 	CompletedOK map[string]bool
 	Probe       ir.Probe
+	Benign      []string
 	Iteration   int
 	// Live receives redacted progress and container output during the run.
 	Live func(Line)
@@ -127,7 +128,7 @@ func (sandbox *Sandbox) Validate(ctx context.Context, input Input) (verdict Verd
 	if errors.Is(upCtx.Err(), context.DeadlineExceeded) {
 		startOutput += "\n" + timeoutMessage + " " + sandbox.timeout.String()
 	}
-	verdict = judge(states, upErr, startOutput, logs, input.CompletedOK)
+	verdict = judge(states, upErr, startOutput, logs, input.CompletedOK, compileBenign(input.Benign))
 	if verdict, err = sandbox.reach(ctx, directory, name, input, verdict, output); err != nil {
 		return Verdict{}, err
 	}

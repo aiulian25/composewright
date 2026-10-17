@@ -38,6 +38,7 @@ const (
 type scriptedDocker struct {
 	mutex  sync.Mutex
 	states []string
+	logs   string
 	runs   int
 }
 
@@ -55,6 +56,8 @@ func (docker *scriptedDocker) run(_ context.Context, _ string, _ io.Writer, argu
 		}
 	case strings.Contains(command, " ps "):
 		return []byte(docker.states[min(docker.runs, len(docker.states))-1]), nil, nil
+	case strings.Contains(command, " logs "):
+		return []byte(docker.logs), nil, nil
 	case strings.HasPrefix(command, "info"):
 		return []byte(`{"CgroupVersion":"2","CgroupDriver":"systemd"}`), nil, nil
 	case strings.Contains(command, probeRun):

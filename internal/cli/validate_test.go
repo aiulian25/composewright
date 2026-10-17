@@ -24,6 +24,7 @@ case "$*" in
   *" run --rm "*) echo '  HTTP/1.1 200 OK' ;;
   *" up "*) [ "%[3]s" = pass ] || { echo "container miniflux-1 is unhealthy" >&2; exit 1; } ;;
   *" ps -a --format json") printf '%[2]s\n' ;;
+  *" logs "*) cat "%[1]s/logs" 2>/dev/null ;;
 esac
 exit 0
 `
@@ -98,6 +99,39 @@ func TestValidateCommand(t *testing.T) {
 	}
 	if result := run(t, environment, "validate", "nonexistent"); result.code == exitOK {
 		t.Fatal("validated a project that does not exist")
+	}
+}
+
+func TestValidateIgnoreLog(t *testing.T) {
+	const pattern = `^FATAL: optional plugin \w+, using defaults`
+	environment := isolate(t)
+	run(t, environment, "init")
+	fakeDocker(t, environment, "pass")
+	if result := generate(t, environment); result.code != exitOK {
+		t.Fatalf("gen: %+v", result)
+	}
+	logs := "miniflux-1  | 2026-10-10T08:15:02.123456789Z FATAL: optional plugin missing, using defaults\n"
+	if err := os.WriteFile(filepath.Join(environment, "logs"), []byte(logs), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if failed := run(t, environment, "validate", "miniflux"); failed.code != exitInvalid || !strings.Contains(failed.stdout, "validation FAIL (logs)") {
+		t.Fatalf("a fatal log line: %+v", failed)
+	}
+	if passed := run(t, environment, "validate", "miniflux", "--ignore-log", pattern); passed.code != exitOK || !strings.Contains(passed.stdout, "validation PASS") {
+		t.Fatalf("with the line ignored: %+v", passed)
+	}
+	if again := run(t, environment, "validate", "miniflux"); again.code != exitOK {
+		t.Fatalf("the pattern was not kept: %+v", again)
+	}
+	other := "miniflux-1  | 2026-10-10T08:15:03.123456789Z panic: no database, using defaults\n"
+	if err := os.WriteFile(filepath.Join(environment, "logs"), []byte(other), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if failed := run(t, environment, "validate", "miniflux"); failed.code != exitInvalid {
+		t.Fatalf("the pattern was split at its comma and hid another line: %+v", failed)
+	}
+	if plan := run(t, environment, "show", "miniflux", "--file", "plan"); plan.code != exitOK || strings.Contains(plan.stdout, "optional plugin") {
+		t.Fatalf("the plan carries the pattern:\n%s", plan.stdout)
 	}
 }
 

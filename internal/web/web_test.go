@@ -35,6 +35,7 @@ import (
 	"github.com/aiulian25/composewright/internal/pipeline"
 	"github.com/aiulian25/composewright/internal/policy"
 	"github.com/aiulian25/composewright/internal/redact"
+	"github.com/aiulian25/composewright/internal/render"
 	"github.com/aiulian25/composewright/internal/sandbox"
 	"github.com/aiulian25/composewright/internal/store"
 	"github.com/aiulian25/composewright/internal/store/storetest"
@@ -77,6 +78,9 @@ const (
 		`{"Service":"db","Name":"cw-miniflux-1-db-1","State":"running","Health":"healthy"}`
 	crashLog  = "miniflux-1  | 2026-10-10T08:15:02.123456789Z level=error msg=\"cannot open the database\"\n"
 	crashMark = `["sh", "-c", "exit 1"]`
+	// fatalMark in compose.yaml makes the app print fatalLine.
+	fatalMark = "# prints a fatal line"
+	fatalLine = "miniflux-1  | 2026-10-10T08:15:02.123456789Z FATAL: optional plugin missing"
 )
 
 // probeRun and probeAnswer are how the sandbox runs its reachability probe
@@ -89,6 +93,11 @@ const (
 func crashes(directory string) bool {
 	content, err := os.ReadFile(filepath.Join(directory, "compose.yaml"))
 	return err == nil && strings.Contains(string(content), crashMark)
+}
+
+func printsFatal(directory string) bool {
+	content, err := os.ReadFile(filepath.Join(directory, "compose.yaml"))
+	return err == nil && strings.Contains(string(content), fatalMark)
 }
 
 // docker answers like a healthy Compose project and streams a line, or
@@ -109,6 +118,8 @@ func docker(_ context.Context, directory string, live io.Writer, arguments ...st
 		return []byte(healthyPS), nil, nil
 	case strings.Contains(command, " logs ") && crashed:
 		return []byte(crashLog), nil, nil
+	case strings.Contains(command, " logs ") && printsFatal(directory):
+		return []byte(fatalLine + "\n"), nil, nil
 	case strings.Contains(command, " logs "):
 		return []byte("miniflux-1  | 2026-10-10T08:15:02.123456789Z Listening on :8080\n"), nil, nil
 	case strings.HasPrefix(command, "info"):
@@ -1459,6 +1470,59 @@ func TestFailedRunExplainsItself(t *testing.T) {
 	status(t, response, http.StatusOK, page)
 	if !strings.Contains(page, olderRunNotice) || !strings.Contains(page, "cannot open the database") {
 		t.Fatal("the last run is not shown after the plan changed")
+	}
+}
+
+// TestNotAFailureForThisApp: a line that failed a run is kept as normal
+// for the project, the run is repeated and passes, and the Review page
+// lists the pattern and removes it.
+func TestNotAFailureForThisApp(t *testing.T) {
+	harness := newHarness(t)
+	harness.signUp()
+	response, page := harness.post("/new", url.Values{"source": {minifluxPath}, "engine": {pipeline.EngineRules}})
+	status(t, response, http.StatusSeeOther, page)
+	harness.waitForJob(response.Header.Get("Location"))
+	response, page = harness.post("/projects/miniflux/review", url.Values{"trust": {"docker.io/miniflux/*"}})
+	status(t, response, http.StatusSeeOther, page)
+	stored, err := pipeline.Load(context.Background(), harness.server.workspace(), "miniflux")
+	if err != nil {
+		t.Fatal(err)
+	}
+	response, page = harness.post("/projects/miniflux/compose", url.Values{"compose": {stored.Generation.ComposeYAML + fatalMark + "\n"}})
+	status(t, response, http.StatusSeeOther, page)
+	response, page = harness.post("/projects/miniflux/validate", nil)
+	status(t, response, http.StatusSeeOther, page)
+	harness.waitForJob(response.Header.Get("Location"))
+	response, page = harness.get(response.Header.Get("Location"))
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, `action="/projects/miniflux/benign"`) || !strings.Contains(page, "Not a failure for this app") {
+		t.Fatal("the failed run offers no way to ignore its log line")
+	}
+	response, page = harness.post("/projects/miniflux/benign", url.Values{"line": {" "}})
+	status(t, response, http.StatusBadRequest, page)
+	response, page = harness.post("/projects/miniflux/benign", url.Values{"line": {fatalLine}})
+	status(t, response, http.StatusSeeOther, page)
+	run := harness.waitForJob(response.Header.Get("Location"))
+	if verdict, found := lastVerdict(run.Result); !found || !verdict.Passed() {
+		t.Fatalf("the run with the line ignored: %+v", run.Result)
+	}
+	const pattern = "FATAL: optional plugin missing"
+	response, page = harness.get("/projects/miniflux/review")
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, "Ignored log lines") || !strings.Contains(page, `name="benign_remove" value="`+pattern+`"`) {
+		t.Fatal("the Review page does not list the ignored line")
+	}
+	stored, _ = pipeline.Load(context.Background(), harness.server.workspace(), "miniflux")
+	mode, networks := render.Exposure(harness.server.config().Profile, stored.Options.ExposeVia, stored.Options.Networks)
+	response, page = harness.post("/projects/miniflux/review", url.Values{"expose": {mode}, "network": networks, "storage": {stored.Options.Storage},
+		"need": stored.Options.AllowNeeds, "registry": stored.Options.AllowRegistries, "benign_remove": {pattern}})
+	status(t, response, http.StatusSeeOther, page)
+	stored, _ = pipeline.Load(context.Background(), harness.server.workspace(), "miniflux")
+	if len(stored.Options.BenignLogPatterns) != 0 {
+		t.Fatalf("the removed pattern stayed: %q", stored.Options.BenignLogPatterns)
+	}
+	if !stored.Options.Edited || !strings.Contains(stored.Generation.ComposeYAML, fatalMark) {
+		t.Fatal("removing an ignored line dropped the edited compose.yaml")
 	}
 }
 

@@ -14,6 +14,7 @@ import (
 
 func (application *app) validateCommand() *cobra.Command {
 	var timeout time.Duration
+	var ignoreLogs []string
 	command := &cobra.Command{
 		Use:   "validate <project>",
 		Short: "Run a project's latest generation in the sandbox again",
@@ -27,18 +28,23 @@ with 'down -v --remove-orphans'.
 A run fails when a container exits, a healthcheck reports unhealthy, the wait
 times out, the stack cannot start, or the logs contain a fatal line (panic:,
 FATAL, permission denied, address already in use, no such file, or a repeated
-connection refused). Running this command is the approval; it is audited.`,
-		Example: "  composewright validate miniflux\n  composewright validate miniflux --timeout 10m",
-		Args:    cobra.ExactArgs(1),
+connection refused). --ignore-log keeps a regular expression (or literal text,
+when it is not a valid one) as normal for this project: a line whose text,
+without its container name and timestamp, matches it never fails its runs
+again. Running this command is the approval; it is audited.`,
+		Example: "  composewright validate miniflux\n  composewright validate miniflux --timeout 10m\n" +
+			"  composewright validate miniflux --ignore-log 'FATAL: optional plugin missing'",
+		Args: cobra.ExactArgs(1),
 		RunE: func(command *cobra.Command, arguments []string) error {
-			return application.runValidate(command.Context(), arguments[0], timeout)
+			return application.runValidate(command.Context(), arguments[0], timeout, ignoreLogs)
 		},
 	}
 	command.Flags().DurationVar(&timeout, "timeout", 0, "how long to wait for the stack to become healthy (default: docker.validate.timeout)")
+	command.Flags().StringArrayVar(&ignoreLogs, "ignore-log", nil, "a log line pattern that is normal for this app and never fails its runs (repeatable)")
 	return command
 }
 
-func (application *app) runValidate(ctx context.Context, name string, timeout time.Duration) error {
+func (application *app) runValidate(ctx context.Context, name string, timeout time.Duration, ignoreLogs []string) error {
 	loaded, err := application.loadConfig()
 	if err != nil {
 		return err
@@ -63,7 +69,13 @@ func (application *app) runValidate(ctx context.Context, name string, timeout ti
 	if err := opened.Store.Audit(ctx, opened.Actor, store.ActionApprove, project.ID, map[string]any{"via": "validate command"}); err != nil {
 		return err
 	}
-	stored, verdict, err := pipeline.Revalidate(ctx, pipeline.Dependencies{Config: configuration, Workspace: opened, Sandbox: runner}, name)
+	dependencies := pipeline.Dependencies{Config: configuration, Workspace: opened, Sandbox: runner}
+	for _, pattern := range ignoreLogs {
+		if err := pipeline.AddBenignPattern(ctx, dependencies, name, pattern); err != nil {
+			return err
+		}
+	}
+	stored, verdict, err := pipeline.Revalidate(ctx, dependencies, name)
 	if err != nil {
 		return err
 	}

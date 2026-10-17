@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"slices"
 	"strings"
+	"sync"
 
 	"github.com/aiulian25/composewright/internal/ir"
 	"github.com/aiulian25/composewright/internal/redact"
@@ -22,6 +24,7 @@ const (
 var (
 	ErrUnknownVariable = errors.New("the plan has no such variable")
 	ErrNotEditable     = errors.New("this value cannot be changed here")
+	ErrEmptyPattern    = errors.New("an empty log pattern would ignore every line")
 )
 
 // Revision is what a person changes on the Review page before approving.
@@ -88,6 +91,54 @@ func Revise(ctx context.Context, dependencies Dependencies, name string, revisio
 		return nil, err
 	}
 	return result, persist(ctx, dependencies, options, result, 1, store.ActionRevise)
+}
+
+// benignMutex keeps two quick changes to one project's patterns from both
+// building on the same version and losing one of them.
+// ponytail: one lock per process, and Revise or EditCompose do not take it;
+// a per-project lock or a store transaction if those race too.
+var benignMutex sync.Mutex
+
+// AddBenignPattern stores a log pattern that no longer fails a project's
+// runs, as a new version of its latest generation; the files stay the same.
+func AddBenignPattern(ctx context.Context, dependencies Dependencies, name, pattern string) error {
+	if strings.TrimSpace(pattern) == "" {
+		return ErrEmptyPattern
+	}
+	return changeBenignPatterns(ctx, dependencies, name, func(patterns []string) []string {
+		if slices.Contains(patterns, pattern) {
+			return patterns
+		}
+		return append(slices.Clone(patterns), pattern)
+	})
+}
+
+// RemoveBenignPattern stops ignoring a log pattern, keeping the files and an
+// edited compose.yaml as they are.
+func RemoveBenignPattern(ctx context.Context, dependencies Dependencies, name, pattern string) error {
+	return changeBenignPatterns(ctx, dependencies, name, func(patterns []string) []string {
+		return slices.DeleteFunc(slices.Clone(patterns), func(kept string) bool { return kept == pattern })
+	})
+}
+
+func changeBenignPatterns(ctx context.Context, dependencies Dependencies, name string, change func([]string) []string) error {
+	benignMutex.Lock()
+	defer benignMutex.Unlock()
+	stored, err := Load(ctx, dependencies.Workspace, name)
+	if err != nil {
+		return err
+	}
+	patterns := change(stored.Options.BenignLogPatterns)
+	if slices.Equal(patterns, stored.Options.BenignLogPatterns) {
+		return nil
+	}
+	result, err := stored.result()
+	if err != nil {
+		return err
+	}
+	options := stored.Options
+	options.BenignLogPatterns = patterns
+	return persist(ctx, dependencies, options, result, 1, store.ActionRevise)
 }
 
 // Editable reports whether a variable's value may be shown and changed as
