@@ -30,6 +30,14 @@ All notable changes to this project are documented here. The format follows
   measured even on a daemon that does not enforce limits, and a run never
   fails because they could not be measured; a slow daemon delays it by ten
   seconds at most.
+- Expose via on the Review page has a Public address field: a host name such
+  as rss.example.com, or one with a path such as home.example.com/rss. It
+  replaces the derived <project>.<domain> in the Traefik rule, the proxy
+  steps in DEPLOY.md and URL variables such as BASE_URL, also when the app
+  joins no network. A path adds a PathPrefix rule and strips the prefix
+  before the app. Blank keeps the derived host; a regeneration keeps the
+  address, and `composewright gen --public-host` sets it from the command
+  line.
 - Try it on the Model providers page sends a connection one tiny request and
   says whether it answered: the model name it answered as, the tokens in and
   out and the time, or the provider's error with the key left out. It works
@@ -184,6 +192,9 @@ All notable changes to this project are documented here. The format follows
 - An example password upstream writes as a variable's default in a compose
   file, as in `${DB_PASSWORD:-changeme}`, is no longer shown on the Analyse
   page or sent to a model.
+- Applying the Review page no longer keeps a URL variable such as BASE_URL as
+  your own value only because the page sent back the URL it showed. One kept
+  that way before follows the public address and networks again.
 
 ## [0.1.3] - 2026-10-12
 

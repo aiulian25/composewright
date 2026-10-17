@@ -1,6 +1,7 @@
 package render
 
 import (
+	"cmp"
 	"regexp"
 	"slices"
 	"strconv"
@@ -73,19 +74,33 @@ func entryValue(plan *ir.IR, entry ir.EnvFileEntry, options Options, stored map[
 	case entry.Key == variableGroupID:
 		return strconv.Itoa(defaults.PGID), nil
 	case rules.IsPublicURL(entry.Key) && entry.Provenance.Source == ir.SourceDefault:
-		return options.publicURL(plan, entry.Value), nil
+		return cmp.Or(options.PublicURL(plan.App.Name), entry.Value), nil
 	}
 	return entry.Value, nil
 }
 
-// publicURL is the address people open: through the first proxy or tunnel
-// the app joins that has a domain, else the first it joins, else the
-// loopback port.
-func (options Options) publicURL(plan *ir.IR, current string) string {
+// PublicURL is the address people open, as https://home.example.com/rss;
+// "" when the app keeps its loopback port.
+func (options Options) PublicURL(project string) string {
+	address := options.PublicAddress(project)
+	if address == "" {
+		return ""
+	}
+	return httpsScheme + address
+}
+
+// PublicAddress is the host and path people open the app at: the one a
+// person set, else through the first proxy or tunnel the app joins that
+// has a domain, else the first it joins; "" when it joins no network and
+// no host was set.
+func (options Options) PublicAddress(project string) string {
+	if options.PublicHost != "" {
+		return options.PublicHost
+	}
 	networks := options.networks()
 	if len(networks) == 0 {
-		return current
+		return ""
 	}
 	withDomain := slices.IndexFunc(networks, func(network config.ProfileNetwork) bool { return network.Domain != "" })
-	return httpsScheme + options.networkHost(networks[max(withDomain, 0)], plan.App.Name)
+	return options.networkHost(networks[max(withDomain, 0)], project)
 }

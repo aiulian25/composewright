@@ -52,7 +52,11 @@ type Options struct {
 	ExposeVia string `json:"expose_via,omitempty"`
 	// Networks are the profile's external networks the app joins; with no
 	// port mode and none chosen, the profile's default networks.
-	Networks        []string `json:"networks,omitempty"`
+	Networks []string `json:"networks,omitempty"`
+	// PublicHost is the address people open the app at, a host name with an
+	// optional path as home.example.com/rss; blank derives one from the
+	// networks it joins.
+	PublicHost      string   `json:"public_host,omitempty"`
 	Storage         string   `json:"storage,omitempty"`
 	ProfileFile     string   `json:"profile_file,omitempty"`
 	AllowNeeds      []string `json:"allow_needs,omitempty"`
@@ -127,6 +131,9 @@ func (options Options) Check() error {
 	}
 	if options.Engine != "" && !slices.Contains(Engines, options.Engine) {
 		return fmt.Errorf("--engine %q must be one of %s", options.Engine, strings.Join(Engines, ", "))
+	}
+	if err := validPublicHost(options.PublicHost); err != nil {
+		return err
 	}
 	for _, capability := range options.AllowNeeds {
 		if !slices.Contains(ir.Capabilities, capability) {
@@ -435,8 +442,8 @@ func renderAndGate(ctx context.Context, dependencies Dependencies, options Optio
 	if err != nil {
 		return err
 	}
-	renderOptions, err := render.Options{Profile: profile, ExposeVia: options.ExposeVia, Networks: options.Networks, Storage: options.Storage,
-		GrantedNeeds: options.AllowNeeds, Header: header(dependencies.Version, result.Source, result.Plan)}.Resolve()
+	renderOptions, err := render.Options{Profile: profile, ExposeVia: options.ExposeVia, Networks: options.Networks, PublicHost: options.PublicHost,
+		Storage: options.Storage, GrantedNeeds: options.AllowNeeds, Header: header(dependencies.Version, result.Source, result.Plan)}.Resolve()
 	if err != nil {
 		return err
 	}

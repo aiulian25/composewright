@@ -1011,6 +1011,51 @@ func TestFilesOnly(t *testing.T) {
 	}
 }
 
+// TestPublicAddressOnReview: the public address typed on the Review is
+// kept with the project and feeds the URL variable, with a path when given;
+// the URL shown and sent back unchanged is no edit that pins it, a bad
+// address is refused and blank goes back to the published port.
+func TestPublicAddressOnReview(t *testing.T) {
+	harness := newHarness(t)
+	harness.signUp()
+	directory := t.TempDir()
+	compose := "services:\n  app:\n    image: docker.io/library/nginx:1.27\n    ports: [\"8080:80\"]\n    environment:\n      BASE_URL: ${BASE_URL}\n"
+	for name, content := range map[string]string{"compose.yaml": compose, ".env.example": "BASE_URL=http://localhost:8080\n"} {
+		if err := os.WriteFile(filepath.Join(directory, name), []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	response, page := harness.post("/new", url.Values{"source": {directory}, "name": {"rss"}, "engine": {pipeline.EngineRules}})
+	status(t, response, http.StatusSeeOther, page)
+	if job := harness.waitForJob(response.Header.Get("Location")); job.Failure != "" {
+		t.Fatal(job.Failure)
+	}
+	stored := harness.reviewWith("rss", nil, url.Values{publicHostField: {"RSS.example.com"}})
+	if stored.Options.PublicHost != "rss.example.com" || stored.Values["BASE_URL"] != "https://rss.example.com" {
+		t.Fatalf("the public address did not reach the project: %q, %q", stored.Options.PublicHost, stored.Values["BASE_URL"])
+	}
+	response, page = harness.get(projectURL("rss", pageReview))
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, `name="public_host" type="text" value="rss.example.com"`) || !strings.Contains(page, "Blank: "+publishedPortHint+".") {
+		t.Fatal("the Review does not show the public address and what a blank one gives")
+	}
+	if stored = harness.reviewWith("rss", nil, url.Values{"expose": {render.ExposeNone}}); stored.Options.ExposeVia != render.ExposeNone {
+		t.Fatalf("ports not switched off: %q", stored.Options.ExposeVia)
+	}
+	if _, page = harness.get(projectURL("rss", pageReview)); !strings.Contains(page, "Blank: "+noAddressHint+".") {
+		t.Fatal("with no port and no network, the Review still offers a blank address the published port")
+	}
+	shown := url.Values{publicHostField: {"home.example.com/rss"}, valuePrefix + "BASE_URL": {"https://rss.example.com"}}
+	if stored = harness.reviewWith("rss", nil, shown); stored.Values["BASE_URL"] != "https://home.example.com/rss" {
+		t.Fatalf("the URL did not follow the new address: %q", stored.Values["BASE_URL"])
+	}
+	response, page = harness.post(projectURL("rss", pageReview), url.Values{publicHostField: {"https://Home.example.com"}, "action": {actionApply}})
+	status(t, response, http.StatusBadRequest, page)
+	if stored = harness.reviewWith("rss", nil, url.Values{publicHostField: {""}}); stored.Values["BASE_URL"] != "http://localhost:8080" {
+		t.Fatalf("a blank address kept %q", stored.Values["BASE_URL"])
+	}
+}
+
 // TestOptionalServicesOnReview: a service upstream starts only with a
 // profile is listed on the Analyse page and left out of compose.yaml until it
 // is ticked on the Review, which generates the project again with it and the
@@ -1201,7 +1246,7 @@ func (harness *harness) reviewWith(name string, optional []string, extra url.Val
 	}
 	options := load().Options
 	mode, networks := render.Exposure(harness.server.config().Profile, options.ExposeVia, options.Networks)
-	form := url.Values{"expose": {mode}, "network": networks, "storage": {options.Storage}, "need": options.AllowNeeds,
+	form := url.Values{"expose": {mode}, "network": networks, publicHostField: {options.PublicHost}, "storage": {options.Storage}, "need": options.AllowNeeds,
 		"registry": options.AllowRegistries, optionalField: optional, "action": {actionApply}}
 	maps.Copy(form, extra)
 	response, page := harness.post(projectURL(name, pageReview), form)

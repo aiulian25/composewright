@@ -60,7 +60,7 @@ func (options Options) reachSection(plan *ir.IR, write func(string, ...any)) {
 	for _, network := range networks {
 		line := fmt.Sprintf("- The app joins the external network `%s`.", network.Name)
 		if hasWebPort {
-			line += " " + proxyStep(network, options.networkHost(network, plan.App.Name), app.Name, port)
+			line += " " + proxyStep(network, options.networkHost(network, plan.App.Name), options.publicPath(), app.Name, port)
 		}
 		write("%s", line)
 	}
@@ -84,26 +84,52 @@ func (options Options) reachSection(plan *ir.IR, write func(string, ...any)) {
 	default:
 		write("Published on this machine only: http://localhost:%d", hostPort)
 	}
+	servedOnPort := options.PublicHost != "" && len(networks) == 0 && options.ExposeVia != ExposeNone
+	if servedOnPort {
+		write("Point https://%s at the published port.", options.PublicHost)
+	}
 	write("")
 }
 
-func proxyStep(network config.ProfileNetwork, host, service string, port int) string {
+func proxyStep(network config.ProfileNetwork, host, path, service string, port int) string {
 	target := fmt.Sprintf("http://%s:%d", service, port)
+	if step, found := pathStep(network, host, path, target); found {
+		return step
+	}
 	switch network.Provider {
 	case providerTraefik:
-		return fmt.Sprintf("Traefik routes https://%s to it through the labels in compose.yaml.", host)
+		return fmt.Sprintf("Traefik routes https://%s to it through the labels in compose.yaml.", host+path)
 	case providerNPM:
 		return fmt.Sprintf("In Nginx Proxy Manager, add a proxy host %s that forwards to %s.", host, target)
-	case "caddy":
+	case providerCaddy:
 		return fmt.Sprintf("In your Caddyfile add:\n\n    %s {\n        reverse_proxy %s:%d\n    }", host, service, port)
-	case "cloudflare":
+	case providerCloudflare:
 		return fmt.Sprintf("In the cloudflared ingress rules add: hostname %s, service %s.", host, target)
-	case "pangolin":
-		return fmt.Sprintf("In Pangolin, add a resource for %s with the target %s (newt joins the same network).", host, target)
-	case "tailscale":
+	case providerPangolin:
+		return fmt.Sprintf("In Pangolin, add a resource for %s with the target %s (newt joins the same network).", host+path, target)
+	case providerTailscale:
 		return fmt.Sprintf("Reach it through your tailnet at %s.", target)
 	}
-	return fmt.Sprintf("Point %s at %s.", host, target)
+	return fmt.Sprintf("Point %s at %s.", host+path, target)
+}
+
+// pathStep is the proxy step for an app served under a path, for the
+// providers whose set-up differs: the path is stripped before the request
+// reaches the app, as the Traefik labels do. Without a path there is none.
+func pathStep(network config.ProfileNetwork, host, path, target string) (string, bool) {
+	if path == "" {
+		return "", false
+	}
+	switch network.Provider {
+	case providerNPM:
+		return fmt.Sprintf("In Nginx Proxy Manager, add a proxy host %s with a custom location %s/ that forwards to %s/.", host, path, target), true
+	case providerCaddy:
+		return fmt.Sprintf("In your Caddyfile add:\n\n    %s {\n        redir %s %s/\n        handle_path %s/* {\n            reverse_proxy %s\n        }\n    }",
+			host, path, path, path, target), true
+	case providerCloudflare:
+		return fmt.Sprintf("In the cloudflared ingress rules add: hostname %s, path ^%s, service %s. cloudflared keeps the path, so the app must serve under %s.", host, path, target, path), true
+	}
+	return "", false
 }
 
 func (options Options) storageSection(plan *ir.IR, write func(string, ...any)) {

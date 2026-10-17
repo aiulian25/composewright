@@ -410,8 +410,8 @@ func PlanCompose(configuration config.Config, version string, stored *Stored) ([
 	if err != nil {
 		return nil, err
 	}
-	options, err := render.Options{Profile: profile, ExposeVia: stored.Options.ExposeVia, Networks: stored.Options.Networks, Storage: stored.Options.Storage,
-		GrantedNeeds: stored.Options.AllowNeeds, Header: header(version, stored.source(), stored.Plan)}.Resolve()
+	options, err := render.Options{Profile: profile, ExposeVia: stored.Options.ExposeVia, Networks: stored.Options.Networks,
+		PublicHost: stored.Options.PublicHost, Storage: stored.Options.Storage, GrantedNeeds: stored.Options.AllowNeeds, Header: header(version, stored.source(), stored.Plan)}.Resolve()
 	if err != nil {
 		return nil, err
 	}

@@ -23,14 +23,20 @@ const (
 	ExposeLAN   = "lan"
 	ExposeNone  = "none"
 
-	loopback        = "127.0.0.1"
-	defaultNetwork  = "default"
-	logDriver       = "json-file"
-	noNewPrivileges = "no-new-privileges:true"
-	providerTraefik = "traefik"
-	providerNPM     = "npm"
-	keyLabels       = "labels"
-	keyExpose       = "expose"
+	loopback           = "127.0.0.1"
+	defaultNetwork     = "default"
+	logDriver          = "json-file"
+	noNewPrivileges    = "no-new-privileges:true"
+	providerTraefik    = "traefik"
+	providerNPM        = "npm"
+	providerCaddy      = "caddy"
+	providerCloudflare = "cloudflare"
+	providerPangolin   = "pangolin"
+	providerTailscale  = "tailscale"
+	keyLabels          = "labels"
+	keyExpose          = "expose"
+	pathSeparator      = "/"
+	stripMiddleware    = "-stripprefix"
 )
 
 var exposeModes = []string{ExposeLocal, ExposeLAN, ExposeNone}
@@ -41,7 +47,10 @@ type Options struct {
 	// ExposeVia is how the app's ports are published: local, lan or none.
 	ExposeVia string
 	// Networks are the external networks from the profile the app joins.
-	Networks     []string
+	Networks []string
+	// PublicHost is the address a person set for the app, a host name with
+	// an optional path as home.example.com/rss; blank derives one.
+	PublicHost   string
 	Storage      string
 	GrantedNeeds []string
 	Header       string
@@ -217,26 +226,41 @@ func (options Options) providerExtras(service *ir.Service, networks []config.Pro
 	}
 	var notes []string
 	for _, network := range networks {
-		host := options.networkHost(network, project)
+		host, path := options.networkHost(network, project), options.publicPath()
 		switch network.Provider {
 		case providerTraefik:
-			node.Content = appendOnce(node.Content, keyLabels, traefikLabels(project, host, network.Name, port))
+			node.Content = appendOnce(node.Content, keyLabels, traefikLabels(project, host, path, network.Name, port))
 		case providerNPM:
 			node.Content = appendOnce(node.Content, keyExpose, flowSequence(strconv.Itoa(port)))
 		default:
-			notes = append(notes, fmt.Sprintf("%s (%s): route %s to http://%s:%d", network.Name, network.Kind, host, service.Name, port))
+			notes = append(notes, fmt.Sprintf("%s (%s): route %s to http://%s:%d", network.Name, network.Kind, host+path, service.Name, port))
 		}
 	}
 	return notes
 }
 
-func traefikLabels(router, host, network string, port int) *yaml.Node {
-	return mapping(
+// traefikLabels route the host to the app; under a path, the path is
+// stripped before the request reaches it.
+func traefikLabels(router, host, path, network string, port int) *yaml.Node {
+	rule := "Host(`" + host + "`)"
+	if path != "" {
+		rule += " && PathPrefix(`" + path + "`)"
+	}
+	labels := mapping(
 		key("traefik.enable"), quoted("true"),
 		key("traefik.docker.network"), quoted(network),
-		key("traefik.http.routers."+router+".rule"), quoted("Host(`"+host+"`)"),
+		key("traefik.http.routers."+router+".rule"), quoted(rule),
 		key("traefik.http.services."+router+".loadbalancer.server.port"), quoted(strconv.Itoa(port)),
 	)
+	if path == "" {
+		return labels
+	}
+	middleware := router + stripMiddleware
+	labels.Content = append(labels.Content,
+		key("traefik.http.middlewares."+middleware+".stripprefix.prefixes"), quoted(path),
+		key("traefik.http.routers."+router+".middlewares"), quoted(middleware),
+	)
+	return labels
 }
 
 // appendOnce adds a key to a mapping's content unless it is already there:
@@ -484,10 +508,23 @@ func webPort(service *ir.Service) (int, bool) {
 	return 0, false
 }
 
-// networkHost is the name the app is reached by through one network: under
-// the network's own domain, else under the profile's domain suffix.
+// networkHost is the name the app is reached by through one network: the
+// host a person set, else under the network's own domain, else under the
+// profile's domain suffix.
 func (options Options) networkHost(network config.ProfileNetwork, project string) string {
+	if host, _, _ := strings.Cut(options.PublicHost, pathSeparator); host != "" {
+		return host
+	}
 	return HostName(project, cmp.Or(network.Domain, options.Profile.Defaults.DomainSuffix))
+}
+
+// publicPath is the path prefix of the host a person set, as /rss; "" for
+// none.
+func (options Options) publicPath() string {
+	if _, path, found := strings.Cut(options.PublicHost, pathSeparator); found {
+		return pathSeparator + path
+	}
+	return ""
 }
 
 // HostName is the name a proxy or tunnel serves the app under.

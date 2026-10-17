@@ -48,6 +48,12 @@
         <legend class="option-group">Ports</legend>
         {{range .Expose}}<label class="option"><input type="radio" name="expose" value="{{.Value}}"{{if .Selected}} checked{{end}}><span class="option-text"><span class="option-name">{{.Label}}</span><span class="option-sub">{{.Sub}}</span></span></label>{{end}}
       </fieldset>
+      <div class="card-body">
+        <label class="field" for="public-host">Public address
+          <input class="mono" id="public-host" name="public_host" type="text" value="{{.PublicHost}}" placeholder="{{.DerivedHost}}" spellcheck="false">
+        </label>
+        <p class="muted small">Blank: {{.BlankHint}}. Add a path to serve it under one, as home.example.com/rss.</p>
+      </div>
     </section>
     <section class="card" aria-labelledby="storage-title">
       <div class="card-head"><h2 id="storage-title">{{template "icon-drive"}}Storage</h2><span class="chip chip-accent push-right">profile</span></div>

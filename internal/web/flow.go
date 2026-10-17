@@ -58,7 +58,12 @@ const (
 	// the Review page.
 	benignRemoveField = "benign_remove"
 	// optionalField holds the optional services ticked on the Review page.
-	optionalField = "optional"
+	optionalField   = "optional"
+	publicHostField = "public_host"
+	// publishedPortHint and noAddressHint say what a blank public address
+	// gives when the app joins no network.
+	publishedPortHint = "the published port"
+	noAddressHint     = "no public address"
 	// composeFileField holds the upstream compose file chosen on the
 	// Review page.
 	composeFileField = "compose_file"
@@ -662,19 +667,25 @@ type reviewView struct {
 	Questions   int
 	Pane        string
 	// Draft is an edit that failed to load, shown again in the editor.
-	Draft       string
-	Project     store.Project
-	Source      string
-	Confidence  string
-	Tones       reviewTones
-	PolicyText  string
-	Engine      string
-	Blocked     bool
-	Denied      int
-	Needed      int
-	Warnings    int
-	Expose      []option
-	Networks    []option
+	Draft      string
+	Project    store.Project
+	Source     string
+	Confidence string
+	Tones      reviewTones
+	PolicyText string
+	Engine     string
+	Blocked    bool
+	Denied     int
+	Needed     int
+	Warnings   int
+	Expose     []option
+	Networks   []option
+	// PublicHost is the address the person set; DerivedHost is the one a
+	// blank field keeps, "" when the app joins no network, and BlankHint
+	// says what a blank field gives.
+	PublicHost  string
+	DerivedHost string
+	BlankHint   string
 	Storage     []option
 	Env         []envRow
 	Optional    []ir.OptionalSetting
@@ -719,9 +730,11 @@ func (server *Server) reviewView(ctx context.Context, stored *pipeline.Stored, r
 	configuration := server.config()
 	profile := configuration.Profile
 	mode, networks := render.Exposure(profile, stored.Options.ExposeVia, stored.Options.Networks)
+	derivedHost := render.Options{Profile: profile, Networks: networks}.PublicAddress(plan.App.Name)
 	view := reviewView{Project: stored.Project, Source: sourceText(storedSource(stored)), Confidence: plan.Confidence,
 		Engine: engineText(stored.Generation), Blocked: report.Blocked(), Denied: report.Count(policy.Deny), Needed: report.Count(policy.Need),
 		Warnings: report.Count(policy.Warn), Expose: portOptions(mode), Networks: networkOptions(profile, networks),
+		PublicHost: stored.Options.PublicHost, DerivedHost: derivedHost, BlankHint: blankHostHint(derivedHost, mode),
 		Storage: server.storageOptions(stored.Options.Storage), Env: envRows(plan, stored.Values, revealed), Optional: render.OptionalSettings(plan),
 		Needs: needViews(plan, stored.Options.AllowNeeds), Findings: findingViews(report, stored.Generation.ComposeYAML), Registries: stored.Options.AllowRegistries,
 		Benign: stored.Options.BenignLogPatterns, OptionalServices: optionalServiceOptions(plan, stored.Rereadable()), ReadOnly: !stored.Rereadable(),
@@ -1105,12 +1118,27 @@ func (server *Server) revise(ctx context.Context, username, name string, revisio
 	return pipeline.Revise(ctx, connection.Dependencies, name, revision)
 }
 
+// blankHostHint is what a blank public address gives: the derived host,
+// else the published port, else none.
+func blankHostHint(derivedHost, mode string) string {
+	if derivedHost != "" {
+		return derivedHost
+	}
+	if mode == render.ExposeNone {
+		return noAddressHint
+	}
+	return publishedPortHint
+}
+
 func revisionFrom(form url.Values, stored *pipeline.Stored) pipeline.Revision {
-	revision := pipeline.Revision{ExposeVia: form.Get("expose"), Networks: form["network"], Storage: form.Get("storage"), AllowNeeds: form["need"],
-		AllowRegistries: form["registry"], Values: map[string]string{}, Secrets: map[string]string{}}
+	revision := pipeline.Revision{ExposeVia: form.Get("expose"), Networks: form["network"], PublicHost: pipeline.TidyPublicHost(form.Get(publicHostField)),
+		Storage: form.Get("storage"), AllowNeeds: form["need"], AllowRegistries: form["registry"], Values: map[string]string{}, Secrets: map[string]string{}}
 	for _, entry := range stored.Plan.EnvFile {
 		value, present := form[valuePrefix+entry.Key]
-		if present && pipeline.Editable(entry) && value[0] != entry.Value {
+		// The page shows the rendered value, as a public URL follows the
+		// exposure: sent back unchanged, it is no edit to pin.
+		edited := present && value[0] != entry.Value && value[0] != stored.Values[entry.Key]
+		if edited && pipeline.Editable(entry) {
 			revision.Values[entry.Key] = value[0]
 		}
 		if typed := form.Get(secretPrefix + entry.Key); typed != "" && pipeline.Supplied(entry) {
@@ -1132,7 +1160,8 @@ func changed(revision pipeline.Revision, stored *pipeline.Stored, profile config
 	options := stored.Options
 	mode, networks := render.Exposure(profile, options.ExposeVia, options.Networks)
 	edits := len(revision.Values) + len(revision.Secrets) + len(revision.Regenerate) + len(revision.Add) + len(revision.MemoryLimits)
-	return edits > 0 || revision.ExposeVia != mode || !sameSet(revision.Networks, networks) || revision.Storage != options.Storage ||
+	return edits > 0 || revision.ExposeVia != mode || !sameSet(revision.Networks, networks) || revision.PublicHost != options.PublicHost ||
+		revision.Storage != options.Storage ||
 		!sameSet(revision.AllowNeeds, options.AllowNeeds) || !sameSet(revision.AllowRegistries, options.AllowRegistries)
 }
 

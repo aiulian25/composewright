@@ -213,7 +213,7 @@ func (stored *Stored) Regeneration(enabled []string, composeFile string) (Option
 	}
 	kept, project := stored.Options, stored.Project
 	options := Options{Name: cmp.Or(kept.Name, project.Name), Engine: kept.Engine, Source: kept.Source, Ref: kept.Ref, Owner: kept.Owner,
-		Upstream: kept.Upstream, ExposeVia: kept.ExposeVia, Networks: kept.Networks, Storage: kept.Storage, ProfileFile: kept.ProfileFile,
+		Upstream: kept.Upstream, ExposeVia: kept.ExposeVia, Networks: kept.Networks, PublicHost: kept.PublicHost, Storage: kept.Storage, ProfileFile: kept.ProfileFile,
 		AllowNeeds: kept.AllowNeeds, AllowRegistries: kept.AllowRegistries, BenignLogPatterns: kept.BenignLogPatterns, EnabledOptional: enabled,
 		ComposeFile: cmp.Or(composeFile, kept.ComposeFile), Regenerating: true}
 	if project.SourceKind == fetch.SourceGitHub && project.SourceCommit != "" {

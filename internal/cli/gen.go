@@ -59,6 +59,7 @@ still stored so you can inspect it, and gen exits with status 2.
   composewright gen ./v2-main.zip --upstream https://github.com/miniflux/v2
   composewright gen ./homeassistant --allow-need host_network
   composewright gen ./app --expose-via npm_default --storage bind
+  composewright gen ./app --network traefik --public-host rss.example.com
   composewright gen ./app --enable-optional tts
   composewright gen ./app --compose-file contrib/docker-compose/docker-compose-traefik.yml
   composewright gen --stop-after facts ./my-checkout`,
@@ -75,6 +76,7 @@ still stored so you can inspect it, and gen exits with status 2.
 	set.StringVar(&flags.options.Upstream, "upstream", "", "repository URL a local directory was checked out from (default: its origin remote)")
 	set.StringVar(&flags.options.ExposeVia, "expose-via", "", "how the app's ports are published: local, lan or none (default: none when it joins a network, else local)")
 	set.StringSliceVar(&flags.options.Networks, "network", nil, "join this network from profile.networks (repeatable; default: the profile's default networks)")
+	set.StringVar(&flags.options.PublicHost, "public-host", "", "address people open the app at, a host name with an optional path as rss.example.com or home.example.com/rss (default: <project>.<network domain>)")
 	set.StringVar(&flags.options.Storage, "storage", "", "volumes or bind (bind mounts under profile.storage.base_path; default: profile.storage.style)")
 	set.StringVar(&flags.options.ProfileFile, "profile", "", "use this exported profile.yaml instead of the config's profile")
 	set.StringSliceVar(&flags.options.AllowNeeds, "allow-need", nil, "grant a requested capability: "+strings.Join(ir.Capabilities, ", ")+" (repeatable, audited)")
@@ -116,6 +118,7 @@ func (application *app) runGen(ctx context.Context, flags genFlags) error {
 		flags.options.Engine = pipeline.EngineRules
 	}
 	flags.options.RunSandbox = !flags.noValidate && !stops
+	flags.options.PublicHost = pipeline.TidyPublicHost(flags.options.PublicHost)
 	connection, err := pipeline.Connect(ctx, pipeline.Setup{Config: configuration, Paths: loaded.Paths, Workspace: opened,
 		Version: application.build.Version, Engine: flags.options.Engine, ExtraRegistries: flags.options.AllowRegistries,
 		Offline: flags.offline, NoLabelCheck: flags.noLabelCheck, Validate: flags.options.RunSandbox})

@@ -11,8 +11,10 @@ import (
 
 	"github.com/docker/go-units"
 
+	"github.com/aiulian25/composewright/internal/config"
 	"github.com/aiulian25/composewright/internal/ir"
 	"github.com/aiulian25/composewright/internal/redact"
+	"github.com/aiulian25/composewright/internal/render"
 	"github.com/aiulian25/composewright/internal/rules"
 	"github.com/aiulian25/composewright/internal/store"
 )
@@ -39,6 +41,7 @@ var (
 type Revision struct {
 	ExposeVia       string
 	Networks        []string
+	PublicHost      string
 	Storage         string
 	AllowNeeds      []string
 	AllowRegistries []string
@@ -76,10 +79,15 @@ func Revise(ctx context.Context, dependencies Dependencies, name string, revisio
 	options := stored.Options
 	options.Edited = false
 	options.ExposeVia, options.Networks, options.Storage, options.AllowNeeds = revision.ExposeVia, revision.Networks, revision.Storage, revision.AllowNeeds
-	options.AllowRegistries = revision.AllowRegistries
+	options.AllowRegistries, options.PublicHost = revision.AllowRegistries, revision.PublicHost
 	if err := options.Check(); err != nil {
 		return nil, err
 	}
+	shown, err := stored.publicURL(dependencies.Config.Profile)
+	if err != nil {
+		return nil, err
+	}
+	unpinShownURL(result.Plan, shown)
 	if err := revision.apply(result.Plan); err != nil {
 		return nil, err
 	}
@@ -166,6 +174,35 @@ func Editable(entry ir.EnvFileEntry) bool {
 // can neither generate it nor build it from other variables.
 func Supplied(entry ir.EnvFileEntry) bool {
 	return entry.Secret && entry.Generate == "" && entry.Value == ""
+}
+
+// publicURL is the public URL the project's options render, as the Review
+// page showed it.
+func (stored *Stored) publicURL(configured config.Profile) (string, error) {
+	profile, err := loadProfile(configured, stored.Options.ProfileFile)
+	if err != nil {
+		return "", err
+	}
+	_, networks := render.Exposure(profile, stored.Options.ExposeVia, stored.Options.Networks)
+	return render.Options{Profile: profile, Networks: networks, PublicHost: stored.Options.PublicHost}.PublicURL(stored.Plan.App.Name), nil
+}
+
+// unpinShownURL gives a public URL back to the renderer when the Review
+// page once pinned it as a person's edit only by sending back the URL it
+// showed, so it follows a new public address or network again.
+// ponytail: the plan's own loopback value was lost to the pin, so with no
+// address left the URL stays as shown until a regeneration builds it again.
+func unpinShownURL(plan *ir.IR, shown string) {
+	if shown == "" {
+		return
+	}
+	for index := range plan.EnvFile {
+		entry := &plan.EnvFile[index]
+		pinned := entry.Provenance.Source == ir.SourceUser && entry.Provenance.SourceRef == reviewSource
+		if pinned && rules.IsPublicURL(entry.Key) && entry.Value == shown {
+			entry.Provenance = ir.Provenance{Source: ir.SourceDefault, Confidence: ir.ConfidenceMedium}
+		}
+	}
 }
 
 func (revision Revision) apply(plan *ir.IR) error {

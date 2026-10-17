@@ -20,7 +20,10 @@ import (
 
 var update = flag.Bool("update", false, "rewrite testdata/golden")
 
-const goldenDir = "../../testdata/golden"
+const (
+	goldenDir      = "../../testdata/golden"
+	traefikVariant = "traefik"
+)
 
 type variant struct {
 	name      string
@@ -37,7 +40,7 @@ var variants = []variant{
 		profile.Networks = []config.ProfileNetwork{{Name: "npm_default", Kind: "proxy", Provider: "npm"}}
 		profile.Defaults.DomainSuffix = "home.arpa"
 	}},
-	{name: "traefik", exposeVia: "traefik", profile: func(profile *config.Profile) {
+	{name: traefikVariant, exposeVia: "traefik", profile: func(profile *config.Profile) {
 		profile.Networks = []config.ProfileNetwork{{Name: "traefik", Kind: "proxy", Provider: "traefik"}}
 		profile.Defaults.DomainSuffix = "home.arpa"
 		profile.Defaults.TZ = "Europe/London"
@@ -438,6 +441,80 @@ func TestGrantedNeedsOfOneCapabilityMerge(t *testing.T) {
 	for _, finding := range findings {
 		if slices.Contains([]string{"P9", "P13"}, finding.Rule) && finding.Severity != policy.OK {
 			t.Fatalf("a gate refuses the granted needs: %+v", finding)
+		}
+	}
+}
+
+// TestPublicHostRoutesAndAddresses checks that a public address set by the
+// person feeds the Traefik rule, the URL variables and DEPLOY.md, a path
+// adding a prefix rule stripped before the app, and blank keeps the
+// derived host.
+func TestPublicHostRoutesAndAddresses(t *testing.T) {
+	cases := []struct {
+		name, publicHost, wantURL string
+		exposeVia                 string
+		wantInCompose, notCompose []string
+		wantInDeploy              string
+	}{
+		{name: "host", publicHost: "rss.example.com", exposeVia: "traefik", wantURL: "https://rss.example.com",
+			wantInCompose: []string{"traefik.http.routers.miniflux.rule: \"Host(`rss.example.com`)\""}, notCompose: []string{"PathPrefix", "stripprefix"},
+			wantInDeploy: "Traefik routes https://rss.example.com to it"},
+		{name: "path", publicHost: "home.example.com/rss", exposeVia: "traefik", wantURL: "https://home.example.com/rss",
+			wantInCompose: []string{"Host(`home.example.com`) && PathPrefix(`/rss`)", "traefik.http.middlewares.miniflux-stripprefix.stripprefix.prefixes: \"/rss\"",
+				"traefik.http.routers.miniflux.middlewares: \"miniflux-stripprefix\""},
+			wantInDeploy: "Traefik routes https://home.example.com/rss to it"},
+		{name: "blank", exposeVia: "traefik", wantURL: "https://miniflux.home.arpa",
+			wantInCompose: []string{"Host(`miniflux.home.arpa`)"}, notCompose: []string{"PathPrefix"}, wantInDeploy: "https://miniflux.home.arpa"},
+		{name: "no network", publicHost: "rss.example.com", exposeVia: ExposeLocal, wantURL: "https://rss.example.com", notCompose: []string{"traefik"},
+			wantInDeploy: "Point https://rss.example.com at the published port."},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			plan := loadPlan(t, "../../testdata/corpus/miniflux/expected.ir.json")
+			plan.EnvFile = append(plan.EnvFile, ir.EnvFileEntry{Key: "BASE_URL", Value: "http://localhost:8080", Provenance: ir.Provenance{Source: ir.SourceDefault}})
+			traefik := variants[slices.IndexFunc(variants, func(candidate variant) bool { return candidate.name == traefikVariant })]
+			traefik.exposeVia = testCase.exposeVia
+			options := testOptions(t, traefik)
+			options.PublicHost = testCase.publicHost
+			compose, err := Compose(plan, options)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, want := range testCase.wantInCompose {
+				if !strings.Contains(string(compose), want) {
+					t.Errorf("compose.yaml lacks %s:\n%s", want, compose)
+				}
+			}
+			for _, unwanted := range testCase.notCompose {
+				if strings.Contains(string(compose), unwanted) {
+					t.Errorf("compose.yaml has %s:\n%s", unwanted, compose)
+				}
+			}
+			values, err := Values(plan, options, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if values["BASE_URL"] != testCase.wantURL {
+				t.Errorf("BASE_URL = %q, want %q", values["BASE_URL"], testCase.wantURL)
+			}
+			if deploy := string(Deploy(plan, options, "passed")); !strings.Contains(deploy, testCase.wantInDeploy) {
+				t.Errorf("DEPLOY.md lacks %q:\n%s", testCase.wantInDeploy, deploy)
+			}
+		})
+	}
+}
+
+func TestProxyStepUnderAPath(t *testing.T) {
+	cases := map[string]string{
+		providerNPM:        "custom location /rss/ that forwards to http://app:8080/",
+		providerCaddy:      "redir /rss /rss/\n        handle_path /rss/* {",
+		providerCloudflare: "path ^/rss",
+		providerPangolin:   "resource for home.example.com/rss",
+	}
+	for provider, want := range cases {
+		step := proxyStep(config.ProfileNetwork{Provider: provider}, "home.example.com", "/rss", "app", 8080)
+		if !strings.Contains(step, want) {
+			t.Errorf("%s step %q lacks %q", provider, step, want)
 		}
 	}
 }

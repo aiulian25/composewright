@@ -12,6 +12,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/aiulian25/composewright/internal/config"
 	"github.com/aiulian25/composewright/internal/extract"
 	"github.com/aiulian25/composewright/internal/fetch"
 	"github.com/aiulian25/composewright/internal/policy"
@@ -85,7 +86,7 @@ func TestReviseRendersANewGeneration(t *testing.T) {
 	first := generated(t, dependencies)
 	ctx := context.Background()
 	before, _ := Load(ctx, dependencies.Workspace, "miniflux")
-	revision := Revision{ExposeVia: "lan", Values: map[string]string{"ADMIN_USERNAME": "boss", "DATABASE_URL": "postgres://miniflux:${POSTGRES_PASSWORD}@db/feeds"},
+	revision := Revision{ExposeVia: "lan", PublicHost: "rss.example.com", Values: map[string]string{"ADMIN_USERNAME": "boss", "DATABASE_URL": "postgres://miniflux:${POSTGRES_PASSWORD}@db/feeds"},
 		Regenerate: []string{"ADMIN_PASSWORD"}, Add: []Variable{{Key: "LOG_LEVEL", Value: "debug"}, {Key: "SMTP_PASSWORD", Value: "mail-secret-123"}}}
 	result, err := Revise(ctx, dependencies, "miniflux", revision)
 	if err != nil {
@@ -95,7 +96,12 @@ func TestReviseRendersANewGeneration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	regeneration, err := after.Regeneration(nil, "")
+	if err != nil {
+		t.Fatal(err)
+	}
 	checks := map[string]bool{
+		"public address kept":          after.Options.PublicHost == "rss.example.com" && regeneration.PublicHost == "rss.example.com",
 		"a new generation":             after.Generation.ID != first.Generation.ID && result.Generation.ID == after.Generation.ID,
 		"value changed":                after.Values["ADMIN_USERNAME"] == "boss",
 		"connection string changed":    strings.HasSuffix(after.Values["DATABASE_URL"], "@db/feeds"),
@@ -121,12 +127,15 @@ func TestReviseRendersANewGeneration(t *testing.T) {
 		t.Fatalf("revision not audited: %+v %v", entries, err)
 	}
 	for name, bad := range map[string]Revision{
-		"generated secret as a value": {Values: map[string]string{"ADMIN_PASSWORD": "x"}},
-		"unknown variable":            {Values: map[string]string{"NOPE": "x"}},
-		"generated secret typed in":   {Secrets: map[string]string{"POSTGRES_PASSWORD": "x"}},
-		"plain value regenerated":     {Regenerate: []string{"ADMIN_USERNAME"}},
-		"duplicate variable":          {Add: []Variable{{Key: "DEBUG", Value: "0"}}},
-		"unknown need":                {AllowNeeds: []string{"everything"}},
+		"generated secret as a value":  {Values: map[string]string{"ADMIN_PASSWORD": "x"}},
+		"unknown variable":             {Values: map[string]string{"NOPE": "x"}},
+		"generated secret typed in":    {Secrets: map[string]string{"POSTGRES_PASSWORD": "x"}},
+		"plain value regenerated":      {Regenerate: []string{"ADMIN_USERNAME"}},
+		"duplicate variable":           {Add: []Variable{{Key: "DEBUG", Value: "0"}}},
+		"unknown need":                 {AllowNeeds: []string{"everything"}},
+		"public address with a scheme": {PublicHost: "https://rss.example.com"},
+		"public address in capitals":   {PublicHost: "RSS.example.com"},
+		"public address up a folder":   {PublicHost: "home.example.com/.."},
 	} {
 		if _, err := Revise(ctx, dependencies, "miniflux", bad); err == nil {
 			t.Errorf("%s accepted", name)
@@ -204,6 +213,73 @@ func TestPeaksSkipsRunsThatMeasuredNothing(t *testing.T) {
 	generations := []store.Generation{run(sandbox.ResultPass, 0), run(sandbox.ResultFail, 900<<20), {}, run(sandbox.ResultPass, measured)}
 	if got := peaks(generations); got["app"] != measured {
 		t.Fatalf("peaks %v, want app at %d", got, measured)
+	}
+}
+
+// TestPublicHostFollowsEveryRevision: an address given to gen feeds the URL
+// variable, a blank one on the Review gives the published port back, and the
+// plan's own compose.yaml routes the address set, so it is no person's edit.
+// A URL an earlier Review pinned only by sending back the one it showed
+// follows a new address; one a person typed stays.
+func TestPublicHostFollowsEveryRevision(t *testing.T) {
+	dependencies := testDependencies(t, &scriptedDocker{states: []string{healthy}})
+	dependencies.Config.Profile.Networks = []config.ProfileNetwork{{Name: "proxy", Kind: "proxy", Provider: "traefik"}}
+	directory := t.TempDir()
+	compose := "services:\n  app:\n    image: docker.io/library/nginx:1.27\n    ports: [\"8080:80\"]\n    environment:\n      BASE_URL: ${BASE_URL}\n"
+	for name, content := range map[string]string{"compose.yaml": compose, ".env.example": "BASE_URL=http://localhost:8080\n"} {
+		if err := os.WriteFile(filepath.Join(directory, name), []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	ctx := context.Background()
+	if _, err := Generate(ctx, dependencies, Options{Source: directory, Name: "rss", PublicHost: "rss.example.com"}); err != nil {
+		t.Fatal(err)
+	}
+	baseURL := func() string {
+		stored, err := Load(ctx, dependencies.Workspace, "rss")
+		if err != nil {
+			t.Fatal(err)
+		}
+		return stored.Values["BASE_URL"]
+	}
+	if got := baseURL(); got != "https://rss.example.com" {
+		t.Fatalf("gen with an address: BASE_URL %q", got)
+	}
+	if _, err := Revise(ctx, dependencies, "rss", Revision{ExposeVia: "local"}); err != nil {
+		t.Fatal(err)
+	}
+	if got := baseURL(); got != "http://localhost:8080" {
+		t.Fatalf("a blank address kept BASE_URL %q", got)
+	}
+	if _, err := Revise(ctx, dependencies, "rss", Revision{ExposeVia: "none", Networks: []string{"proxy"}, PublicHost: "rss.example.com"}); err != nil {
+		t.Fatal(err)
+	}
+	stored, err := Load(ctx, dependencies.Workspace, "rss")
+	if err != nil {
+		t.Fatal(err)
+	}
+	planned, err := PlanCompose(dependencies.Config, dependencies.Version, stored)
+	if err != nil || !strings.Contains(string(planned), "Host(`rss.example.com`)") {
+		t.Fatalf("the plan's compose.yaml does not route the address (%v):\n%s", err, planned)
+	}
+	routed := Revision{ExposeVia: "none", Networks: []string{"proxy"}}
+	for _, step := range []struct{ publicHost, typed, want string }{
+		{publicHost: "rss.example.com", typed: "https://rss.example.com", want: "https://rss.example.com"},
+		{publicHost: "home.example.com/rss", want: "https://home.example.com/rss"},
+		{publicHost: "home.example.com/rss", typed: "https://feeds.example.org", want: "https://feeds.example.org"},
+		{publicHost: "rss.example.com", want: "https://feeds.example.org"},
+	} {
+		revision := routed
+		revision.PublicHost = step.publicHost
+		if step.typed != "" {
+			revision.Values = map[string]string{"BASE_URL": step.typed}
+		}
+		if _, err := Revise(ctx, dependencies, "rss", revision); err != nil {
+			t.Fatal(err)
+		}
+		if got := baseURL(); got != step.want {
+			t.Fatalf("address %s, typed %q: BASE_URL %q, want %q", step.publicHost, step.typed, got, step.want)
+		}
 	}
 }
 

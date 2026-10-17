@@ -527,6 +527,23 @@ func TestGenBlocksUngrantedNeedsAndUnknownNetworks(t *testing.T) {
 	if result := generate(t, environment, "--allow-need", "everything"); result.code == exitOK {
 		t.Fatal("an unknown capability was accepted")
 	}
+	if result := generate(t, environment, "--public-host", "https://rss.example.com"); result.code == exitOK {
+		t.Fatal("a public address with a scheme was accepted")
+	}
+}
+
+// TestGenPublicHost: --public-host reaches the project with its host
+// lowercased, its path kept and the trailing slash dropped.
+func TestGenPublicHost(t *testing.T) {
+	environment := isolate(t)
+	run(t, environment, "init")
+	if result := generate(t, environment, "--public-host", "Home.example.com/rss/"); result.code != exitOK {
+		t.Fatalf("gen --public-host: %+v", result)
+	}
+	deploy := run(t, environment, "show", "miniflux", "--file", "deploy")
+	if !strings.Contains(deploy.stdout, "Point https://home.example.com/rss at the published port.") {
+		t.Fatalf("DEPLOY.md does not name the address:\n%s", deploy.stdout)
+	}
 }
 
 func TestProfileExportImport(t *testing.T) {
