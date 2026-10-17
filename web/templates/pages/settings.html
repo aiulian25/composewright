@@ -313,7 +313,7 @@
           <td>{{.Service.Title}}</td>
           <td class="mono">{{.Model}}</td>
           <td>{{template "key-state" .}}</td>
-          <td><span class="row">{{if .InUse}}<span class="chip chip-accent">in use</span>{{else}}<button class="button button-small" type="submit" name="use" value="{{.Name}}">Use</button>{{end}}<a class="button button-small button-ghost" href="/settings?section=models&amp;edit={{.Name}}#connection">Edit</a><button class="button button-small button-ghost" type="submit" name="remove" value="{{.Name}}" aria-label="Remove {{.Name}}" title="Remove {{.Name}}">{{template "icon-trash"}}</button></span></td>
+          <td><span class="row">{{if .InUse}}<span class="chip chip-accent">in use</span>{{else}}<button class="button button-small" type="submit" name="use" value="{{.Name}}">Use</button>{{end}}<button class="button button-small button-ghost" type="submit" formaction="/settings/models/test" name="test" value="{{.Name}}" aria-label="Try {{.Name}}">Try it</button><a class="button button-small button-ghost" href="/settings?section=models&amp;edit={{.Name}}#connection">Edit</a><button class="button button-small button-ghost" type="submit" name="remove" value="{{.Name}}" aria-label="Remove {{.Name}}" title="Remove {{.Name}}">{{template "icon-trash"}}</button></span></td>
         </tr>
         {{end}}
       </tbody>
@@ -350,7 +350,7 @@
       <span class="muted small">Stored encrypted in composewright's database, never in config.yaml, and never shown again. Ollama needs none.</span>
     </label>
   </div>
-  <div class="card-foot"><span class="muted small push-right" data-unsaved hidden>Unsaved changes</span><button class="button" type="submit" name="action" value="save">Save</button><button class="button button-primary" type="submit" name="action" value="save-use">Save and use</button></div>
+  <div class="card-foot"><span class="muted small push-right" data-unsaved{{if not .Form.Unsaved}} hidden{{end}}>Unsaved changes</span><button class="button" type="submit" name="action" value="save">Save</button><button class="button button-primary" type="submit" name="action" value="save-use">Save and use</button><button class="button button-ghost" type="submit" formaction="/settings/models/test" title="Send one tiny request with these details; nothing is saved">Try it</button></div>
 </form>
 {{end}}
 {{end}}

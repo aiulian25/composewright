@@ -32,6 +32,7 @@ const (
 	ActionSettings     = "settings"
 	ActionBackup       = "backup"
 	ActionRestore      = "restore"
+	ActionTestModel    = "test_model"
 	genesisAuditHash   = ""
 )
 

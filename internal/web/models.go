@@ -1,6 +1,7 @@
 package web
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -10,6 +11,8 @@ import (
 	"strings"
 
 	"github.com/aiulian25/composewright/internal/config"
+	"github.com/aiulian25/composewright/internal/llm"
+	"github.com/aiulian25/composewright/internal/netguard"
 	"github.com/aiulian25/composewright/internal/store"
 )
 
@@ -28,6 +31,12 @@ const (
 	actionSaveAndUse = "save-use"
 	nameSuffix       = "-%d"
 	firstFreeSuffix  = 2
+	presetField      = "preset"
+	apiKeyField      = "api_key"
+	testField        = "test"
+	unsavedLabel     = "This connection"
+	testPassed       = "%s: %s."
+	testFailed       = "%s did not pass the test: %s."
 )
 
 // service is how the Model providers page presents a preset: its name, what
@@ -115,6 +124,8 @@ type connectionForm struct {
 	KeyStored      bool
 	KeyFromEnv     bool
 	Editing        bool
+	// Unsaved is a form shown again after it was tried: nothing in it is saved.
+	Unsaved bool
 }
 
 type modelsView struct {
@@ -125,7 +136,9 @@ type modelsView struct {
 	EngineLabel string
 }
 
-func (server *Server) modelsView(ctx context.Context, llm config.LLM, editing string) (modelsView, error) {
+// modelsView is the Model providers page. The form shows the saved
+// connection being edited, or typed, what the form sent when it was tried.
+func (server *Server) modelsView(ctx context.Context, llm config.LLM, editing string, typed *connectionForm) (modelsView, error) {
 	view := modelsView{Services: services(), EngineLabel: engineLabels[llm.Engine]}
 	for index := range view.Services {
 		view.Services[index].FreeName = freeName(llm.Connections, view.Services[index].ID)
@@ -147,6 +160,14 @@ func (server *Server) modelsView(ctx context.Context, llm config.LLM, editing st
 		row := view.Connections[index]
 		view.Form = connectionForm{Preset: row.Service.ID, Name: row.Name, BaseURL: row.BaseURL, Model: row.Model,
 			MaxInputTokens: row.MaxInputTokens, KeyStored: row.KeyStored, KeyFromEnv: row.KeyFromEnv, Editing: true}
+	}
+	if typed == nil {
+		return view, nil
+	}
+	view.Form = *typed
+	index = slices.IndexFunc(view.Connections, func(row connectionRow) bool { return row.Name == typed.Name })
+	if typed.Editing && index >= 0 {
+		view.Form.KeyStored, view.Form.KeyFromEnv = view.Connections[index].KeyStored, view.Connections[index].KeyFromEnv
 	}
 	return view, nil
 }
@@ -192,12 +213,19 @@ func (server *Server) saveModels(request *http.Request, current *visit, configur
 	return server.saveConnection(request, current, configuration)
 }
 
-func (server *Server) saveConnection(request *http.Request, current *visit, configuration config.Config) (config.Config, error) {
-	llm := configuration.LLM
-	chosen := serviceByID(field(request, "preset"))
+// connectionFromForm reads the add or edit form into a connection, with
+// the service it was added for.
+func connectionFromForm(request *http.Request) (config.Connection, service, *numbers) {
+	chosen := serviceByID(field(request, presetField))
 	reader := &numbers{request: request}
 	connection := config.Connection{Name: field(request, "name"), Provider: chosen.Provider, BaseURL: strings.TrimRight(field(request, "base_url"), "/"),
 		Model: field(request, "model"), MaxInputTokens: reader.whole("max_input_tokens", "The input budget", chosen.MaxInputTokens)}
+	return connection, chosen, reader
+}
+
+func (server *Server) saveConnection(request *http.Request, current *visit, configuration config.Config) (config.Config, error) {
+	llm := configuration.LLM
+	connection, chosen, reader := connectionFromForm(request)
 	previous := slices.IndexFunc(llm.Connections, func(saved config.Connection) bool { return saved.Name == connection.Name })
 	editing := request.PostFormValue(editQuery) != ""
 	if previous >= 0 && !editing {
@@ -210,7 +238,7 @@ func (server *Server) saveConnection(request *http.Request, current *visit, conf
 	if previous >= 0 {
 		connection.APIKeyRef = llm.Connections[previous].APIKeyRef
 	}
-	key := request.PostFormValue("api_key")
+	key := request.PostFormValue(apiKeyField)
 	if key != "" {
 		connection.APIKeyRef = config.SecretRefKeyring + keyNamePrefix + connection.Name
 	}
@@ -347,4 +375,84 @@ func (server *Server) storeKey(request *http.Request, current *visit, name, key 
 		return err
 	}
 	return database.Audit(request.Context(), webActorPrefix+current.user.Username, store.ActionSetSecret, "", map[string]any{"name": name})
+}
+
+// testConnection sends one tiny request to a saved connection, or to the
+// one typed into the form, and shows what came back. A key typed into the
+// form is used for this request only: never stored, logged or audited.
+func (server *Server) testConnection(writer http.ResponseWriter, request *http.Request, current *visit) error {
+	configuration := server.config()
+	state := settingsState{shown: sectionModels, status: http.StatusOK, configuration: configuration}
+	connection, key, typed, err := server.connectionToTest(request, configuration.LLM)
+	state.form = typed
+	if err != nil {
+		state.problem, state.status = capitalised(err.Error())+".", http.StatusBadRequest
+		return server.renderSettings(writer, request, current, state)
+	}
+	result, err := server.probe(request.Context(), configuration, connection, key)
+	details := map[string]any{"provider": connection.Provider, "model": connection.Model, "ok": err == nil}
+	if auditErr := server.workspace().Store.Audit(request.Context(), webActorPrefix+current.user.Username, store.ActionTestModel, "", details); auditErr != nil {
+		return auditErr
+	}
+	label := cmp.Or(connection.Name, unsavedLabel)
+	if err != nil {
+		state.problem = fmt.Sprintf(testFailed, label, strings.TrimSuffix(err.Error(), "."))
+		return server.renderSettings(writer, request, current, state)
+	}
+	state.notice = fmt.Sprintf(testPassed, label, result.Summary())
+	return server.renderSettings(writer, request, current, state)
+}
+
+// connectionToTest is the saved connection a row's Try it names, with its
+// stored key, or the connection the form holds, with the key typed there or
+// the one stored for the connection being edited. typed is what the form
+// sent, to show again.
+func (server *Server) connectionToTest(request *http.Request, llm config.LLM) (connection config.Connection, key string, typed *connectionForm, err error) {
+	saved := func(name string) int {
+		return slices.IndexFunc(llm.Connections, func(candidate config.Connection) bool { return candidate.Name == name })
+	}
+	if name := field(request, testField); name != "" {
+		index := saved(name)
+		if index < 0 {
+			return connection, "", nil, fmt.Errorf("there is no saved connection %q", name)
+		}
+		connection = llm.Connections[index]
+		key, err = server.workspace().ResolveSecret(request.Context(), connection.APIKeyRef)
+		return connection, key, nil, err
+	}
+	connection, chosen, reader := connectionFromForm(request)
+	editing := request.PostFormValue(editQuery) != ""
+	typed = &connectionForm{Preset: chosen.ID, Name: connection.Name, BaseURL: connection.BaseURL, Model: connection.Model,
+		MaxInputTokens: connection.MaxInputTokens, Editing: editing, Unsaved: true}
+	if err = errors.Join(reader.problems...); err != nil {
+		return connection, "", typed, err
+	}
+	if key = request.PostFormValue(apiKeyField); key != "" {
+		return connection, key, typed, nil
+	}
+	index := saved(connection.Name)
+	if !editing || index < 0 || llm.Connections[index].Provider != connection.Provider {
+		return connection, "", typed, nil
+	}
+	key, err = server.workspace().ResolveSecret(request.Context(), llm.Connections[index].APIKeyRef)
+	return connection, key, typed, err
+}
+
+// probe tries a connection through an egress guard built for a
+// configuration that uses it, so its host is the only model host allowed,
+// and only once the configuration would be valid with it.
+func (server *Server) probe(ctx context.Context, configuration config.Config, connection config.Connection, key string) (llm.ProbeResult, error) {
+	configuration.LLM = configuration.LLM.Use(connection)
+	if err := configuration.Validate(); err != nil {
+		return llm.ProbeResult{}, err
+	}
+	policy, err := netguard.PolicyFromConfig(configuration, nil, server.options.Version)
+	if err != nil {
+		return llm.ProbeResult{}, err
+	}
+	guard, err := netguard.New(policy)
+	if err != nil {
+		return llm.ProbeResult{}, err
+	}
+	return llm.Probe(ctx, configuration.LLM, key, guard)
 }

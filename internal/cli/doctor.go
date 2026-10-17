@@ -12,7 +12,7 @@ import (
 )
 
 func (application *app) doctorCommand() *cobra.Command {
-	var setupRootless bool
+	var setupRootless, contactModel bool
 	command := &cobra.Command{
 		Use:   "doctor",
 		Short: "Check Docker, the sandbox tier, permissions and the egress allowlist",
@@ -22,20 +22,23 @@ plugin (2.24.4 or later), whether the daemon is rootless, whether it enforces
 memory, CPU and process limits, that the profile's external networks exist,
 and which hosts the egress guard allows.
 
-doctor never changes anything. --setup-rootless prints the steps to run a
-dedicated rootless Docker daemon on the host, the recommended sandbox, and
-the composewright container on it.`,
-		Example: "  composewright doctor\n  composewright doctor --json\n  composewright doctor --setup-rootless",
+doctor never changes anything and never contacts the model unless
+--contact-model asks it to send the model in use one tiny request, through
+the egress guard, and report what answered, the tokens and the time.
+--setup-rootless prints the steps to run a dedicated rootless Docker daemon
+on the host, the recommended sandbox, and the composewright container on it.`,
+		Example: "  composewright doctor\n  composewright doctor --json\n  composewright doctor --contact-model\n  composewright doctor --setup-rootless",
 		Args:    cobra.NoArgs,
 		RunE: func(command *cobra.Command, _ []string) error {
-			return application.runDoctor(command.Context(), setupRootless)
+			return application.runDoctor(command.Context(), setupRootless, contactModel)
 		},
 	}
 	command.Flags().BoolVar(&setupRootless, "setup-rootless", false, "print the rootless Docker setup steps")
+	command.Flags().BoolVar(&contactModel, "contact-model", false, "send the model in use one tiny test request")
 	return command
 }
 
-func (application *app) runDoctor(ctx context.Context, setupRootless bool) error {
+func (application *app) runDoctor(ctx context.Context, setupRootless, contactModel bool) error {
 	if setupRootless {
 		fmt.Fprintln(application.stdout, doctor.RootlessRecipe())
 		return nil
@@ -44,12 +47,18 @@ func (application *app) runDoctor(ctx context.Context, setupRootless bool) error
 	if err != nil {
 		return err
 	}
-	runner, dockerErr := sandbox.FromConfig(loaded.Config, loaded.Paths.ProjectsDir())
-	checks := doctor.Run(ctx, doctor.Inputs{Loaded: loaded, Sandbox: runner, Docker: dockerErr})
 	policy, err := netguard.PolicyFromConfig(loaded.Config, nil, application.build.Version)
 	if err != nil {
 		return err
 	}
+	runner, dockerErr := sandbox.FromConfig(loaded.Config, loaded.Paths.ProjectsDir())
+	inputs := doctor.Inputs{Loaded: loaded, Sandbox: runner, Docker: dockerErr}
+	if contactModel {
+		if inputs.ModelGuard, err = netguard.New(policy); err != nil {
+			return err
+		}
+	}
+	checks := doctor.Run(ctx, inputs)
 	if application.global.json {
 		return writeJSON(application.stdout, map[string]any{"checks": checks, "egress": policy.Hosts, "private_targets": policy.PrivateTargets})
 	}

@@ -173,6 +173,7 @@ func (server *Server) routes() {
 	mux.HandleFunc("POST /projects/{name}/delete", server.authed(server.delete))
 	mux.HandleFunc("GET /settings", server.authed(server.settingsPage))
 	mux.HandleFunc("POST /settings/{section}", server.authed(server.saveSettings))
+	mux.HandleFunc("POST /settings/models/test", server.authed(server.testConnection))
 	mux.HandleFunc("POST /settings/backup/passphrase", server.authed(server.setBackupPassphrase))
 	mux.HandleFunc("POST /settings/backup/now", server.authed(server.backUpNow))
 	mux.HandleFunc("POST /settings/backup/download", server.authed(server.downloadBackup))

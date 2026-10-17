@@ -115,6 +115,8 @@ type settingsState struct {
 	problem       string
 	status        int
 	configuration config.Config
+	// form is what the connection form sent when it was tried.
+	form *connectionForm
 }
 
 func (server *Server) settingsPage(writer http.ResponseWriter, request *http.Request, current *visit) error {
@@ -152,7 +154,7 @@ func (server *Server) renderSettings(writer http.ResponseWriter, request *http.R
 		return err
 	}
 	configuration := state.configuration
-	models, err := server.modelsView(request.Context(), configuration.LLM, request.URL.Query().Get(editQuery))
+	models, err := server.modelsView(request.Context(), configuration.LLM, request.URL.Query().Get(editQuery), state.form)
 	if err != nil {
 		return err
 	}

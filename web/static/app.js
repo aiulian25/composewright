@@ -510,7 +510,7 @@
       return;
     }
     var note = document.querySelector("[data-unsaved]");
-    var unsaved = false;
+    var unsaved = Boolean(note && !note.hidden);
     var mark = function () {
       unsaved = true;
       if (note) {

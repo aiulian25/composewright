@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/fs"
 	"log/slog"
@@ -1502,6 +1503,114 @@ func TestModelConnections(t *testing.T) {
 	if err != nil || len(latest) != 1 || latest[0].Action != store.ActionDeleteSecret || latest[0].Details["name"] != "llm-claude-work" {
 		t.Fatalf("removing the key was not audited: %+v %v", latest, err)
 	}
+}
+
+// fakeModel is an OpenAI-compatible server that knows one model and
+// repeats the key it was sent when asked for another, as some do.
+func fakeModel(t *testing.T, known string, keys *[]string) *httptest.Server {
+	t.Helper()
+	var mutex sync.Mutex
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		var body struct{ Model string }
+		_ = json.NewDecoder(request.Body).Decode(&body)
+		key := strings.TrimPrefix(request.Header.Get("Authorization"), "Bearer ")
+		mutex.Lock()
+		*keys = append(*keys, key)
+		mutex.Unlock()
+		if body.Model != known {
+			writer.WriteHeader(http.StatusNotFound)
+			_, _ = io.WriteString(writer, `{"error":"model `+body.Model+` does not exist for key `+key+`"}`)
+			return
+		}
+		_, _ = io.WriteString(writer, `{"model":"`+known+`","choices":[{"finish_reason":"stop","message":{"content":"{\"ok\":true}"}}],"usage":{"prompt_tokens":23,"completion_tokens":4}}`)
+	}))
+	t.Cleanup(server.Close)
+	return server
+}
+
+// TestTryModelConnection: Try it on the form sends one request with the key
+// typed there and keeps nothing; a wrong model shows the provider's error
+// without the key; a saved connection, and the form editing it, is tried
+// with its stored key; every try is audited without the key.
+func TestTryModelConnection(t *testing.T) {
+	const (
+		model    = "qwen2.5-coder:7b"
+		typedKey = "test-typed-key-value"
+		savedKey = "test-saved-key-value"
+	)
+	harness := newHarness(t)
+	harness.signUp()
+	server := harness.server
+	var keys []string
+	fake := fakeModel(t, model, &keys)
+	before, err := os.ReadFile(server.paths().ConfigFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	form := url.Values{"preset": {"custom"}, "name": {"lan"}, "base_url": {fake.URL + "/v1"}, "model": {model},
+		"max_input_tokens": {"8000"}, "api_key": {typedKey}}
+	response, page := harness.post("/settings/models/test", form)
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, "lan: Reachable · answered as qwen2.5-coder:7b · 23 in / 4 out tokens · ") || !strings.Contains(page, `value="lan"`) {
+		t.Fatalf("the try did not report the answer or lost the form:\n%s", page)
+	}
+	if strings.Contains(page, "data-unsaved hidden") {
+		t.Fatal("a tried form was shown again as if it were saved")
+	}
+	if save, try := strings.Index(page, `value="save"`), strings.Index(page, `formaction="/settings/models/test" title=`); save < 0 || try < save {
+		t.Fatal("Try it comes before Save, so Enter in the form would try instead of save")
+	}
+	if len(keys) != 1 || keys[0] != typedKey {
+		t.Fatalf("not one request with the typed key: %d", len(keys))
+	}
+	form.Set("model", "qwen-missing")
+	response, page = harness.post("/settings/models/test", form)
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, "lan did not pass the test") || !strings.Contains(page, "qwen-missing does not exist") || strings.Contains(page, typedKey) {
+		t.Fatalf("a wrong model did not show the scrubbed error:\n%s", page)
+	}
+	after, err := os.ReadFile(server.paths().ConfigFile)
+	stored, _ := server.workspace().Store.HasSecret(context.Background(), "llm-lan")
+	if err != nil || !bytes.Equal(before, after) || stored {
+		t.Fatal("trying a connection wrote config.yaml or stored its key")
+	}
+	latest, err := server.workspace().Store.AuditEntries(context.Background(), "", 1)
+	if err != nil || len(latest) != 1 || latest[0].Action != store.ActionTestModel || latest[0].Details["ok"] != false ||
+		latest[0].Details["model"] != "qwen-missing" || strings.Contains(fmt.Sprint(latest[0].Details), typedKey) {
+		t.Fatalf("the try was not audited as it was: %+v %v", latest, err)
+	}
+	form.Set("max_input_tokens", "")
+	response, page = harness.post("/settings/models/test", form)
+	status(t, response, http.StatusBadRequest, page)
+	if !strings.Contains(page, "The input budget must be a whole number") {
+		t.Fatalf("a try took an input budget a save refuses:\n%s", page)
+	}
+	form.Set("max_input_tokens", "8000")
+	form.Set("model", model)
+	form.Set("api_key", savedKey)
+	form.Set("action", "save")
+	response, page = harness.post("/settings/models", form)
+	status(t, response, http.StatusSeeOther, page)
+	response, page = harness.post("/settings/models/test", url.Values{"test": {"lan"}})
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, "lan: Reachable") || keys[len(keys)-1] != savedKey {
+		t.Fatalf("the saved connection was not tried with its stored key:\n%s", page)
+	}
+	editForm := url.Values{"preset": {"custom"}, "name": {"lan"}, "base_url": {fake.URL + "/v1"}, "model": {model},
+		"max_input_tokens": {"8000"}, "edit": {"1"}}
+	response, page = harness.post("/settings/models/test", editForm)
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, "lan: Reachable") || keys[len(keys)-1] != savedKey || !strings.Contains(page, "stored; type a new one to replace it") {
+		t.Fatalf("the edit form was not tried with the stored key, or forgot it is stored:\n%s", page)
+	}
+	editForm.Del("edit")
+	response, page = harness.post("/settings/models/test", editForm)
+	status(t, response, http.StatusOK, page)
+	if keys[len(keys)-1] == savedKey {
+		t.Fatal("the add form was tried with the key stored for a saved connection of the same name")
+	}
+	response, page = harness.post("/settings/models/test", url.Values{"test": {"nowhere"}})
+	status(t, response, http.StatusBadRequest, page)
 }
 
 // TestSettingsSavesTakeTurns: saves that arrive together are applied one

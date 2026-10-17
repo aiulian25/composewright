@@ -2,11 +2,15 @@ package doctor
 
 import (
 	"context"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/aiulian25/composewright/internal/config"
+	"github.com/aiulian25/composewright/internal/netguard"
 	"github.com/aiulian25/composewright/internal/sandbox"
 	"github.com/aiulian25/composewright/internal/store/storetest"
 	"github.com/aiulian25/composewright/internal/workspace"
@@ -68,6 +72,44 @@ func TestModelCheck(t *testing.T) {
 	t.Setenv(keyVariable, "test-key-value")
 	if check := modelCheck(ctx, loaded); check.Status != StatusOK || !strings.Contains(check.Detail, "API key stored") {
 		t.Fatalf("Anthropic with a key: %+v", check)
+	}
+}
+
+// TestContactCheck: asked to, doctor sends the model in use one request
+// through the egress guard and reports who answered, or the error.
+func TestContactCheck(t *testing.T) {
+	ctx := context.Background()
+	loaded := loadedIn(t)
+	initialised(t, loaded)
+	loaded.Config.LLM.Provider = config.ProviderNone
+	if check := contactCheck(ctx, loaded, nil); check.Status != StatusOK || check.Name != contactedName {
+		t.Fatalf("no model: %+v", check)
+	}
+	answer := `{"model":"qwen2.5-coder:7b","message":{"content":"{\"ok\":true}"},"done":true,"prompt_eval_count":23,"eval_count":4}`
+	ollama := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if request.URL.Path != "/api/chat" {
+			http.NotFound(writer, request)
+			return
+		}
+		_, _ = io.WriteString(writer, answer+"\n")
+	}))
+	t.Cleanup(ollama.Close)
+	loaded.Config.LLM.Provider, loaded.Config.LLM.Model, loaded.Config.LLM.APIKeyRef = config.ProviderOllama, "qwen2.5-coder:7b", ""
+	for base, want := range map[string]string{ollama.URL: "Reachable · answered as qwen2.5-coder:7b · 23 in / 4 out tokens", ollama.URL + "/wrong": "404"} {
+		loaded.Config.LLM.BaseURL = base
+		policy, err := netguard.PolicyFromConfig(loaded.Config, nil, "test")
+		if err != nil {
+			t.Fatal(err)
+		}
+		guard, err := netguard.New(policy)
+		if err != nil {
+			t.Fatal(err)
+		}
+		check := contactCheck(ctx, loaded, guard)
+		failed := check.Status == StatusFail && check.Fix != ""
+		if !strings.Contains(check.Detail, want) || (want == "404") != failed {
+			t.Fatalf("%s: %+v", base, check)
+		}
 	}
 }
 

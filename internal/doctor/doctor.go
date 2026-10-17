@@ -10,6 +10,8 @@ import (
 	"strings"
 
 	"github.com/aiulian25/composewright/internal/config"
+	"github.com/aiulian25/composewright/internal/llm"
+	"github.com/aiulian25/composewright/internal/netguard"
 	"github.com/aiulian25/composewright/internal/sandbox"
 	"github.com/aiulian25/composewright/internal/workspace"
 )
@@ -19,6 +21,8 @@ const (
 	StatusWarn = "warn"
 	StatusFail = "fail"
 	tcpPrefix  = "tcp://"
+	// contactedName is the check that really asks the model.
+	contactedName = "model (contacted)"
 )
 
 type Check struct {
@@ -32,11 +36,17 @@ type Inputs struct {
 	Loaded  *config.Loaded
 	Sandbox *sandbox.Sandbox
 	Docker  error
+	// ModelGuard, when set, is the egress guard a test request to the
+	// model goes through; without it the model is never contacted.
+	ModelGuard *netguard.Guard
 }
 
 // Run performs every check and returns them in a fixed order.
 func Run(ctx context.Context, inputs Inputs) []Check {
 	checks := []Check{workspaceCheck(ctx, inputs.Loaded), auditCheck(ctx, inputs.Loaded), modelCheck(ctx, inputs.Loaded)}
+	if inputs.ModelGuard != nil {
+		checks = append(checks, contactCheck(ctx, inputs.Loaded, inputs.ModelGuard))
+	}
 	if inputs.Docker != nil {
 		return append(checks, Check{Name: "docker cli", Status: StatusFail, Detail: inputs.Docker.Error(),
 			Fix: "install Docker Engine with the compose plugin, or set docker.cli_path"})
@@ -82,7 +92,7 @@ func auditCheck(ctx context.Context, loaded *config.Loaded) Check {
 }
 
 // modelCheck reads the model settings and whether its API key is stored;
-// it never contacts the model.
+// it never contacts the model. contactCheck does, when asked.
 func modelCheck(ctx context.Context, loaded *config.Loaded) Check {
 	settings := loaded.Config.LLM
 	if settings.Provider == config.ProviderNone {
@@ -98,6 +108,21 @@ func modelCheck(ctx context.Context, loaded *config.Loaded) Check {
 			Fix: "composewright config set-secret llm, or set llm.api_key_ref to env:ANTHROPIC_API_KEY; until then the rules work alone"}
 	}
 	return Check{Name: "model", Status: StatusOK, Detail: detail}
+}
+
+// contactCheck sends the model in use one tiny request and reports what
+// came back.
+func contactCheck(ctx context.Context, loaded *config.Loaded, guard *netguard.Guard) Check {
+	settings := loaded.Config.LLM
+	if settings.Provider == config.ProviderNone {
+		return Check{Name: contactedName, Status: StatusOK, Detail: "llm.provider is none: there is no model to contact"}
+	}
+	result, err := llm.Probe(ctx, settings, apiKey(ctx, loaded), guard)
+	if err != nil {
+		return Check{Name: contactedName, Status: StatusFail, Detail: err.Error(),
+			Fix: "check llm.base_url, llm.model and the API key (composewright config set-secret llm); until then the rules work alone"}
+	}
+	return Check{Name: contactedName, Status: StatusOK, Detail: result.Summary()}
 }
 
 func apiKey(ctx context.Context, loaded *config.Loaded) string {

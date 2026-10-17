@@ -2,9 +2,13 @@ package cli
 
 import (
 	"encoding/json"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"testing"
 )
 
@@ -123,5 +127,29 @@ func TestDoctor(t *testing.T) {
 	recipe := run(t, environment, "doctor", "--setup-rootless")
 	if recipe.code != exitOK || !strings.Contains(recipe.stdout, "dockerd-rootless-setuptool.sh install") || !strings.Contains(recipe.stdout, "composewright never does") {
 		t.Fatalf("rootless recipe: %+v", recipe)
+	}
+}
+
+// TestDoctorContactsModelOnlyWhenAsked: plain doctor sends the model
+// nothing; --contact-model sends one request and prints what answered.
+func TestDoctorContactsModelOnlyWhenAsked(t *testing.T) {
+	environment := isolate(t)
+	run(t, environment, "init")
+	fakeDocker(t, environment, "pass")
+	var requests atomic.Int32
+	model := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
+		requests.Add(1)
+		_, _ = io.WriteString(writer, `{"model":"qwen2.5-coder:7b","message":{"content":"{\"ok\":true}"},"done":true,"prompt_eval_count":23,"eval_count":4}`+"\n")
+	}))
+	t.Cleanup(model.Close)
+	run(t, environment, "config", "set", "llm.provider", "ollama")
+	run(t, environment, "config", "set", "llm.base_url", model.URL)
+	run(t, environment, "config", "set", "llm.model", "qwen2.5-coder:7b")
+	if result := run(t, environment, "doctor"); strings.Contains(result.stdout, "model (contacted)") || requests.Load() != 0 {
+		t.Fatalf("doctor contacted the model unasked:\n%s", result.stdout)
+	}
+	result := run(t, environment, "doctor", "--contact-model")
+	if result.code != exitOK || requests.Load() != 1 || !strings.Contains(result.stdout, "Reachable · answered as qwen2.5-coder:7b · 23 in / 4 out tokens") {
+		t.Fatalf("doctor --contact-model: %+v", result)
 	}
 }

@@ -6,6 +6,16 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Try it on the Model providers page sends a connection one tiny request and
+  says whether it answered: the model name it answered as, the tokens in and
+  out and the time, or the provider's error with the key left out. It works
+  on each saved connection and on the add or edit form before saving; a key
+  typed there is used for that one request and kept nowhere.
+  `composewright doctor --contact-model` does the same for the model in use;
+  plain `composewright doctor` still never contacts the model.
+
 ### Changed
 
 - The Result page finishes a project in one card: save the files to a folder,
