@@ -180,6 +180,8 @@ func (server *Server) routes() {
 	mux.HandleFunc("POST /settings/backup/download", server.authed(server.downloadBackup))
 	mux.HandleFunc("POST /settings/backup/restore", server.authed(server.restoreBackup))
 	mux.HandleFunc("POST /settings/backup/delete", server.authed(server.deleteBackup))
+	mux.HandleFunc("POST /settings/audit/verify", server.authed(server.verifyAudit))
+	mux.HandleFunc("POST /settings/audit/export", server.authed(server.exportAudit))
 	mux.HandleFunc("POST /engine", server.authed(server.switchEngine))
 }
 

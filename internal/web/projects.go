@@ -95,7 +95,7 @@ func (server *Server) projectPage(writer http.ResponseWriter, request *http.Requ
 	if err != nil {
 		return err
 	}
-	audit, err := database.AuditEntries(ctx, stored.Project.ID, auditShown)
+	audit, err := database.AuditPage(ctx, store.AuditFilter{ProjectID: stored.Project.ID, Limit: auditShown})
 	if err != nil {
 		return err
 	}

@@ -11,6 +11,7 @@
   <a href="/settings?section=account"{{if eq .Data.Page "account"}} aria-current="page"{{end}}>{{template "icon-user"}}<span>Account</span></a>
   <h3>Data</h3>
   <a href="/settings?section=backup"{{if eq .Data.Page "backup"}} aria-current="page"{{end}}>{{template "icon-history"}}<span>Backups</span></a>
+  <a href="/settings?section=audit"{{if eq .Data.Page "audit"}} aria-current="page"{{end}}>{{template "icon-book"}}<span>Audit log</span></a>
 </nav>
 <nav class="sidebar-foot" aria-label="More">
   <a href="/projects">{{template "icon-arrow-left"}}<span>Back to projects</span></a>
@@ -32,11 +33,11 @@
 {{with .Data}}
 <div class="page-head">
   <h1 class="page-title">{{.Title}}</h1>
-  {{if eq .Page "backup"}}<span class="lead">Your Settings and every project, backed up on a schedule or when you ask, encrypted with your backup passphrase.</span>{{else}}<span class="lead">Saved to <span class="mono">{{.ConfigFile}}</span>; each save is checked as a whole and written to the audit log.</span>{{end}}
-  {{if and (ne .Page "account") (ne .Page "models") (ne .Page "backup")}}<span class="row push-right"><span class="muted small" data-unsaved hidden>Unsaved changes</span><button class="button button-primary" type="submit" form="settings-form">Save</button></span>{{end}}
+  {{if eq .Page "backup"}}<span class="lead">Your Settings and every project, backed up on a schedule or when you ask, encrypted with your backup passphrase.</span>{{else if eq .Page "audit"}}<span class="lead">Everything done here and from the CLI, newest first. Each entry carries the hash of the one before, so an edited or removed entry shows.</span>{{else}}<span class="lead">Saved to <span class="mono">{{.ConfigFile}}</span>; each save is checked as a whole and written to the audit log.</span>{{end}}
+  {{if and (ne .Page "account") (ne .Page "models") (ne .Page "backup") (ne .Page "audit")}}<span class="row push-right"><span class="muted small" data-unsaved hidden>Unsaved changes</span><button class="button button-primary" type="submit" form="settings-form">Save</button></span>{{end}}
 </div>
 
-{{if eq .Page "models"}}{{template "models-page" $}}{{else if eq .Page "backup"}}{{template "backup-page" $}}{{else}}
+{{if eq .Page "models"}}{{template "models-page" $}}{{else if eq .Page "backup"}}{{template "backup-page" $}}{{else if eq .Page "audit"}}{{template "audit-page" $}}{{else}}
 <form class="stack" id="settings-form" method="post" action="/settings/{{.Page}}" data-settings-form>
   <input type="hidden" name="csrf" value="{{$csrf}}">
 
@@ -278,6 +279,44 @@
   </div>
   <div class="card-foot"><span class="muted small">Written to the audit log.</span><button class="button button-primary push-right" type="submit">{{template "icon-upload"}}Restore</button></div>
 </form>
+{{end}}
+{{end}}
+
+{{define "audit-page"}}
+{{$csrf := .CSRF}}
+{{with .Data.Audit}}
+<form class="card" method="get" action="/settings" aria-labelledby="audit-filter-title">
+  <input type="hidden" name="section" value="audit">
+  <div class="card-head"><h2 id="audit-filter-title">{{template "icon-search"}}Filter</h2></div>
+  <div class="card-body">
+    <div class="field-grid">
+      <label class="field" for="audit-action">Action<select id="audit-action" name="action"><option value="">every action</option>{{range .Actions}}<option value="{{.Value}}"{{if .Selected}} selected{{end}}>{{.Label}}</option>{{end}}</select></label>
+      <label class="field" for="audit-project">Project<select id="audit-project" name="project"><option value="">every project, and none</option>{{range .Projects}}<option value="{{.Value}}"{{if .Selected}} selected{{end}}>{{.Label}}</option>{{end}}</select></label>
+    </div>
+  </div>
+  <div class="card-foot"><button class="button button-primary push-right" type="submit">Show</button></div>
+</form>
+<section class="card" aria-labelledby="audit-title">
+  <div class="card-head"><h2 id="audit-title">{{template "icon-book"}}Entries</h2>
+    <span class="row push-right">
+      <form method="post" action="/settings/audit/verify"><input type="hidden" name="csrf" value="{{$csrf}}"><button class="button button-small" type="submit">{{template "icon-shield"}}Verify chain</button></form>
+      <form method="post" action="/settings/audit/export"><input type="hidden" name="csrf" value="{{$csrf}}"><input type="hidden" name="action" value="{{.Action}}"><input type="hidden" name="project" value="{{.Project}}"><button class="button button-small" type="submit">{{template "icon-download"}}Download as JSON Lines</button></form>
+    </span>
+  </div>
+  {{if .Entries}}
+  <div class="table-scroll">
+    <table class="table table-compact">
+      <thead><tr><th scope="col">#</th><th scope="col">When</th><th scope="col">Who</th><th scope="col">Action</th><th scope="col">Project</th><th scope="col">Details</th></tr></thead>
+      <tbody>
+        {{range .Entries}}<tr><td class="mono muted">{{.Sequence}}</td><td class="muted nowrap">{{when .Time}}</td><td class="mono">{{.Actor}}</td><td>{{.Action}}</td><td class="mono">{{.Project}}</td><td>{{if .Details}}<details><summary class="small">details</summary><pre class="terminal">{{.Details}}</pre></details>{{end}}</td></tr>{{end}}
+      </tbody>
+    </table>
+  </div>
+  {{if .Next}}<div class="card-foot"><a class="button button-small push-right" href="/settings?section=audit&amp;action={{.Action}}&amp;project={{.Project}}&amp;before={{.Next}}">Older entries {{template "icon-arrow"}}</a></div>{{end}}
+  {{else}}
+  <p class="card-body muted">No entries{{if or .Action .Project}} match these filters{{end}}.</p>
+  {{end}}
+</section>
 {{end}}
 {{end}}
 

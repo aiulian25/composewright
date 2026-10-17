@@ -49,9 +49,10 @@ const (
 var (
 	// settingsSections are the Settings pages in order; each page is one
 	// form, saved in one go.
-	settingsSections = []string{sectionProfile, sectionEngine, sectionModels, sectionAppearance, sectionAccount, sectionBackup}
+	settingsSections = []string{sectionProfile, sectionEngine, sectionModels, sectionAppearance, sectionAccount, sectionBackup, sectionAudit}
 	settingsTitles   = map[string]string{sectionProfile: "Environment profile", sectionEngine: "Engine",
-		sectionModels: "Model providers", sectionAppearance: "Appearance", sectionAccount: "Account", sectionBackup: "Backups"}
+		sectionModels: "Model providers", sectionAppearance: "Appearance", sectionAccount: "Account", sectionBackup: "Backups",
+		sectionAudit: "Audit log"}
 )
 
 type settingsView struct {
@@ -77,6 +78,7 @@ type settingsView struct {
 	ConfigFile  string
 	Minimum     int
 	Backups     backupView
+	Audit       auditView
 }
 
 // networkRow is one row of the networks table. It carries the kinds and
@@ -143,8 +145,11 @@ func preview(configuration config.Config, shown string) (settingsFile, error) {
 	}
 	rendered, err := config.Render(configuration)
 	file := settingsFile{Name: configFile, Lines: plainLines(string(rendered), languageYAML), Command: "composewright config show"}
-	if shown == sectionBackup {
+	switch shown {
+	case sectionBackup:
 		file.Command = ""
+	case sectionAudit:
+		file.Command = auditCommand
 	}
 	return file, err
 }
@@ -173,6 +178,11 @@ func (server *Server) renderSettings(writer http.ResponseWriter, request *http.R
 	view.NewNetwork, view.NewNetwork.Index = blank, newRowIndex
 	if state.shown == sectionBackup {
 		if view.Backups, err = server.backupView(request.Context(), configuration.Backup); err != nil {
+			return err
+		}
+	}
+	if state.shown == sectionAudit {
+		if view.Audit, err = server.auditView(request.Context(), auditFilter(request)); err != nil {
 			return err
 		}
 	}
@@ -230,7 +240,8 @@ func hostHint(row *networkRow, owner doctor.FoundNetwork) {
 // page never repeats it.
 func (server *Server) saveSettings(writer http.ResponseWriter, request *http.Request, current *visit) error {
 	section := request.PathValue("section")
-	if !slices.Contains(settingsSections, section) {
+	// The Audit log page has no settings to save.
+	if !slices.Contains(settingsSections, section) || section == sectionAudit {
 		return statusError{status: http.StatusNotFound, message: noSuchSection}
 	}
 	submitted, err := server.saveSection(request, current, section)

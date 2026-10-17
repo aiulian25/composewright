@@ -245,7 +245,7 @@ func TestPasswordResetsTheAdministrator(t *testing.T) {
 	if _, err := opened.Store.SessionByHash(ctx, session.IDHash); !errors.Is(err, store.ErrNotFound) {
 		t.Fatalf("a browser stayed signed in: %v", err)
 	}
-	latest, err := opened.Store.AuditEntries(ctx, "", 1)
+	latest, err := opened.Store.AuditPage(ctx, store.AuditFilter{Limit: 1})
 	if err != nil || len(latest) != 1 || latest[0].Action != store.ActionPassword || latest[0].Details["user"] != "iulian" {
 		t.Fatalf("the reset was not audited: %+v %v", latest, err)
 	}
@@ -312,6 +312,27 @@ func TestAuditVerify(t *testing.T) {
 	storetest.EditAuditActor(t, path, 1)
 	if result := run(t, environment, "audit", "verify"); result.code == 0 || !strings.Contains(result.stderr, "audit log entry 1 does not match the chain") {
 		t.Fatalf("edited log passed: %d %q %q", result.code, result.stdout, result.stderr)
+	}
+}
+
+// TestAuditList: audit list shows every entry, and --action keeps only the
+// entries of that action.
+func TestAuditList(t *testing.T) {
+	environment := isolate(t)
+	run(t, environment, "init")
+	opened := openTestWorkspace(t, environment)
+	if err := opened.Store.Audit(context.Background(), "web:admin", store.ActionLogin, "", map[string]any{}); err != nil {
+		t.Fatal(err)
+	}
+	opened.Close()
+	result := run(t, environment, "audit", "list")
+	if result.code != exitOK || !strings.Contains(result.stdout, "web:admin") || !strings.Contains(result.stdout, store.ActionInit) {
+		t.Fatalf("audit list: %+v", result)
+	}
+	result = run(t, environment, "audit", "list", "--action", store.ActionLogin, "--json")
+	var entries []store.AuditEntry
+	if err := json.Unmarshal([]byte(result.stdout), &entries); err != nil || len(entries) != 1 || entries[0].Action != store.ActionLogin {
+		t.Fatalf("audit list --action login: %v %+v", err, result)
 	}
 }
 

@@ -71,6 +71,23 @@
   <p class="card-body muted">The facts appear here once the repository is read.</p>
   {{end}}
 </section>
+
+{{if .Suspicious}}
+<section class="card" aria-labelledby="suspicious-title">
+  <div class="card-head"><h2 id="suspicious-title">{{template "icon-warning"}}Suspicious instructions in the repository</h2><span class="note">{{plural (len .Suspicious) "line" "lines"}}</span></div>
+  <div class="card-body stack">
+    <p class="banner banner-warn" role="note">These lines speak to a language model, not to you. The Review page shows them again beside the plan.</p>
+  </div>
+  <div class="table-scroll">
+    <table class="table">
+      <thead><tr><th scope="col">Line</th><th scope="col">Where</th></tr></thead>
+      <tbody>
+        {{range .Suspicious}}<tr><td class="mono">{{.Text}}</td><td class="mono muted nowrap">{{.Location}}</td></tr>{{end}}
+      </tbody>
+    </table>
+  </div>
+</section>
+{{end}}
 {{end}}
 {{end}}
 

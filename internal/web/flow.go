@@ -20,6 +20,7 @@ import (
 	"github.com/docker/go-units"
 
 	"github.com/aiulian25/composewright/internal/config"
+	"github.com/aiulian25/composewright/internal/extract"
 	"github.com/aiulian25/composewright/internal/fetch"
 	"github.com/aiulian25/composewright/internal/ir"
 	"github.com/aiulian25/composewright/internal/pipeline"
@@ -407,7 +408,9 @@ type analyseView struct {
 	Steps     []stepView
 	Facts     []factRow
 	FactChips []string
-	Events    string
+	// Suspicious are repository lines addressed to a language model.
+	Suspicious []extract.Note
+	Events     string
 	// Live is a generation you can watch; otherwise the page shows a
 	// stored project's analysis.
 	Live      bool
@@ -442,7 +445,7 @@ func (server *Server) analyseView(snapshot snapshot) analyseView {
 		view.Ref = sourceText(snapshot.Source)
 	}
 	if snapshot.Facts != nil {
-		view.Files = filesRead(snapshot.Facts.Files, nil)
+		view.Files, view.Suspicious = filesRead(snapshot.Facts.Files, nil), snapshot.Facts.Suspicious
 	}
 	return view
 }
@@ -459,7 +462,7 @@ func (server *Server) analysePage(writer http.ResponseWriter, request *http.Requ
 		FactChips: chips, Questions: questionCount(envRows(stored.Plan, stored.Values, false))}
 	view.Rules, view.Filled, view.Fields = ruleRows(stored.Plan)
 	if stored.Facts != nil {
-		view.Files = filesRead(stored.Facts.Files, stored.Plan)
+		view.Files, view.Suspicious = filesRead(stored.Facts.Files, stored.Plan), stored.Facts.Suspicious
 	}
 	page := server.page(request, current, "Analysis of "+stored.Project.Name).flow(stepAnalyse).of(stored.Project.Name)
 	page.Data, page.CLI = view, "composewright show "+stored.Project.Name
@@ -598,7 +601,8 @@ type reviewView struct {
 	TrustOffers []trustOffer
 	Revealed    bool
 	Running     string
-	Notes       []string
+	Suspicious  []string
+	Notes       []noteView
 	Notices     []string
 	// LastFailure is the last test run when it failed; ChangedSince says
 	// the plan was changed after it.
@@ -617,7 +621,10 @@ func (server *Server) reviewView(ctx context.Context, stored *pipeline.Stored, r
 		Storage: server.storageOptions(stored.Options.Storage), Env: envRows(plan, stored.Values, revealed), Optional: render.OptionalSettings(plan),
 		Needs: needViews(plan, stored.Options.AllowNeeds), Findings: findingViews(report, stored.Generation.ComposeYAML), Registries: stored.Options.AllowRegistries,
 		Benign:      stored.Options.BenignLogPatterns,
-		TrustOffers: trustOffers(plan, report, configuration.Registries.Allow), Revealed: revealed, Notes: plan.PostInstallNotes}
+		TrustOffers: trustOffers(plan, report, configuration.Registries.Allow), Revealed: revealed, Suspicious: plan.SuspiciousInstructions}
+	for _, note := range plan.PostInstallNotes {
+		view.Notes = append(view.Notes, noteView{Text: note, Suspicious: repeatsSuspicious(note, plan.SuspiciousInstructions)})
+	}
 	for _, entry := range plan.EnvFile {
 		if entry.Generate != "" {
 			view.Generated++
@@ -645,6 +652,30 @@ func (server *Server) reviewView(ctx context.Context, stored *pipeline.Stored, r
 		view.LastFailure, view.ChangedSince = failureText(verdict), tested.ID != stored.Generation.ID
 	}
 	return view, nil
+}
+
+// noteView is a note for deployment; Suspicious says it repeats a line
+// addressed to a language model.
+type noteView struct {
+	Text       string
+	Suspicious bool
+}
+
+// locatedInstruction is a suspicious instruction the rules found: its file
+// and line, then its text. One a model reported may have neither.
+var locatedInstruction = regexp.MustCompile(`^(\S+:\d+): (.+)$`)
+
+// repeatsSuspicious says whether a note repeats a suspicious instruction:
+// the rules cite its file and line, a model may quote its text.
+func repeatsSuspicious(note string, instructions []string) bool {
+	return slices.ContainsFunc(instructions, func(instruction string) bool {
+		match := locatedInstruction.FindStringSubmatch(instruction)
+		if match == nil {
+			return instruction != "" && strings.Contains(note, instruction)
+		}
+		location, text := match[1], match[2]
+		return strings.Contains(note, "("+location+")") || strings.Contains(note, text)
+	})
 }
 
 // composeView badges compose.yaml; an edited version is compared with the

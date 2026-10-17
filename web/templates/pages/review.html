@@ -136,10 +136,20 @@
   </section>
   {{end}}
 
+  {{if .Suspicious}}
+  <section class="card" aria-labelledby="suspicious-title">
+    <div class="card-head"><h2 id="suspicious-title">{{template "icon-warning"}}Suspicious instructions in the repository</h2><span class="note">{{plural (len .Suspicious) "line" "lines"}}</span></div>
+    <div class="card-body stack">
+      <p class="banner banner-warn" role="note">These lines speak to a language model, not to you. Check that the plan does not do what they ask.</p>
+      <ul class="notes">{{range .Suspicious}}<li class="mono">{{.}}</li>{{end}}</ul>
+    </div>
+  </section>
+  {{end}}
+
   {{if .Notes}}
   <section class="card" aria-labelledby="notes-title">
     <div class="card-head"><h2 id="notes-title">{{template "icon-book"}}Notes for deployment</h2></div>
-    <ul class="notes card-body">{{range .Notes}}<li>{{.}}</li>{{end}}</ul>
+    <ul class="notes card-body">{{range .Notes}}<li>{{.Text}}{{if .Suspicious}} <span class="chip chip-warn">repeats a suspicious line</span>{{end}}</li>{{end}}</ul>
   </section>
   {{end}}
 </form>

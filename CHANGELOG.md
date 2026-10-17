@@ -36,6 +36,17 @@ All notable changes to this project are documented here. The format follows
   and they travel with the project in backups.
   `composewright validate <project> --ignore-log 'pattern'` does the same from
   the command line with a regular expression over that same text.
+- Settings › Audit log lists every audit entry, newest first, including
+  sign-ins, settings changes, backups and secrets set outside any project.
+  Each row opens to show the details recorded with it, which may name a
+  secret but never hold its value. Filter by action or project, check the
+  hash chain with Verify chain, or download the entries as JSON Lines, which
+  is recorded too. `composewright audit list [--action X] [--project Y]`
+  prints the same list.
+- Lines in a repository that speak to a language model, such as "ignore
+  previous instructions", are now listed with their file and line on the
+  Analyse and Review pages instead of only being counted, and a note for
+  deployment that repeats one is marked.
 
 ### Changed
 

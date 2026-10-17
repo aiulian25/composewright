@@ -105,9 +105,29 @@ func (store *Store) VerifyAudit(ctx context.Context) (int, error) {
 	return count, rows.Err()
 }
 
-func (store *Store) AuditEntries(ctx context.Context, projectID string, limit int) ([]AuditEntry, error) {
+// AuditFilter picks audit entries: those of one action and one project,
+// older than Before, at most Limit of them. Empty fields and zero numbers
+// pick everything.
+type AuditFilter struct {
+	Action    string
+	ProjectID string
+	Before    int64
+	Limit     int
+}
+
+// unlimited is the LIMIT SQLite reads as no limit at all.
+const unlimited = -1
+
+// AuditPage lists the entries a filter picks, newest first. The next page
+// starts before the last entry's sequence number.
+func (store *Store) AuditPage(ctx context.Context, filter AuditFilter) ([]AuditEntry, error) {
+	limit := filter.Limit
+	if limit <= 0 {
+		limit = unlimited
+	}
 	rows, err := store.database.QueryContext(ctx, `SELECT seq, ts, actor, action, project_id, details_json, hash FROM audit_log
-		WHERE ?='' OR project_id=? ORDER BY seq DESC LIMIT ?`, projectID, projectID, limit)
+		WHERE (?='' OR action=?) AND (?='' OR project_id=?) AND (?=0 OR seq<?) ORDER BY seq DESC LIMIT ?`,
+		filter.Action, filter.Action, filter.ProjectID, filter.ProjectID, filter.Before, filter.Before, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -127,6 +147,34 @@ func (store *Store) AuditEntries(ctx context.Context, projectID string, limit in
 		entries = append(entries, entry)
 	}
 	return entries, rows.Err()
+}
+
+// AuditActions are the actions the audit log holds, in order.
+func (store *Store) AuditActions(ctx context.Context) ([]string, error) {
+	return store.auditDistinct(ctx, `SELECT DISTINCT action FROM audit_log ORDER BY action`)
+}
+
+// AuditProjects are the project IDs the audit log names, in order, those of
+// projects deleted since among them.
+func (store *Store) AuditProjects(ctx context.Context) ([]string, error) {
+	return store.auditDistinct(ctx, `SELECT DISTINCT project_id FROM audit_log WHERE project_id<>'' ORDER BY project_id`)
+}
+
+func (store *Store) auditDistinct(ctx context.Context, query string) ([]string, error) {
+	rows, err := store.database.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var values []string
+	for rows.Next() {
+		var value string
+		if err := rows.Scan(&value); err != nil {
+			return nil, err
+		}
+		values = append(values, value)
+	}
+	return values, rows.Err()
 }
 
 func auditHash(sequence, timestamp int64, actor, action, projectID, details, previous string) string {

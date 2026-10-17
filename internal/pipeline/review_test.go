@@ -115,7 +115,7 @@ func TestReviseRendersANewGeneration(t *testing.T) {
 	if t.Failed() {
 		t.Logf("compose after the revision:\n%s", after.Generation.ComposeYAML)
 	}
-	entries, err := dependencies.Workspace.Store.AuditEntries(ctx, after.Project.ID, 10)
+	entries, err := dependencies.Workspace.Store.AuditPage(ctx, store.AuditFilter{ProjectID: after.Project.ID, Limit: 10})
 	if err != nil || entries[0].Action != store.ActionRevise {
 		t.Fatalf("revision not audited: %+v %v", entries, err)
 	}
@@ -154,7 +154,7 @@ func TestApproveAndValidate(t *testing.T) {
 	if len(recorded.lines) == 0 || recorded.lines[0].Source != sandbox.SourceSandbox {
 		t.Fatalf("no live lines: %+v", recorded.lines)
 	}
-	entries, _ := dependencies.Workspace.Store.AuditEntries(context.Background(), result.Project.ID, 20)
+	entries, _ := dependencies.Workspace.Store.AuditPage(context.Background(), store.AuditFilter{ProjectID: result.Project.ID, Limit: 20})
 	approvals := 0
 	for _, entry := range entries {
 		if entry.Action == store.ActionApprove && entry.Details["via"] == "web" {
@@ -181,7 +181,7 @@ func TestPassRemovesEarlierDrafts(t *testing.T) {
 	if err != nil || len(generations) != 1 || generations[0].Number != 2 {
 		t.Fatalf("versions after the pass: %+v %v", generations, err)
 	}
-	entries, err := dependencies.Workspace.Store.AuditEntries(ctx, result.Project.ID, 20)
+	entries, err := dependencies.Workspace.Store.AuditPage(ctx, store.AuditFilter{ProjectID: result.Project.ID, Limit: 20})
 	if err != nil {
 		t.Fatal(err)
 	}
