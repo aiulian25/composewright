@@ -79,6 +79,13 @@ const (
 	crashMark = `["sh", "-c", "exit 1"]`
 )
 
+// probeRun and probeAnswer are how the sandbox runs its reachability probe
+// and what a healthy app answers it.
+const (
+	probeRun    = " run --rm "
+	probeAnswer = "  HTTP/1.1 200 OK\n"
+)
+
 func crashes(directory string) bool {
 	content, err := os.ReadFile(filepath.Join(directory, "compose.yaml"))
 	return err == nil && strings.Contains(string(content), crashMark)
@@ -106,6 +113,8 @@ func docker(_ context.Context, directory string, live io.Writer, arguments ...st
 		return []byte("miniflux-1  | 2026-10-10T08:15:02.123456789Z Listening on :8080\n"), nil, nil
 	case strings.HasPrefix(command, "info"):
 		return []byte(`{"CgroupVersion":"2","CgroupDriver":"systemd"}`), nil, nil
+	case strings.Contains(command, probeRun):
+		return []byte(probeAnswer), nil, nil
 	}
 	return nil, nil, nil
 }
@@ -604,6 +613,9 @@ func TestTheWholeFlow(t *testing.T) {
 	status(t, response, http.StatusOK, page)
 	if !strings.Contains(page, "Every service is up") || !strings.Contains(page, "Attempt 1 passed") || !strings.Contains(page, "Listening on :8080") {
 		t.Fatal("the kept run does not show its verdict and logs")
+	}
+	if !strings.Contains(page, "Reach miniflux from the network") || !strings.Contains(page, "http://miniflux:8080/healthcheck answered 200") {
+		t.Fatal("the run does not say what the probe asked and what answered")
 	}
 	response, page = harness.get("/projects/miniflux/analyse")
 	status(t, response, http.StatusOK, page)

@@ -20,6 +20,14 @@ All notable changes to this project are documented here. The format follows
   Settings › Engine would, and gates the plan again, so later projects from
   the same namespace are not blocked. Trust for this project still trusts it
   for that project only.
+- The reachability check now asks the app for its health endpoint when the
+  evidence names one: the URL its healthcheck asks on the probed port, the
+  image's own HEALTHCHECK, a known endpoint for images such as miniflux, or a
+  health path the README documents. It then expects a success or a redirect,
+  unless the healthcheck itself accepts any answer or logs in, so an error
+  there fails the run as unreachable, and the Validate page says what was
+  asked and what answered. Without such evidence it asks / and takes
+  any answer, as before.
 
 ### Changed
 

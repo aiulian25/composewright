@@ -105,8 +105,19 @@
   "probe": {
     "service": "docker",
     "port": 80,
-    "path": "/",
-    "expect": []
+    "path": "/api/info",
+    "expect": [
+      200,
+      201,
+      202,
+      203,
+      204,
+      301,
+      302,
+      303,
+      307,
+      308
+    ]
   },
   "post_install_notes": [
     "Default login is wallabag:wallabag. (README.md:13)"

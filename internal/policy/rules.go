@@ -25,7 +25,6 @@ var (
 	digestPattern       = regexp.MustCompile(`^sha256:[a-f0-9]{64}$`)
 	userPattern         = regexp.MustCompile(`^[0-9]+(:[0-9]+)?$`)
 	referencePattern    = regexp.MustCompile(`\$\{([A-Za-z_][A-Za-z0-9_]*)[^}]*\}`)
-	urlHost             = regexp.MustCompile(`(?i)\b[a-z][a-z0-9+.-]*://(?:[^@/\s"']*@)?(\[[^\]]*\]|[^/:\s"'?#]*)`)
 	dangerousCommand    = regexp.MustCompile(`(?i)(\b(curl|wget|nc|ncat|netcat|socat)\b|/dev/(tcp|udp)/|docker\.sock|--privileged|\b(ba|da|z)?sh\s+-c\b.*https?://)`)
 	dangerousProbe      = regexp.MustCompile(`(?i)(/dev/(tcp|udp)/|docker\.sock|--privileged)`)
 	dockerSocketMention = regexp.MustCompile(`(?i)docker\.sock`)
@@ -38,10 +37,7 @@ var (
 	bareHost = regexp.MustCompile(`(?i)^(?:[^@/\s]+@)?(\[[0-9a-f:.]+\]|\d{1,3}(?:\.\d{1,3}){3}|(?:[a-z0-9-]+\.)+[a-z]{2,})(?::\d+)?(?:/|$)`)
 )
 
-var (
-	loopbackHosts  = []string{"localhost", "127.0.0.1", "0.0.0.0", "::1", "::"}
-	networkClients = []string{"curl", "wget", "nc", "ncat", "netcat", "socat", "telnet"}
-)
+var networkClients = []string{"curl", "wget", "nc", "ncat", "netcat", "socat", "telnet"}
 
 const shellOperators = "|;&()"
 
@@ -260,8 +256,8 @@ func (check *checker) probeTargets(service *ir.Service, field, test string) {
 	if dangerousProbe.MatchString(test) {
 		check.add("P6", Deny, service.Name, field+".test", "healthcheck %q reaches a device, the Docker socket or privileges", test)
 	}
-	for _, match := range urlHost.FindAllStringSubmatch(test, -1) {
-		check.probeHost(service, field, match[1])
+	for _, host := range ir.URLHosts(test) {
+		check.probeHost(service, field, host)
 	}
 	check.networkClientTargets(service, field, test)
 }
@@ -292,7 +288,7 @@ func (check *checker) networkClientTargets(service *ir.Service, field, test stri
 
 func (check *checker) probeHost(service *ir.Service, field, host string) {
 	host = strings.ToLower(strings.Trim(host, "[]"))
-	if !slices.Contains(loopbackHosts, host) && host != service.Name {
+	if !slices.Contains(ir.LoopbackHosts, host) && host != service.Name {
 		check.add("P6", Deny, service.Name, field+".test", "healthcheck contacts %q; it may only probe the container itself", host)
 	}
 }

@@ -78,8 +78,9 @@ var failureHints = map[string]string{
 		"or a healthcheck that cannot pass.",
 	sandbox.ReasonLogs:  "Every container kept running, but a line in the logs reads like a fatal error.",
 	sandbox.ReasonStart: "Docker could not start the stack: an image it cannot pull, a port already in use, or a setting it refuses. Its message is above.",
-	sandbox.ReasonUnreachable: "Every service is up, but the app did not answer another container on the sandbox network, the way a proxy reaches it. " +
-		"It may listen on 127.0.0.1 inside its container, or on another port than the plan says; its last lines below often name the address.",
+	sandbox.ReasonUnreachable: "Every service is up, but the app did not answer another container on the sandbox network, the way a proxy reaches it, as the plan expects. " +
+		"It may listen on 127.0.0.1 inside its container, or on another port than the plan says; its last lines below often name the address. " +
+		"When it answered with an error, the probe path above may not be the app's health endpoint.",
 }
 
 var archiveExtension = []string{".zip", ".tar", ".gz", ".tgz", ".xz", ".bz2", ".7z", ".rar"}

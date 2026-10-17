@@ -1,11 +1,36 @@
 package rules
 
 import (
+	"cmp"
 	"fmt"
 	"path"
+	"regexp"
 	"slices"
+	"strconv"
+	"strings"
 
 	"github.com/aiulian25/composewright/internal/ir"
+)
+
+const (
+	httpPort = "80"
+	// hostnameVariable is the shell variable some healthchecks name their
+	// own container by, written $HOSTNAME or $$HOSTNAME in compose.
+	hostnameVariable = "HOSTNAME"
+	variableMarks    = "${}"
+)
+
+// probeAccepted are the answers that show a documented path works: success
+// or a redirect, as the explicit list the plan schema allows.
+var probeAccepted = []int{200, 201, 202, 203, 204, 301, 302, 303, 307, 308}
+
+var (
+	// failsOnHTTPError is a healthcheck that turns an HTTP error into a
+	// failure: wget does, curl only with -f, --fail or --fail-with-body.
+	// ponytail: a -f anywhere in the command counts, even one given to test.
+	failsOnHTTPError = regexp.MustCompile(`\bwget\b|(?:^|\s)(?:-[a-zA-Z]*f[a-zA-Z]*|--fail(?:-with-body)?)(?:\s|$)`)
+	// sendsCredentials is a healthcheck that logs in, which the probe does not.
+	sendsCredentials = regexp.MustCompile(`(?i)(?:^|\s)(?:-u|--user|--http-user|--password|--http-password)[\s=]|authorization:`)
 )
 
 // finish names the project, writes the summary, probe, notes and suspicious
@@ -17,6 +42,7 @@ func (builder *builder) finish() {
 	plan.App.Summary = truncate(builder.facts.Summary.Text, maxSummaryLength)
 	if port, found := probePort(app); found {
 		plan.Probe = ir.Probe{Service: app.Name, Port: port, Path: defaultProbePath}
+		builder.probePath(app, &plan.Probe)
 	}
 	for _, note := range builder.facts.Notes {
 		plan.PostInstallNotes = append(plan.PostInstallNotes, fmt.Sprintf("%s (%s)", note.Text, note.Location))
@@ -50,6 +76,46 @@ func probePort(app *ir.Service) (int, bool) {
 	}
 	published := slices.IndexFunc(tcp, func(port ir.Port) bool { return port.Publish })
 	return tcp[max(published, 0)].Container, true
+}
+
+// probePath asks the probe for the path the evidence says answers: the URL
+// the app's healthcheck asks on the probe port, else the path the catalogue
+// knows, else the health endpoint the README documents. Without one the
+// probe asks / and takes any answer.
+func (builder *builder) probePath(app *ir.Service, probe *ir.Probe) {
+	if healthcheckProbe(app, probe) {
+		return
+	}
+	documented := known.appProbePath(app.Image)
+	if documented == "" && len(builder.facts.HealthPaths) > 0 {
+		documented = builder.facts.HealthPaths[0].Text
+	}
+	if documented != "" {
+		probe.Path, probe.Expect = documented, slices.Clone(probeAccepted)
+	}
+}
+
+// healthcheckProbe points the probe at the URL the service's healthcheck
+// asks, when that is the container itself on the probe port, and expects
+// success only when the healthcheck itself fails on an HTTP error.
+func healthcheckProbe(service *ir.Service, probe *ir.Probe) bool {
+	asked, found := ir.HealthcheckURL(service.Healthcheck.Test)
+	if !found || strings.ContainsAny(asked.Path, variableMarks) {
+		return false
+	}
+	host := strings.ToLower(asked.Hostname())
+	itself := slices.Contains(ir.LoopbackHosts, host) || host == service.Name ||
+		strings.Trim(host, variableMarks) == strings.ToLower(hostnameVariable)
+	port := cmp.Or(asked.Port(), httpPort)
+	if !itself || port != strconv.Itoa(probe.Port) {
+		return false
+	}
+	probe.Path, probe.Expect = cmp.Or(asked.EscapedPath(), defaultProbePath), nil
+	command := strings.Join(service.Healthcheck.Test, " ")
+	if failsOnHTTPError.MatchString(command) && !sendsCredentials.MatchString(command) {
+		probe.Expect = slices.Clone(probeAccepted)
+	}
+	return true
 }
 
 func (builder *builder) projectName(app *ir.Service) string {

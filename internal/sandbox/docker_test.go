@@ -27,6 +27,14 @@ func TestDocker(t *testing.T) {
 	const alpine = "docker.io/library/alpine:3.20"
 	web := ir.Probe{Service: "web", Port: 80, Path: "/"}
 	loopback := ir.Probe{Service: "app", Port: 8080, Path: "/"}
+	accepted := []int{200, 301, 302}
+	healthPath := ir.Probe{Service: "web", Port: 80, Path: "/index.html", Expect: accepted}
+	missingPath := ir.Probe{Service: "web", Port: 80, Path: "/healthz", Expect: accepted}
+	const nginx = `services:
+  web:
+    image: docker.io/library/nginx:1.27-alpine
+    healthcheck: {test: ["CMD", "wget", "-qO-", "http://127.0.0.1/"], interval: 2s, timeout: 2s, retries: 5}
+`
 	cases := []struct {
 		name    string
 		compose string
@@ -40,6 +48,8 @@ func TestDocker(t *testing.T) {
     ports: ["127.0.0.1:8080:80/tcp"]
     healthcheck: {test: ["CMD", "wget", "-qO-", "http://127.0.0.1/"], interval: 2s, timeout: 2s, retries: 5}
 `, web, ResultPass, ""},
+		{"expected answer on the health path", nginx, healthPath, ResultPass, ""},
+		{"404 on the health path", nginx, missingPath, ResultFail, ReasonUnreachable},
 		{"loopback only", "services:\n  app:\n    image: " + alpine + "\n    command: [\"nc\", \"-lk\", \"-s\", \"127.0.0.1\", \"-p\", \"8080\", \"-e\", \"true\"]\n" +
 			"    healthcheck: {test: [\"CMD\", \"nc\", \"-z\", \"127.0.0.1\", \"8080\"], interval: 1s, timeout: 1s, retries: 5}\n", loopback, ResultFail, ReasonUnreachable},
 		{"crash", "services:\n  job:\n    image: " + alpine + "\n    command: [\"sh\", \"-c\", \"echo boom; exit 3\"]\n", ir.Probe{}, ResultFail, ReasonCrash},

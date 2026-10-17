@@ -42,6 +42,10 @@ func ApplyImages(plan *ir.IR, inspected map[string]images.Metadata, upstream str
 		imageUser(service, metadata)
 		sourceLabel(plan, service, metadata, upstream)
 	}
+	// The image's HEALTHCHECK may name the URL the rules could not see.
+	if service, found := plan.Service(plan.Probe.Service); found {
+		healthcheckProbe(service, &plan.Probe)
+	}
 	plan.Unfilled = Gaps(plan)
 }
 

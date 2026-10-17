@@ -393,8 +393,19 @@
   "probe": {
     "service": "miniflux",
     "port": 8080,
-    "path": "/",
-    "expect": []
+    "path": "/healthcheck",
+    "expect": [
+      200,
+      201,
+      202,
+      203,
+      204,
+      301,
+      302,
+      303,
+      307,
+      308
+    ]
   },
   "post_install_notes": [
     "ADMIN_PASSWORD was generated for you; it is in .env",

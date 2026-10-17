@@ -55,3 +55,5 @@ apps:
     memory_limit: 2g
   - images: [docker.io/miniflux/miniflux, ghcr.io/miniflux/miniflux]
     healthcheck: ["CMD", "/usr/bin/miniflux", "-healthcheck", "auto"]
+    # -healthcheck auto asks the app's own /healthcheck, which answers 200 OK.
+    probe_path: /healthcheck

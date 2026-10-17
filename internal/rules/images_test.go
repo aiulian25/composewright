@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"slices"
 	"strings"
 	"testing"
 
@@ -75,5 +76,34 @@ func TestImageUser(t *testing.T) {
 		if service.User != testCase.want {
 			t.Errorf("%s: user = %q, want %q", testCase.name, service.User, testCase.want)
 		}
+	}
+}
+
+// TestImageHealthcheckSetsTheProbePath: the image's HEALTHCHECK arrives
+// after the rules, and the probe follows the URL it asks.
+func TestImageHealthcheckSetsTheProbePath(t *testing.T) {
+	appImage := ir.Image{Registry: "docker.io", Repository: "example/app", Tag: "1.0"}
+	plan := &ir.IR{Services: []ir.Service{{Name: "app", Role: ir.RoleApp, Image: appImage,
+		Ports: []ir.Port{{Container: 8080, Protocol: ir.ProtocolTCP}}}}, Probe: ir.Probe{Service: "app", Port: 8080, Path: defaultProbePath}}
+	inspected := map[string]images.Metadata{ImageKey(appImage): {Reference: "docker.io/example/app:1.0", ConfigRead: true,
+		Healthcheck: []string{"CMD-SHELL", "wget -qO- http://127.0.0.1:8080/ping || exit 1"}}}
+	ApplyImages(plan, inspected, "")
+	if plan.Probe.Path != "/ping" || !slices.Equal(plan.Probe.Expect, probeAccepted) {
+		t.Fatalf("probe %+v", plan.Probe)
+	}
+}
+
+// TestImageHealthcheckDropsAnEarlierExpectation: a HEALTHCHECK that takes
+// any answer replaces the documented path and its expectation together.
+func TestImageHealthcheckDropsAnEarlierExpectation(t *testing.T) {
+	appImage := ir.Image{Registry: "docker.io", Repository: "example/app", Tag: "1.0"}
+	plan := &ir.IR{Services: []ir.Service{{Name: "app", Role: ir.RoleApp, Image: appImage,
+		Ports: []ir.Port{{Container: 8080, Protocol: ir.ProtocolTCP}}}},
+		Probe: ir.Probe{Service: "app", Port: 8080, Path: "/healthz", Expect: slices.Clone(probeAccepted)}}
+	inspected := map[string]images.Metadata{ImageKey(appImage): {Reference: "docker.io/example/app:1.0", ConfigRead: true,
+		Healthcheck: []string{"CMD-SHELL", "curl http://localhost:8080/ || exit 1"}}}
+	ApplyImages(plan, inspected, "")
+	if plan.Probe.Path != defaultProbePath || len(plan.Probe.Expect) > 0 {
+		t.Fatalf("probe %+v", plan.Probe)
 	}
 }

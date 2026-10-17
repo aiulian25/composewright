@@ -425,7 +425,7 @@ func TestValidateReachesTheApp(t *testing.T) {
 		{"redirect elsewhere", &fakeDocker{ps: healthyApp, probe: "  HTTP/1.1 302 Found\n  Location: http://sso.example/\nwget: bad address 'sso.example'\n"},
 			nil, ResultPass, true, "answered 302", "10"},
 		{"unexpected status", &fakeDocker{ps: healthyApp, probe: "  HTTP/1.1 404 Not Found\nwget: server returned error: HTTP/1.1 404 Not Found\n"},
-			[]int{200}, ResultFail, true, "answered 404; the plan expects one of [200]", "10"},
+			[]int{200}, ResultFail, true, "answered 404; the plan expects / to answer one of 200", "10"},
 		{"no address of its own", &fakeDocker{ps: healthyApp, probe: "wget: bad address 'app:80'\n"}, nil, ResultPass, false, "not checked: app has no address", "10"},
 		{"probe did not run", &fakeDocker{ps: healthyApp, probeErr: errors.New("exit status 1")}, nil, ResultPass, false, "pull access denied", "10"},
 		{"earlier failure", &fakeDocker{ps: healthyApp, logs: "app-1  | panic: boom\n", probe: refused}, nil, ResultFail, false, notRun, ""},
@@ -453,6 +453,32 @@ func TestValidateReachesTheApp(t *testing.T) {
 				t.Fatal("the probe ran after an earlier check failed")
 			}
 		})
+	}
+}
+
+// TestReadReachChecksTheExpectedStatus: with statuses expected, any other
+// answer on the probe path fails and names the path; without, any answers.
+func TestReadReachChecksTheExpectedStatus(t *testing.T) {
+	accepted := []int{200, 204, 302}
+	const url = "http://app:8080/healthz"
+	cases := []struct {
+		name   string
+		expect []int
+		said   string
+		failed bool
+		want   string
+	}{
+		{"404 expected away", accepted, "  HTTP/1.1 404 Not Found\n", true, url + " answered 404; the plan expects /healthz to answer one of 200, 204, 302"},
+		{"500 expected away", accepted, "  HTTP/1.1 500 Internal Server Error\n", true, "answered 500"},
+		{"200 expected", accepted, "  HTTP/1.1 200 OK\n", false, url + " answered 200"},
+		{"redirect expected", accepted, "  HTTP/1.1 302 Found\n", false, url + " answered 302"},
+		{"404 with nothing expected", nil, "  HTTP/1.1 404 Not Found\n", false, url + " answered 404"},
+	}
+	for _, testCase := range cases {
+		reach, failed := readReach(ir.Probe{Service: "app", Port: 8080, Path: "/healthz", Expect: testCase.expect}, url, testCase.said)
+		if failed != testCase.failed || !strings.Contains(reach.Said, testCase.want) || !reach.Checked {
+			t.Errorf("%s: failed %v, said %q", testCase.name, failed, reach.Said)
+		}
 	}
 }
 

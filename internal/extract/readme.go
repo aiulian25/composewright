@@ -21,6 +21,12 @@ var (
 	yamlFileName  = regexp.MustCompile(`[A-Za-z0-9_.-]+\.ya?ml\b`)
 	proseLine     = regexp.MustCompile(`^[A-Za-z*_"'(]`)
 	markdownLink  = regexp.MustCompile(`\[\[?([^\]]*)\]\([^)]*\)\]?`)
+	// healthPath is a health endpoint a README documents, written alone or
+	// at the end of a URL without a port, since a URL with one may name a
+	// management port the probe does not ask; healthWord must be on the
+	// same line, so /ping as a chat command is not one.
+	healthPath = regexp.MustCompile("(?:^|[\\s`'\"(]|https?://[^/:\\s`'\"]+)(/(?:api/)?(?:healthz|health|healthcheck|ping)|/-/healthy|/livez|/readyz)(?:$|[\\s`'\").,;:?])")
+	healthWord = regexp.MustCompile(`(?i)\b(?:health|liveness|readiness|probe|endpoint)`)
 )
 
 // commonWords appear in upper case in READMEs without being variables.
@@ -53,6 +59,7 @@ type markdownScan struct {
 	notes        []Note
 	summary      Note
 	fileMentions []Note
+	healthPaths  []Note
 }
 
 // scanMarkdown mines a README or docs page: docker run commands, image names,
@@ -92,6 +99,9 @@ func scanMarkdown(relative string, content []byte) markdownScan {
 		}
 		if credentials.MatchString(line) {
 			scan.notes = append(scan.notes, Note{Text: strings.TrimSpace(cleanCell(line)), Location: at})
+		}
+		if match := healthPath.FindStringSubmatch(line); match != nil && healthWord.MatchString(line) {
+			scan.healthPaths = append(scan.healthPaths, Note{Text: match[1], Location: at})
 		}
 	}
 	return scan

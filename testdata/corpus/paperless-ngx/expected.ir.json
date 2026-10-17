@@ -541,7 +541,18 @@
     "service": "webserver",
     "port": 8000,
     "path": "/",
-    "expect": []
+    "expect": [
+      200,
+      201,
+      202,
+      203,
+      204,
+      301,
+      302,
+      303,
+      307,
+      308
+    ]
   },
   "post_install_notes": [
     "PAPERLESS_SECRET_KEY was generated for you; it is in .env"

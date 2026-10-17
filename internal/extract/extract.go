@@ -102,6 +102,10 @@ func (facts *Facts) readMarkdown(file sourceFile) []Mention {
 	if file.relative == facts.rootReadme() && facts.Summary.Text == "" {
 		facts.Summary = scan.summary
 	}
+	// Other pages often document a component's endpoints, not the app's.
+	if file.relative == facts.rootReadme() {
+		facts.HealthPaths = append(facts.HealthPaths, scan.healthPaths...)
+	}
 	for index, line := range strings.Split(string(file.content), "\n") {
 		if match := suspiciousText.FindString(line); match != "" {
 			facts.Suspicious = append(facts.Suspicious, Note{Text: strings.TrimSpace(line), Location: Location{File: file.relative, Line: index + 1}})

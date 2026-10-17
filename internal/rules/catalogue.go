@@ -82,6 +82,9 @@ type knownApp struct {
 	Healthcheck []string `yaml:"healthcheck"`
 	// MemoryLimit is what the image needs to run, at least.
 	MemoryLimit string `yaml:"memory_limit"`
+	// ProbePath answers a healthy app with a success, when the healthcheck
+	// does not name it.
+	ProbePath string `yaml:"probe_path"`
 }
 
 type catalogue struct {
@@ -132,6 +135,10 @@ func (loaded catalogue) appHealthcheck(image ir.Image) []string {
 
 func (loaded catalogue) appMemory(image ir.Image) string {
 	return loaded.app(image).MemoryLimit
+}
+
+func (loaded catalogue) appProbePath(image ir.Image) string {
+	return loaded.app(image).ProbePath
 }
 
 func (loaded catalogue) app(image ir.Image) knownApp {

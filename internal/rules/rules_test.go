@@ -697,3 +697,50 @@ func TestExplicitComposeDefaultsFollowCompose(t *testing.T) {
 		t.Error("a password for an outside database was asked for")
 	}
 }
+
+// TestProbeFollowsTheEvidence: the probe asks the path the healthcheck, the
+// catalogue or the root README names and expects it to answer when that
+// evidence does (a healthcheck only when it fails on an HTTP error), else
+// asks / and takes any answer.
+func TestProbeFollowsTheEvidence(t *testing.T) {
+	compose := func(image, healthcheck string) string {
+		text := "services:\n  app:\n    image: " + image + "\n    ports: [\"8080:8080\"]\n"
+		if healthcheck != "" {
+			text += "    healthcheck:\n      test: " + healthcheck + "\n"
+		}
+		return text
+	}
+	const appImage = "ghcr.io/example/app:1.0"
+	cases := []struct {
+		name    string
+		files   map[string]string
+		path    string
+		expects bool
+	}{
+		{"healthcheck URL", map[string]string{"compose.yaml": compose(appImage, `["CMD-SHELL", "curl -f http://localhost:8080/api/health"]`),
+			"README.md": "Health endpoint: `/healthz`\n"}, "/api/health", true},
+		{"healthcheck takes any answer", map[string]string{"compose.yaml": compose(appImage, `["CMD-SHELL", "curl http://localhost:8080/x || exit 1"]`)}, "/x", false},
+		{"healthcheck with combined flags", map[string]string{"compose.yaml": compose(appImage, `["CMD-SHELL", "curl -fsSL http://localhost:8080/x"]`)}, "/x", true},
+		{"healthcheck with the fail flag last", map[string]string{"compose.yaml": compose(appImage, `["CMD-SHELL", "curl -sSf http://localhost:8080/x"]`)}, "/x", true},
+		{"healthcheck logs in", map[string]string{"compose.yaml": compose(appImage, `["CMD-SHELL", "curl -fsS -u admin:admin http://localhost:8080/x"]`)}, "/x", false},
+		{"healthcheck path from a variable", map[string]string{"compose.yaml": compose(appImage, `["CMD-SHELL", "curl -f http://localhost:8080/$$APP_PATH/health"]`)}, defaultProbePath, false},
+		{"documented in the README", map[string]string{"compose.yaml": compose(appImage, ""), "README.md": "Health endpoint: `/healthz`\n"}, "/healthz", true},
+		{"documented on another port", map[string]string{"compose.yaml": compose(appImage, ""), "README.md": "Health: http://localhost:9000/health\n"}, defaultProbePath, false},
+		{"catalogue", map[string]string{"compose.yaml": compose("docker.io/miniflux/miniflux:2.2.0", "")}, "/healthcheck", true},
+		{"own host name", map[string]string{"compose.yaml": compose(appImage, `["CMD-SHELL", "wget -qO- http://$$HOSTNAME:8080/status"]`)}, "/status", true},
+		{"no URL", map[string]string{"compose.yaml": compose(appImage, `["CMD", "pg_isready"]`)}, defaultProbePath, false},
+		{"another port", map[string]string{"compose.yaml": compose(appImage, `["CMD-SHELL", "curl -f http://localhost:9090/metrics"]`)}, defaultProbePath, false},
+		{"another container", map[string]string{"compose.yaml": compose(appImage, `["CMD-SHELL", "curl -f http://db:8080/health"]`)}, defaultProbePath, false},
+		{"documented in another page", map[string]string{"compose.yaml": compose(appImage, ""), "docs/README.md": "Health endpoint: `/healthz`\n"}, defaultProbePath, false},
+	}
+	for _, testCase := range cases {
+		plan := Build(context.Background(), Input{Facts: testFacts(t, testCase.files), Source: &fetch.Source{Owner: "example", Repository: "app"}})
+		probe := plan.Probe
+		if probe.Service != "app" || probe.Port != 8080 || probe.Path != testCase.path || slices.Contains(probe.Expect, 200) != testCase.expects {
+			t.Errorf("%s: probe %+v, want path %s", testCase.name, probe, testCase.path)
+		}
+		if !testCase.expects && len(probe.Expect) > 0 {
+			t.Errorf("%s: probe expects %v without evidence", testCase.name, probe.Expect)
+		}
+	}
+}

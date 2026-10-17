@@ -21,6 +21,7 @@ case "$*" in
   "compose version --short") echo 5.6.0 ;;
   "info --format"*) echo '{"CgroupVersion":"2","CgroupDriver":"systemd","SecurityOptions":["name=seccomp"]}' ;;
   "network ls"*) echo bridge ;;
+  *" run --rm "*) echo '  HTTP/1.1 200 OK' ;;
   *" up "*) [ "%[3]s" = pass ] || { echo "container miniflux-1 is unhealthy" >&2; exit 1; } ;;
   *" ps -a --format json") printf '%[2]s\n' ;;
 esac

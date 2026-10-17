@@ -438,3 +438,25 @@ func FuzzScanMarkdown(f *testing.F) {
 		_ = scanMarkdown("README.md", data)
 	})
 }
+
+// TestScanMarkdownHealthPaths: a health endpoint counts on a line that
+// talks about health, written alone or ending a URL without a port, outside
+// code blocks.
+func TestScanMarkdownHealthPaths(t *testing.T) {
+	content := "Health endpoint: `/healthz`\n" +
+		"Check health at http://localhost/api/health.\n" +
+		"Ping endpoint: `/ping`\n" +
+		"Liveness: `/-/healthy`\n" +
+		"Management health: http://localhost:9000/health\n" +
+		"Type /ping in the chat to see the bot answer.\n" +
+		"- `GET /AudioMuseAI/health` is the plugin's health probe\n" +
+		"```\ncurl http://localhost/-/healthy # health\n```\n"
+	scan := scanMarkdown("README.md", []byte(content))
+	var paths []string
+	for _, note := range scan.healthPaths {
+		paths = append(paths, note.Text)
+	}
+	if !slices.Equal(paths, []string{"/healthz", "/api/health", "/ping", "/-/healthy"}) || scan.healthPaths[0].Location.Line != 1 {
+		t.Fatalf("health paths %+v", scan.healthPaths)
+	}
+}

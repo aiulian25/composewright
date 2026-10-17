@@ -27,6 +27,13 @@ const (
 	unhealthy     = `{"Service":"miniflux","State":"running","Health":"unhealthy"}` + "\n" + `{"Service":"db","State":"running","Health":"healthy"}`
 )
 
+// probeRun and probeAnswer are how the sandbox runs its reachability probe
+// and what a healthy app answers it.
+const (
+	probeRun    = " run --rm "
+	probeAnswer = "  HTTP/1.1 200 OK\n"
+)
+
 // scriptedDocker answers `ps` with the next scripted state per run.
 type scriptedDocker struct {
 	mutex  sync.Mutex
@@ -50,6 +57,8 @@ func (docker *scriptedDocker) run(_ context.Context, _ string, _ io.Writer, argu
 		return []byte(docker.states[min(docker.runs, len(docker.states))-1]), nil, nil
 	case strings.HasPrefix(command, "info"):
 		return []byte(`{"CgroupVersion":"2","CgroupDriver":"systemd"}`), nil, nil
+	case strings.Contains(command, probeRun):
+		return []byte(probeAnswer), nil, nil
 	}
 	return nil, nil, nil
 }

@@ -1,6 +1,7 @@
 package sandbox
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"regexp"
@@ -138,7 +139,7 @@ func readReach(probe ir.Probe, url, said string) (Reach, bool) {
 	}
 	unexpected := len(probe.Expect) > 0 && !slices.Contains(probe.Expect, status)
 	if unexpected {
-		reach.Said += fmt.Sprintf("; the plan expects one of %v", probe.Expect)
+		reach.Said += fmt.Sprintf("; the plan expects %s to answer one of %s", cmp.Or(probe.Path, defaultProbePath), statusList(probe.Expect))
 	}
 	return reach, unexpected
 }
@@ -149,6 +150,14 @@ func probeURL(probe ir.Probe) string {
 		path = defaultProbePath
 	}
 	return httpScheme + probe.Service + ":" + strconv.Itoa(probe.Port) + path
+}
+
+func statusList(statuses []int) string {
+	words := make([]string, len(statuses))
+	for index, status := range statuses {
+		words[index] = strconv.Itoa(status)
+	}
+	return strings.Join(words, ", ")
 }
 
 func seconds(duration time.Duration) string {

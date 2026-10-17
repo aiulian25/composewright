@@ -47,8 +47,10 @@ type Facts struct {
 	Readmes      []string       `json:"readmes"`
 	Summary      Note           `json:"summary"`
 	FileMentions []Note         `json:"file_mentions"`
-	StackHints   []string       `json:"stack_hints"`
-	Problems     []string       `json:"problems"`
+	// HealthPaths are health endpoints the root README documents.
+	HealthPaths []Note   `json:"health_paths,omitempty"`
+	StackHints  []string `json:"stack_hints"`
+	Problems    []string `json:"problems"`
 }
 
 type ComposeFile struct {
