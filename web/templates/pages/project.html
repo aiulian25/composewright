@@ -18,6 +18,20 @@
     <a class="button button-danger push-right" href="/projects/{{.Project.Name}}/delete">{{template "icon-trash"}}Delete…</a>
   </div></div>
 </section>
+<section class="card" aria-labelledby="images-title">
+  <div class="card-head"><h2 id="images-title">{{template "icon-box"}}Images</h2><span class="note">asks the registries again; nothing is pulled</span><form class="push-right" method="post" action="/projects/{{.Project.Name}}/images"><input type="hidden" name="csrf" value="{{$csrf}}"><button class="button button-small" type="submit">{{template "icon-refresh"}}Check images</button></form></div>
+  {{if .Checked}}
+  <div class="table-scroll">
+    <table class="table">
+      <thead><tr><th scope="col">Service</th><th scope="col">Pinned</th><th scope="col">Now</th><th scope="col">Newer tags</th><th scope="col">Built</th><th scope="col">Version</th></tr></thead>
+      <tbody>
+        {{$name := .Project.Name}}
+        {{range .Images}}<tr><td>{{.Service}}</td><td class="mono">{{.Pinned}}{{if .PinnedDigest}}<span class="block muted small">{{.PinnedDigest}}</span>{{end}}</td><td><span class="chip chip-{{.Tone}}">{{.Now}}</span>{{if .Digest}}<span class="block mono muted small">{{.Digest}}</span>{{end}}{{if .Problem}}<span class="block muted small">{{.Problem}}</span>{{end}}</td><td>{{if .Newer}}<span class="mono">{{.Newer}}</span>{{else}}<span class="muted">none</span>{{end}}{{if .EditedHint}}<span class="block muted small">{{.EditedHint}} <a href="/projects/{{$name}}/files">Open Files</a></span>{{end}}{{if .Offer}}<form method="post" action="/projects/{{$name}}/images/use"><input type="hidden" name="csrf" value="{{$csrf}}"><input type="hidden" name="service" value="{{.Service}}"><input type="hidden" name="tag" value="{{.Offer}}"><button class="button button-small" type="submit">{{template "icon-play"}}Use {{.Offer}} and re-test</button></form>{{end}}</td><td class="muted nowrap">{{.Built}}</td><td class="mono">{{.Version}}</td></tr>{{end}}
+      </tbody>
+    </table>
+  </div>
+  {{end}}
+</section>
 <section class="card" aria-labelledby="history-title">
   <div class="card-head"><h2 id="history-title">{{template "icon-history"}}Generations</h2></div>
   <div class="table-scroll">

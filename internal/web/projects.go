@@ -82,9 +82,18 @@ type projectView struct {
 	Generations []generationRow
 	Audit       []store.AuditEntry
 	Running     string
+	// Checked says Images holds what a check of the images just found.
+	Checked bool
+	Images  []imageRow
 }
 
 func (server *Server) projectPage(writer http.ResponseWriter, request *http.Request, current *visit) error {
+	return server.renderProject(writer, request, current, nil)
+}
+
+// renderProject shows the project page; checked, when not nil, is what a
+// check of its images found.
+func (server *Server) renderProject(writer http.ResponseWriter, request *http.Request, current *visit, checked []pipeline.ImageStatus) error {
 	ctx := request.Context()
 	stored, err := pipeline.Load(ctx, server.workspace(), request.PathValue("name"))
 	if err != nil {
@@ -100,7 +109,8 @@ func (server *Server) projectPage(writer http.ResponseWriter, request *http.Requ
 		return err
 	}
 	view := projectView{Project: stored.Project, Tone: statusTones[stored.Project.Status], Source: sourceText(storedSource(stored)),
-		Blocked: stored.Report.Blocked(), Audit: audit}
+		Blocked: stored.Report.Blocked(), Audit: audit, Checked: checked != nil,
+		Images: imageRows(checked, stored.Options.Edited)}
 	for _, generation := range generations {
 		view.Generations = append(view.Generations, generationRowFor(generation))
 	}

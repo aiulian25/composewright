@@ -35,6 +35,7 @@ var (
 	ErrNotEditable     = errors.New("this value cannot be changed here")
 	ErrNotASize        = errors.New("not a size such as 512m")
 	ErrEmptyPattern    = errors.New("an empty log pattern would ignore every line")
+	ErrInvalidTag      = errors.New("not a valid image tag")
 )
 
 // Revision is what a person changes on the Review page before approving.
@@ -59,6 +60,8 @@ type Revision struct {
 	// Ports are host ports to publish container ports on, keyed as
 	// Options.Ports.
 	Ports map[string]int
+	// Images are new tags by service; each is verified and pinned again.
+	Images map[string]string
 }
 
 type Variable struct {
@@ -84,6 +87,7 @@ func Revise(ctx context.Context, dependencies Dependencies, name string, revisio
 	options.ExposeVia, options.Networks, options.Storage, options.AllowNeeds = revision.ExposeVia, revision.Networks, revision.Storage, revision.AllowNeeds
 	options.AllowRegistries, options.PublicHost = revision.AllowRegistries, revision.PublicHost
 	options.Ports = chosenPorts(stored.Options.Ports, revision.Ports)
+	options.ImageTags = withTags(options.ImageTags, revision.Images)
 	if err := options.Check(); err != nil {
 		return nil, err
 	}
@@ -108,7 +112,7 @@ func Revise(ctx context.Context, dependencies Dependencies, name string, revisio
 	}
 	input := policyInput(ctx, dependencies, result.Plan, result.Source, options)
 	if dependencies.Inspector != nil {
-		result.Inspected, result.Checks = verifyImages(ctx, dependencies.Inspector, result.Plan, input)
+		result.Inspected, result.Checks = verifyImages(ctx, dependencies.Inspector, result.Plan, input, revision.Images)
 		rules.ApplyImages(result.Plan, result.Inspected, result.Source.URL)
 	}
 	result.Plan.Unfilled = rules.Gaps(result.Plan)
@@ -238,6 +242,16 @@ func (revision *Revision) apply(plan *ir.IR) error {
 	if unmatched := setHostPorts(plan, revision.Ports, edited); len(unmatched) > 0 {
 		return fmt.Errorf("%w: %s", ErrUnknownPort, strings.Join(unmatched, ", "))
 	}
+	for name, tag := range revision.Images {
+		service, found := plan.Service(name)
+		if !found {
+			return fmt.Errorf("%w: %s", ErrUnknownService, name)
+		}
+		if !validTag(service.Image, tag) {
+			return fmt.Errorf("%w: %q", ErrInvalidTag, tag)
+		}
+		service.Image.Tag, service.Image.Digest, service.Image.Provenance = tag, "", edited
+	}
 	return nil
 }
 
@@ -269,6 +283,14 @@ func (revision *Revision) supply(key, value string) {
 		revision.Secrets = map[string]string{}
 	}
 	revision.Secrets[key] = value
+}
+
+// validTag reports whether tag is a tag alone, with no digest or other
+// reference syntax, for the image's repository.
+func validTag(image ir.Image, tag string) bool {
+	image.Tag = tag
+	parsed, err := ir.ParseImage(image.TaggedReference())
+	return err == nil && parsed.Tag == tag && parsed.Digest == ""
 }
 
 func addVariable(plan *ir.IR, variable Variable, provenance ir.Provenance) error {

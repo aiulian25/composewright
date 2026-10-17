@@ -315,8 +315,12 @@ func (server *Server) generate(ctx context.Context, running *job, username strin
 // connect builds a run's dependencies acting as username, so its audit
 // entries name the person who started it.
 func (server *Server) connect(ctx context.Context, username, engine string, validate bool) (pipeline.Connection, error) {
-	return server.options.Connect(ctx, pipeline.Setup{Config: server.config(), Paths: server.paths(), Workspace: server.as(username),
-		Version: server.options.Version, Engine: engine, Validate: validate})
+	return server.options.Connect(ctx, server.pipelineSetup(username, engine, validate))
+}
+
+func (server *Server) pipelineSetup(username, engine string, validate bool) pipeline.Setup {
+	return pipeline.Setup{Config: server.config(), Paths: server.paths(), Workspace: server.as(username),
+		Version: server.options.Version, Engine: engine, Validate: validate}
 }
 
 // uploadsRoot holds a private folder for each run's uploaded files. It is
@@ -544,6 +548,7 @@ func (server *Server) analysePage(writer http.ResponseWriter, request *http.Requ
 		return err
 	}
 	rows, chips := factRows(stored.Facts)
+	rows = append(rows, imageVersionRows(stored.Images)...)
 	view := analyseView{Project: stored.Project.Name, Heading: stored.Project.Name, Ref: sourceText(storedSource(stored)), Facts: rows,
 		FactChips: chips, Questions: questionCount(envRows(stored.Plan, stored.Values, false))}
 	view.Rules, view.Filled, view.Fields = ruleRows(stored.Plan)
@@ -805,7 +810,7 @@ func (server *Server) composeView(stored *pipeline.Stored) []badgedLine {
 		}
 		rendered = string(plan)
 	}
-	return composeLines(stored.Plan, stored.Generation.ComposeYAML, rendered)
+	return composeLines(stored.Plan, stored.Generation.ComposeYAML, rendered, imageFacts(stored.Images))
 }
 
 // envText is the .env file with secrets masked unless revealed.

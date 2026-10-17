@@ -174,6 +174,8 @@ func (server *Server) routes() {
 	mux.HandleFunc("POST /projects/{name}/benign", server.authed(server.markBenign))
 	mux.HandleFunc("POST /projects/{name}/repair/propose", server.authed(server.proposeRepair))
 	mux.HandleFunc("POST /projects/{name}/repair/apply", server.authed(server.applyRepair))
+	mux.HandleFunc("POST /projects/{name}/images", server.authed(server.checkImages))
+	mux.HandleFunc("POST /projects/{name}/images/use", server.authed(server.useTag))
 	mux.HandleFunc("GET /projects/{name}/delete", server.authed(server.deletePage))
 	mux.HandleFunc("POST /projects/{name}/delete", server.authed(server.delete))
 	mux.HandleFunc("GET /settings", server.authed(server.settingsPage))

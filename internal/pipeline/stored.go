@@ -160,7 +160,8 @@ func (stored *Stored) verifiedImages() (map[string]images.Metadata, map[string]p
 			continue
 		}
 		key := rules.ImageKey(service.Image)
-		inspected[key] = images.Metadata{Reference: image.Reference, Digest: image.Digest, Source: image.OCISource, FetchedAt: image.VerifiedAt}
+		inspected[key] = images.Metadata{Reference: image.Reference, Digest: image.Digest, Source: image.OCISource, FetchedAt: image.VerifiedAt,
+			Labels: image.Labels, Created: image.Created}
 		checks[key] = policy.ImageCheck{Found: true}
 	}
 	return inspected, checks
@@ -215,7 +216,7 @@ func (stored *Stored) Regeneration(enabled []string, composeFile string) (Option
 	options := Options{Name: cmp.Or(kept.Name, project.Name), Engine: kept.Engine, Source: kept.Source, Ref: kept.Ref, Owner: kept.Owner,
 		Upstream: kept.Upstream, ExposeVia: kept.ExposeVia, Networks: kept.Networks, PublicHost: kept.PublicHost, Storage: kept.Storage, ProfileFile: kept.ProfileFile,
 		AllowNeeds: kept.AllowNeeds, AllowRegistries: kept.AllowRegistries, BenignLogPatterns: kept.BenignLogPatterns, EnabledOptional: enabled,
-		ComposeFile: cmp.Or(composeFile, kept.ComposeFile), Ports: kept.Ports, Regenerating: true}
+		ComposeFile: cmp.Or(composeFile, kept.ComposeFile), Ports: kept.Ports, ImageTags: kept.ImageTags, Regenerating: true}
 	if project.SourceKind == fetch.SourceGitHub && project.SourceCommit != "" {
 		options.Ref = project.SourceCommit
 	}

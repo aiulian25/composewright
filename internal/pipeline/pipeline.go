@@ -83,6 +83,9 @@ type Options struct {
 	// Ports are the host ports a person chose, keyed by service and
 	// container port as app:8080.
 	Ports map[string]int `json:"ports,omitempty"`
+	// ImageTags are the image tags a person chose with Use tag, by service:
+	// every regeneration keeps them until another is chosen.
+	ImageTags map[string]string `json:"image_tags,omitempty"`
 	// Regenerating generates an existing project again from its own
 	// source: a source read elsewhere is refused, never moved to.
 	Regenerating bool `json:"-"`
@@ -316,6 +319,9 @@ func plan(ctx context.Context, dependencies Dependencies, options *Options, resu
 	if err := draft(ctx, dependencies, options, result); err != nil {
 		return policy.Input{}, err
 	}
+	if err := keepChosenTags(ctx, dependencies.Workspace, options, result); err != nil {
+		return policy.Input{}, err
+	}
 	observer.step(StepPlan, StateDone, "")
 	input := policyInput(ctx, dependencies, result.Plan, result.Source, *options)
 	imagesState, imagesNote := StateRunning, ""
@@ -323,7 +329,7 @@ func plan(ctx context.Context, dependencies Dependencies, options *Options, resu
 		imagesState, imagesNote = StateSkipped, "offline: images are not verified or pinned"
 	}
 	observer.step(StepImages, imagesState, imagesNote)
-	result.Inspected, result.Checks = verifyImages(ctx, dependencies.Inspector, result.Plan, input)
+	result.Inspected, result.Checks = verifyImages(ctx, dependencies.Inspector, result.Plan, input, nil)
 	rules.ApplyImages(result.Plan, result.Inspected, result.Source.URL)
 	if dependencies.Inspector != nil {
 		observer.step(StepImages, StateDone, "")
@@ -401,8 +407,9 @@ func absolutePaths(options *Options) error {
 
 // verifyImages asks the registry about every image the policy would allow
 // (images outside the allowlist are never contacted). A missing image
-// becomes a deny; an unreachable registry only a warning.
-func verifyImages(ctx context.Context, inspector *images.Inspector, plan *ir.IR, input policy.Input) (map[string]images.Metadata, map[string]policy.ImageCheck) {
+// becomes a deny; an unreachable registry only a warning. Services in
+// retagged are read past the cache: their tag is new to this version.
+func verifyImages(ctx context.Context, inspector *images.Inspector, plan *ir.IR, input policy.Input, retagged map[string]string) (map[string]images.Metadata, map[string]policy.ImageCheck) {
 	inspected := map[string]images.Metadata{}
 	checks := map[string]policy.ImageCheck{}
 	if inspector == nil {
@@ -416,7 +423,11 @@ func verifyImages(ctx context.Context, inspector *images.Inspector, plan *ir.IR,
 		if done || !allowed {
 			continue
 		}
-		metadata, err := inspector.Inspect(ctx, image)
+		inspect := inspector.Inspect
+		if _, found := retagged[service.Name]; found {
+			inspect = inspector.Fresh
+		}
+		metadata, err := inspect(ctx, image)
 		switch {
 		case errors.Is(err, images.ErrNotFound):
 			checks[key] = policy.ImageCheck{Found: false}
@@ -610,7 +621,7 @@ func imageRecords(plan *ir.IR, inspected map[string]images.Metadata) []store.Ima
 	for _, service := range plan.Services {
 		metadata := inspected[rules.ImageKey(service.Image)]
 		records = append(records, store.Image{Service: service.Name, Reference: service.Image.String(), Digest: service.Image.Digest,
-			Registry: service.Image.Registry, OCISource: metadata.Source, VerifiedAt: metadata.FetchedAt})
+			Registry: service.Image.Registry, OCISource: metadata.Source, VerifiedAt: metadata.FetchedAt, Labels: metadata.Labels, Created: metadata.Created})
 	}
 	return records
 }

@@ -5,11 +5,13 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"maps"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/aiulian25/composewright/internal/secrets"
 )
@@ -302,14 +304,11 @@ func TestRemoveDraftsKeepsTestedAndLaterVersions(t *testing.T) {
 	}
 }
 
-// TestMigrationNumbersExistingGenerations: a database from before version
-// numbers numbers each project's generations in the order they were made,
-// equal times in the order they were stored, and goes on from there.
-func TestMigrationNumbersExistingGenerations(t *testing.T) {
-	const lastUnnumbered = 2
+// migratedUpTo opens a new database at path with the migrations up to
+// version applied, as an older composewright left it.
+func migratedUpTo(t *testing.T, path string, version int) *sql.DB {
+	t.Helper()
 	ctx := context.Background()
-	directory := t.TempDir()
-	path := filepath.Join(directory, "composewright.db")
 	if err := createPrivate(path); err != nil {
 		t.Fatal(err)
 	}
@@ -326,14 +325,67 @@ func TestMigrationNumbersExistingGenerations(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, migration := range pending {
-		if migration.version > lastUnnumbered {
+		if migration.version > version {
 			continue
 		}
 		if err := older.apply(ctx, migration); err != nil {
 			t.Fatal(err)
 		}
 	}
-	_, err = database.ExecContext(ctx, `INSERT INTO projects (id, name, slug, source_kind, status, created_at, updated_at) VALUES
+	return database
+}
+
+// TestImageFactsMigration: images stored before image facts read back
+// without labels or a build time, and new ones keep both.
+func TestImageFactsMigration(t *testing.T) {
+	const beforeImageFacts = 3
+	ctx := context.Background()
+	directory := t.TempDir()
+	path := filepath.Join(directory, "composewright.db")
+	database := migratedUpTo(t, path, beforeImageFacts)
+	_, err := database.ExecContext(ctx, `INSERT INTO projects (id, name, slug, source_kind, status, created_at, updated_at) VALUES
+		('p1', 'one', 'one', 'local', 'generated', 1, 1);
+		INSERT INTO generations (id, project_id, iteration, engine, ir_json, created_at, number) VALUES ('old', 'p1', 1, 'rules', '{}', 100, 1);
+		INSERT INTO images (id, generation_id, service, reference) VALUES ('i1', 'old', 'app', 'docker.io/example/app:1.0')`)
+	if err := errors.Join(err, database.Close()); err != nil {
+		t.Fatal(err)
+	}
+	key, err := secrets.NewKey()
+	if err != nil {
+		t.Fatal(err)
+	}
+	store, err := Open(ctx, path, filepath.Join(directory, "backups"), secrets.NewSealer(key))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { store.Close() })
+	old, err := store.Images(ctx, "old")
+	if err != nil || len(old) != 1 || old[0].Labels != nil || !old[0].Created.IsZero() {
+		t.Fatalf("an image from before the migration: %+v %v", old, err)
+	}
+	built := time.Date(2026, 9, 1, 12, 0, 0, 0, time.UTC)
+	labels := map[string]string{"org.opencontainers.image.version": "2.2.3"}
+	added, err := store.AddGeneration(ctx, Generation{ProjectID: "p1", Engine: "rules", IRJSON: "{}"},
+		[]Image{{Service: "app", Reference: "docker.io/example/app:2.2.3", Labels: labels, Created: built}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	stored, err := store.Images(ctx, added.ID)
+	if err != nil || len(stored) != 1 || !maps.Equal(stored[0].Labels, labels) || !stored[0].Created.Equal(built) {
+		t.Fatalf("image facts read back as %+v: %v", stored, err)
+	}
+}
+
+// TestMigrationNumbersExistingGenerations: a database from before version
+// numbers numbers each project's generations in the order they were made,
+// equal times in the order they were stored, and goes on from there.
+func TestMigrationNumbersExistingGenerations(t *testing.T) {
+	const lastUnnumbered = 2
+	ctx := context.Background()
+	directory := t.TempDir()
+	path := filepath.Join(directory, "composewright.db")
+	database := migratedUpTo(t, path, lastUnnumbered)
+	_, err := database.ExecContext(ctx, `INSERT INTO projects (id, name, slug, source_kind, status, created_at, updated_at) VALUES
 		('p1', 'one', 'one', 'local', 'generated', 1, 1), ('p2', 'two', 'two', 'local', 'generated', 1, 1);
 		INSERT INTO generations (id, project_id, iteration, engine, ir_json, created_at) VALUES
 		('third', 'p1', 1, 'rules', '{}', 200), ('first', 'p1', 1, 'rules', '{}', 100), ('second', 'p1', 1, 'rules', '{}', 100),

@@ -10,6 +10,7 @@ import (
 
 	"github.com/aiulian25/composewright/internal/composefile"
 	"github.com/aiulian25/composewright/internal/extract"
+	"github.com/aiulian25/composewright/internal/images"
 	"github.com/aiulian25/composewright/internal/ir"
 )
 
@@ -46,9 +47,6 @@ var (
 	proxyVariant    = regexp.MustCompile(`(?i)(traefik|caddy|nginx|proxy|swag|portainer|letsencrypt|https)`)
 	addonVariant    = regexp.MustCompile(`(?i)(tika|gotenberg|ldap|oidc|authelia|keycloak|monitoring|prometheus|grafana|backup)`)
 	preferredNames  = []string{"compose.yaml", "compose.yml", "docker-compose.yml", "docker-compose.yaml", "basic.yml", "basic.yaml"}
-	// unstableTag marks tags that follow development builds; a documented
-	// stable tag is preferred over them.
-	unstableTag = regexp.MustCompile(`(?i)(^|[._-])(nightly|dev|develop|edge|beta|alpha|rc[0-9]*|canary|unstable|snapshot|preview|main|master)([._-]|$)`)
 	// hostPaths are bind sources that expose the host itself; they are never
 	// turned into volumes.
 	hostPaths = []string{"/var/run/docker.sock", "/run/docker.sock", "/etc/localtime", "/etc/timezone", "/proc", "/sys", "/dev", "/run", "/var/run"}
@@ -353,7 +351,7 @@ func (builder *builder) publishedImage(service extract.ComposeService) ir.Image 
 // documentation, name and accept takes, preferring a stable tag over one
 // that follows development builds.
 func (builder *builder) documentedImageOf(accept func(ir.Image) bool) (ir.Image, bool) {
-	var images []ir.Image
+	var documented []ir.Image
 	for _, kind := range []string{extract.KindWorkflow, extract.KindReadme} {
 		for _, mention := range builder.facts.Images {
 			image, err := ir.ParseImage(mention.Reference)
@@ -364,14 +362,14 @@ func (builder *builder) documentedImageOf(accept func(ir.Image) bool) (ir.Image,
 				image.Tag = "latest"
 			}
 			image.Provenance = provenance(sourceOfKind(kind), mention.Location, ir.ConfidenceMedium)
-			images = append(images, image)
+			documented = append(documented, image)
 		}
 	}
-	if stable := slices.IndexFunc(images, func(image ir.Image) bool { return !unstableTag.MatchString(image.Tag) }); stable >= 0 {
-		return images[stable], true
+	if stable := slices.IndexFunc(documented, func(image ir.Image) bool { return !images.Unstable(image.Tag) }); stable >= 0 {
+		return documented[stable], true
 	}
-	if len(images) > 0 {
-		return images[0], true
+	if len(documented) > 0 {
+		return documented[0], true
 	}
 	return ir.Image{}, false
 }

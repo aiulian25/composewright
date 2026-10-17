@@ -186,9 +186,17 @@ func (image Image) Reference() string {
 	return image.Registry + "/" + image.Repository
 }
 
+// TagSeparator joins a repository and its tag.
+const TagSeparator = ":"
+
+// TaggedReference is the repository with its tag, without the digest.
+func (image Image) TaggedReference() string {
+	return image.Reference() + TagSeparator + image.Tag
+}
+
 // String is the pullable reference, pinned by digest when one is known.
 func (image Image) String() string {
-	reference := image.Reference() + ":" + image.Tag
+	reference := image.TaggedReference()
 	if image.Digest != "" {
 		reference += "@" + image.Digest
 	}

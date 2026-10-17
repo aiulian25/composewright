@@ -172,6 +172,19 @@ All notable changes to this project are documented here. The format follows
   in the repository, and a later gen without it keeps that file; a path it
   lacks is shown in the gen output and the deployment notes, and the usual
   file is used.
+- Check images on a project's page asks each image's registry again what
+  its tag points at, with HEAD requests only so nothing is pulled, and lists
+  the newer stable tags of the same family: for 2.2.3, the newer 2.2.x and
+  2.x tags, never nightly, dev or release candidates. Offered tags keep the
+  pinned tag's variant, so 2.2.3-php7 is offered 2.2.4-php7, not a -php8
+  tag. Over a compose.yaml edited by hand it checks the images the edit
+  names. A tag that now points at a different image than the one pinned
+  says so, and Use 2.2.5 and re-test makes a new version with that tag,
+  verified, pinned and gated again, and tests it; the chosen tag stays when
+  the project is generated again. `composewright images <project>` prints
+  the same table. Each version now keeps its images' labels and build date: the
+  Review's compose pane shows the version, build date, revision and source
+  when you hover an image line, and the Analysis lists the image version.
 
 ### Changed
 

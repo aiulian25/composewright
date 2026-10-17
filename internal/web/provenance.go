@@ -25,9 +25,12 @@ const (
 	toneYou      = "you"
 	keyServices  = "services"
 	keyEnv       = "environment"
-	commentMark  = "#"
-	rulePrefix   = "R"
-	refSeparator = ":"
+	keyImage     = "image"
+	// imageKeyDepth is services, the service's name, image.
+	imageKeyDepth = 3
+	commentMark   = "#"
+	rulePrefix    = "R"
+	refSeparator  = ":"
 )
 
 var (
@@ -129,6 +132,8 @@ type badgedLine struct {
 	Badge    string
 	Tone     string
 	Marked   bool
+	// Title is shown on hover: what the registry said about an image line.
+	Title string
 }
 
 // plainLines shows a file without badges.
@@ -143,16 +148,21 @@ func plainLines(text, language string) []badgedLine {
 
 // composeLines badges every line of compose.yaml by the key it belongs to.
 // rendered is the plan's own rendering when the file was edited: lines it
-// lacks are the person's (U).
-func composeLines(plan *ir.IR, compose, rendered string) []badgedLine {
+// lacks are the person's (U). imageFacts by service title its image line
+// unless the person wrote it.
+func composeLines(plan *ir.IR, compose, rendered string, imageFacts map[string]string) []badgedLine {
 	texts := strings.Split(strings.TrimRight(compose, "\n"), "\n")
 	highlighted := highlight(compose, languageYAML)
-	badges := make([]string, len(texts))
+	badges, titles := make([]string, len(texts)), make([]string, len(texts))
 	var document yaml.Node
 	if err := yaml.Unmarshal([]byte(compose), &document); err == nil && len(document.Content) > 0 {
 		composefile.Walk(document.Content[0], nil, func(path []string, line int) {
-			if line >= 1 && line <= len(badges) {
-				badges[line-1] = badgeFor(plan, path)
+			if line < 1 || line > len(badges) {
+				return
+			}
+			badges[line-1] = badgeFor(plan, path)
+			if isImageKey(path) {
+				titles[line-1] = imageFacts[path[1]]
 			}
 		})
 	}
@@ -162,11 +172,12 @@ func composeLines(plan *ir.IR, compose, rendered string) []badgedLine {
 	}
 	lines := make([]badgedLine, 0, len(texts))
 	for index, text := range texts {
-		line := badgedLine{Segments: highlighted[index], Badge: badges[index]}
+		line := badgedLine{Segments: highlighted[index], Badge: badges[index], Title: titles[index]}
 		trimmed := strings.TrimSpace(text)
 		changed := rendered != "" && trimmed != "" && !strings.HasPrefix(trimmed, commentMark) && !original[trimmed]
+		// A line the person wrote may name another image than the facts.
 		if changed {
-			line.Badge, line.Marked = badgeYou, true
+			line.Badge, line.Marked, line.Title = badgeYou, true, ""
 		}
 		line.Tone = badgeTones[line.Badge]
 		if line.Tone == "" && line.Badge != "" {
@@ -175,6 +186,11 @@ func composeLines(plan *ir.IR, compose, rendered string) []badgedLine {
 		lines = append(lines, line)
 	}
 	return lines
+}
+
+// isImageKey is the path of a service's image: key.
+func isImageKey(path []string) bool {
+	return len(path) == imageKeyDepth && path[0] == keyServices && path[2] == keyImage
 }
 
 // lineText is a line of text without its indentation; "" for no line.
@@ -210,7 +226,7 @@ func serviceBadge(plan *ir.IR, service *ir.Service, path []string) string {
 		return badge
 	}
 	switch path[0] {
-	case "image":
+	case keyImage:
 		return sourceBadges[service.Image.Provenance.Source]
 	case "healthcheck":
 		return sourceBadges[service.Healthcheck.Provenance.Source]

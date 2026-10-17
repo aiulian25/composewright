@@ -25,9 +25,15 @@ import (
 )
 
 const (
-	SourceLabel = "org.opencontainers.image.source"
-	cacheTTL    = 24 * time.Hour
-	linuxOS     = "linux"
+	SourceLabel   = "org.opencontainers.image.source"
+	VersionLabel  = "org.opencontainers.image.version"
+	RevisionLabel = "org.opencontainers.image.revision"
+	cacheTTL      = 24 * time.Hour
+	linuxOS       = "linux"
+	// tagPageSize and maxTagsRead bound a tag listing: popular images
+	// have thousands of tags, and only a version-shaped few matter.
+	tagPageSize = 1000
+	maxTagsRead = 5000
 )
 
 var (
@@ -50,8 +56,11 @@ type Metadata struct {
 	HealthStartPeriod string            `json:"health_start_period"`
 	HealthRetries     int               `json:"health_retries"`
 	Labels            map[string]string `json:"labels"`
-	ConfigRead        bool              `json:"config_read"`
-	FetchedAt         time.Time         `json:"fetched_at"`
+	Created           time.Time         `json:"created"`
+	// ConfigRead's key changed when the build date was kept, so an entry
+	// cached before then is read again.
+	ConfigRead bool      `json:"config_facts_read"`
+	FetchedAt  time.Time `json:"fetched_at"`
 }
 
 // Cache keeps metadata between runs; the store implements it.
@@ -77,17 +86,20 @@ func NewInspector(guard *netguard.Guard, cache Cache, readConfig bool, mirror st
 // Inspect resolves an image's digest and, if enabled, reads its config.
 // Results are cached for a day.
 func (inspector *Inspector) Inspect(ctx context.Context, image ir.Image) (Metadata, error) {
-	reference := image.Reference() + ":" + image.Tag
+	reference := image.TaggedReference()
 	if cached, found := inspector.cached(ctx, reference); found {
 		return cached, nil
 	}
-	parsed, err := inspector.remoteReference(image, reference)
+	return inspector.Fresh(ctx, image)
+}
+
+// Fresh is Inspect past the cache, for a tag that may have moved since it
+// was cached; what it reads is cached again.
+func (inspector *Inspector) Fresh(ctx context.Context, image ir.Image) (Metadata, error) {
+	reference := image.TaggedReference()
+	parsed, options, err := inspector.registryRequest(ctx, image, reference)
 	if err != nil {
 		return Metadata{}, err
-	}
-	options := []remote.Option{
-		remote.WithContext(ctx), remote.WithTransport(inspector.guard.Transport(netguard.Registry)),
-		remote.WithAuth(authn.Anonymous), remote.WithPlatform(v1.Platform{OS: linuxOS, Architecture: runtime.GOARCH}),
 	}
 	descriptor, err := remote.Head(parsed, options...)
 	if err != nil {
@@ -101,6 +113,63 @@ func (inspector *Inspector) Inspect(ctx context.Context, image ir.Image) (Metada
 	}
 	inspector.store(ctx, metadata)
 	return metadata, nil
+}
+
+// Digest is what the image's tag resolves to now: one HEAD, past the cache
+// and without reading the config, so Docker Hub counts no pull.
+func (inspector *Inspector) Digest(ctx context.Context, image ir.Image) (string, error) {
+	reference := image.TaggedReference()
+	parsed, options, err := inspector.registryRequest(ctx, image, reference)
+	if err != nil {
+		return "", err
+	}
+	descriptor, err := remote.Head(parsed, options...)
+	if err != nil {
+		return "", inspector.classify(image, reference, err)
+	}
+	return descriptor.Digest.String(), nil
+}
+
+// Tags lists the image repository's tags, at most maxTagsRead of them.
+// ponytail: a repository with more tags than that may hide newer ones past
+// the cap; ask for them by name if that matters.
+func (inspector *Inspector) Tags(ctx context.Context, image ir.Image) ([]string, error) {
+	reference := image.TaggedReference()
+	parsed, options, err := inspector.registryRequest(ctx, image, reference)
+	if err != nil {
+		return nil, err
+	}
+	puller, err := remote.NewPuller(append(options, remote.WithPageSize(tagPageSize))...)
+	if err != nil {
+		return nil, err
+	}
+	lister, err := puller.Lister(ctx, parsed.Context())
+	if err != nil {
+		return nil, inspector.classify(image, reference, err)
+	}
+	var tags []string
+	for lister.HasNext() && len(tags) < maxTagsRead {
+		page, err := lister.Next(ctx)
+		if err != nil {
+			return nil, inspector.classify(image, reference, err)
+		}
+		tags = append(tags, page.Tags...)
+	}
+	return tags[:min(len(tags), maxTagsRead)], nil
+}
+
+// registryRequest is where an image's registry requests go and how they
+// are made.
+func (inspector *Inspector) registryRequest(ctx context.Context, image ir.Image, reference string) (name.Reference, []remote.Option, error) {
+	parsed, err := inspector.remoteReference(image, reference)
+	if err != nil {
+		return nil, nil, err
+	}
+	options := []remote.Option{
+		remote.WithContext(ctx), remote.WithTransport(inspector.guard.Transport(netguard.Registry)),
+		remote.WithAuth(authn.Anonymous), remote.WithPlatform(v1.Platform{OS: linuxOS, Architecture: runtime.GOARCH}),
+	}
+	return parsed, options, nil
 }
 
 // remoteReference is where the registry requests go: a Docker Hub image is
@@ -141,6 +210,7 @@ func readConfig(reference name.Reference, options []remote.Option, metadata *Met
 	configuration := file.Config
 	metadata.ConfigRead = true
 	metadata.Labels = configuration.Labels
+	metadata.Created = file.Created.Time
 	metadata.Source = configuration.Labels[SourceLabel]
 	metadata.Env, metadata.User = configuration.Env, configuration.User
 	metadata.ExposedPorts = sortedKeys(configuration.ExposedPorts)
@@ -164,7 +234,10 @@ func (inspector *Inspector) cached(ctx context.Context, reference string) (Metad
 		return Metadata{}, false
 	}
 	var metadata Metadata
-	if json.Unmarshal([]byte(encoded), &metadata) != nil || (inspector.readConfig && !metadata.ConfigRead) {
+	if json.Unmarshal([]byte(encoded), &metadata) != nil {
+		return Metadata{}, false
+	}
+	if inspector.readConfig && !metadata.ConfigRead {
 		return Metadata{}, false
 	}
 	return metadata, true

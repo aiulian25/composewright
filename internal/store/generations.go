@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -36,6 +37,10 @@ type Image struct {
 	Registry   string    `json:"registry"`
 	OCISource  string    `json:"oci_source"`
 	VerifiedAt time.Time `json:"verified_at"`
+	// Labels are the image's OCI labels and Created when it was built, as
+	// the registry said when this version was made.
+	Labels  map[string]string `json:"labels,omitempty"`
+	Created time.Time         `json:"created"`
 }
 
 const generationColumns = `id, project_id, iteration, engine, provider, model, prompt_hash, ir_json, compose_yaml, deploy_md,
@@ -76,9 +81,13 @@ func insertGeneration(ctx context.Context, transaction *sql.Tx, generation Gener
 		return err
 	}
 	for _, image := range images {
-		_, err := transaction.ExecContext(ctx, `INSERT INTO images (id, generation_id, service, reference, digest, registry, oci_source, verified_at)
-			VALUES (?,?,?,?,?,?,?,?)`, newID(), generation.ID, image.Service, image.Reference, image.Digest, image.Registry,
-			image.OCISource, unix(image.VerifiedAt))
+		labels, err := labelsJSON(image.Labels)
+		if err != nil {
+			return err
+		}
+		_, err = transaction.ExecContext(ctx, `INSERT INTO images (id, generation_id, service, reference, digest, registry, oci_source, verified_at,
+			labels_json, created) VALUES (?,?,?,?,?,?,?,?,?,?)`, newID(), generation.ID, image.Service, image.Reference, image.Digest, image.Registry,
+			image.OCISource, unix(image.VerifiedAt), labels, unix(image.Created))
 		if err != nil {
 			return err
 		}
@@ -184,7 +193,7 @@ func (store *Store) Generations(ctx context.Context, projectID string) ([]Genera
 }
 
 func (store *Store) Images(ctx context.Context, generationID string) ([]Image, error) {
-	rows, err := store.database.QueryContext(ctx, `SELECT service, reference, digest, registry, oci_source, verified_at
+	rows, err := store.database.QueryContext(ctx, `SELECT service, reference, digest, registry, oci_source, verified_at, labels_json, created
 		FROM images WHERE generation_id=? ORDER BY service`, generationID)
 	if err != nil {
 		return nil, err
@@ -193,14 +202,37 @@ func (store *Store) Images(ctx context.Context, generationID string) ([]Image, e
 	var images []Image
 	for rows.Next() {
 		var image Image
-		var verified int64
-		if err := rows.Scan(&image.Service, &image.Reference, &image.Digest, &image.Registry, &image.OCISource, &verified); err != nil {
+		var verified, created int64
+		var labels string
+		if err := rows.Scan(&image.Service, &image.Reference, &image.Digest, &image.Registry, &image.OCISource, &verified, &labels, &created); err != nil {
 			return nil, err
 		}
-		image.VerifiedAt = fromUnix(verified)
+		if image.Labels, err = labelsFrom(labels); err != nil {
+			return nil, fmt.Errorf("labels of image %s: %w", image.Reference, err)
+		}
+		image.VerifiedAt, image.Created = fromUnix(verified), fromUnix(created)
 		images = append(images, image)
 	}
 	return images, rows.Err()
+}
+
+// labelsJSON is how labels are stored: "" when there are none.
+func labelsJSON(labels map[string]string) (string, error) {
+	if len(labels) == 0 {
+		return "", nil
+	}
+	encoded, err := json.Marshal(labels)
+	return string(encoded), err
+}
+
+// labelsFrom reads labels as labelsJSON stores them.
+func labelsFrom(encoded string) (map[string]string, error) {
+	if encoded == "" {
+		return nil, nil
+	}
+	var labels map[string]string
+	err := json.Unmarshal([]byte(encoded), &labels)
+	return labels, err
 }
 
 func scanGeneration(row rowScanner) (Generation, error) {

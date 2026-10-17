@@ -18,7 +18,7 @@ const (
 
 // ImageKey identifies an image the way verification results are keyed.
 func ImageKey(image ir.Image) string {
-	return image.Reference() + ":" + image.Tag
+	return image.TaggedReference()
 }
 
 // ApplyImages is R3: what the registry says about each image pins its

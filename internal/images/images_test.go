@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"slices"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -24,6 +25,8 @@ import (
 )
 
 const testImage = "example/app:1.0"
+
+var testBuilt = time.Date(2026, 9, 1, 12, 0, 0, 0, time.UTC)
 
 type memoryCache struct {
 	entries map[string]string
@@ -62,6 +65,7 @@ func fakeRegistry(t *testing.T, repositoryAndTag string) (*httptest.Server, *ato
 	file.Config.ExposedPorts = map[string]struct{}{"8080/tcp": {}}
 	file.Config.Volumes = map[string]struct{}{"/data": {}}
 	file.Config.Healthcheck = &v1.HealthConfig{Test: []string{"CMD-SHELL", "wget -qO- http://127.0.0.1:$PORT/health"}, Interval: 30 * time.Second, Retries: 3}
+	file.Created = v1.Time{Time: testBuilt}
 	image, err = mutate.ConfigFile(image, file)
 	if err != nil {
 		t.Fatal(err)
@@ -93,7 +97,7 @@ func TestInspectReadsDigestAndConfig(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if metadata.Digest != digest || metadata.Source != "https://github.com/example/app" || !metadata.ConfigRead {
+	if metadata.Digest != digest || metadata.Source != "https://github.com/example/app" || !metadata.ConfigRead || !metadata.Created.Equal(testBuilt) {
 		t.Fatalf("metadata %+v", metadata)
 	}
 	if metadata.ExposedPorts[0] != "8080/tcp" || metadata.Volumes[0] != "/data" || metadata.HealthInterval != "30s" || metadata.HealthRetries != 3 {
@@ -105,6 +109,30 @@ func TestInspectReadsDigestAndConfig(t *testing.T) {
 	}
 	if requests.Load() != before {
 		t.Fatal("a cached image was fetched again")
+	}
+}
+
+// TestInspectReadsAgainWithoutBuildDate: an entry cached before the build
+// date was kept is fetched again rather than served without one.
+func TestInspectReadsAgainWithoutBuildDate(t *testing.T) {
+	server, requests, digest := fakeRegistry(t, testImage)
+	host := strings.TrimPrefix(server.URL, "http://")
+	image := ir.Image{Registry: host, Repository: "example/app", Tag: "1.0"}
+	cache := &memoryCache{entries: map[string]string{}, fetched: time.Now()}
+	if err := cache.CacheImage(context.Background(), image.TaggedReference(), `{"digest":"`+digest+`","config_read":true}`); err != nil {
+		t.Fatal(err)
+	}
+	metadata, err := inspector(t, server, cache, "").Inspect(context.Background(), image)
+	if err != nil || !metadata.Created.Equal(testBuilt) {
+		t.Fatalf("metadata %+v: %v", metadata, err)
+	}
+	// An image built without a date is still served from the cache.
+	if err := cache.CacheImage(context.Background(), image.TaggedReference(), `{"digest":"`+digest+`","config_facts_read":true}`); err != nil {
+		t.Fatal(err)
+	}
+	before := requests.Load()
+	if _, err := inspector(t, server, cache, "").Inspect(context.Background(), image); err != nil || requests.Load() != before {
+		t.Fatalf("an image without a build date was fetched again: %v", err)
 	}
 }
 
@@ -211,5 +239,83 @@ func TestRateLimitNamesTheMirrorKey(t *testing.T) {
 	other := ir.Image{Registry: "ghcr.io", Repository: "example/app", Tag: "1.0"}
 	if err := NewInspector(nil, nil, true, "").classify(other, "ghcr.io/example/app:1.0", limited); errors.Is(err, ErrRateLimited) {
 		t.Fatalf("another registry's limit blames Docker Hub: %v", err)
+	}
+}
+
+// TestNewerTags: newer tags keep the pinned tag's prefix, number count,
+// suffix and major version, and development builds are left out.
+func TestNewerTags(t *testing.T) {
+	tags := []string{"2.2.1", "2.2.3", "2.2.5", "2.2.4", "2.3.0", "3.0.0", "2.2.5-rc1", "2.2.6-nightly", "2.2.7.dev", "2.2", "2.2.4.1",
+		"v2.2.9", "latest", "nightly", "2.2.6-alpine", "2.2.4-rc1", "2.2.3-ls45", "2.2.3-ls46", "2.2.4-ls46", "2.2.4-ls7",
+		"2.2.3-php7", "2.2.3-php8", "2.2.4-php7", "2.2.5-php8", "1.25.3-java11", "1.25.3-java17", "1.25.4-java11",
+		"2.2.4-alpine", "2.2.4-alpine3", "10.1.30-jdk17", "10.1.30-jdk21", "10.1.31-jdk11", "10.1.31-jdk17",
+		"7.2.4-alpine3.19", "7.2.5-alpine3.18", "7.2.5-alpine3.19", "16.1.0-debian-12-r5", "16.1.0-debian-12-r6", "16.1.1-debian-12"}
+	cases := []struct {
+		pinned string
+		want   []string
+	}{
+		{"2.2.3", []string{"2.2.4", "2.2.5", "2.3.0"}},
+		{"2.2", []string{}},
+		{"2.1", []string{"2.2"}},
+		{"v2.2.3", []string{"v2.2.9"}},
+		{"2.2.5-alpine", []string{"2.2.6-alpine"}},
+		{"2.2.3-alpine", []string{"2.2.4-alpine", "2.2.6-alpine"}},
+		{"2.2.3-php7", []string{"2.2.4-php7"}},
+		{"1.25.3-java11", []string{"1.25.4-java11"}},
+		{"10.1.30-jdk17", []string{"10.1.31-jdk17"}},
+		{"7.2.4-alpine3.19", []string{"7.2.5-alpine3.19"}},
+		{"16.1.0-debian-12-r5", []string{"16.1.0-debian-12-r6"}},
+		{"2.2.3-ls45", []string{"2.2.3-ls46", "2.2.4-ls7", "2.2.4-ls46"}},
+		{"latest", nil},
+		{"3.0.0", []string{}},
+		// Only another release candidate is written like one; it is no
+		// stable tag to move to.
+		{"2.2.3-rc1", []string{}},
+	}
+	for _, testCase := range cases {
+		got := Newer(testCase.pinned, tags)
+		if !slices.Equal(got, testCase.want) || (testCase.want == nil) != (got == nil) {
+			t.Errorf("newer than %s: %q, want %q", testCase.pinned, got, testCase.want)
+		}
+	}
+}
+
+// TestDigestAndTagsAskTheRegistry: a tag moved since it was cached is seen
+// at once by Digest and Fresh, and the repository's tags are listed.
+func TestDigestAndTagsAskTheRegistry(t *testing.T) {
+	server, _, first := fakeRegistry(t, testImage)
+	host := strings.TrimPrefix(server.URL, "http://")
+	image := ir.Image{Registry: host, Repository: "example/app", Tag: "1.0"}
+	cache := &memoryCache{entries: map[string]string{}}
+	checker := inspector(t, server, cache, "")
+	if _, err := checker.Inspect(context.Background(), image); err != nil {
+		t.Fatal(err)
+	}
+	moved, err := random.Image(256, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, tag := range []string{"1.0", "1.1"} {
+		reference, _ := name.ParseReference(host + "/example/app:" + tag)
+		if err := remote.Write(reference, moved); err != nil {
+			t.Fatal(err)
+		}
+	}
+	digest, err := checker.Digest(context.Background(), image)
+	if wanted, _ := moved.Digest(); err != nil || digest != wanted.String() || digest == first {
+		t.Fatalf("digest after the tag moved: %s %v", digest, err)
+	}
+	tags, err := checker.Tags(context.Background(), image)
+	if err != nil || !slices.Equal(tags, []string{"1.0", "1.1"}) {
+		t.Fatalf("tags %v: %v", tags, err)
+	}
+	if cached, _ := checker.Inspect(context.Background(), image); cached.Digest != first {
+		t.Fatalf("Inspect did not serve the cache: %s", cached.Digest)
+	}
+	if _, err := checker.Fresh(context.Background(), image); err != nil {
+		t.Fatal(err)
+	}
+	if cached, _ := checker.Inspect(context.Background(), image); cached.Digest != digest {
+		t.Fatalf("Fresh did not cache what it read: %s", cached.Digest)
 	}
 }

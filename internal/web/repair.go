@@ -203,7 +203,7 @@ func proposalView(proposal *pipeline.Proposal) (repairView, error) {
 		Version: stored.Generation.Number + 1, Edited: stored.Options.Edited, Blocked: proposal.Report.Blocked(),
 		PolicyText: policyText(proposal.Report), PolicyTone: tonesFor("", proposal.Report).Policy, Findings: findingViews(proposal.Report, compose),
 		Rejected: proposal.Rejected, Notes: proposal.Notes, Removed: removed,
-		Compose: modelLines(composeLines(proposal.Plan, compose, ""), addedCompose),
+		Compose: modelLines(composeLines(proposal.Plan, compose, "", nil), addedCompose),
 		Env:     modelLines(plainLines(env, languageEnv), addedEnv)}
 	return view, nil
 }

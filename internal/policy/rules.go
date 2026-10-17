@@ -127,7 +127,7 @@ func (check *checker) image(service *ir.Service, field string) {
 	if image.Digest != "" && !digestPattern.MatchString(image.Digest) {
 		check.add("P2", Deny, service.Name, field+".digest", "image digest %q must be sha256 followed by 64 hex characters", image.Digest)
 	}
-	verification, checked := check.input.Images[image.Reference()+":"+image.Tag]
+	verification, checked := check.input.Images[image.TaggedReference()]
 	switch {
 	case checked && !verification.Found:
 		check.add("P1", Deny, service.Name, field, "image %s:%s does not exist in the registry", image.Reference(), image.Tag)
