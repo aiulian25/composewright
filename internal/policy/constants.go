@@ -1,5 +1,7 @@
 package policy
 
+import "github.com/docker/go-units"
+
 const (
 	maxServices       = 8
 	lowPortLimit      = 1024
@@ -20,6 +22,12 @@ const (
 	volumeTypeTmpfs   = "tmpfs"
 	localVolumeDriver = "local"
 	noNewPrivileges   = "no-new-privileges"
+	// tightFactor and generousFactor bound a mem_limit against a service's
+	// observed peak; limitStep is what a suggested limit rounds up to.
+	tightFactor    = 1.5
+	generousFactor = 4
+	limitStep      = 128 * units.MiB
+	mebibyteSuffix = "m"
 )
 
 // ownerRegistries are the hosts where a GitHub owner's namespace is trusted

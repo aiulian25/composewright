@@ -62,8 +62,11 @@ const (
 	// composeFileField holds the upstream compose file chosen on the
 	// Review page.
 	composeFileField = "compose_file"
-	lineField        = "line"
-	emptyLineProblem = "That log line has no text to ignore."
+	// memoryLimitField is a finding's "Use 1GiB" button: service=limit.
+	memoryLimitField     = "memory_limit"
+	memoryLimitSeparator = "="
+	lineField            = "line"
+	emptyLineProblem     = "That log line has no text to ignore."
 	// trustAlwaysProblem follows a revision that already went in, so it
 	// says what did change.
 	trustAlwaysProblem = "the changes were applied and %s is trusted for this project, but adding it to registries.allow failed: %w"
@@ -698,7 +701,17 @@ type reviewView struct {
 }
 
 func (server *Server) reviewView(ctx context.Context, stored *pipeline.Stored, revealed bool) (reviewView, error) {
-	report, plan := stored.Report, stored.Plan
+	generations, err := server.workspace().Store.Generations(ctx, stored.Project.ID)
+	if err != nil {
+		return reviewView{}, err
+	}
+	observed, err := pipeline.Observed(ctx, stored, generations)
+	if err != nil {
+		return reviewView{}, err
+	}
+	// Appended, not merged: Merge would drop the measured peak of a service
+	// whose limit already has a P10 finding, such as one from upstream.
+	report, plan := policy.Report{Findings: append(slices.Clone(stored.Report.Findings), observed.Findings...)}, stored.Plan
 	configuration := server.config()
 	profile := configuration.Profile
 	mode, networks := render.Exposure(profile, stored.Options.ExposeVia, stored.Options.Networks)
@@ -732,10 +745,6 @@ func (server *Server) reviewView(ctx context.Context, stored *pipeline.Stored, r
 	view.Compose, view.Pane = server.composeView(stored), paneCompose
 	view.EnvLines = plainLines(server.envText(stored, revealed), languageEnv)
 	view.DeployLines = plainLines(stored.Generation.DeployMD, languageMarkdown)
-	generations, err := server.workspace().Store.Generations(ctx, stored.Project.ID)
-	if err != nil {
-		return view, err
-	}
 	if tested, verdict, found := testedRun(generations, ""); found && !verdict.Passed() {
 		view.LastFailure, view.ChangedSince = failureText(verdict), tested.ID != stored.Generation.ID
 	}
@@ -989,6 +998,9 @@ func (server *Server) review(writer http.ResponseWriter, request *http.Request, 
 	if key := request.PostFormValue("regenerate"); key != "" {
 		revision.Regenerate, action = []string{key}, actionApply
 	}
+	if len(revision.MemoryLimits) > 0 {
+		action = actionApply
+	}
 	alwaysPattern := request.PostFormValue(trustAlwaysField)
 	for _, pattern := range []string{alwaysPattern, request.PostFormValue(trustField)} {
 		if pattern != "" {
@@ -1104,6 +1116,9 @@ func revisionFrom(form url.Values, stored *pipeline.Stored) pipeline.Revision {
 	if key := strings.TrimSpace(form.Get("add-key")); key != "" {
 		revision.Add = []pipeline.Variable{{Key: key, Value: form.Get("add-value")}}
 	}
+	if service, limit, found := strings.Cut(form.Get(memoryLimitField), memoryLimitSeparator); found {
+		revision.MemoryLimits = map[string]string{service: limit}
+	}
 	return revision
 }
 
@@ -1112,7 +1127,7 @@ func revisionFrom(form url.Values, stored *pipeline.Stored) pipeline.Revision {
 func changed(revision pipeline.Revision, stored *pipeline.Stored, profile config.Profile) bool {
 	options := stored.Options
 	mode, networks := render.Exposure(profile, options.ExposeVia, options.Networks)
-	edits := len(revision.Values) + len(revision.Secrets) + len(revision.Regenerate) + len(revision.Add)
+	edits := len(revision.Values) + len(revision.Secrets) + len(revision.Regenerate) + len(revision.Add) + len(revision.MemoryLimits)
 	return edits > 0 || revision.ExposeVia != mode || !sameSet(revision.Networks, networks) || revision.Storage != options.Storage ||
 		!sameSet(revision.AllowNeeds, options.AllowNeeds) || !sameSet(revision.AllowRegistries, options.AllowRegistries)
 }

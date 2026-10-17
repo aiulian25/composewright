@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/docker/go-units"
+
 	"github.com/aiulian25/composewright/internal/composefile"
 	"github.com/aiulian25/composewright/internal/extract"
 	"github.com/aiulian25/composewright/internal/fetch"
@@ -337,6 +339,10 @@ type findingView struct {
 	Label   string
 	Line    int
 	Code    string
+	// MemoryLimit is a mem_limit to offer instead, and MemoryLimitText
+	// how the button names it.
+	MemoryLimit     string
+	MemoryLimitText string
 }
 
 var severityViews = map[policy.Severity][2]string{
@@ -355,10 +361,19 @@ func findingViews(report policy.Report, compose string) []findingView {
 			}
 			style, line := severityViews[severity], finding.Line(lines)
 			views = append(views, findingView{Rule: finding.Rule, Service: finding.Service, Message: finding.Message, Tone: style[0], Label: style[1],
-				Line: line, Code: lineText(texts, line)})
+				Line: line, Code: lineText(texts, line), MemoryLimit: finding.MemoryLimit, MemoryLimitText: sizeText(finding.MemoryLimit)})
 		}
 	}
 	return views
+}
+
+// sizeText writes a mem_limit such as 1024m as 1GiB; empty stays empty.
+func sizeText(limit string) string {
+	bytes, err := units.RAMInBytes(limit)
+	if limit == "" || err != nil {
+		return ""
+	}
+	return units.BytesSize(float64(bytes))
 }
 
 // trustOffer is an image namespace a person could trust; Permanent says
@@ -525,12 +540,13 @@ type stateView struct {
 	State   string
 	Detail  string
 	Tone    string
+	Peak    string
 }
 
 func stateViews(verdict sandbox.Verdict) []stateView {
 	views := make([]stateView, 0, len(verdict.Services))
 	for _, state := range verdict.Services {
-		view := stateView{Service: state.Service, State: state.State, Tone: toneOk}
+		view := stateView{Service: state.Service, State: state.State, Tone: toneOk, Peak: state.Peak()}
 		if state.Health != "" {
 			view.State = state.Health
 		}

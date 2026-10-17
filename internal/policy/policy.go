@@ -46,6 +46,9 @@ type Finding struct {
 	Path       string   `json:"path,omitempty"`
 	Capability string   `json:"capability,omitempty"`
 	Message    string   `json:"message"`
+	// MemoryLimit is a mem_limit, such as 1024m, that fits what the
+	// service was seen to use.
+	MemoryLimit string `json:"memory_limit,omitempty"`
 }
 
 type Report struct {

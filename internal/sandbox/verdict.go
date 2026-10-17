@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 	"unicode/utf8"
+
+	"github.com/docker/go-units"
 )
 
 const (
@@ -40,6 +42,9 @@ const (
 	clipMarker       = "…"
 	tailPerService   = 8 << 10
 	logPrefixPattern = `^(\S+?)(-\d+)?\s+\|\s?`
+	peakPrefix       = "peak "
+	limitJoiner      = " of "
+	cpuFormat        = ", %.0f%% CPU"
 )
 
 // fatalPatterns are the log lines that fail a run even when every
@@ -79,6 +84,26 @@ type ServiceState struct {
 	// became healthy printed, secrets redacted: why it failed, when the
 	// app's own logs do not say.
 	HealthOutput string `json:"health_output,omitempty"`
+	// PeakMemoryBytes and PeakCPUPercent are the most the service used
+	// while the run sampled it; zero when it was never measured.
+	PeakMemoryBytes int64   `json:"peak_memory_bytes,omitempty"`
+	PeakCPUPercent  float64 `json:"peak_cpu_percent,omitempty"`
+	// MemoryLimitBytes is the mem_limit the tested compose.yaml gives the
+	// service, before the sandbox caps it.
+	MemoryLimitBytes int64 `json:"memory_limit_bytes,omitempty"`
+}
+
+// Peak is the service's highest use, such as "peak 612MiB of 1GiB, 12%
+// CPU", or empty when it was never measured.
+func (state ServiceState) Peak() string {
+	if state.PeakMemoryBytes == 0 {
+		return ""
+	}
+	text := peakPrefix + units.BytesSize(float64(state.PeakMemoryBytes))
+	if state.MemoryLimitBytes > 0 {
+		text += limitJoiner + units.BytesSize(float64(state.MemoryLimitBytes))
+	}
+	return text + fmt.Sprintf(cpuFormat, state.PeakCPUPercent)
 }
 
 // Publisher is one published port as Docker reports it.

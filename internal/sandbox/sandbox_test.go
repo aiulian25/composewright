@@ -42,18 +42,30 @@ volumes:
 `
 
 type fakeDocker struct {
-	mutex     sync.Mutex
-	calls     [][]string
-	upErr     error
-	upOutput  string
-	ps        string
-	psErr     error
-	logs      string
-	probe     string
-	probeErr  error
-	directory string
-	envMode   os.FileMode
+	mutex    sync.Mutex
+	calls    [][]string
+	upErr    error
+	upOutput string
+	ps       string
+	psErr    error
+	logs     string
+	stats    string
+	statsErr error
+	// sampledWhileUp, when set, holds `up` open until a stats call made
+	// while it runs closes it; stats reports stats then, and settledStats
+	// once up has returned, when set.
+	sampledWhileUp chan struct{}
+	upRunning      bool
+	settledStats   string
+	probe          string
+	probeErr       error
+	directory      string
+	envMode        os.FileMode
 }
+
+// upHoldLimit ends a held `up` when no sample comes, so a broken sampler
+// fails its test instead of hanging it.
+const upHoldLimit = 10 * time.Second
 
 func (fake *fakeDocker) run(_ context.Context, directory string, live io.Writer, arguments ...string) ([]byte, []byte, error) {
 	fake.mutex.Lock()
@@ -69,7 +81,26 @@ func (fake *fakeDocker) run(_ context.Context, directory string, live io.Writer,
 		if live != nil {
 			_, _ = io.WriteString(live, fake.upOutput+"\n")
 		}
+		sampled := fake.sampledWhileUp
+		fake.upRunning = true
+		fake.mutex.Unlock()
+		if sampled != nil {
+			select {
+			case <-sampled:
+			case <-time.After(upHoldLimit):
+			}
+		}
+		fake.mutex.Lock()
+		fake.upRunning = false
 		return []byte(fake.upOutput), nil, fake.upErr
+	case strings.HasPrefix(command, "stats ") && !fake.upRunning && fake.settledStats != "":
+		return []byte(fake.settledStats), nil, fake.statsErr
+	case strings.HasPrefix(command, "stats "):
+		if fake.upRunning && fake.sampledWhileUp != nil {
+			close(fake.sampledWhileUp)
+			fake.sampledWhileUp = nil
+		}
+		return []byte(fake.stats), nil, fake.statsErr
 	case strings.Contains(command, " run "):
 		return []byte(fake.probe), []byte("Error response from daemon: pull access denied for busybox"), fake.probeErr
 	case strings.Contains(command, " ps "):

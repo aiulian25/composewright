@@ -3,7 +3,9 @@ package policy
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io/fs"
+	"math"
 	"os"
 	"path/filepath"
 	"slices"
@@ -12,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/compose-spec/compose-go/v2/types"
+	"github.com/docker/go-units"
 
 	"github.com/aiulian25/composewright/internal/composefile"
 	"github.com/aiulian25/composewright/internal/ir"
@@ -93,6 +96,44 @@ func (check *checker) composeService(name string, service types.ServiceConfig) {
 	check.composeVolumes(name, service)
 	check.composePorts(name, service)
 	check.composeImage(name, service)
+}
+
+// EvaluateObserved is the part of P10 that needs a sandbox run: each
+// service's mem_limit in the compose model against the peak memory in
+// bytes a passing run measured for it. A tight limit gets a larger one to
+// use, a generous one is pointed out.
+func EvaluateObserved(project *types.Project, peaks map[string]int64) Report {
+	check := &checker{}
+	for _, name := range sortedKeys(project.Services) {
+		check.observed(name, project.Services[name], peaks[name])
+	}
+	return Report{Findings: check.findings}
+}
+
+func (check *checker) observed(name string, service types.ServiceConfig, peak int64) {
+	limit := int64(service.MemLimit)
+	if peak <= 0 || limit <= 0 {
+		return
+	}
+	field := "services." + name + ".mem_limit"
+	sizes := fmt.Sprintf("observed peak %s; limit %s", units.BytesSize(float64(peak)), units.BytesSize(float64(limit)))
+	switch {
+	case float64(limit) < tightFactor*float64(peak):
+		check.add("P10", Warn, name, field, "%s: the limit is tight: OOM kills likely", sizes)
+		check.findings[len(check.findings)-1].MemoryLimit = SuggestedLimit(peak)
+	case float64(limit) > generousFactor*float64(peak):
+		check.add("P10", Warn, name, field, "%s: the limit is %.1f× what was used", sizes, float64(limit)/float64(peak))
+	default:
+		check.add("P10", OK, name, field, "%s", sizes)
+	}
+}
+
+// SuggestedLimit is tightFactor times the peak, rounded up to whole
+// limitStep mebibytes, as a mem_limit value.
+func SuggestedLimit(peak int64) string {
+	wanted := int64(math.Ceil(tightFactor * float64(peak)))
+	mebibytes := (wanted + limitStep - 1) / limitStep * limitStep / units.MiB
+	return strconv.FormatInt(mebibytes, 10) + mebibyteSuffix
 }
 
 func (check *checker) composeGrants(name string, service types.ServiceConfig) {

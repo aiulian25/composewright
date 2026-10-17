@@ -96,7 +96,7 @@ func (application *app) printVerdict(verdict sandbox.Verdict) {
 	fmt.Fprintf(output, "\nvalidation %s in %s · iteration %d · %s\n", result, verdict.Duration.Round(time.Second), verdict.Iteration, sandboxText(verdict.Sandbox))
 	rows := make([][]string, 0, len(verdict.Services))
 	for _, state := range verdict.Services {
-		rows = append(rows, []string{"  " + sanitize(state.Service), state.State, state.Health, fmt.Sprintf("exit %d", state.ExitCode)})
+		rows = append(rows, []string{"  " + sanitize(state.Service), state.State, state.Health, fmt.Sprintf("exit %d", state.ExitCode), state.Peak()})
 	}
 	_ = table(output, rows...)
 	if verdict.Detail != "" {

@@ -72,6 +72,7 @@ func TestDocker(t *testing.T) {
 			}
 			if testCase.name == "healthy" {
 				assertLoopbackEphemeral(t, verdict)
+				assertPeaks(t, verdict)
 			}
 			if testCase.probe.Port != 0 && (verdict.Reach == nil || !verdict.Reach.Checked) {
 				t.Fatalf("the probe did not run: %+v", verdict.Reach)
@@ -170,5 +171,15 @@ func TestDockerLiveLogs(t *testing.T) {
 	firstTick, healthy := strings.Index(joined, "ticker: tick 1"), strings.Index(joined, "Healthy")
 	if firstTick < 0 || healthy < 0 || firstTick > healthy {
 		t.Errorf("no log line arrived while up --wait was still waiting:\n%s", joined)
+	}
+}
+
+// assertPeaks checks that a passing run measured every service.
+func assertPeaks(t *testing.T, verdict Verdict) {
+	t.Helper()
+	for _, state := range verdict.Services {
+		if state.PeakMemoryBytes <= 0 {
+			t.Fatalf("no peak memory for %s: %+v", state.Service, state)
+		}
 	}
 }

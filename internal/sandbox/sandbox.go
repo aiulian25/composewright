@@ -103,12 +103,12 @@ func (sandbox *Sandbox) Validate(ctx context.Context, input Input) (verdict Verd
 	if err := environment.MissingRuntime(); err != nil {
 		return Verdict{}, cmp.Or(infoErr, err)
 	}
-	pinned, err := sandbox.prepare(ctx, directory, name, input, started, environment.probesEarly())
+	project, err := sandbox.prepare(ctx, directory, name, input, started, environment.probesEarly())
 	if err != nil {
 		return Verdict{}, err
 	}
 	pull := pullAlways
-	if pinned {
+	if everyImagePinned(project) {
 		pull = pullMissing
 	}
 	output.say("project %s: restart \"no\", no-new-privileges, at most %s memory, %g CPUs and %d processes per service, published ports on 127.0.0.1 only",
@@ -123,14 +123,27 @@ func (sandbox *Sandbox) Validate(ctx context.Context, input Input) (verdict Verd
 	waitTimeout := strconv.Itoa(int(sandbox.timeout.Seconds()))
 	output.say("pulling images and starting; waiting up to %s for every service to be healthy%s", sandbox.timeout, probeNote(environment))
 	stopFollowing := output.follow(upCtx, sandbox, directory, name, started)
+	kept := newPeaks()
+	stopSampling := sandbox.sampling(upCtx, directory, name, kept)
 	upOut, upErrOut, upErr := sandbox.compose(upCtx, directory, output.writer(SourceCompose), name, "up", "--wait", "--wait-timeout", waitTimeout,
 		"--pull", pull, "--no-build", "--quiet-pull")
 	stopFollowing()
+	stopSampling()
+	sampled := make(chan struct{})
+	go func() {
+		defer close(sampled)
+		sandbox.sample(ctx, directory, name, kept)
+	}()
 	statesOut, _, statesErr := sandbox.compose(ctx, directory, nil, name, "ps", "-a", "--format", "json")
 	logsOut, _, _ := sandbox.compose(ctx, directory, nil, name, "logs", "--no-color", "-t", "--since", started.UTC().Format(time.RFC3339))
 	states, parseErr := parseStates(statesOut)
+	<-sampled
 	if statesErr != nil || parseErr != nil {
 		return Verdict{}, errors.Join(errors.New("could not read container states"), statesErr, parseErr)
+	}
+	kept.record(states)
+	for index, state := range states {
+		states[index].MemoryLimitBytes = int64(project.Services[state.Service].MemLimit)
 	}
 	output.logs(string(logsOut))
 	sandbox.healthOutputs(ctx, states, input.Secrets, output)
@@ -168,27 +181,26 @@ func (sandbox *Sandbox) healthOutputs(ctx context.Context, states []ServiceState
 	}
 }
 
-// prepare writes the run's files and reports whether every image is pinned
-// by digest.
-func (sandbox *Sandbox) prepare(ctx context.Context, directory, name string, input Input, started time.Time, earlyProbes bool) (bool, error) {
+// prepare writes the run's files and returns the compose project they hold.
+func (sandbox *Sandbox) prepare(ctx context.Context, directory, name string, input Input, started time.Time, earlyProbes bool) (*types.Project, error) {
 	project, err := composefile.Load(ctx, composeFile, input.Compose, nil, false)
 	if err != nil {
-		return false, fmt.Errorf("compose.yaml does not load: %w", err)
+		return nil, fmt.Errorf("compose.yaml does not load: %w", err)
 	}
 	override, err := Override(project, input.Published, sandbox.limits, name, started.Unix(), earlyProbes, Runtime(sandbox.tier))
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 	if err := os.MkdirAll(directory, runDirMode); err != nil {
-		return false, err
+		return nil, err
 	}
 	files := map[string][]byte{composeFile: input.Compose, overrideFile: override, envFile: input.Env}
 	for file, content := range files {
 		if err := atomicfile.Write(filepath.Join(directory, file), content, runFileMode); err != nil {
-			return false, err
+			return nil, err
 		}
 	}
-	return everyImagePinned(project), nil
+	return project, nil
 }
 
 // everyImagePinned reports whether each service names its image by digest.

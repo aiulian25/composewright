@@ -24,6 +24,7 @@ case "$*" in
   *" run --rm "*) echo '  HTTP/1.1 200 OK' ;;
   *" up "*) [ "%[3]s" = pass ] || { echo "container miniflux-1 is unhealthy" >&2; exit 1; } ;;
   *" ps -a --format json") printf '%[2]s\n' ;;
+  "stats --no-stream"*) echo '{"Name":"miniflux-1","MemUsage":"300MiB / 1GiB","CPUPerc":"5%"}' ;;
   *" logs "*) cat "%[1]s/logs" 2>/dev/null ;;
 esac
 exit 0
@@ -60,7 +61,7 @@ func TestGenAsksBeforeTheSandboxRuns(t *testing.T) {
 	}
 	approved := run(t, environment, "--yes", "gen", "--offline", "--no-llm", "--upstream", "https://github.com/miniflux/v2", minifluxFiles)
 	recorded, _ = os.ReadFile(calls)
-	if approved.code != exitOK || !strings.Contains(approved.stdout, "validation PASS") {
+	if approved.code != exitOK || !strings.Contains(approved.stdout, "validation PASS") || !strings.Contains(approved.stdout, "peak 300MiB of 512MiB, 5% CPU") {
 		t.Fatalf("approved gen: %+v", approved)
 	}
 	for _, want := range []string{"up --wait", "--pull always --no-build", "-f compose.yaml -f override.yaml", "down -v --remove-orphans"} {

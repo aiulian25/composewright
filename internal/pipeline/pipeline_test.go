@@ -43,6 +43,7 @@ type scriptedDocker struct {
 	mutex  sync.Mutex
 	states []string
 	logs   string
+	stats  string
 	runs   int
 }
 
@@ -58,6 +59,8 @@ func (docker *scriptedDocker) run(_ context.Context, _ string, _ io.Writer, argu
 		if strings.Contains(docker.states[min(docker.runs, len(docker.states))-1], "unhealthy") {
 			return []byte("container miniflux is unhealthy"), nil, errors.New("exit status 1")
 		}
+	case strings.HasPrefix(command, "stats "):
+		return []byte(docker.stats), nil, nil
 	case strings.Contains(command, " ps "):
 		return []byte(docker.states[min(docker.runs, len(docker.states))-1]), nil, nil
 	case strings.Contains(command, " logs "):

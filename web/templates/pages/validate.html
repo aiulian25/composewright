@@ -85,7 +85,7 @@
 {{if .Services}}
 <section class="context-section" aria-labelledby="containers-title">
   <h3 id="containers-title">Containers</h3>
-  <dl class="states">{{range .Services}}<dt>{{.Service}}</dt><dd class="state-{{.Tone}}">{{.State}}{{if .Detail}} ({{.Detail}}){{end}}</dd>{{end}}</dl>
+  <dl class="states">{{range .Services}}<dt>{{.Service}}</dt><dd class="state-{{.Tone}}">{{.State}}{{if .Detail}} ({{.Detail}}){{end}}{{if .Peak}} · {{.Peak}}{{end}}</dd>{{end}}</dl>
 </section>
 {{end}}
 <section class="context-section" aria-labelledby="limits-title">

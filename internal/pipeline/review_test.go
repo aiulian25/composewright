@@ -14,6 +14,7 @@ import (
 
 	"github.com/aiulian25/composewright/internal/extract"
 	"github.com/aiulian25/composewright/internal/fetch"
+	"github.com/aiulian25/composewright/internal/policy"
 	"github.com/aiulian25/composewright/internal/rules"
 	"github.com/aiulian25/composewright/internal/sandbox"
 	"github.com/aiulian25/composewright/internal/store"
@@ -130,6 +131,79 @@ func TestReviseRendersANewGeneration(t *testing.T) {
 		if _, err := Revise(ctx, dependencies, "miniflux", bad); err == nil {
 			t.Errorf("%s accepted", name)
 		}
+	}
+}
+
+func TestObservedPeakOffersALargerLimit(t *testing.T) {
+	named := `{"Service":"miniflux","Name":"cw-miniflux-1","State":"running","Health":"healthy"}` + "\n" +
+		`{"Service":"db","Name":"cw-db-1","State":"running","Health":"healthy"}`
+	docker := &scriptedDocker{states: []string{named}, stats: `{"Name":"cw-miniflux-1","MemUsage":"900MiB / 1GiB","CPUPerc":"20%"}` + "\n" +
+		`{"Name":"cw-db-1","MemUsage":"40MiB / 1GiB","CPUPerc":"1%"}`}
+	dependencies := testDependencies(t, docker)
+	generated(t, dependencies)
+	ctx := context.Background()
+	if _, err := ApproveAndValidate(ctx, dependencies, "miniflux", "web"); err != nil {
+		t.Fatal(err)
+	}
+	observed := func() policy.Report {
+		t.Helper()
+		stored, err := Load(ctx, dependencies.Workspace, "miniflux")
+		if err != nil {
+			t.Fatal(err)
+		}
+		generations, err := dependencies.Workspace.Store.Generations(ctx, stored.Project.ID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		report, err := Observed(ctx, stored, generations)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return report
+	}
+	miniflux := func() policy.Finding {
+		t.Helper()
+		findings := observed().Findings
+		index := slices.IndexFunc(findings, func(finding policy.Finding) bool { return finding.Service == "miniflux" })
+		if index < 0 {
+			t.Fatalf("no finding for miniflux: %+v", findings)
+		}
+		return findings[index]
+	}
+	tight := miniflux()
+	if tight.Severity != policy.Warn || tight.MemoryLimit == "" {
+		t.Fatalf("no tight-limit finding: %+v", tight)
+	}
+	limit := tight.MemoryLimit
+	result, err := Revise(ctx, dependencies, "miniflux", Revision{MemoryLimits: map[string]string{"miniflux": limit}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if fits := miniflux(); !strings.Contains(string(result.Files.Compose), "mem_limit: "+limit) || fits.Severity != policy.OK {
+		t.Fatalf("limit %s not applied: %+v\n%s", limit, fits, result.Files.Compose)
+	}
+	for name, bad := range map[string]struct {
+		limits map[string]string
+		want   error
+	}{"unknown service": {map[string]string{"nope": "1g"}, ErrUnknownService}, "not a size": {map[string]string{"miniflux": "lots"}, ErrNotASize}} {
+		if _, err := Revise(ctx, dependencies, "miniflux", Revision{MemoryLimits: bad.limits}); !errors.Is(err, bad.want) {
+			t.Errorf("%s: got %v, want %v", name, err, bad.want)
+		}
+	}
+}
+
+func TestPeaksSkipsRunsThatMeasuredNothing(t *testing.T) {
+	run := func(result string, peak int64) store.Generation {
+		verdict, err := json.Marshal(sandbox.Verdict{Result: result, Services: []sandbox.ServiceState{{Service: "app", PeakMemoryBytes: peak}}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return store.Generation{ValidationJSON: string(verdict)}
+	}
+	const measured = 300 << 20
+	generations := []store.Generation{run(sandbox.ResultPass, 0), run(sandbox.ResultFail, 900<<20), {}, run(sandbox.ResultPass, measured)}
+	if got := peaks(generations); got["app"] != measured {
+		t.Fatalf("peaks %v, want app at %d", got, measured)
 	}
 }
 

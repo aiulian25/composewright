@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -603,6 +604,47 @@ func TestEvaluateYAML(t *testing.T) {
 			report := policy.EvaluateYAML(context.Background(), loadCompose(t, testCase.yaml), []byte(testCase.yaml), input)
 			if report.Worst() != testCase.want {
 				t.Fatalf("worst = %s, want %s: %+v", report.Worst(), testCase.want, report.Findings)
+			}
+		})
+	}
+}
+
+func TestObservedPeakAgainstMemLimit(t *testing.T) {
+	const mebibyte = 1 << 20
+	cases := []struct {
+		name      string
+		limit     string
+		peak      int64
+		want      policy.Severity
+		message   string
+		suggested string
+	}{
+		{"fits", "1g", 612 * mebibyte, policy.OK, "observed peak 612MiB; limit 1GiB", ""},
+		{"tight", "512m", 612 * mebibyte, policy.Warn, "the limit is tight: OOM kills likely", "1024m"},
+		{"just below one and a half", "917m", 612 * mebibyte, policy.Warn, "tight", "1024m"},
+		{"one and a half is enough", "918m", 612 * mebibyte, policy.OK, "observed peak", ""},
+		{"four times is enough", "400m", 100 * mebibyte, policy.OK, "observed peak", ""},
+		{"generous", "800m", 100 * mebibyte, policy.Warn, "the limit is 8.0× what was used", ""},
+		{"just above four times", "440m", 100 * mebibyte, policy.Warn, "the limit is 4.4× what was used", ""},
+		{"not measured", "1g", 0, policy.OK, "", ""},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			content := "services:\n  app:\n    image: " + nginx + "\n    mem_limit: " + testCase.limit + "\n"
+			report := policy.EvaluateObserved(loadCompose(t, content), map[string]int64{"app": testCase.peak})
+			index := slices.IndexFunc(report.Findings, func(finding policy.Finding) bool { return finding.Rule == "P10" })
+			if testCase.message == "" {
+				if index >= 0 {
+					t.Fatalf("unmeasured service got %+v", report.Findings[index])
+				}
+				return
+			}
+			if index < 0 {
+				t.Fatalf("no P10 finding: %+v", report.Findings)
+			}
+			finding := report.Findings[index]
+			if finding.Severity != testCase.want || !strings.Contains(finding.Message, testCase.message) || finding.MemoryLimit != testCase.suggested {
+				t.Fatalf("finding %+v", finding)
 			}
 		})
 	}

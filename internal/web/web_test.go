@@ -77,6 +77,10 @@ func (fake *clock) advance(step time.Duration) {
 // crashedPS and crashLog are a run whose app exits; a test asks for one by
 // editing crashMark into compose.yaml.
 const (
+	// statsOutput is docker stats for healthyPS: the app's peak is above
+	// its 512m limit, so Review offers a larger one.
+	statsOutput = `{"Name":"cw-miniflux-1-miniflux-1","MemUsage":"900MiB / 1GiB","CPUPerc":"20%"}` + "\n" +
+		`{"Name":"cw-miniflux-1-db-1","MemUsage":"200MiB / 1GiB","CPUPerc":"2%"}`
 	crashedPS = `{"Service":"miniflux","Name":"cw-miniflux-1-miniflux-1","State":"exited","Health":"","ExitCode":1}` + "\n" +
 		`{"Service":"db","Name":"cw-miniflux-1-db-1","State":"running","Health":"healthy"}`
 	crashLog  = "miniflux-1  | 2026-10-10T08:15:02.123456789Z level=error msg=\"cannot open the database\"\n"
@@ -115,6 +119,8 @@ func docker(_ context.Context, directory string, live io.Writer, arguments ...st
 		if live != nil {
 			_, _ = io.WriteString(live, " Container cw-miniflux-1-miniflux-1 Healthy\n")
 		}
+	case strings.HasPrefix(command, "stats "):
+		return []byte(statsOutput), nil, nil
 	case strings.Contains(command, " ps ") && crashed:
 		return []byte(crashedPS), nil, nil
 	case strings.Contains(command, " ps "):
@@ -628,6 +634,9 @@ func TestTheWholeFlow(t *testing.T) {
 	if !strings.Contains(page, "Every service is up") || !strings.Contains(page, "Attempt 1 passed") || !strings.Contains(page, "Listening on :8080") {
 		t.Fatal("the kept run does not show its verdict and logs")
 	}
+	if !strings.Contains(page, "healthy · peak 900MiB of 512MiB, 20% CPU") || !strings.Contains(page, "healthy · peak 200MiB of 512MiB") {
+		t.Fatal("the Containers list does not show each service's peak")
+	}
 	if !strings.Contains(page, "<dt>runtime</dt><dd>daemon default</dd>") {
 		t.Fatal("the sandbox limits do not say which runtime the run used")
 	}
@@ -651,10 +660,31 @@ func TestTheWholeFlow(t *testing.T) {
 	if !strings.Contains(page, `href="/projects/miniflux"`) || !strings.Contains(page, "docker.io/miniflux/miniflux") {
 		t.Fatal("the projects table does not list the project with its image")
 	}
+	harness.useObservedLimit()
 	response, page = harness.post("/projects/miniflux/delete", nil)
 	status(t, response, http.StatusSeeOther, page)
 	response, page = harness.get("/projects/miniflux")
 	status(t, response, http.StatusNotFound, page)
+}
+
+// useObservedLimit follows the Review page's offer of a mem_limit that
+// fits the peak the passing run measured.
+func (harness *harness) useObservedLimit() {
+	t := harness.t
+	response, page := harness.get("/projects/miniflux/review")
+	status(t, response, http.StatusOK, page)
+	offer := `name="memory_limit" value="miniflux=1408m">Use 1.375GiB</button>`
+	if !strings.Contains(page, "the limit is tight: OOM kills likely") || !strings.Contains(page, offer) {
+		t.Fatal("the Review page does not offer a larger limit for a tight one")
+	}
+	response, page = harness.post("/projects/miniflux/review", url.Values{"registry": {"docker.io/miniflux/*"}, "value:ADMIN_USERNAME": {"boss"},
+		"memory_limit": {"miniflux=1408m"}})
+	status(t, response, http.StatusSeeOther, page)
+	response, page = harness.get(response.Header.Get("Location"))
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, appliedNotice) || !strings.Contains(page, "mem_limit: 1408m") || strings.Contains(page, offer) {
+		t.Fatal("using the offered limit did not make a version with it")
+	}
 }
 
 func TestValidateViewShowsTheRuntimeTheRunUsed(t *testing.T) {

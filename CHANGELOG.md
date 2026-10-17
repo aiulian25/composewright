@@ -8,6 +8,16 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Test runs now measure how much memory and CPU each service uses while it
+  starts and once every service is up. The Validate page's Containers list
+  and `composewright validate` show each peak against the service's memory
+  limit, such as peak 612MiB of 1GiB. After a passing run the Review page
+  warns when a limit is below one and a half times the peak, where OOM kills
+  are likely, with a button that makes a new version with a limit that fits,
+  and also when a limit is more than four times what was used. Peaks are
+  measured even on a daemon that does not enforce limits, and a run never
+  fails because they could not be measured; a slow daemon delays it by ten
+  seconds at most.
 - Try it on the Model providers page sends a connection one tiny request and
   says whether it answered: the model name it answered as, the tokens in and
   out and the time, or the provider's error with the key left out. It works

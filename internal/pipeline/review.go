@@ -9,6 +9,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/docker/go-units"
+
 	"github.com/aiulian25/composewright/internal/ir"
 	"github.com/aiulian25/composewright/internal/redact"
 	"github.com/aiulian25/composewright/internal/rules"
@@ -27,7 +29,9 @@ var addedDescriptions = []string{addedDescription, addedInEditor}
 
 var (
 	ErrUnknownVariable = errors.New("the plan has no such variable")
+	ErrUnknownService  = errors.New("the plan has no such service")
 	ErrNotEditable     = errors.New("this value cannot be changed here")
+	ErrNotASize        = errors.New("not a size such as 512m")
 	ErrEmptyPattern    = errors.New("an empty log pattern would ignore every line")
 )
 
@@ -47,6 +51,8 @@ type Revision struct {
 	Regenerate []string
 	// Add are new variables for the app service.
 	Add []Variable
+	// MemoryLimits are new mem_limit values by service, such as 1024m.
+	MemoryLimits map[string]string
 }
 
 type Variable struct {
@@ -180,6 +186,23 @@ func (revision Revision) apply(plan *ir.IR) error {
 			return err
 		}
 	}
+	for name, limit := range revision.MemoryLimits {
+		if err := setMemoryLimit(plan, name, limit, edited); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func setMemoryLimit(plan *ir.IR, name, limit string, provenance ir.Provenance) error {
+	service, found := plan.Service(name)
+	if !found {
+		return fmt.Errorf("%w: %s", ErrUnknownService, name)
+	}
+	if _, err := units.RAMInBytes(limit); err != nil {
+		return fmt.Errorf("%q is %w", limit, ErrNotASize)
+	}
+	service.Resources.MemoryLimit, service.Resources.Provenance = limit, provenance
 	return nil
 }
 

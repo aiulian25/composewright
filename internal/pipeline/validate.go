@@ -361,3 +361,40 @@ func samePlan(left, right *ir.IR) bool {
 	rightJSON, rightErr := json.Marshal(right)
 	return leftErr == nil && rightErr == nil && string(leftJSON) == string(rightJSON)
 }
+
+// Observed checks a version's memory limits against what the newest
+// passing run among generations, newest first, measured. That run may be
+// of this version, after its report was made, or of an earlier one.
+func Observed(ctx context.Context, stored *Stored, generations []store.Generation) (policy.Report, error) {
+	measured := peaks(generations)
+	if len(measured) == 0 {
+		return policy.Report{}, nil
+	}
+	project, err := composefile.Load(ctx, composeFileName, []byte(stored.Generation.ComposeYAML), nil, false)
+	if err != nil {
+		return policy.Report{}, fmt.Errorf("%w: %w", ErrComposeInvalid, err)
+	}
+	return policy.EvaluateObserved(project, measured), nil
+}
+
+// peaks is the peak memory per service of the newest passing run that
+// measured any; runs from before peaks were kept, or whose stats failed,
+// measured none.
+func peaks(generations []store.Generation) map[string]int64 {
+	for _, generation := range generations {
+		var verdict sandbox.Verdict
+		if generation.ValidationJSON == "" || json.Unmarshal([]byte(generation.ValidationJSON), &verdict) != nil || !verdict.Passed() {
+			continue
+		}
+		measured := map[string]int64{}
+		for _, state := range verdict.Services {
+			if state.PeakMemoryBytes > 0 {
+				measured[state.Service] = max(measured[state.Service], state.PeakMemoryBytes)
+			}
+		}
+		if len(measured) > 0 {
+			return measured
+		}
+	}
+	return nil
+}
