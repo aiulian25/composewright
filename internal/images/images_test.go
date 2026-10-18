@@ -15,6 +15,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/registry"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/google/go-containerregistry/pkg/v1/empty"
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/random"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
@@ -86,7 +87,7 @@ func inspector(t *testing.T, server *httptest.Server, cache Cache, mirror string
 	if err != nil {
 		t.Fatal(err)
 	}
-	return NewInspector(guard, cache, true, mirror)
+	return NewInspector(guard, cache, Options{ReadConfig: true, Mirror: mirror})
 }
 
 func TestInspectReadsDigestAndConfig(t *testing.T) {
@@ -119,7 +120,8 @@ func TestInspectReadsAgainWithoutBuildDate(t *testing.T) {
 	host := strings.TrimPrefix(server.URL, "http://")
 	image := ir.Image{Registry: host, Repository: "example/app", Tag: "1.0"}
 	cache := &memoryCache{entries: map[string]string{}, fetched: time.Now()}
-	if err := cache.CacheImage(context.Background(), image.TaggedReference(), `{"digest":"`+digest+`","config_read":true}`); err != nil {
+	key := inspector(t, server, cache, "").cacheKey(image.TaggedReference())
+	if err := cache.CacheImage(context.Background(), key, `{"digest":"`+digest+`","config_read":true}`); err != nil {
 		t.Fatal(err)
 	}
 	metadata, err := inspector(t, server, cache, "").Inspect(context.Background(), image)
@@ -127,12 +129,84 @@ func TestInspectReadsAgainWithoutBuildDate(t *testing.T) {
 		t.Fatalf("metadata %+v: %v", metadata, err)
 	}
 	// An image built without a date is still served from the cache.
-	if err := cache.CacheImage(context.Background(), image.TaggedReference(), `{"digest":"`+digest+`","config_facts_read":true}`); err != nil {
+	if err := cache.CacheImage(context.Background(), key, `{"digest":"`+digest+`","config_facts_read":true}`); err != nil {
 		t.Fatal(err)
 	}
 	before := requests.Load()
 	if _, err := inspector(t, server, cache, "").Inspect(context.Background(), image); err != nil || requests.Load() != before {
 		t.Fatalf("an image without a build date was fetched again: %v", err)
+	}
+}
+
+// platformIndex serves example/app:1.0 as an image index with one image per
+// platform, each labelled with its platform, and returns the index digest.
+func platformIndex(t *testing.T, server *httptest.Server, platforms ...string) string {
+	t.Helper()
+	var index v1.ImageIndex = empty.Index
+	for _, text := range platforms {
+		platform, err := v1.ParsePlatform(text)
+		if err != nil {
+			t.Fatal(err)
+		}
+		image, err := random.Image(256, 1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		file, _ := image.ConfigFile()
+		file.OS, file.Architecture, file.Variant = platform.OS, platform.Architecture, platform.Variant
+		file.Config.Labels = map[string]string{VersionLabel: text}
+		if image, err = mutate.ConfigFile(image, file); err != nil {
+			t.Fatal(err)
+		}
+		index = mutate.AppendManifests(index, mutate.IndexAddendum{Add: image, Descriptor: v1.Descriptor{Platform: platform}})
+	}
+	reference, _ := name.ParseReference(strings.TrimPrefix(server.URL, "http://") + "/" + testImage)
+	if err := remote.WriteIndex(reference, index); err != nil {
+		t.Fatal(err)
+	}
+	digest, _ := index.Digest()
+	return digest.String()
+}
+
+func platformInspector(t *testing.T, server *httptest.Server, cache Cache, platform string) *Inspector {
+	t.Helper()
+	return NewInspector(inspector(t, server, nil, "").guard, cache, Options{ReadConfig: true, Platform: platform})
+}
+
+// TestInspectReadsThePlatformVariant: with a platform in the profile, the
+// digest pinned is still the index's, so one compose.yaml runs on every
+// platform it lists, while the facts come from that platform's image.
+func TestInspectReadsThePlatformVariant(t *testing.T) {
+	server, _, _ := fakeRegistry(t, "example/other:1.0")
+	digest := platformIndex(t, server, "linux/amd64", "linux/arm64/v8")
+	image := ir.Image{Registry: strings.TrimPrefix(server.URL, "http://"), Repository: "example/app", Tag: "1.0"}
+	metadata, err := platformInspector(t, server, nil, "linux/arm64").Inspect(context.Background(), image)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if metadata.Digest != digest || !slices.Equal(metadata.Platforms, []string{"linux/amd64", "linux/arm64/v8"}) || metadata.Labels[VersionLabel] != "linux/arm64/v8" {
+		t.Fatalf("metadata %+v, want the index digest %s, both platforms and the arm64 image's labels", metadata, digest)
+	}
+}
+
+// TestInspectListsAMissingPlatformWithoutFailing: an index without the chosen
+// platform is no error, and the platforms it lists are kept for the policy.
+// Facts cached for one platform are never served for another.
+func TestInspectListsAMissingPlatformWithoutFailing(t *testing.T) {
+	server, requests, _ := fakeRegistry(t, "example/other:1.0")
+	platformIndex(t, server, "linux/amd64")
+	image := ir.Image{Registry: strings.TrimPrefix(server.URL, "http://"), Repository: "example/app", Tag: "1.0"}
+	cache := &memoryCache{entries: map[string]string{}}
+	if _, err := platformInspector(t, server, cache, "linux/amd64").Inspect(context.Background(), image); err != nil {
+		t.Fatal(err)
+	}
+	before := requests.Load()
+	metadata, err := platformInspector(t, server, cache, "linux/arm64").Inspect(context.Background(), image)
+	if err != nil || !slices.Equal(metadata.Platforms, []string{"linux/amd64"}) || metadata.ConfigRead {
+		t.Fatalf("metadata %+v: %v", metadata, err)
+	}
+	if requests.Load() == before {
+		t.Fatal("facts cached for linux/amd64 served an inspection for linux/arm64")
 	}
 }
 
@@ -152,7 +226,7 @@ func TestInspectStaysBehindTheGuard(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = NewInspector(guard, nil, true, "").Inspect(context.Background(), ir.Image{Registry: host, Repository: "example/app", Tag: "1.0"})
+	_, err = NewInspector(guard, nil, Options{ReadConfig: true}).Inspect(context.Background(), ir.Image{Registry: host, Repository: "example/app", Tag: "1.0"})
 	if err == nil || requests.Load() != 0 {
 		t.Fatalf("an unlisted private registry was contacted: err=%v requests=%d", err, requests.Load())
 	}
@@ -183,7 +257,7 @@ func TestPublicMirrorUsesHTTPS(t *testing.T) {
 		t.Fatal(err)
 	}
 	for mirror, scheme := range cases {
-		reference, err := NewInspector(guard, nil, true, mirror).remoteReference(hub, "docker.io/library/postgres:17")
+		reference, err := NewInspector(guard, nil, Options{ReadConfig: true, Mirror: mirror}).remoteReference(hub, "docker.io/library/postgres:17")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -201,7 +275,7 @@ func TestSingleWordMirrorIsTheHost(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	reference, err := NewInspector(guard, nil, true, "nas").remoteReference(hub, "docker.io/library/postgres:17")
+	reference, err := NewInspector(guard, nil, Options{ReadConfig: true, Mirror: "nas"}).remoteReference(hub, "docker.io/library/postgres:17")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -229,15 +303,15 @@ func TestMirrorLackingAnImageIsNotMissing(t *testing.T) {
 func TestRateLimitNamesTheMirrorKey(t *testing.T) {
 	limited := &transport.Error{StatusCode: http.StatusTooManyRequests}
 	hub := ir.Image{Registry: ir.DockerHubHost, Repository: "library/postgres", Tag: "17"}
-	err := NewInspector(nil, nil, true, "").classify(hub, "docker.io/library/postgres:17", limited)
+	err := NewInspector(nil, nil, Options{ReadConfig: true}).classify(hub, "docker.io/library/postgres:17", limited)
 	if !errors.Is(err, ErrRateLimited) || !strings.Contains(err.Error(), "profile.registry_mirror") {
 		t.Fatalf("Docker Hub's limit: %v", err)
 	}
-	if err := NewInspector(nil, nil, true, "mirror.gcr.io").classify(hub, "docker.io/library/postgres:17", limited); errors.Is(err, ErrRateLimited) {
+	if err := NewInspector(nil, nil, Options{ReadConfig: true, Mirror: "mirror.gcr.io"}).classify(hub, "docker.io/library/postgres:17", limited); errors.Is(err, ErrRateLimited) {
 		t.Fatalf("a mirror's limit points at the mirror setting: %v", err)
 	}
 	other := ir.Image{Registry: "ghcr.io", Repository: "example/app", Tag: "1.0"}
-	if err := NewInspector(nil, nil, true, "").classify(other, "ghcr.io/example/app:1.0", limited); errors.Is(err, ErrRateLimited) {
+	if err := NewInspector(nil, nil, Options{ReadConfig: true}).classify(other, "ghcr.io/example/app:1.0", limited); errors.Is(err, ErrRateLimited) {
 		t.Fatalf("another registry's limit blames Docker Hub: %v", err)
 	}
 }

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"runtime"
 	"slices"
 	"time"
 )
@@ -65,6 +66,8 @@ const (
 	LayoutProject = "{project}"
 	LayoutVolume  = "{volume}"
 
+	platformOS = "linux"
+
 	MaxIterationsLimit = 10
 	minimumTimeout     = 10 * time.Second
 	minimumSessionTTL  = 5 * time.Minute
@@ -110,6 +113,7 @@ var (
 	networkKinds     = []string{"proxy", "tunnel", "vpn", "other"}
 	networkProviders = []string{"", "npm", "traefik", "caddy", "pangolin", "cloudflare", "tailscale"}
 	restartModes     = []string{"unless-stopped", "always", "on-failure", "no"}
+	platforms        = []string{"linux/amd64", "linux/arm64", "linux/arm/v7"}
 	backupSchedules  = []string{BackupOff, BackupWeekly, BackupMonthly, BackupCustom}
 )
 
@@ -119,6 +123,11 @@ var (
 func NetworkKinds() []string     { return slices.Clone(networkKinds) }
 func NetworkProviders() []string { return slices.Clone(networkProviders) }
 func RestartModes() []string     { return slices.Clone(restartModes) }
-func Themes() []string           { return slices.Clone(themes) }
-func BackupSchedules() []string  { return slices.Clone(backupSchedules) }
-func SandboxTiers() []string     { return slices.Clone(sandboxTiers) }
+func Platforms() []string        { return slices.Clone(platforms) }
+
+// HostPlatform is the platform of the machine composewright runs on, the
+// one an empty profile.platform means.
+func HostPlatform() string      { return platformOS + "/" + runtime.GOARCH }
+func Themes() []string          { return slices.Clone(themes) }
+func BackupSchedules() []string { return slices.Clone(backupSchedules) }
+func SandboxTiers() []string    { return slices.Clone(sandboxTiers) }

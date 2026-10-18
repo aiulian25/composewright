@@ -80,6 +80,9 @@ type Input struct {
 type ImageCheck struct {
 	Found   bool
 	Message string
+	// Platforms are those the registry lists for the image; empty when it
+	// was not read.
+	Platforms []string
 }
 
 // Blocked reports whether anything denies the plan or a need is still waiting

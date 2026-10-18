@@ -433,12 +433,12 @@ func verifyImages(ctx context.Context, inspector *images.Inspector, plan *ir.IR,
 			checks[key] = policy.ImageCheck{Found: false}
 		case err != nil && metadata.Digest != "":
 			inspected[key] = metadata
-			checks[key] = policy.ImageCheck{Found: true, Message: "digest pinned, but the image config could not be read: " + err.Error()}
+			checks[key] = policy.ImageCheck{Found: true, Message: "digest pinned, but the image config could not be read: " + err.Error(), Platforms: metadata.Platforms}
 		case err != nil:
 			checks[key] = policy.ImageCheck{Found: true, Message: err.Error()}
 		default:
 			inspected[key] = metadata
-			checks[key] = policy.ImageCheck{Found: true}
+			checks[key] = policy.ImageCheck{Found: true, Platforms: metadata.Platforms}
 		}
 	}
 	return inspected, checks
@@ -462,7 +462,8 @@ func renderAndGate(ctx context.Context, dependencies Dependencies, options Optio
 		return err
 	}
 	renderOptions, err := render.Options{Profile: profile, ExposeVia: options.ExposeVia, Networks: options.Networks, PublicHost: options.PublicHost,
-		Storage: options.Storage, GrantedNeeds: options.AllowNeeds, Header: header(dependencies.Version, result.Source, result.Plan)}.Resolve()
+		Storage: options.Storage, GrantedNeeds: options.AllowNeeds, Header: header(dependencies.Version, result.Source, result.Plan),
+		CheckedPlatform: checkedPlatform(dependencies.Config.Profile.Platform, result.Plan, result.Checks)}.Resolve()
 	if err != nil {
 		return err
 	}
@@ -491,6 +492,20 @@ func renderAndGate(ctx context.Context, dependencies Dependencies, options Optio
 	input.Profile = profile
 	result.Report = result.Report.Merge(policy.EvaluateYAML(ctx, project, result.Files.Compose, input))
 	return nil
+}
+
+// checkedPlatform is the profile's platform when the registry listed it for
+// every image, so DEPLOY.md can say the stack was verified for it.
+func checkedPlatform(platform string, plan *ir.IR, checks map[string]policy.ImageCheck) string {
+	if platform == "" {
+		return ""
+	}
+	for _, service := range plan.Services {
+		if !policy.PlatformListed(checks[rules.ImageKey(service.Image)].Platforms, platform) {
+			return ""
+		}
+	}
+	return platform
 }
 
 func loadProfile(configured config.Profile, file string) (config.Profile, error) {

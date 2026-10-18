@@ -73,15 +73,19 @@ type settingsView struct {
 	HostProblem string
 	Models      modelsView
 	Restarts    []string
-	Themes      []string
-	Private     string
-	Registries  string
-	ConfigFile  string
-	Minimum     int
-	Backups     backupView
-	Audit       auditView
-	Maintenance maintenanceView
-	Advanced    advancedView
+	// Platforms are the platforms the profile may target; HostPlatform is
+	// the one an empty choice means.
+	Platforms    []string
+	HostPlatform string
+	Themes       []string
+	Private      string
+	Registries   string
+	ConfigFile   string
+	Minimum      int
+	Backups      backupView
+	Audit        auditView
+	Maintenance  maintenanceView
+	Advanced     advancedView
 }
 
 // networkRow is one row of the networks table. It carries the kinds and
@@ -180,6 +184,7 @@ func (server *Server) renderSettings(writer http.ResponseWriter, request *http.R
 	}
 	view := settingsView{Page: state.shown, Title: settingsTitles[state.shown], Engines: server.engineOptions(configuration.LLM.Engine), File: file,
 		Config: configuration, MaxNetworks: maxNetworkRows, Models: models, Restarts: config.RestartModes(), Themes: config.Themes(),
+		Platforms: platformChoices(configuration.Profile.Platform), HostPlatform: config.HostPlatform(),
 		ConfigFile: server.paths().ConfigFile, Private: strings.Join(configuration.Network.AllowPrivateTargets, "\n"),
 		Registries: strings.Join(configuration.Registries.Allow, "\n"), Minimum: auth.MinimumPasswordLength}
 	kinds, providers := config.NetworkKinds(), config.NetworkProviders()
@@ -332,8 +337,19 @@ func (server *Server) update(request *http.Request, current *visit, values map[s
 	return server.workspace().Store.Audit(request.Context(), webActorPrefix+current.user.Username, store.ActionSettings, "", map[string]any{"keys": keys})
 }
 
+// platformChoices are the platforms Settings offers, with a platform set in
+// config.yaml outside them kept, so saving the page does not drop it.
+func platformChoices(current string) []string {
+	choices := config.Platforms()
+	if current != "" && !slices.Contains(choices, current) {
+		choices = append(choices, current)
+	}
+	return choices
+}
+
 // profileForm reads the Environment profile page into the profile: the
-// networks table, the storage fields, the defaults and the registry mirror.
+// networks table, the storage fields, the defaults, the registry mirror and
+// the platform.
 func profileForm(request *http.Request, profile config.Profile) (config.Profile, error) {
 	profile.Networks = adopt(formNetworks(request), request.PostForm["adopt"])
 	profile.Storage = config.Storage{Style: field(request, "style"), BasePath: field(request, "base_path"), Layout: field(request, "layout"),
@@ -347,6 +363,7 @@ func profileForm(request *http.Request, profile config.Profile) (config.Profile,
 		PIDsLimit:  reader.whole("pids_limit", "Processes per service", saved.PIDsLimit),
 		CPUs:       reader.decimal("cpus", "CPUs per service", saved.CPUs)}
 	profile.RegistryMirror = strings.ToLower(field(request, "registry_mirror"))
+	profile.Platform = field(request, "platform")
 	return profile, errors.Join(reader.problems...)
 }
 
@@ -429,6 +446,7 @@ func profileValues(profile config.Profile) map[string]string {
 		"profile.defaults.cpus":          strconv.FormatFloat(defaults.CPUs, 'f', -1, 64),
 		"profile.defaults.pids_limit":    strconv.Itoa(defaults.PIDsLimit),
 		"profile.registry_mirror":        quote(profile.RegistryMirror),
+		"profile.platform":               quote(profile.Platform),
 	}
 }
 

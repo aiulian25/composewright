@@ -134,6 +134,8 @@ func TestValidateRejectsBadValues(t *testing.T) {
 		"mirror scheme":    func(c *Config) { c.Profile.RegistryMirror = "https://mirror.gcr.io" },
 		"mirror port":      func(c *Config) { c.Profile.RegistryMirror = "mirror.gcr.io:http" },
 		"mirror port zero": func(c *Config) { c.Profile.RegistryMirror = "mirror.gcr.io:0" },
+		"platform os":      func(c *Config) { c.Profile.Platform = "windows/amd64" },
+		"platform variant": func(c *Config) { c.Profile.Platform = "linux/arm/7" },
 		"network domain": func(c *Config) {
 			c.Profile.Networks = []ProfileNetwork{{Name: "npm", Kind: "proxy", Domain: "https://npm.example.com"}}
 		},

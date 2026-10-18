@@ -768,3 +768,36 @@ func TestTakenHostPortWarnsAndSuggestsTheNextFree(t *testing.T) {
 		t.Errorf("unique ports warn: %+v", report.Findings)
 	}
 }
+
+// TestImageWithoutThePlatformVariantIsDenied: with a platform in the profile,
+// an image the registry lists only for others is a P2 deny. An arm64/v8
+// variant serves linux/arm64, and an image whose platforms were not read, or
+// a profile naming none, raises nothing.
+func TestImageWithoutThePlatformVariantIsDenied(t *testing.T) {
+	plan := goodPlan()
+	input := baseInput(plan)
+	input.Profile.Platform = "linux/arm64"
+	key := plan.Services[0].Image.TaggedReference()
+	cases := map[string]struct {
+		platforms []string
+		denied    bool
+	}{
+		"amd64 only": {platforms: []string{"linux/amd64"}, denied: true},
+		"arm64 v8":   {platforms: []string{"linux/amd64", "linux/arm64/v8"}},
+		"not read":   {},
+	}
+	for name, test := range cases {
+		input.Images = map[string]policy.ImageCheck{key: {Found: true, Platforms: test.platforms}}
+		denied := slices.ContainsFunc(policy.Evaluate(input).Findings, func(finding policy.Finding) bool {
+			return finding.Rule == "P2" && finding.Severity == policy.Deny && strings.Contains(finding.Message, "has no linux/arm64 variant (it has linux/amd64)")
+		})
+		if denied != test.denied {
+			t.Errorf("%s: denied = %v, want %v", name, denied, test.denied)
+		}
+	}
+	input.Profile.Platform = ""
+	input.Images = map[string]policy.ImageCheck{key: {Found: true, Platforms: []string{"linux/amd64"}}}
+	if report := policy.Evaluate(input); report.Has("P2", policy.Deny) {
+		t.Errorf("a profile naming no platform denied: %+v", report.Findings)
+	}
+}

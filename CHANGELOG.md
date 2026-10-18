@@ -207,6 +207,16 @@ All notable changes to this project are documented here. The format follows
   the same table. Each version now keeps its images' labels and build date: the
   Review's compose pane shows the version, build date, revision and source
   when you hover an image line, and the Analysis lists the image version.
+- The Environment profile page has a Target platform: linux/amd64,
+  linux/arm64, linux/arm/v7 or this machine's, kept as `profile.platform`.
+  Every image is checked for a variant for it, and one without is a P2 deny
+  that names what the image has, such as "has no linux/arm/v7 variant (it
+  has linux/amd64, linux/arm64)", until another tag or image is chosen. The
+  pinned digest stays the image index's, so compose.yaml runs on every
+  platform it lists, while labels and healthchecks are read from that
+  platform's image. DEPLOY.md says "verified for linux/arm64" once every
+  image has the variant, and a test run says when the sandbox tests its own
+  platform instead.
 
 ### Changed
 

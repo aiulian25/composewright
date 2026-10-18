@@ -66,3 +66,4 @@ profile:
     cpus: 1
     pids_limit: 256
   registry_mirror: ""        # host[:port] Docker Hub images are checked through, such as mirror.gcr.io
+  platform: ""               # linux/amd64, linux/arm64 or linux/arm/v7: every image must have a variant for it; empty is this machine's

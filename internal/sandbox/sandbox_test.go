@@ -21,6 +21,7 @@ import (
 	"go.yaml.in/yaml/v3"
 
 	"github.com/aiulian25/composewright/internal/composefile"
+	"github.com/aiulian25/composewright/internal/config"
 	"github.com/aiulian25/composewright/internal/ir"
 )
 
@@ -764,5 +765,20 @@ func TestParseContainersReadsHostPortsAndLabels(t *testing.T) {
 	}
 	if project := containers[0].Labels[LabelComposeProject]; project != "kuma" {
 		t.Errorf("compose project label = %q, want kuma", project)
+	}
+}
+
+// TestPlatformNoteOnlyWhenTheTargetDiffers: the run says when the files
+// target another platform than the sandbox's own.
+func TestPlatformNoteOnlyWhenTheTargetDiffers(t *testing.T) {
+	if note := platformNote(""); note != "" {
+		t.Errorf("no platform chosen: %q", note)
+	}
+	if note := platformNote(config.HostPlatform()); note != "" {
+		t.Errorf("this machine's platform: %q", note)
+	}
+	other := "linux/riscv64"
+	if note := platformNote(other); !strings.Contains(note, "the files target "+other) || !strings.Contains(note, "this sandbox runs "+config.HostPlatform()) {
+		t.Errorf("another platform: %q", note)
 	}
 }

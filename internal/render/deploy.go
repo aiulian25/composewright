@@ -28,6 +28,9 @@ func Deploy(plan *ir.IR, options Options, status string) []byte {
 		write("Upstream: %s", plan.App.UpstreamURL)
 	}
 	write("Validation: %s", status)
+	if options.CheckedPlatform != "" {
+		write("Platform: verified for %s, every image has a variant for it", options.CheckedPlatform)
+	}
 	write("")
 	write("## Start it")
 	write("")

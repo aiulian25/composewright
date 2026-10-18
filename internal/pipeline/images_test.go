@@ -24,6 +24,8 @@ import (
 	"github.com/aiulian25/composewright/internal/images"
 	"github.com/aiulian25/composewright/internal/ir"
 	"github.com/aiulian25/composewright/internal/netguard"
+	"github.com/aiulian25/composewright/internal/policy"
+	"github.com/aiulian25/composewright/internal/rules"
 	"github.com/aiulian25/composewright/internal/store"
 )
 
@@ -72,7 +74,7 @@ func newMirrorRegistry(t *testing.T, cache images.Cache) (*mirrorRegistry, *imag
 		t.Fatal(err)
 	}
 	mirror.host = host
-	return mirror, images.NewInspector(guard, cache, true, host)
+	return mirror, images.NewInspector(guard, cache, images.Options{ReadConfig: true, Mirror: host})
 }
 
 // push stores a new image under repository:tag, labelled with its version,
@@ -296,5 +298,25 @@ func TestRegenerationKeepsAChosenTag(t *testing.T) {
 		if service, _ := result.Plan.Service("miniflux"); service.Image.Tag != "2.2.5" || service.Image.Digest == "" {
 			t.Fatalf("%s: the chosen tag was not kept and pinned: %+v", name, service.Image)
 		}
+	}
+}
+
+// TestCheckedPlatformNeedsEveryImage: DEPLOY.md names the platform only when
+// the registry listed it for every image of the plan.
+func TestCheckedPlatformNeedsEveryImage(t *testing.T) {
+	app := ir.Image{Registry: ir.DockerHubHost, Repository: minifluxRepository, Tag: "2.2.3"}
+	database := ir.Image{Registry: ir.DockerHubHost, Repository: "library/postgres", Tag: "17"}
+	plan := &ir.IR{Services: []ir.Service{{Name: "miniflux", Image: app}, {Name: "db", Image: database}}}
+	listed := policy.ImageCheck{Found: true, Platforms: []string{"linux/amd64", "linux/arm64/v8"}}
+	checks := map[string]policy.ImageCheck{rules.ImageKey(app): listed, rules.ImageKey(database): listed}
+	if platform := checkedPlatform("linux/arm64", plan, checks); platform != "linux/arm64" {
+		t.Errorf("every image listed: %q", platform)
+	}
+	if platform := checkedPlatform("", plan, checks); platform != "" {
+		t.Errorf("no platform chosen: %q", platform)
+	}
+	delete(checks, rules.ImageKey(database))
+	if platform := checkedPlatform("linux/arm64", plan, checks); platform != "" {
+		t.Errorf("an image not checked: %q", platform)
 	}
 }

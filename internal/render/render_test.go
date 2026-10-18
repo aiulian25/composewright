@@ -259,6 +259,20 @@ func TestDeployFolderOwner(t *testing.T) {
 	}
 }
 
+// TestDeployNamesTheCheckedPlatform: DEPLOY.md says which platform every
+// image was verified for, and says nothing when none was checked.
+func TestDeployNamesTheCheckedPlatform(t *testing.T) {
+	options := testOptions(t, variant{})
+	plan := &ir.IR{App: ir.App{Name: "demo"}, Services: []ir.Service{{Name: "app"}}}
+	if deploy := string(Deploy(plan, options, "not validated yet")); strings.Contains(deploy, "Platform:") {
+		t.Errorf("DEPLOY.md names a platform no image was checked for:\n%s", deploy)
+	}
+	options.CheckedPlatform = "linux/arm64"
+	if deploy := string(Deploy(plan, options, "not validated yet")); !strings.Contains(deploy, "Platform: verified for linux/arm64, every image has a variant for it") {
+		t.Errorf("DEPLOY.md lacks the platform line:\n%s", deploy)
+	}
+}
+
 // TestDeployNeverOpensPortZero: an app with no published port is not sent
 // to http://localhost:0.
 func TestDeployNeverOpensPortZero(t *testing.T) {

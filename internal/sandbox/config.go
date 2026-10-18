@@ -41,5 +41,7 @@ func FromConfig(configuration config.Config, projectsDir string) (*Sandbox, erro
 		return nil, err
 	}
 	runner := ExecRunner(docker, configuration.Docker.Host)
-	return New(runner, limits, validation.Timeout, configuration.Docker.SandboxTier, projectsDir), nil
+	sandbox := New(runner, limits, validation.Timeout, configuration.Docker.SandboxTier, projectsDir)
+	sandbox.platform = configuration.Profile.Platform
+	return sandbox, nil
 }

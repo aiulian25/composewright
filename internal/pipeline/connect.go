@@ -56,7 +56,8 @@ func Connect(ctx context.Context, setup Setup) (Connection, error) {
 	}
 	if !setup.Offline {
 		dependencies.Guard = guard
-		dependencies.Inspector = images.NewInspector(guard, imageCache(setup.Workspace), !setup.NoLabelCheck, setup.Config.Profile.RegistryMirror)
+		dependencies.Inspector = images.NewInspector(guard, imageCache(setup.Workspace), images.Options{ReadConfig: !setup.NoLabelCheck,
+			Mirror: setup.Config.Profile.RegistryMirror, Platform: setup.Config.Profile.Platform})
 	}
 	if dependencies.GitHubToken, err = resolveSecret(ctx, setup.Workspace, setup.Config.SCM.GitHubTokenRef); err != nil {
 		return Connection{}, err

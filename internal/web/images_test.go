@@ -67,7 +67,7 @@ func (harness *harness) readThroughMirror() (string, *[]string) {
 	if err != nil {
 		harness.t.Fatal(err)
 	}
-	inspector := images.NewInspector(guard, nil, true, host)
+	inspector := images.NewInspector(guard, nil, images.Options{ReadConfig: true, Mirror: host})
 	var trusted []string
 	harness.server.options.Connect = func(ctx context.Context, setup pipeline.Setup) (pipeline.Connection, error) {
 		trusted = setup.ExtraRegistries

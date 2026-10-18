@@ -1336,6 +1336,21 @@ func TestSettings(t *testing.T) {
 	if !strings.Contains(page, "registry_mirror &#34;https://mirror.gcr.io&#34; must be host or host:port") || harness.server.config().Profile.RegistryMirror != "mirror.gcr.io" {
 		t.Fatal("a mirror with a scheme was saved or not explained")
 	}
+	profile = sentProfile()
+	profile.Set("platform", "linux/arm64")
+	response, page = harness.post("/settings/profile", profile)
+	status(t, response, http.StatusSeeOther, page)
+	response, page = harness.get(response.Header.Get("Location"))
+	status(t, response, http.StatusOK, page)
+	if harness.server.config().Profile.Platform != "linux/arm64" || !strings.Contains(page, `<option value="linux/arm64" selected>linux/arm64</option>`) {
+		t.Fatalf("the platform %q was not saved or shown as chosen", harness.server.config().Profile.Platform)
+	}
+	profile.Set("platform", "windows/amd64")
+	response, page = harness.post("/settings/profile", profile)
+	status(t, response, http.StatusBadRequest, page)
+	if harness.server.config().Profile.Platform != "linux/arm64" {
+		t.Fatal("an invalid platform was saved")
+	}
 	response, page = harness.post("/settings/engine", url.Values{"engine": {"rules"}, "registries": {"docker.io/library/*\nghcr.io/*"}})
 	status(t, response, http.StatusSeeOther, page)
 	if registries := harness.server.config().Registries.Allow; len(registries) != 2 {

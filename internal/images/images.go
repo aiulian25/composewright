@@ -5,12 +5,13 @@
 package images
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
-	"runtime"
+	"slices"
 	"sort"
 	"time"
 
@@ -20,6 +21,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
 
+	"github.com/aiulian25/composewright/internal/config"
 	"github.com/aiulian25/composewright/internal/ir"
 	"github.com/aiulian25/composewright/internal/netguard"
 )
@@ -29,7 +31,12 @@ const (
 	VersionLabel  = "org.opencontainers.image.version"
 	RevisionLabel = "org.opencontainers.image.revision"
 	cacheTTL      = 24 * time.Hour
-	linuxOS       = "linux"
+	// cacheKeySeparator joins a reference and the platform its facts were
+	// read for into the cache key.
+	cacheKeySeparator = " "
+	// linuxOS is the only system a profile targets, so an index's Windows
+	// images and attestation manifests are not listed.
+	linuxOS = "linux"
 	// tagPageSize and maxTagsRead bound a tag listing: popular images
 	// have thousands of tags, and only a version-shaped few matter.
 	tagPageSize = 1000
@@ -57,6 +64,9 @@ type Metadata struct {
 	HealthRetries     int               `json:"health_retries"`
 	Labels            map[string]string `json:"labels"`
 	Created           time.Time         `json:"created"`
+	// Platforms are the platforms the tag's image index lists, or the
+	// image's own when the tag names a single image.
+	Platforms []string `json:"platforms"`
 	// ConfigRead's key changed when the build date was kept, so an entry
 	// cached before then is read again.
 	ConfigRead bool      `json:"config_facts_read"`
@@ -74,20 +84,36 @@ type Inspector struct {
 	cache      Cache
 	readConfig bool
 	mirror     string
+	platform   v1.Platform
+	// platformChosen says the profile names the platform, so an image
+	// lacking it is the policy's to report, not an unreadable config.
+	platformChosen bool
 }
 
-// NewInspector inspects through the guard's registry purpose. readConfig
-// controls the image-config GET used for labels and R3 facts; mirror, when
-// set, is the host Docker Hub images are read from instead.
-func NewInspector(guard *netguard.Guard, cache Cache, readConfig bool, mirror string) *Inspector {
-	return &Inspector{guard: guard, cache: cache, readConfig: readConfig, mirror: mirror}
+// Options are how an inspector reads images.
+type Options struct {
+	// ReadConfig controls the image-config GET used for labels and R3 facts.
+	ReadConfig bool
+	// Mirror, when set, is the host Docker Hub images are read from instead.
+	Mirror string
+	// Platform is the profile's platform, such as linux/arm64, whose variant
+	// facts are read; empty is this machine's.
+	Platform string
+}
+
+// NewInspector inspects through the guard's registry purpose.
+func NewInspector(guard *netguard.Guard, cache Cache, options Options) *Inspector {
+	inspector := &Inspector{guard: guard, cache: cache, readConfig: options.ReadConfig, mirror: options.Mirror}
+	// Validation accepts only platforms ParsePlatform reads.
+	platform, _ := v1.ParsePlatform(cmp.Or(options.Platform, config.HostPlatform()))
+	inspector.platform, inspector.platformChosen = *platform, options.Platform != ""
+	return inspector
 }
 
 // Inspect resolves an image's digest and, if enabled, reads its config.
 // Results are cached for a day.
 func (inspector *Inspector) Inspect(ctx context.Context, image ir.Image) (Metadata, error) {
-	reference := image.TaggedReference()
-	if cached, found := inspector.cached(ctx, reference); found {
+	if cached, found := inspector.cached(ctx, image.TaggedReference()); found {
 		return cached, nil
 	}
 	return inspector.Fresh(ctx, image)
@@ -106,8 +132,8 @@ func (inspector *Inspector) Fresh(ctx context.Context, image ir.Image) (Metadata
 		return Metadata{}, inspector.classify(image, reference, err)
 	}
 	metadata := Metadata{Reference: reference, Digest: descriptor.Digest.String(), FetchedAt: time.Now().UTC()}
-	if inspector.readConfig {
-		if err := readConfig(parsed, options, &metadata); err != nil {
+	if inspector.readConfig || inspector.platformChosen {
+		if err := inspector.readManifest(parsed, options, &metadata); err != nil {
 			return metadata, inspector.classify(image, reference, err)
 		}
 	}
@@ -167,7 +193,7 @@ func (inspector *Inspector) registryRequest(ctx context.Context, image ir.Image,
 	}
 	options := []remote.Option{
 		remote.WithContext(ctx), remote.WithTransport(inspector.guard.Transport(netguard.Registry)),
-		remote.WithAuth(authn.Anonymous), remote.WithPlatform(v1.Platform{OS: linuxOS, Architecture: runtime.GOARCH}),
+		remote.WithAuth(authn.Anonymous), remote.WithPlatform(inspector.platform),
 	}
 	return parsed, options, nil
 }
@@ -198,8 +224,26 @@ func (inspector *Inspector) throughMirror(image ir.Image) bool {
 	return image.Registry == ir.DockerHubHost && inspector.mirror != ""
 }
 
-func readConfig(reference name.Reference, options []remote.Option, metadata *Metadata) error {
-	image, err := remote.Image(reference, options...)
+// readManifest reads what the tag points at: the platforms an image index
+// lists and, when enabled, the config of the variant for the platform. An
+// index lacking a chosen platform has no such config to read.
+func (inspector *Inspector) readManifest(reference name.Reference, options []remote.Option, metadata *Metadata) error {
+	descriptor, err := remote.Get(reference, options...)
+	if err != nil {
+		return err
+	}
+	if descriptor.MediaType.IsIndex() {
+		listed, err := indexPlatforms(descriptor)
+		if err != nil {
+			return err
+		}
+		metadata.Platforms = platformNames(listed)
+		lacksChosen := inspector.platformChosen && !slices.ContainsFunc(listed, func(platform v1.Platform) bool { return platform.Satisfies(inspector.platform) })
+		if !inspector.readConfig || lacksChosen {
+			return nil
+		}
+	}
+	image, err := descriptor.Image()
 	if err != nil {
 		return err
 	}
@@ -207,6 +251,44 @@ func readConfig(reference name.Reference, options []remote.Option, metadata *Met
 	if err != nil {
 		return err
 	}
+	if own := file.Platform(); len(metadata.Platforms) == 0 && own != nil {
+		metadata.Platforms = []string{own.String()}
+	}
+	if inspector.readConfig {
+		keepConfig(file, metadata)
+	}
+	return nil
+}
+
+// indexPlatforms are the Linux platforms an image index has images for.
+func indexPlatforms(descriptor *remote.Descriptor) ([]v1.Platform, error) {
+	index, err := descriptor.ImageIndex()
+	if err != nil {
+		return nil, err
+	}
+	manifest, err := index.IndexManifest()
+	if err != nil {
+		return nil, err
+	}
+	var platforms []v1.Platform
+	for _, child := range manifest.Manifests {
+		if child.Platform != nil && child.Platform.OS == linuxOS {
+			platforms = append(platforms, *child.Platform)
+		}
+	}
+	return platforms, nil
+}
+
+func platformNames(platforms []v1.Platform) []string {
+	names := make([]string, 0, len(platforms))
+	for _, platform := range platforms {
+		names = append(names, platform.String())
+	}
+	slices.Sort(names)
+	return slices.Compact(names)
+}
+
+func keepConfig(file *v1.ConfigFile, metadata *Metadata) {
 	configuration := file.Config
 	metadata.ConfigRead = true
 	metadata.Labels = configuration.Labels
@@ -222,14 +304,13 @@ func readConfig(reference name.Reference, options []remote.Option, metadata *Met
 		metadata.HealthStartPeriod = durationText(health.StartPeriod)
 		metadata.HealthRetries = health.Retries
 	}
-	return nil
 }
 
 func (inspector *Inspector) cached(ctx context.Context, reference string) (Metadata, bool) {
 	if inspector.cache == nil {
 		return Metadata{}, false
 	}
-	encoded, fetched, found, err := inspector.cache.CachedImage(ctx, reference)
+	encoded, fetched, found, err := inspector.cache.CachedImage(ctx, inspector.cacheKey(reference))
 	if err != nil || !found || time.Since(fetched) > cacheTTL {
 		return Metadata{}, false
 	}
@@ -243,12 +324,18 @@ func (inspector *Inspector) cached(ctx context.Context, reference string) (Metad
 	return metadata, true
 }
 
+// cacheKey keeps facts read for one platform's variant from serving
+// another's.
+func (inspector *Inspector) cacheKey(reference string) string {
+	return reference + cacheKeySeparator + inspector.platform.String()
+}
+
 func (inspector *Inspector) store(ctx context.Context, metadata Metadata) {
 	if inspector.cache == nil {
 		return
 	}
 	if encoded, err := json.Marshal(metadata); err == nil {
-		_ = inspector.cache.CacheImage(ctx, metadata.Reference, string(encoded))
+		_ = inspector.cache.CacheImage(ctx, inspector.cacheKey(metadata.Reference), string(encoded))
 	}
 }
 

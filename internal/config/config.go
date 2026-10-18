@@ -112,6 +112,9 @@ type Profile struct {
 	Storage        Storage          `yaml:"storage"`
 	Defaults       Defaults         `yaml:"defaults"`
 	RegistryMirror string           `yaml:"registry_mirror"`
+	// Platform is the os/architecture[/variant] the stacks are deployed to,
+	// such as linux/arm64; empty is the machine composewright runs on.
+	Platform string `yaml:"platform"`
 }
 
 // ProfileNetwork is a proxy, tunnel or VPN network projects can join.

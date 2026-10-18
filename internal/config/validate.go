@@ -23,6 +23,7 @@ var (
 	hostnamePattern      = regexp.MustCompile(`^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$`)
 	ownerPattern         = regexp.MustCompile(`^[0-9]+:[0-9]+$`)
 	secretRefNamePattern = regexp.MustCompile(`^[A-Za-z0-9_.-]+$`)
+	platformPattern      = regexp.MustCompile(`^linux/[a-z0-9]+(/v[0-9]+)?$`)
 	// localSuffixes are names only a local resolver answers.
 	localSuffixes = []string{".local", ".lan", ".home.arpa", ".internal"}
 	// sharedAddressSpace is 100.64.0.0/10, carrier-grade NAT and the
@@ -182,6 +183,9 @@ func (profile Profile) Validate() error {
 		}
 	}
 	problems = append(problems, profile.Storage.validate(), profile.Defaults.validate(), registryMirrorProblem(profile.RegistryMirror))
+	if profile.Platform != "" && !platformPattern.MatchString(profile.Platform) {
+		problems = append(problems, fmt.Errorf("profile.platform %q must be linux/<architecture>[/<variant>], such as linux/arm64 or linux/arm/v7", profile.Platform))
+	}
 	return errors.Join(problems...)
 }
 

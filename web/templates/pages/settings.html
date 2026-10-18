@@ -113,6 +113,7 @@
       <label class="field" for="pids_limit">Processes per service<input type="text" id="pids_limit" name="pids_limit" value="{{.PIDsLimit}}" inputmode="numeric" pattern="[0-9]+"></label>
       {{end}}
       <label class="field" for="registry_mirror">Registry mirror<input class="mono" type="text" id="registry_mirror" name="registry_mirror" value="{{.Config.Profile.RegistryMirror}}" placeholder="mirror.gcr.io" spellcheck="false"><span class="muted small">Docker Hub images are checked through this host. A plain-HTTP mirror on your LAN needs its host:port under <a href="/settings?section=engine#private">private targets</a>.</span></label>
+      <label class="field" for="platform">Target platform<select id="platform" name="platform">{{$platform := .Config.Profile.Platform}}<option value=""{{if eq $platform ""}} selected{{end}}>This machine ({{.HostPlatform}})</option>{{range .Platforms}}<option value="{{.}}"{{if eq . $platform}} selected{{end}}>{{.}}</option>{{end}}</select><span class="muted small">The machine the stacks run on. Every image must have a variant for it, and DEPLOY.md says which one it was verified for.</span></label>
     </div>
   </section>
 {{end}}

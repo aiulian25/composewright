@@ -54,6 +54,9 @@ type Options struct {
 	Storage      string
 	GrantedNeeds []string
 	Header       string
+	// CheckedPlatform is the platform the registry listed for every image;
+	// empty when the images were not checked for one.
+	CheckedPlatform string
 }
 
 // Exposure applies the defaults to a choice: with nothing chosen, the app

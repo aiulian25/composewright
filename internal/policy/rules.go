@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/docker/go-units"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
 
 	"github.com/aiulian25/composewright/internal/composefile"
 	"github.com/aiulian25/composewright/internal/ir"
@@ -134,6 +135,33 @@ func (check *checker) image(service *ir.Service, field string) {
 	case checked && verification.Message != "":
 		check.add("P1", Warn, service.Name, field, "image %s:%s could not be verified: %s", image.Reference(), image.Tag, verification.Message)
 	}
+	check.platform(service, field, verification)
+}
+
+// platform is P2's check that an image has a variant for the profile's
+// platform. An image whose platforms the registry did not give is left to
+// P1's verification findings.
+func (check *checker) platform(service *ir.Service, field string, verification ImageCheck) {
+	wanted := check.input.Profile.Platform
+	if wanted == "" || len(verification.Platforms) == 0 || PlatformListed(verification.Platforms, wanted) {
+		return
+	}
+	image := service.Image
+	check.add("P2", Deny, service.Name, field+".tag", "image %s:%s has no %s variant (it has %s); choose a tag or image that has one",
+		image.Reference(), image.Tag, wanted, strings.Join(verification.Platforms, ", "))
+}
+
+// PlatformListed reports whether one of platforms runs on wanted: an image
+// listed for linux/arm64/v8 runs on linux/arm64.
+func PlatformListed(platforms []string, wanted string) bool {
+	spec, err := v1.ParsePlatform(wanted)
+	if err != nil {
+		return false
+	}
+	return slices.ContainsFunc(platforms, func(listed string) bool {
+		platform, err := v1.ParsePlatform(listed)
+		return err == nil && platform.Satisfies(*spec)
+	})
 }
 
 // ValidEnvKey reports whether key can name a .env variable.

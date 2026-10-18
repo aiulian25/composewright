@@ -64,6 +64,9 @@ type Sandbox struct {
 	root           string
 	now            func() time.Time
 	followInterval time.Duration
+	// platform is the profile's, the one the files target; empty is this
+	// machine's.
+	platform string
 }
 
 func New(run Runner, limits Limits, timeout time.Duration, tier, projectsDir string) *Sandbox {
@@ -113,6 +116,9 @@ func (sandbox *Sandbox) Validate(ctx context.Context, input Input) (verdict Verd
 	}
 	output.say("project %s: restart \"no\", no-new-privileges, at most %s memory, %g CPUs and %d processes per service, published ports on 127.0.0.1 only",
 		name, units.BytesSize(float64(sandbox.limits.MemoryBytes)), sandbox.limits.CPUs, sandbox.limits.PIDs)
+	if note := platformNote(sandbox.platform); note != "" {
+		output.say("%s", note)
+	}
 	defer func() {
 		teardownErr := sandbox.teardown(directory, name)
 		err = errors.Join(err, teardownErr)
@@ -290,6 +296,18 @@ func (sandbox *Sandbox) Info(ctx context.Context) (Environment, error) {
 	environment.CgroupVersion, environment.CgroupDriver, environment.EngineVersion = info.CgroupVersion, info.CgroupDriver, info.ServerVersion
 	environment.LimitsEnforced = info.CgroupDriver != cgroupNone && (!environment.Rootless || delegated())
 	return environment, nil
+}
+
+// platformNote says when the files target another platform than the one
+// the sandbox tests them on, which runs each image's variant for itself.
+// ponytail: this machine's platform, not a remote Docker host's; read the
+// daemon's architecture from docker info if remote daemons matter.
+func platformNote(target string) string {
+	own := config.HostPlatform()
+	if target == "" || target == own {
+		return ""
+	}
+	return "this sandbox runs " + own + "; the files target " + target
 }
 
 // Runtime is the runtime every sandbox container runs under: runsc for the
