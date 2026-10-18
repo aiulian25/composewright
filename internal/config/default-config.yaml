@@ -36,7 +36,7 @@ scm:
   github_token_ref: ""       # optional keyring:<name> or env:<VARIABLE>; raises the GitHub API limit from 60 to 5000 requests per hour
 network:
   allow_private_targets: []  # explicit opt-in for LAN or loopback services, e.g. ["192.168.1.10:3000"]
-  update_check: false        # must stay false: `composewright version --check` is the only update check
+  update_check: false        # must stay false: updates are checked only when you ask (version --check or Settings › Maintenance)
 ui:
   auth_required: true
   session_ttl: 12h0m0s       # 5m to 720h (30 days)

@@ -42,7 +42,7 @@ func TestRotationKeepsEverySecretReadable(t *testing.T) {
 		t.Fatal(err)
 	}
 	oldID := workspace.Key.ID
-	result, err := workspace.RotateKey(ctx)
+	result, err := workspace.RotateKey(ctx, workspace.Actor)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -66,7 +66,7 @@ func TestRotationKeepsEverySecretReadable(t *testing.T) {
 	if err != nil || values[0].Value != "keep-me" {
 		t.Fatalf("secret lost in rotation: %+v %v", values, err)
 	}
-	purged, err := reopened.PurgeRetiredKeys(ctx)
+	purged, err := reopened.PurgeRetiredKeys(ctx, reopened.Actor)
 	if err != nil || len(purged) != 1 || purged[0] != oldID {
 		t.Fatalf("purge: %v %v", purged, err)
 	}
@@ -75,6 +75,36 @@ func TestRotationKeepsEverySecretReadable(t *testing.T) {
 	}
 	if count, err := reopened.Store.VerifyAudit(ctx); err != nil || count != 3 {
 		t.Fatalf("audit after init, rotate, purge: %d %v", count, err)
+	}
+}
+
+// TestOpenWorkspaceSealsWithTheNewKey: a running server rotates the key
+// without opening the workspace again, so what it stores afterwards is
+// sealed with the new key and every value still opens.
+func TestOpenWorkspaceSealsWithTheNewKey(t *testing.T) {
+	ctx := context.Background()
+	workspace, err := Open(ctx, initialise(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer workspace.Close()
+	if err := workspace.Store.SetSecret(ctx, "llm", "sk-test"); err != nil {
+		t.Fatal(err)
+	}
+	result, err := workspace.RotateKey(ctx, workspace.Actor)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := workspace.Store.SetSecret(ctx, "github", "token"); err != nil {
+		t.Fatal(err)
+	}
+	usage, err := workspace.Store.KeyUsage(ctx)
+	if err != nil || usage[result.NewKeyID] != 2 || usage[result.OldKeyID] != 0 {
+		t.Fatalf("values by key after rotating: %v %v", usage, err)
+	}
+	secretReadable(t, workspace)
+	if value, _, err := workspace.Store.Secret(ctx, "github"); err != nil || value != "token" {
+		t.Fatalf("a value stored after rotating does not open: %q %v", value, err)
 	}
 }
 
@@ -127,13 +157,13 @@ func TestRotationResumesAfterInterruption(t *testing.T) {
 	secretReadable(t, workspace)
 	canceled, cancel := context.WithCancel(ctx)
 	cancel()
-	if _, err := workspace.RotateKey(canceled); err == nil {
+	if _, err := workspace.RotateKey(canceled, workspace.Actor); err == nil {
 		t.Fatal("a rotation without a database transaction succeeded")
 	}
 	if _, err := os.Stat(loaded.Paths.KeyFile + nextKeySuffix); err != nil {
 		t.Fatalf("a failed retry removed the key every value is sealed with: %v", err)
 	}
-	result, err := workspace.RotateKey(ctx)
+	result, err := workspace.RotateKey(ctx, workspace.Actor)
 	if err != nil {
 		t.Fatalf("the interrupted rotation cannot finish: %v", err)
 	}
@@ -214,7 +244,7 @@ func TestPurgeRefusesWhileARetiredKeyIsInUse(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(retiredDir, workspace.Key.ID+keyExtension), current, 0o600); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := workspace.PurgeRetiredKeys(ctx); err == nil {
+	if _, err := workspace.PurgeRetiredKeys(ctx, workspace.Actor); err == nil {
 		t.Fatal("purge deleted a key that still protects a value")
 	}
 }

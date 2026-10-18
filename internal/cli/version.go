@@ -1,22 +1,18 @@
 package cli
 
 import (
+	"cmp"
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"runtime"
 
 	"github.com/spf13/cobra"
 
-	"github.com/aiulian25/composewright/internal/netguard"
+	"github.com/aiulian25/composewright/internal/release"
 )
 
 const (
-	// releaseRepository is where `version --check` looks; rename with the project.
-	releaseRepository = "aiulian25/composewright"
-	releaseURL        = "https://" + netguard.ReleaseHost + "/repos/" + releaseRepository + "/releases/latest"
-	releaseBodyLimit  = 1 << 20
+	noReleaseYet = "none published yet"
 	// versionTemplate prints the root command's Version, which holds versionLine.
 	versionTemplate = "{{.Version}}\n"
 )
@@ -77,28 +73,9 @@ func (application *app) latestRelease(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, releaseURL, nil)
+	latest, err := release.Latest(ctx, guard)
 	if err != nil {
 		return "", err
 	}
-	request.Header.Set("Accept", "application/vnd.github+json")
-	response, err := guard.Client(netguard.Release).Do(request)
-	if err != nil {
-		return "", err
-	}
-	defer response.Body.Close()
-	body, err := netguard.ReadBody(response, releaseBodyLimit)
-	if err != nil {
-		return "", err
-	}
-	if response.StatusCode == http.StatusNotFound {
-		return "none published yet", nil
-	}
-	var release struct {
-		TagName string `json:"tag_name"`
-	}
-	if err := json.Unmarshal(body, &release); err != nil || release.TagName == "" {
-		return "", fmt.Errorf("unexpected answer from GitHub Releases (%s)", response.Status)
-	}
-	return release.TagName, nil
+	return cmp.Or(latest.Tag, noReleaseYet), nil
 }

@@ -121,3 +121,4 @@ func NetworkProviders() []string { return slices.Clone(networkProviders) }
 func RestartModes() []string     { return slices.Clone(restartModes) }
 func Themes() []string           { return slices.Clone(themes) }
 func BackupSchedules() []string  { return slices.Clone(backupSchedules) }
+func SandboxTiers() []string     { return slices.Clone(sandboxTiers) }

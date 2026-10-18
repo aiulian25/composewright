@@ -58,7 +58,11 @@ func (store *Store) ResealAll(ctx context.Context, target secrets.Key) (int, err
 		_, err = transaction.ExecContext(ctx, `INSERT INTO keys (key_id, created_at) VALUES (?, ?) ON CONFLICT(key_id) DO NOTHING`, target.ID, now)
 		return err
 	})
-	return resealed, err
+	if err != nil {
+		return 0, err
+	}
+	store.sealer.Store(store.sealer.Load().Rotated(target))
+	return resealed, nil
 }
 
 type sealedRow struct {
@@ -107,7 +111,7 @@ func collect(ctx context.Context, transaction *sql.Tx, query string, aad func(ow
 func (store *Store) rewrite(ctx context.Context, transaction *sql.Tx, rows []sealedRow, target secrets.Key, update string) error {
 	check := secrets.NewSealer(target)
 	for _, row := range rows {
-		moved, err := store.sealer.Reseal(row.sealed, row.aad, target)
+		moved, err := store.sealer.Load().Reseal(row.sealed, row.aad, target)
 		if err != nil {
 			return err
 		}

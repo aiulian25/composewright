@@ -56,6 +56,17 @@ All notable changes to this project are documented here. The format follows
   deployment always wins over such an example, and an .env sample's value
   over one the example gives. The Analyse page counts these examples apart
   from the compose files.
+- Two new Settings pages cover what used to need the CLI. Maintenance shows
+  the master key's id, age and how many values it encrypts, rotates it or
+  purges retired keys after asking for your password (not while a run is
+  going, and the running server uses the new key at once), checks GitHub
+  Releases for a new version when you ask, and runs doctor's Docker checks
+  in the browser. Advanced edits the sandbox tier (runsc included), the
+  sandbox limits, timeout and repair rounds, the Docker host and CLI path,
+  the code hosts and the session length, and stores or removes a GitHub
+  token, encrypted like model keys. The Environment profile page downloads
+  and imports `profile.yaml`, as `composewright profile export` and
+  `import` do.
 - Try it on the Model providers page sends a connection one tiny request and
   says whether it answered: the model name it answered as, the tokens in and
   out and the time, or the provider's error with the key left out. It works

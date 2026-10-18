@@ -17,6 +17,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	_ "modernc.org/sqlite"
@@ -39,7 +40,9 @@ var ErrNotFound = errors.New("not found")
 
 type Store struct {
 	database *sql.DB
-	sealer   *secrets.Sealer
+	// sealer changes when the master key is rotated while the store is
+	// open, so readers load it each time.
+	sealer atomic.Pointer[secrets.Sealer]
 }
 
 // Open creates the database file with mode 0600 if needed, applies pending
@@ -53,7 +56,8 @@ func Open(ctx context.Context, path, backupsDir string, sealer *secrets.Sealer) 
 		return nil, err
 	}
 	database.SetMaxOpenConns(1)
-	store := &Store{database: database, sealer: sealer}
+	store := &Store{database: database}
+	store.sealer.Store(sealer)
 	if err := store.migrate(ctx, backupsDir); err != nil {
 		return nil, errors.Join(err, database.Close())
 	}

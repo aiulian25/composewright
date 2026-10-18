@@ -24,12 +24,11 @@ var statusTones = map[string]string{
 }
 
 // as is the workspace one signed-in user acts through: audit entries name
-// them and the configuration is the current one.
+// them and the configuration is the current one. It leaves out the master
+// key, which a rotation swaps while requests run.
 func (server *Server) as(username string) *workspace.Workspace {
-	view := *server.options.Workspace
-	view.Actor = webActorPrefix + username
-	view.Config = server.config()
-	return &view
+	shared := server.workspace()
+	return &workspace.Workspace{Config: server.config(), Paths: shared.Paths, Store: shared.Store, Actor: webActorPrefix + username}
 }
 
 type projectRow struct {

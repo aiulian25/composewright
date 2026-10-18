@@ -298,7 +298,7 @@ func validateSize(field, value string) error {
 
 func updateCheckDisabled(enabled bool) error {
 	if enabled {
-		return errors.New("network.update_check must be false: automatic update checks are not supported, run `composewright version --check` instead")
+		return errors.New("network.update_check must be false: automatic update checks are not supported, run `composewright version --check` or use Settings › Maintenance instead")
 	}
 	return nil
 }

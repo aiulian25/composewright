@@ -106,7 +106,7 @@ func (application *app) runKeysRotate(ctx context.Context) error {
 		return err
 	}
 	defer workspace.Close()
-	result, err := workspace.RotateKey(ctx)
+	result, err := workspace.RotateKey(ctx, workspace.Actor)
 	if err != nil {
 		return err
 	}
@@ -131,7 +131,7 @@ func (application *app) runKeysPurge(ctx context.Context) error {
 	if !confirmed {
 		return errors.New("purge cancelled")
 	}
-	purged, err := workspace.PurgeRetiredKeys(ctx)
+	purged, err := workspace.PurgeRetiredKeys(ctx, workspace.Actor)
 	if err != nil {
 		return err
 	}

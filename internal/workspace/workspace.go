@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/aiulian25/composewright/internal/atomicfile"
 	"github.com/aiulian25/composewright/internal/config"
@@ -122,8 +123,9 @@ type RotationResult struct {
 // RotateKey writes a new key next to the current one, re-seals every value
 // in one transaction, then swaps the files. The old key is kept under
 // keys/retired/ until `keys purge`, so an older backup stays restorable.
-// An interrupted rotation is resumed with the key it left behind.
-func (workspace *Workspace) RotateKey(ctx context.Context) (RotationResult, error) {
+// An interrupted rotation is resumed with the key it left behind. actor is
+// who the audit log names.
+func (workspace *Workspace) RotateKey(ctx context.Context, actor string) (RotationResult, error) {
 	keyFile := workspace.Paths.KeyFile
 	nextFile := keyFile + nextKeySuffix
 	next, created, err := nextKey(nextFile)
@@ -155,13 +157,14 @@ func (workspace *Workspace) RotateKey(ctx context.Context) (RotationResult, erro
 	}
 	result := RotationResult{OldKeyID: workspace.Key.ID, NewKeyID: next.ID, Resealed: resealed, Retired: retiredFile}
 	workspace.Key = next
-	return result, workspace.Store.Audit(ctx, workspace.Actor, store.ActionRotate, "",
+	return result, workspace.Store.Audit(ctx, actor, store.ActionRotate, "",
 		map[string]any{"old_key_id": result.OldKeyID, "new_key_id": result.NewKeyID, "resealed": resealed})
 }
 
 type KeyStatus struct {
 	CurrentKeyID string         `json:"current_key_id"`
 	KeyFile      string         `json:"key_file"`
+	Created      time.Time      `json:"key_created,omitzero"`
 	Retired      []string       `json:"retired_key_ids"`
 	Usage        map[string]int `json:"sealed_values_by_key"`
 	Pending      bool           `json:"rotation_incomplete"`
@@ -177,6 +180,9 @@ func (workspace *Workspace) KeyStatus(ctx context.Context) (KeyStatus, error) {
 		return KeyStatus{}, err
 	}
 	status := KeyStatus{CurrentKeyID: workspace.Key.ID, KeyFile: workspace.Paths.KeyFile, Usage: usage}
+	if info, err := os.Stat(workspace.Paths.KeyFile); err == nil {
+		status.Created = info.ModTime()
+	}
 	for _, key := range retired {
 		status.Retired = append(status.Retired, key.ID)
 	}
@@ -185,8 +191,9 @@ func (workspace *Workspace) KeyStatus(ctx context.Context) (KeyStatus, error) {
 	return status, nil
 }
 
-// PurgeRetiredKeys deletes retired key files once no stored value needs them.
-func (workspace *Workspace) PurgeRetiredKeys(ctx context.Context) ([]string, error) {
+// PurgeRetiredKeys deletes retired key files once no stored value needs
+// them; actor is who the audit log names.
+func (workspace *Workspace) PurgeRetiredKeys(ctx context.Context, actor string) ([]string, error) {
 	usage, err := workspace.Store.KeyUsage(ctx)
 	if err != nil {
 		return nil, err
@@ -206,7 +213,7 @@ func (workspace *Workspace) PurgeRetiredKeys(ctx context.Context) ([]string, err
 		}
 		purged = append(purged, keyID)
 	}
-	return purged, workspace.Store.Audit(ctx, workspace.Actor, store.ActionPurgeKeys, "", map[string]any{"purged": purged})
+	return purged, workspace.Store.Audit(ctx, actor, store.ActionPurgeKeys, "", map[string]any{"purged": purged})
 }
 
 // loadRetiredKeys returns keys under keys/retired/ plus a pending .next key

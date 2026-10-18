@@ -146,7 +146,8 @@ func (server *Server) statusBar(ctx context.Context) StatusBar {
 // egressHosts are the hosts the guard lets a web run contact: the code
 // hosts, every host behind a trusted registry and, when a model is set up,
 // its server, even if the default engine is rules only, since a run may pick
-// a model. The update check's host is the CLI's alone.
+// a model. The update check's host is left out: only the check someone
+// asks for, under Settings or with version --check, contacts it.
 func egressHosts(configuration config.Config, version string) []string {
 	policy, err := netguard.PolicyFromConfig(configuration, nil, version)
 	if err != nil {

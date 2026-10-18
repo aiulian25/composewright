@@ -44,7 +44,7 @@ func (store *Store) insertEnvVar(ctx context.Context, transaction *sql.Tx, proje
 	var sealed secrets.Sealed
 	if variable.Secret {
 		var err error
-		sealed, err = store.sealer.Seal([]byte(variable.Value), secrets.ProjectAAD(projectID, variable.Key))
+		sealed, err = store.sealer.Load().Seal([]byte(variable.Value), secrets.ProjectAAD(projectID, variable.Key))
 		if err != nil {
 			return err
 		}
@@ -90,7 +90,7 @@ func (store *Store) scanEnvVar(rows *sql.Rows, projectID string) (EnvVar, error)
 		return variable, err
 	}
 	sealed.KeyID = keyID.String
-	value, err := store.sealer.Open(sealed, secrets.ProjectAAD(projectID, variable.Key))
+	value, err := store.sealer.Load().Open(sealed, secrets.ProjectAAD(projectID, variable.Key))
 	if err != nil {
 		return EnvVar{}, errors.Join(errors.New("cannot decrypt "+variable.Key), err)
 	}

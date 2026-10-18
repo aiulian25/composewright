@@ -6,12 +6,14 @@
   <h3>Generation</h3>
   <a href="/settings?section=engine"{{if eq .Data.Page "engine"}} aria-current="page"{{end}}>{{template "icon-engine"}}<span>Engine</span></a>
   <a href="/settings?section=models"{{if eq .Data.Page "models"}} aria-current="page"{{end}}>{{template "icon-plug"}}<span>Model providers</span></a>
+  <a href="/settings?section=advanced"{{if eq .Data.Page "advanced"}} aria-current="page"{{end}}>{{template "icon-wrench"}}<span>Advanced</span></a>
   <h3>Interface</h3>
   <a href="/settings?section=appearance"{{if eq .Data.Page "appearance"}} aria-current="page"{{end}}>{{template "icon-palette"}}<span>Appearance</span></a>
   <a href="/settings?section=account"{{if eq .Data.Page "account"}} aria-current="page"{{end}}>{{template "icon-user"}}<span>Account</span></a>
   <h3>Data</h3>
   <a href="/settings?section=backup"{{if eq .Data.Page "backup"}} aria-current="page"{{end}}>{{template "icon-history"}}<span>Backups</span></a>
   <a href="/settings?section=audit"{{if eq .Data.Page "audit"}} aria-current="page"{{end}}>{{template "icon-book"}}<span>Audit log</span></a>
+  <a href="/settings?section=maintenance"{{if eq .Data.Page "maintenance"}} aria-current="page"{{end}}>{{template "icon-key"}}<span>Maintenance</span></a>
 </nav>
 <nav class="sidebar-foot" aria-label="More">
   <a href="/projects">{{template "icon-arrow-left"}}<span>Back to projects</span></a>
@@ -33,11 +35,19 @@
 {{with .Data}}
 <div class="page-head">
   <h1 class="page-title">{{.Title}}</h1>
-  {{if eq .Page "backup"}}<span class="lead">Your Settings and every project, backed up on a schedule or when you ask, encrypted with your backup passphrase.</span>{{else if eq .Page "audit"}}<span class="lead">Everything done here and from the CLI, newest first. Each entry carries the hash of the one before, so an edited or removed entry shows.</span>{{else}}<span class="lead">Saved to <span class="mono">{{.ConfigFile}}</span>; each save is checked as a whole and written to the audit log.</span>{{end}}
-  {{if and (ne .Page "account") (ne .Page "models") (ne .Page "backup") (ne .Page "audit")}}<span class="row push-right"><span class="muted small" data-unsaved hidden>Unsaved changes</span><button class="button button-primary" type="submit" form="settings-form">Save</button></span>{{end}}
+  {{if eq .Page "backup"}}<span class="lead">Your Settings and every project, backed up on a schedule or when you ask, encrypted with your backup passphrase.</span>{{else if eq .Page "audit"}}<span class="lead">Everything done here and from the CLI, newest first. Each entry carries the hash of the one before, so an edited or removed entry shows.</span>{{else if eq .Page "maintenance"}}<span class="lead">The master key, updates and the Docker checks. Nothing here runs unless you ask; key changes and update checks are written to the audit log.</span>{{else if eq .Page "advanced"}}<span class="lead">Saved to <span class="mono">{{.ConfigFile}}</span>; these belong to this install, so a backup leaves them out.</span>{{else}}<span class="lead">Saved to <span class="mono">{{.ConfigFile}}</span>; each save is checked as a whole and written to the audit log.</span>{{end}}
+  {{if eq .Page "profile"}}<div class="row">
+    <a class="button button-small" href="/settings/profile/export">{{template "icon-download"}}Download profile.yaml</a>
+    <form class="row" method="post" action="/settings/profile/import" enctype="multipart/form-data">
+      <input type="hidden" name="csrf" value="{{$csrf}}">
+      <input type="file" name="profile" accept=".yaml,.yml" aria-label="profile.yaml to import" required>
+      <button class="button button-small" type="submit" data-confirm="Replace the environment profile with this file?">{{template "icon-upload"}}Import profile.yaml</button>
+    </form>
+  </div>{{end}}
+  {{if and (ne .Page "account") (ne .Page "models") (ne .Page "backup") (ne .Page "audit") (ne .Page "maintenance")}}<span class="row push-right"><span class="muted small" data-unsaved hidden>Unsaved changes</span><button class="button button-primary" type="submit" form="settings-form">Save</button></span>{{end}}
 </div>
 
-{{if eq .Page "models"}}{{template "models-page" $}}{{else if eq .Page "backup"}}{{template "backup-page" $}}{{else if eq .Page "audit"}}{{template "audit-page" $}}{{else}}
+{{if eq .Page "models"}}{{template "models-page" $}}{{else if eq .Page "backup"}}{{template "backup-page" $}}{{else if eq .Page "audit"}}{{template "audit-page" $}}{{else if eq .Page "maintenance"}}{{template "maintenance-page" $}}{{else}}
 <form class="stack" id="settings-form" method="post" action="/settings/{{.Page}}" data-settings-form>
   <input type="hidden" name="csrf" value="{{$csrf}}">
 
@@ -126,6 +136,40 @@
   </section>
 {{end}}
 
+{{if eq .Page "advanced"}}
+  <section class="card" id="sandbox" aria-labelledby="sandbox-title">
+    <div class="card-head"><h2 id="sandbox-title">{{template "icon-shield"}}Sandbox</h2><span class="note">used by the next Validate run</span></div>
+    <div class="card-body field-grid">
+      {{with .Config.Docker}}
+      <label class="field" for="sandbox_tier">Sandbox tier<select id="sandbox_tier" name="sandbox_tier">{{$current := .SandboxTier}}{{range $.Data.Advanced.Tiers}}<option value="{{.}}"{{if eq . $current}} selected{{end}}>{{.}}</option>{{end}}</select><span class="muted small">runsc runs every container under gVisor; <span class="mono">composewright doctor</span> says which tier fits this host.</span></label>
+      {{with .Validate}}
+      <label class="field" for="timeout">Run timeout<input type="text" id="timeout" name="timeout" value="{{.Timeout}}" spellcheck="false"><span class="muted small">such as 5m or 10m</span></label>
+      <label class="field" for="validate_memory">Memory per service<input type="text" id="validate_memory" name="validate_memory" value="{{.MemoryLimit}}" spellcheck="false"></label>
+      <label class="field" for="validate_cpus">CPUs per service<input type="text" id="validate_cpus" name="validate_cpus" value="{{.CPUs}}" inputmode="decimal"></label>
+      <label class="field" for="validate_pids">Processes per service<input type="text" id="validate_pids" name="validate_pids" value="{{.PIDsLimit}}" inputmode="numeric" pattern="[0-9]+"></label>
+      <label class="field" for="max_iterations">Repair rounds<input type="text" id="max_iterations" name="max_iterations" value="{{.MaxIterations}}" inputmode="numeric" pattern="[0-9]+"><span class="muted small">how often a failed run is fixed and tried again</span></label>
+      {{end}}
+      {{end}}
+    </div>
+  </section>
+
+  <section class="card" id="docker" aria-labelledby="docker-title">
+    <div class="card-head"><h2 id="docker-title">{{template "icon-docker"}}Docker</h2></div>
+    <div class="card-body field-grid">
+      <label class="field" for="docker_host">Docker host<input class="mono" type="text" id="docker_host" name="docker_host" value="{{.Config.Docker.Host}}" placeholder="unix:///var/run/docker.sock" spellcheck="false"><span class="muted small">Empty: DOCKER_HOST, then the active docker context.</span></label>
+      <label class="field" for="cli_path">Docker CLI<input class="mono" type="text" id="cli_path" name="cli_path" value="{{.Config.Docker.CLIPath}}" placeholder="/usr/bin/docker" spellcheck="false"><span class="muted small">Empty: docker found on PATH.</span></label>
+    </div>
+  </section>
+
+  <section class="card" id="code-hosts" aria-labelledby="code-hosts-title">
+    <div class="card-head"><h2 id="code-hosts-title">{{template "icon-code-host"}}Code hosts and sign-in</h2></div>
+    <div class="card-body field-grid">
+      <label class="field" for="allow_hosts">Code hosts<textarea class="mono" id="allow_hosts" name="allow_hosts" rows="3" spellcheck="false">{{.Advanced.AllowHosts}}</textarea><span class="muted small">Hosts repositories are fetched from, one per line.</span></label>
+      <label class="field" for="session_ttl">Session length<input type="text" id="session_ttl" name="session_ttl" value="{{.Config.UI.SessionTTL}}" spellcheck="false"><span class="muted small">How long a sign-in lasts, from 5m to 720h.</span></label>
+    </div>
+  </section>
+{{end}}
+
 {{if eq .Page "appearance"}}
   <section class="card" id="appearance" aria-labelledby="appearance-title">
     <div class="card-head"><h2 id="appearance-title">{{template "icon-palette"}}Theme</h2></div>
@@ -152,6 +196,7 @@
 
   {{if ne .Page "account"}}<div class="row"><button class="button button-primary push-right" type="submit">Save</button></div>{{end}}
 </form>
+{{if eq .Page "advanced"}}{{template "github-token" $}}{{end}}
 {{end}}
 {{end}}
 {{end}}
@@ -279,6 +324,77 @@
     <label class="option"><input type="checkbox" name="replace" value="1"><span class="option-text"><span class="option-name">Replace projects that exist here</span><span class="option-sub">Otherwise a project with the same name stays as it is.</span></span></label>
   </div>
   <div class="card-foot"><span class="muted small">Written to the audit log.</span><button class="button button-primary push-right" type="submit">{{template "icon-upload"}}Restore</button></div>
+</form>
+{{end}}
+{{end}}
+
+{{define "github-token"}}
+{{$csrf := .CSRF}}
+{{with .Data.Advanced}}
+<form class="card" id="github-token" method="post" action="/settings/advanced/token" aria-labelledby="github-token-title">
+  <input type="hidden" name="csrf" value="{{$csrf}}">
+  <div class="card-head"><h2 id="github-token-title">{{template "icon-key"}}GitHub token</h2>{{if .TokenUnused}}<span class="chip chip-warn">stored, not used</span>{{else if .TokenStored}}<span class="chip chip-ok">{{template "icon-check"}}stored, encrypted</span>{{else}}<span class="chip">none</span>{{end}}</div>
+  <div class="card-body stack">
+    <p class="muted small">Private repositories need one, and it lifts GitHub's limit of 60 requests an hour. Read access to contents is enough.{{if and .TokenUnused (not .TokenElsewhere)}} The stored token is not used yet: store it again to use it.{{end}}{{if .TokenElsewhere}} The configuration reads it from <span class="mono">{{.TokenRef}}</span>; storing one here replaces that.{{end}}</p>
+    <label class="field" for="github-token-value">Token<input class="mono" type="password" id="github-token-value" name="token" autocomplete="off" spellcheck="false" placeholder="{{if .TokenStored}}stored; type a new one to replace it{{else}}github_pat_…{{end}}"><span class="muted small">Stored encrypted in composewright's database, never in config.yaml, and never shown again.</span></label>
+  </div>
+  <div class="card-foot">{{if .TokenStored}}<button class="button button-ghost" type="submit" name="clear" value="1" formnovalidate data-confirm="Remove the stored GitHub token?">{{template "icon-trash"}}Remove</button>{{end}}<button class="button button-primary push-right" type="submit">Store token</button></div>
+</form>
+{{end}}
+{{end}}
+
+{{define "maintenance-page"}}
+{{$csrf := .CSRF}}
+{{with .Data.Maintenance}}
+<form class="card" id="master-key" method="post" action="/settings/maintenance/rotate" aria-labelledby="master-key-title">
+  <input type="hidden" name="csrf" value="{{$csrf}}">
+  <div class="card-head"><h2 id="master-key-title">{{template "icon-key"}}Master key</h2>{{if .Pending}}<span class="chip chip-warn">rotation interrupted</span>{{end}}</div>
+  <dl class="card-body kv">
+    <dt>id</dt><dd class="mono">{{.KeyID}}</dd>
+    {{if .KeyAge}}<dt>made</dt><dd>{{when .KeyCreated}} · {{.KeyAge}} old</dd>{{end}}
+    <dt>encrypts</dt><dd>{{plural .Sealed "stored value" "stored values"}}</dd>
+    {{range .Retired}}<dt>retired</dt><dd><span class="mono">{{.ID}}</span> · {{plural .Sealed "value" "values"}}</dd>{{end}}
+  </dl>
+  <div class="card-body stack">
+    <p class="muted small">Rotating makes a new key and re-encrypts every stored value with it in one step. The old key stays on disk, so a copy of the database made before still opens, until you purge it.{{if .Pending}} The last rotation stopped part way; rotate again to finish it.{{end}}</p>
+    <div class="field-grid">
+      <label class="field" for="key-current">Your account password<input id="key-current" name="current" type="password" autocomplete="current-password" required></label>
+    </div>
+  </div>
+  <div class="card-foot"><span class="muted small">Not while a run is going.</span>{{if .Retired}}<button class="button button-ghost push-right" type="submit" formaction="/settings/maintenance/purge" data-confirm="Delete the retired keys? Copies of the database made before the last rotation can no longer be opened.">{{template "icon-trash"}}Purge retired keys</button>{{end}}<button class="button button-primary{{if not .Retired}} push-right{{end}}" type="submit">{{template "icon-refresh"}}Rotate key</button></div>
+</form>
+
+<form class="card" id="updates" method="post" action="/settings/maintenance/update-check" aria-labelledby="updates-title">
+  <input type="hidden" name="csrf" value="{{$csrf}}">
+  <div class="card-head"><h2 id="updates-title">{{template "icon-download"}}Updates</h2><span class="note">version {{.Version}}</span></div>
+  <div class="card-body stack">
+    <p class="muted small">composewright never checks on its own. This asks GitHub Releases once, through the egress guard.</p>
+    {{with .Update}}<p role="status">{{.Text}}{{if .URL}} <a href="{{.URL}}" target="_blank" rel="noopener noreferrer">Release notes</a>{{end}}</p>{{end}}
+  </div>
+  <div class="card-foot"><button class="button button-primary push-right" type="submit">Check for a new version</button></div>
+</form>
+
+<section class="card" id="audit-chain" aria-labelledby="audit-chain-title">
+  <div class="card-head"><h2 id="audit-chain-title">{{template "icon-book"}}Audit log</h2><form class="push-right" method="post" action="/settings/audit/verify"><input type="hidden" name="csrf" value="{{$csrf}}"><button class="button button-small" type="submit">{{template "icon-shield"}}Verify chain</button></form></div>
+  <p class="card-body muted small">Checks that no entry was edited or removed; the result shows on the <a href="/settings?section=audit">Audit log</a> page.</p>
+</section>
+
+<form class="card" id="docker-checks" method="post" action="/settings/maintenance/doctor" aria-labelledby="docker-checks-title">
+  <input type="hidden" name="csrf" value="{{$csrf}}">
+  <div class="card-head"><h2 id="docker-checks-title">{{template "icon-docker"}}Docker</h2><span class="note">composewright doctor</span></div>
+  {{if .Checks}}
+  <div class="table-scroll">
+    <table class="table table-compact">
+      <thead><tr><th scope="col">Check</th><th scope="col">Result</th><th scope="col">Details</th></tr></thead>
+      <tbody>
+        {{range .Checks}}<tr><th scope="row">{{.Name}}</th><td><span class="chip chip-{{.Tone}}">{{.Status}}</span></td><td>{{.Detail}}{{if .Fix}}<span class="block muted small">fix: {{.Fix}}</span>{{end}}</td></tr>{{end}}
+      </tbody>
+    </table>
+  </div>
+  {{else}}
+  <p class="card-body muted small">The data folder, the audit log, the Docker CLI and daemon, the sandbox tier, resource limits and the profile's networks. The model is not contacted.</p>
+  {{end}}
+  <div class="card-foot"><button class="button button-primary push-right" type="submit">{{template "icon-play"}}Run checks</button></div>
 </form>
 {{end}}
 {{end}}

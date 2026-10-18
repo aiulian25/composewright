@@ -49,10 +49,11 @@ const (
 var (
 	// settingsSections are the Settings pages in order; each page is one
 	// form, saved in one go.
-	settingsSections = []string{sectionProfile, sectionEngine, sectionModels, sectionAppearance, sectionAccount, sectionBackup, sectionAudit}
-	settingsTitles   = map[string]string{sectionProfile: "Environment profile", sectionEngine: "Engine",
-		sectionModels: "Model providers", sectionAppearance: "Appearance", sectionAccount: "Account", sectionBackup: "Backups",
-		sectionAudit: "Audit log"}
+	settingsSections = []string{sectionProfile, sectionEngine, sectionModels, sectionAdvanced, sectionAppearance, sectionAccount, sectionBackup,
+		sectionAudit, sectionMaintenance}
+	settingsTitles = map[string]string{sectionProfile: "Environment profile", sectionEngine: "Engine",
+		sectionModels: "Model providers", sectionAdvanced: "Advanced", sectionAppearance: "Appearance", sectionAccount: "Account",
+		sectionBackup: "Backups", sectionAudit: "Audit log", sectionMaintenance: "Maintenance"}
 )
 
 type settingsView struct {
@@ -79,6 +80,8 @@ type settingsView struct {
 	Minimum     int
 	Backups     backupView
 	Audit       auditView
+	Maintenance maintenanceView
+	Advanced    advancedView
 }
 
 // networkRow is one row of the networks table. It carries the kinds and
@@ -120,6 +123,10 @@ type settingsState struct {
 	configuration config.Config
 	// form is what the connection form sent when it was tried.
 	form *connectionForm
+	// update and checks are what the last update check and Docker check
+	// on the Maintenance page said.
+	update *updateCheck
+	checks []doctor.Check
 }
 
 func (server *Server) settingsPage(writer http.ResponseWriter, request *http.Request, current *visit) error {
@@ -131,6 +138,9 @@ func (server *Server) settingsPage(writer http.ResponseWriter, request *http.Req
 		state.notice = savedNotice
 	}
 	if notice := backupNotice(request.URL.Query()); notice != "" {
+		state.notice = notice
+	}
+	if notice, done := doneNotices[request.URL.Query().Get(doneQuery)]; done {
 		state.notice = notice
 	}
 	return server.renderSettings(writer, request, current, state)
@@ -150,6 +160,10 @@ func preview(configuration config.Config, shown string) (settingsFile, error) {
 		file.Command = ""
 	case sectionAudit:
 		file.Command = auditCommand
+	case sectionMaintenance:
+		file.Command = keysCommand
+	case sectionAdvanced:
+		file.Command = advancedCommand
 	}
 	return file, err
 }
@@ -188,6 +202,16 @@ func (server *Server) renderSettings(writer http.ResponseWriter, request *http.R
 	}
 	if state.shown == sectionProfile {
 		server.lookAtHost(request.Context(), &view)
+	}
+	if state.shown == sectionMaintenance {
+		if view.Maintenance, err = server.maintenanceView(request.Context(), state); err != nil {
+			return err
+		}
+	}
+	if state.shown == sectionAdvanced {
+		if view.Advanced, err = server.advancedView(request.Context(), configuration); err != nil {
+			return err
+		}
 	}
 	page := server.page(request, current, "Settings")
 	page.Nav, page.Context, page.CLI, page.Notice, page.Error, page.Data = navSettings, true, file.Command, state.notice, state.problem, view
@@ -240,8 +264,8 @@ func hostHint(row *networkRow, owner doctor.FoundNetwork) {
 // page never repeats it.
 func (server *Server) saveSettings(writer http.ResponseWriter, request *http.Request, current *visit) error {
 	section := request.PathValue("section")
-	// The Audit log page has no settings to save.
-	if !slices.Contains(settingsSections, section) || section == sectionAudit {
+	// The Audit log and Maintenance pages have no settings to save.
+	if !slices.Contains(settingsSections, section) || section == sectionAudit || section == sectionMaintenance {
 		return statusError{status: http.StatusNotFound, message: noSuchSection}
 	}
 	submitted, err := server.saveSection(request, current, section)
@@ -265,6 +289,11 @@ func (server *Server) saveSection(request *http.Request, current *visit, section
 			return submitted, err
 		}
 		return submitted, server.update(request, current, profileValues(submitted.Profile))
+	case sectionAdvanced:
+		if submitted, err = advancedForm(request, submitted); err != nil {
+			return submitted, err
+		}
+		return submitted, server.update(request, current, advancedValues(submitted))
 	case sectionEngine:
 		submitted = engineForm(request, submitted)
 		return submitted, server.saveEngine(request, current, submitted)
@@ -444,6 +473,15 @@ func (reader *numbers) whole(name, label string, saved int) int {
 		return saved
 	}
 	return number
+}
+
+func (reader *numbers) duration(name, label string, saved time.Duration) time.Duration {
+	length, err := time.ParseDuration(field(reader.request, name))
+	if err != nil {
+		reader.problems = append(reader.problems, fmt.Errorf("%s must be a length of time such as 5m or 12h", label))
+		return saved
+	}
+	return length
 }
 
 func (reader *numbers) decimal(name, label string, saved float64) float64 {

@@ -9,7 +9,8 @@ import (
 	"github.com/aiulian25/composewright/internal/config"
 )
 
-// ReleaseHost serves `version --check`, the only request made for updates.
+// ReleaseHost serves the update check someone asks for, from the CLI or
+// Settings; it is the only request made for updates.
 const ReleaseHost = "api.github.com"
 
 // registryHosts maps a registry to every host a manifest or config request

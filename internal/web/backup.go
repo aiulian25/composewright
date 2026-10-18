@@ -428,8 +428,9 @@ func uploadedBackup(request *http.Request) ([]byte, error) {
 	return io.ReadAll(file)
 }
 
-// settingsValues are every key the Settings page writes, so a restore
-// writes them in one save that is validated as a whole.
+// settingsValues are every key a backup carries, so a restore writes them
+// in one save that is validated as a whole. The Advanced page's keys
+// belong to the install and stay out.
 func settingsValues(configuration config.Config) map[string]string {
 	values := profileValues(configuration.Profile)
 	maps.Copy(values, engineValues(configuration))

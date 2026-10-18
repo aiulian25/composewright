@@ -10,7 +10,7 @@ import (
 
 // SetSecret stores a sealed setting such as an API key.
 func (store *Store) SetSecret(ctx context.Context, name, value string) error {
-	sealed, err := store.sealer.Seal([]byte(value), secrets.SettingsAAD(name))
+	sealed, err := store.sealer.Load().Seal([]byte(value), secrets.SettingsAAD(name))
 	if err != nil {
 		return err
 	}
@@ -33,7 +33,7 @@ func (store *Store) Secret(ctx context.Context, name string) (value string, foun
 		return "", false, err
 	}
 	sealed.KeyID = keyID.String
-	plaintext, err := store.sealer.Open(sealed, secrets.SettingsAAD(name))
+	plaintext, err := store.sealer.Load().Open(sealed, secrets.SettingsAAD(name))
 	return string(plaintext), err == nil, err
 }
 

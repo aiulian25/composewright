@@ -108,7 +108,7 @@ func TestHasSecretOpensNothing(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	store.sealer = secrets.NewSealer(otherKey)
+	store.sealer.Store(secrets.NewSealer(otherKey))
 	if _, _, err := store.Secret(ctx, "llm-claude"); err == nil {
 		t.Fatal("a key sealed under another master key opened")
 	}
@@ -551,7 +551,7 @@ func TestResealAllMovesEveryValue(t *testing.T) {
 	if err != nil || usage[newKey.ID] != 2 || usage[oldKey.ID] != 0 {
 		t.Fatalf("usage after rotation: %v %v", usage, err)
 	}
-	store.sealer = secrets.NewSealer(newKey)
+	store.sealer.Store(secrets.NewSealer(newKey))
 	values, err := store.EnvVars(ctx, project.ID)
 	if err != nil || values[0].Value != "a-secret" {
 		t.Fatalf("value unreadable with only the new key: %+v %v", values, err)

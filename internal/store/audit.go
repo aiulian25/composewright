@@ -35,6 +35,7 @@ const (
 	ActionTestModel     = "test_model"
 	ActionProposeRepair = "propose_repair"
 	ActionCheckImages   = "check_images"
+	ActionUpdateCheck   = "update_check"
 	genesisAuditHash    = ""
 )
 

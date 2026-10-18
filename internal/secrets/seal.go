@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
+	"maps"
 
 	"golang.org/x/crypto/chacha20poly1305"
 )
@@ -36,6 +37,14 @@ func NewSealer(current Key, retired ...Key) *Sealer {
 		keys[key.ID] = key
 	}
 	return &Sealer{current: current, keys: keys}
+}
+
+// Rotated is this sealer with next as its current key; every value it
+// opened before still opens.
+func (sealer *Sealer) Rotated(next Key) *Sealer {
+	keys := maps.Clone(sealer.keys)
+	keys[next.ID] = next
+	return &Sealer{current: next, keys: keys}
 }
 
 func (sealer *Sealer) CurrentKeyID() string {

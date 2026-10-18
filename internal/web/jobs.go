@@ -334,6 +334,18 @@ func (registry *jobs) running(project string) (*job, bool) {
 	return nil, false
 }
 
+// busy reports whether any run is going.
+func (registry *jobs) busy() bool {
+	registry.mutex.Lock()
+	defer registry.mutex.Unlock()
+	for _, existing := range registry.byID {
+		if !existing.isFinished() {
+			return true
+		}
+	}
+	return false
+}
+
 // shutdown stops every job and waits for their cleanup.
 func (registry *jobs) shutdown(grace time.Duration) {
 	registry.mutex.Lock()

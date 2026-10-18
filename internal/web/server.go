@@ -14,7 +14,9 @@ import (
 
 	"github.com/aiulian25/composewright/internal/auth"
 	"github.com/aiulian25/composewright/internal/config"
+	"github.com/aiulian25/composewright/internal/netguard"
 	"github.com/aiulian25/composewright/internal/pipeline"
+	"github.com/aiulian25/composewright/internal/release"
 	"github.com/aiulian25/composewright/internal/workspace"
 	"github.com/aiulian25/composewright/web"
 )
@@ -51,6 +53,10 @@ const (
 // fakes in tests.
 type Connector func(ctx context.Context, setup pipeline.Setup) (pipeline.Connection, error)
 
+// ReleaseLookup asks for composewright's latest release; release.Latest in
+// production, a test server in tests.
+type ReleaseLookup func(ctx context.Context, guard *netguard.Guard) (release.Release, error)
+
 type Options struct {
 	Loaded    *config.Loaded
 	Flags     config.Flags
@@ -62,6 +68,7 @@ type Options struct {
 	TrustedProxies []netip.Prefix
 	SetupToken     string
 	Connect        Connector
+	Latest         ReleaseLookup
 	Logger         *slog.Logger
 	Now            func() time.Time
 }
@@ -88,6 +95,9 @@ type Server struct {
 	settingsMutex sync.Mutex
 	// proposals keeps each repair a person was shown until they apply it.
 	proposals shownProposals
+	// keyMutex keeps readers of the master key out while a rotation or
+	// purge swaps it.
+	keyMutex sync.RWMutex
 }
 
 func New(options Options) (*Server, error) {
@@ -105,6 +115,9 @@ func New(options Options) (*Server, error) {
 	}
 	if options.Now == nil {
 		options.Now = time.Now
+	}
+	if options.Latest == nil {
+		options.Latest = release.Latest
 	}
 	if options.Logger == nil {
 		options.Logger = slog.Default()
@@ -188,6 +201,13 @@ func (server *Server) routes() {
 	mux.HandleFunc("POST /settings/backup/delete", server.authed(server.deleteBackup))
 	mux.HandleFunc("POST /settings/audit/verify", server.authed(server.verifyAudit))
 	mux.HandleFunc("POST /settings/audit/export", server.authed(server.exportAudit))
+	mux.HandleFunc("POST /settings/maintenance/rotate", server.authed(server.rotateKey))
+	mux.HandleFunc("POST /settings/maintenance/purge", server.authed(server.purgeKeys))
+	mux.HandleFunc("POST /settings/maintenance/update-check", server.authed(server.checkForUpdate))
+	mux.HandleFunc("POST /settings/maintenance/doctor", server.authed(server.runDoctor))
+	mux.HandleFunc("POST /settings/advanced/token", server.authed(server.saveGitHubToken))
+	mux.HandleFunc("GET /settings/profile/export", server.authed(server.exportProfile))
+	mux.HandleFunc("POST /settings/profile/import", server.authed(server.importProfile))
 	mux.HandleFunc("POST /engine", server.authed(server.switchEngine))
 }
 
@@ -201,6 +221,14 @@ func (server *Server) paths() config.Paths {
 	server.mutex.RLock()
 	defer server.mutex.RUnlock()
 	return server.loaded.Paths
+}
+
+// loadedConfig is a copy of the configuration with where it came from.
+func (server *Server) loadedConfig() *config.Loaded {
+	server.mutex.RLock()
+	defer server.mutex.RUnlock()
+	copied := *server.loaded
+	return &copied
 }
 
 // reload reads config.yaml again after Settings changed it.
