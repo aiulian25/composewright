@@ -19,7 +19,7 @@
 <p class="muted">v{{.Generation.Number}} · {{.Summary}}{{if .Failed}} · <a href="/projects/{{.Project.Name}}/validate">See why the test failed</a>{{end}}</p>
 
 <section class="card" aria-labelledby="deploy-title">
-  <div class="card-head"><h2 id="deploy-title">{{template "icon-deploy"}}Deploy</h2><span class="note">{{if .Arcane}}compose.yaml and .env.example, without secrets{{else}}compose.yaml, .env and DEPLOY.md{{end}}</span></div>
+  <div class="card-head"><h2 id="deploy-title">{{template "icon-deploy"}}Deploy</h2><span class="note">{{.Carried}}</span></div>
   <div class="card-body deploy-steps">
     {{if .Saved}}
     <p class="deploy-step" role="status"><span class="step-mark step-done">{{template "icon-check"}}</span><span class="strong">Saved</span><span class="mono">{{.Saved}}</span></p>

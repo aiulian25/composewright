@@ -2797,8 +2797,8 @@ func TestSecretPassedAsAFileTravelsWithTheFiles(t *testing.T) {
 	}
 	response, page = harness.get("/projects/notes/files")
 	status(t, response, http.StatusOK, page)
-	if !strings.Contains(page, "Save 4 files") {
-		t.Fatal("Save does not count the secret file")
+	if !strings.Contains(page, "Save 4 files") || !strings.Contains(page, "compose.yaml, .env, DEPLOY.md and 1 secret file") {
+		t.Fatal("Save does not count the secret file, or the Deploy card does not name it")
 	}
 	response, archive := harness.post("/projects/notes/download", nil)
 	status(t, response, http.StatusOK, "")
@@ -2841,8 +2841,8 @@ func TestBundledFileIsShownAndSaved(t *testing.T) {
 	}
 	response, page = harness.get("/projects/site/files")
 	status(t, response, http.StatusOK, page)
-	if !strings.Contains(page, "Save 4 files") {
-		t.Fatal("Save does not count the bundled file")
+	if !strings.Contains(page, "Save 4 files") || !strings.Contains(page, "compose.yaml, .env, DEPLOY.md and 1 config file") {
+		t.Fatal("Save does not count the bundled file, or the Deploy card does not name it")
 	}
 	response, archive := harness.post("/projects/site/download", nil)
 	status(t, response, http.StatusOK, "")

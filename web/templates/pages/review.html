@@ -214,6 +214,6 @@
 </div>
 <div class="tab-panel" data-panel="env"{{if ne .Pane "env"}} hidden{{end}}><div class="code">{{template "code-lines" .EnvLines}}</div></div>
 <div class="tab-panel" data-panel="deploy"{{if ne .Pane "deploy"}} hidden{{end}}><div class="code">{{template "code-lines" .DeployLines}}</div></div>
-{{$pane := .Pane}}{{range .ConfigFiles}}<div class="tab-panel" data-panel="{{.Pane}}"{{if ne $pane .Pane}} hidden{{end}}><p class="muted small">Copied from {{.Source}} in the repository and mounted read-only; DEPLOY.md says how to change that.</p><div class="code">{{template "code-lines" .Lines}}</div></div>{{end}}
+{{$pane := .Pane}}{{range .ConfigFiles}}<div class="tab-panel" data-panel="{{.Pane}}"{{if ne $pane .Pane}} hidden{{end}}><div class="code">{{template "code-lines" .Lines}}</div><div class="legend">Copied from {{.Source}} in the repository and mounted read-only; DEPLOY.md says how to change that.</div></div>{{end}}
 {{end}}
 {{end}}

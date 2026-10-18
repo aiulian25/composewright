@@ -42,9 +42,17 @@ const (
 	// and .env.example for Arcane.
 	folderFiles = 3
 	arcaneFiles = 2
-	plainText   = "text/plain; charset=utf-8"
-	zipType     = "application/zip"
-	webMask     = "<hidden: Reveal secrets shows it>"
+	// The words the Deploy card names the files a save writes with.
+	secretFileSingular = "secret file"
+	secretFilePlural   = "secret files"
+	configFileSingular = "config file"
+	configFilePlural   = "config files"
+	listSeparator      = ", "
+	lastSeparator      = " and "
+	withoutSecrets     = ", without secrets"
+	plainText          = "text/plain; charset=utf-8"
+	zipType            = "application/zip"
+	webMask            = "<hidden: Reveal secrets shows it>"
 	// retestField asks a side-by-side save to start a test run as well.
 	retestField = "retest"
 	// The Save form's fields, also read from the address once the folder
@@ -85,8 +93,10 @@ type filesView struct {
 	Saved      string
 	// SecretFiles are the secrets passed as files a folder save writes;
 	// Saving counts every file a save writes, bundled config files too.
-	SecretFiles  []string
-	Saving       int
+	SecretFiles []string
+	Saving      int
+	// Carried names the files a save writes, for the Deploy card.
+	Carried      string
 	ComposeLines []badgedLine
 	EnvLines     []badgedLine
 	DeployLines  []badgedLine
@@ -201,6 +211,7 @@ func (server *Server) filesView(ctx context.Context, stored *pipeline.Stored, st
 	}
 	view.SecretFiles = slices.Sorted(maps.Keys(stored.Plan.SecretFiles(nil)))
 	view.Saving = folderFiles + len(view.SecretFiles) + len(stored.Generation.Files)
+	view.Carried = carried(len(view.SecretFiles), len(stored.Generation.Files), view.Arcane)
 	if view.Arcane {
 		view.Saving = arcaneFiles + len(stored.Generation.Files)
 	}
@@ -476,6 +487,27 @@ func (server *Server) copyEnv(writer http.ResponseWriter, request *http.Request,
 	writer.Header().Set(contentType, plainText)
 	_, err = writer.Write(env) //nolint:gosec // G705: served as text/plain with nosniff; the .env is exactly what was asked for
 	return err
+}
+
+// carried names the files a save writes: compose.yaml, .env and DEPLOY.md
+// with the secret and config files, or for Arcane compose.yaml and
+// .env.example with the config files, and no secret.
+func carried(secretFiles, configFiles int, arcane bool) string {
+	names := []string{export.ComposeName, export.EnvName, export.DeployName}
+	if arcane {
+		names, secretFiles = []string{export.ComposeName, export.EnvExampleName}, 0
+	}
+	if secretFiles > 0 {
+		names = append(names, countText(secretFiles, secretFileSingular, secretFilePlural))
+	}
+	if configFiles > 0 {
+		names = append(names, countText(configFiles, configFileSingular, configFilePlural))
+	}
+	listed := strings.Join(names[:len(names)-1], listSeparator) + lastSeparator + names[len(names)-1]
+	if arcane {
+		listed += withoutSecrets
+	}
+	return listed
 }
 
 // zipEntry is one file of a download, by its path in the project folder.
