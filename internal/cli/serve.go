@@ -194,6 +194,9 @@ func (application *app) runServe(ctx context.Context, listen string, trustedProx
 		return err
 	}
 	defer opened.Close()
+	for _, problem := range opened.Catalogue.Problems {
+		application.logger.Warn(catalogueLeftOut, "problem", problem)
+	}
 	if listen == "" {
 		listen = loaded.Config.Listen
 	}

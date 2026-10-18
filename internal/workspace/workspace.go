@@ -16,6 +16,7 @@ import (
 
 	"github.com/aiulian25/composewright/internal/atomicfile"
 	"github.com/aiulian25/composewright/internal/config"
+	"github.com/aiulian25/composewright/internal/rules"
 	"github.com/aiulian25/composewright/internal/secrets"
 	"github.com/aiulian25/composewright/internal/store"
 )
@@ -34,6 +35,9 @@ type Workspace struct {
 	Key    secrets.Key
 	Store  *store.Store
 	Actor  string
+	// Catalogue is what the rules know of images, with the override files
+	// catalogue.d held when the workspace opened.
+	Catalogue *rules.Catalogue
 }
 
 type InitResult struct {
@@ -72,8 +76,9 @@ func Init(ctx context.Context, loaded *config.Loaded) (InitResult, error) {
 	return result, workspace.Store.Audit(ctx, workspace.Actor, store.ActionInit, "", map[string]any{"key_id": key.ID})
 }
 
-// Open loads the state every command needs and enforces the permission
-// rules: private data directory, private key directory, 0600 key files.
+// Open loads the state every command needs, the rules catalogue with its
+// overrides among it, and enforces the permission rules: private data
+// directory, private key directory, 0600 key files.
 func Open(ctx context.Context, loaded *config.Loaded) (*Workspace, error) {
 	paths := loaded.Paths
 	if err := finishInterruptedSwap(paths.KeyFile); err != nil {
@@ -105,7 +110,7 @@ func Open(ctx context.Context, loaded *config.Loaded) (*Workspace, error) {
 	if err := database.RecordKey(ctx, key.ID); err != nil {
 		return nil, errors.Join(err, database.Close())
 	}
-	return &Workspace{Config: loaded.Config, Paths: paths, Key: key, Store: database, Actor: actor()}, nil
+	return &Workspace{Config: loaded.Config, Paths: paths, Key: key, Store: database, Actor: actor(), Catalogue: LoadCatalogue(paths)}, nil
 }
 
 func (workspace *Workspace) Close() error {

@@ -48,7 +48,7 @@ var Engines = []string{EngineRules, EngineAssisted, EngineModel}
 // leaves the rules' plan and says so.
 func draft(ctx context.Context, dependencies Dependencies, options *Options, result *Result) error {
 	input := rules.Input{Facts: result.Facts, Source: result.Source, Name: options.Name, EnabledOptional: options.EnabledOptional,
-		ComposeFile: options.ComposeFile}
+		ComposeFile: options.ComposeFile, Catalogue: catalogueOf(dependencies.Workspace)}
 	rulePlan := rules.Build(ctx, input)
 	kept := options.EnabledOptional == nil
 	previous, err := previousOptions(ctx, dependencies.Workspace, rulePlan.App.Name, result.Source.URL, options.Uploaded)
@@ -89,6 +89,16 @@ func draft(ctx context.Context, dependencies Dependencies, options *Options, res
 		result.Plan.PostInstallNotes = append(result.Plan.PostInstallNotes, variantNote)
 	}
 	return nil
+}
+
+// catalogueOf is the rules catalogue the workspace read, with its
+// overrides; a run without a workspace, such as gen --stop-after ir, uses
+// the one composewright ships.
+func catalogueOf(opened *workspace.Workspace) *rules.Catalogue {
+	if opened == nil {
+		return nil
+	}
+	return opened.Catalogue
 }
 
 // carryPrevious fills in from the options the project was last generated

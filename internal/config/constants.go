@@ -14,6 +14,7 @@ const (
 	KeyFileName    = "master.key"
 	ProjectsDir    = "projects"
 	BackupsDir     = "backups"
+	CatalogueDir   = "catalogue.d"
 
 	EnvConfig        = "COMPOSEWRIGHT_CONFIG"
 	EnvDataDir       = "COMPOSEWRIGHT_DATA_DIR"

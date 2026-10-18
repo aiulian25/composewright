@@ -94,7 +94,7 @@ func (builder *builder) probePath(app *ir.Service, probe *ir.Probe) {
 	if healthcheckProbe(app, probe) {
 		return
 	}
-	documented := known.appProbePath(app.Image)
+	documented := builder.catalogue.appProbePath(app.Image)
 	if documented == "" && len(builder.facts.HealthPaths) > 0 {
 		documented = builder.facts.HealthPaths[0].Text
 	}

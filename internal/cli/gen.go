@@ -109,6 +109,9 @@ func (application *app) runGen(ctx context.Context, flags genFlags) error {
 			return err
 		}
 		defer opened.Close()
+		for _, problem := range opened.Catalogue.Problems {
+			application.note(catalogueLeftOut + ": " + problem)
+		}
 	}
 	configuration := loaded.Config
 	if flags.timeout > 0 {

@@ -197,7 +197,7 @@
 
   {{if ne .Page "account"}}<div class="row"><button class="button button-primary push-right" type="submit">Save</button></div>{{end}}
 </form>
-{{if eq .Page "advanced"}}{{template "github-token" $}}{{end}}
+{{if eq .Page "advanced"}}{{template "github-token" $}}{{template "catalogue-overrides" $}}{{end}}
 {{end}}
 {{end}}
 {{end}}
@@ -344,6 +344,33 @@
 {{end}}
 {{end}}
 
+{{define "catalogue-overrides"}}
+{{with .Data.Advanced}}
+<section class="card" id="catalogue-overrides" aria-labelledby="catalogue-overrides-title">
+  <div class="card-head"><h2 id="catalogue-overrides-title">{{template "icon-book"}}Catalogue overrides</h2>{{if .Catalogue.Problems}}<span class="chip chip-warn">{{plural (len .Catalogue.Problems) "problem" "problems"}}</span>{{else if .Catalogue.Overrides}}<span class="chip chip-ok">{{template "icon-check"}}{{plural (len .Catalogue.Overrides) "file" "files"}}</span>{{else}}<span class="chip">none</span>{{end}}</div>
+  <div class="card-body">
+    <p class="muted small">A .yaml file in <span class="mono">{{.CatalogueDir}}</span> adds to what composewright knows of images, in the families: and apps: form of its own catalogue: the healthcheck, memory or probe path an app's images need, and the databases, caches and proxies by name. Files are read in name order and a later one wins: a family replaces the one of its name, an app entry wins for its images. composewright reads them when it starts and after a restore, so restart it after changing one; backups include them.</p>
+    {{with .Catalogue.Problems}}<p>Left out until fixed:</p>
+    <ul class="notes">{{range .}}<li>{{.}}</li>{{end}}</ul>{{end}}
+    {{if not .Catalogue.Overrides}}<pre class="terminal">apps:
+  - images: [ghcr.io/example/app]
+    healthcheck: ["CMD", "/app", "healthcheck"]
+    memory_limit: 1g</pre>{{end}}
+  </div>
+  {{with .Catalogue.Overrides}}
+  <div class="table-scroll">
+    <table class="table table-compact">
+      <thead><tr><th scope="col">File</th><th scope="col">Families</th><th scope="col">Apps</th></tr></thead>
+      <tbody>
+        {{range .}}<tr><th scope="row" class="mono">{{.Name}}</th><td>{{.Families}}</td><td>{{.Apps}}</td></tr>{{end}}
+      </tbody>
+    </table>
+  </div>
+  {{end}}
+</section>
+{{end}}
+{{end}}
+
 {{define "maintenance-page"}}
 {{$csrf := .CSRF}}
 {{with .Data.Maintenance}}
@@ -393,7 +420,7 @@
     </table>
   </div>
   {{else}}
-  <p class="card-body muted small">The data folder, the audit log, the Docker CLI and daemon, the sandbox tier, resource limits and the profile's networks. The model is not contacted.</p>
+  <p class="card-body muted small">The data folder, the audit log, the catalogue overrides, the Docker CLI and daemon, the sandbox tier, resource limits and the profile's networks. The model is not contacted.</p>
   {{end}}
   <div class="card-foot"><button class="button button-primary push-right" type="submit">{{template "icon-play"}}Run checks</button></div>
 </form>

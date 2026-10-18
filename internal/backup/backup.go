@@ -1,7 +1,8 @@
 // Package backup writes and reads a composewright backup: the Settings
-// page's choices with the model keys they use, and every project with its
-// versions and .env, in one file encrypted with a passphrase. The master
-// key never leaves the install, so a backup restores on any install.
+// page's choices with the model keys they use, the catalogue overrides, and
+// every project with its versions and .env, in one file encrypted with a
+// passphrase. The master key never leaves the install, so a backup restores
+// on any install.
 package backup
 
 import (
@@ -25,6 +26,7 @@ import (
 	"github.com/aiulian25/composewright/internal/config"
 	"github.com/aiulian25/composewright/internal/policy"
 	"github.com/aiulian25/composewright/internal/store"
+	"github.com/aiulian25/composewright/internal/workspace"
 )
 
 const (
@@ -55,14 +57,17 @@ var (
 )
 
 // Archive is what a backup holds. Keys are the stored model API keys the
-// settings name, by their keyring name.
+// settings name, by their keyring name, and Catalogue the catalogue.d
+// override files by theirs; a backup made where there were none, or before
+// they existed, has none.
 type Archive struct {
-	Format   int                   `json:"format"`
-	Created  time.Time             `json:"created"`
-	Version  string                `json:"version"`
-	Settings Settings              `json:"settings"`
-	Keys     map[string]string     `json:"keys"`
-	Projects []store.ProjectRecord `json:"projects"`
+	Format    int                   `json:"format"`
+	Created   time.Time             `json:"created"`
+	Version   string                `json:"version"`
+	Settings  Settings              `json:"settings"`
+	Keys      map[string]string     `json:"keys"`
+	Projects  []store.ProjectRecord `json:"projects"`
+	Catalogue map[string][]byte     `json:"catalogue,omitempty"`
 }
 
 // Settings are the choices the Settings page saves. The rest of the
@@ -83,9 +88,12 @@ func (settings Settings) Apply(configuration config.Config) config.Config {
 	return configuration
 }
 
-// Collect gathers an archive from the configuration and the store.
-func Collect(ctx context.Context, database *store.Store, configuration config.Config, version string, now time.Time) (Archive, error) {
-	archive := Archive{Format: formatVersion, Created: now.UTC(), Version: version, Keys: map[string]string{},
+// Collect gathers an archive from the configuration, the store and the
+// override files in catalogueDirectory. A file the rules could not read is
+// left out, as they leave it out.
+func Collect(ctx context.Context, database *store.Store, configuration config.Config, catalogueDirectory, version string, now time.Time) (Archive, error) {
+	catalogue, _ := workspace.CatalogueFiles(catalogueDirectory)
+	archive := Archive{Format: formatVersion, Created: now.UTC(), Version: version, Keys: map[string]string{}, Catalogue: catalogue,
 		Settings: Settings{Profile: configuration.Profile, LLM: configuration.LLM, Registries: configuration.Registries.Allow,
 			PrivateTargets: configuration.Network.AllowPrivateTargets, Theme: configuration.UI.Theme}}
 	for _, name := range keyNames(configuration.LLM) {
@@ -201,11 +209,17 @@ func decode(payload []byte) (Archive, error) {
 	return archive, archive.problem()
 }
 
-// problem checks what a restore would write: the names that become folders,
-// the .env keys, the keys of the model settings, and each version's JSON.
+// problem checks what a restore would write: the names that become folders
+// or files, the .env keys, the keys of the model settings, and each
+// version's JSON.
 func (archive Archive) problem() error {
 	if archive.Format != formatVersion {
 		return fmt.Errorf("backup format %d is not supported", archive.Format)
+	}
+	for name, content := range archive.Catalogue {
+		if !workspace.ValidCatalogueFile(name, content) {
+			return fmt.Errorf("the backup has a catalogue override %q that cannot be restored", name)
+		}
 	}
 	named := keyNames(archive.Settings.LLM)
 	for name := range archive.Keys {

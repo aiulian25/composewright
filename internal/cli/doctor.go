@@ -17,10 +17,11 @@ func (application *app) doctorCommand() *cobra.Command {
 		Use:   "doctor",
 		Short: "Check Docker, the sandbox tier, permissions and the egress allowlist",
 		Long: `Check everything composewright depends on and say how to fix what is wrong:
-the data directory and master key permissions, the docker CLI and compose
-plugin (2.24.4 or later), whether the daemon is rootless, whether it enforces
-memory, CPU and process limits, that the profile's external networks exist,
-and which hosts the egress guard allows.
+the data directory and master key permissions, the catalogue override files
+in catalogue.d, the docker CLI and compose plugin (2.24.4 or later), whether
+the daemon is rootless, whether it enforces memory, CPU and process limits,
+that the profile's external networks exist, and which hosts the egress guard
+allows.
 
 doctor never changes anything and never contacts the model unless
 --contact-model asks it to send the model in use one tiny request, through

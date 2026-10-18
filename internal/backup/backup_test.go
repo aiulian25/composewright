@@ -2,15 +2,25 @@ package backup
 
 import (
 	"bytes"
+	"context"
 	"errors"
+	"maps"
+	"os"
+	"path/filepath"
 	"slices"
 	"testing"
+	"time"
 
 	"github.com/aiulian25/composewright/internal/config"
+	"github.com/aiulian25/composewright/internal/secrets"
 	"github.com/aiulian25/composewright/internal/store"
 )
 
-const testPassphrase = "correct horse battery staple"
+const (
+	testPassphrase = "correct horse battery staple"
+	// overLimit is one byte more than an override file may hold.
+	overLimit = 256<<10 + 1
+)
 
 func sampleArchive() Archive {
 	llm := config.Default().LLM
@@ -77,6 +87,9 @@ func TestArchiveProblems(t *testing.T) {
 		"bad .env key":    func(archive *Archive) { archive.Projects[0].Variables[0].Key = "A=B" },
 		"unreadable plan": func(archive *Archive) { archive.Projects[0].Generations[0].Generation.IRJSON = "{" },
 		"newer format":    func(archive *Archive) { archive.Format = formatVersion + 1 },
+		"override path":   func(archive *Archive) { archive.Catalogue = map[string][]byte{"../escape.yaml": nil} },
+		"override kind":   func(archive *Archive) { archive.Catalogue = map[string][]byte{"notes.txt": nil} },
+		"override size":   func(archive *Archive) { archive.Catalogue = map[string][]byte{"large.yaml": make([]byte, overLimit)} },
 	}
 	for name, mutate := range cases {
 		archive := sampleArchive()
@@ -84,5 +97,59 @@ func TestArchiveProblems(t *testing.T) {
 		if archive.problem() == nil {
 			t.Errorf("%s: accepted", name)
 		}
+	}
+}
+
+func openStore(t *testing.T) *store.Store {
+	t.Helper()
+	key, err := secrets.NewKey()
+	if err != nil {
+		t.Fatal(err)
+	}
+	directory := t.TempDir()
+	database, err := store.Open(context.Background(), filepath.Join(directory, config.DatabaseName), filepath.Join(directory, config.BackupsDir),
+		secrets.NewSealer(key))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { database.Close() })
+	return database
+}
+
+// TestCatalogueOverridesRoundTrip: a backup carries the override files of
+// the catalogue.d folder it was collected from and opens with them; one
+// from an install without the folder carries none, and one made before
+// overrides existed still opens.
+func TestCatalogueOverridesRoundTrip(t *testing.T) {
+	ctx, database := context.Background(), openStore(t)
+	directory := filepath.Join(t.TempDir(), config.CatalogueDir)
+	if err := os.MkdirAll(directory, config.DirMode); err != nil {
+		t.Fatal(err)
+	}
+	override := []byte("apps:\n  - images: [ghcr.io/x/bookorbit]\n    healthcheck: [\"CMD\", \"/app\", \"healthcheck\"]\n")
+	if err := os.WriteFile(filepath.Join(directory, "bookorbit.yaml"), override, config.FileMode); err != nil {
+		t.Fatal(err)
+	}
+	collected := map[string]map[string][]byte{directory: {"bookorbit.yaml": override}, filepath.Join(directory, "missing"): nil}
+	for folder, want := range collected {
+		archive, err := Collect(ctx, database, config.Default(), folder, "test", time.Now())
+		if err != nil {
+			t.Fatal(err)
+		}
+		sealed, err := Seal(archive, testPassphrase)
+		if err != nil {
+			t.Fatal(err)
+		}
+		opened, err := Open(sealed, testPassphrase)
+		if err != nil || !maps.EqualFunc(opened.Catalogue, want, bytes.Equal) {
+			t.Fatalf("from %s: overrides %q, %v", folder, opened.Catalogue, err)
+		}
+	}
+	sealed, err := Seal(sampleArchive(), testPassphrase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if opened, err := Open(sealed, testPassphrase); err != nil || opened.Catalogue != nil {
+		t.Fatalf("a backup without overrides: %q, %v", opened.Catalogue, err)
 	}
 }

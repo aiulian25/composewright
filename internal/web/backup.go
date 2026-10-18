@@ -19,6 +19,7 @@ import (
 	"github.com/aiulian25/composewright/internal/backup"
 	"github.com/aiulian25/composewright/internal/config"
 	"github.com/aiulian25/composewright/internal/store"
+	"github.com/aiulian25/composewright/internal/workspace"
 )
 
 const (
@@ -163,7 +164,7 @@ func (server *Server) storeBackup(ctx context.Context, kind, actor string) (back
 	}
 	defer release()
 	now, configuration := server.options.Now(), server.config()
-	archive, err := backup.Collect(ctx, database, configuration, server.options.Version, now)
+	archive, err := backup.Collect(ctx, database, configuration, server.paths().CatalogueDir(), server.options.Version, now)
 	if err != nil {
 		return backup.Stored{}, err
 	}
@@ -176,7 +177,8 @@ func (server *Server) storeBackup(ctx context.Context, kind, actor string) (back
 	if err != nil {
 		return backup.Stored{}, err
 	}
-	details := map[string]any{"backup": stored.Name, "kind": kind, "projects": len(archive.Projects), "keys": sortedKeys(archive.Keys)}
+	details := map[string]any{"backup": stored.Name, "kind": kind, "projects": len(archive.Projects), "keys": sortedKeys(archive.Keys),
+		"catalogue": sortedKeys(archive.Catalogue)}
 	var pruneErr error
 	if kind == backup.KindAutomatic {
 		details["pruned"], pruneErr = folder.Prune(configuration.Backup.Keep)
@@ -316,10 +318,12 @@ func resealBackup(folder backup.Folder, name, from, to string) error {
 	return folder.Rewrite(name, resealed)
 }
 
-// restoreBackup brings back a backup's Settings choices, model keys and
-// projects, once the account password is confirmed again: a stored one, or
-// an uploaded file with its passphrase. A project that exists here is kept
-// unless replacing it was asked for.
+// restoreBackup brings back a backup's Settings choices, model keys,
+// catalogue overrides and projects, once the account password is confirmed
+// again: a stored one, or an uploaded file with its passphrase. A project
+// that exists here is kept unless replacing it was asked for; an override
+// file replaces the one of its name, and new runs use the catalogue read
+// again.
 func (server *Server) restoreBackup(writer http.ResponseWriter, request *http.Request, current *visit) error {
 	restored, kept, err := server.restore(request, current)
 	if err != nil {
@@ -357,8 +361,13 @@ func (server *Server) restore(request *http.Request, current *visit) (restored, 
 	if err := server.update(request, current, settingsValues(configuration)); err != nil {
 		return nil, nil, err
 	}
-	details := map[string]any{"from": source, "replace": replace, "keys": sortedKeys(archive.Keys), "backup_created": archive.Created,
-		"backup_version": archive.Version}
+	paths := server.paths()
+	if err := workspace.WriteCatalogueFiles(paths.CatalogueDir(), archive.Catalogue); err != nil {
+		return nil, nil, err
+	}
+	server.catalogue.Store(workspace.LoadCatalogue(paths))
+	details := map[string]any{"from": source, "replace": replace, "keys": sortedKeys(archive.Keys), "catalogue": sortedKeys(archive.Catalogue),
+		"backup_created": archive.Created, "backup_version": archive.Version}
 	var failure error
 	for _, record := range archive.Projects {
 		written, err := database.RestoreProject(ctx, record, replace)
@@ -504,6 +513,6 @@ func passphraseNotice(query url.Values) string {
 	return notice + " These still need the old passphrase: " + strings.Join(left, namesJoiner) + "."
 }
 
-func sortedKeys(values map[string]string) []string {
+func sortedKeys[Value any](values map[string]Value) []string {
 	return slices.Sorted(maps.Keys(values))
 }

@@ -78,6 +78,21 @@ All notable changes to this project are documented here. The format follows
   alone pass that; source files fill what is left and the rest are skipped.
   The Fetch step says how many files it fetched this way and how many
   source files it skipped.
+- What composewright knows about images, such as the healthcheck Miniflux
+  gets or the memory Immich needs, can now be added to without a new
+  release: `.yaml` files in the `catalogue.d` folder of the data directory,
+  `/data/catalogue.d` in the container, use the same `families:` and
+  `apps:` lists as the built-in catalogue. They are read in name order and
+  a later file wins: a family replaces the one of its name and an app entry
+  wins for the images it lists. A healthcheck from them is cited as R5, as
+  the built-in ones are. Commands read the files each time and the web UI
+  when it starts and after a restore. Settings › Advanced lists them with
+  how many families and apps each adds and the folder they are read from;
+  a file that is not valid YAML, or whose image, `memory_limit` or
+  healthcheck cannot be used, is listed there with its problem and left
+  out, `composewright doctor` reports it in a catalogue overrides row, and
+  `composewright gen` notes it. Backups include the files and a restore
+  writes them back.
 - Try it on the Model providers page sends a connection one tiny request and
   says whether it answered: the model name it answered as, the tokens in and
   out and the time, or the provider's error with the key left out. It works

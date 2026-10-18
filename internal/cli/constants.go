@@ -41,6 +41,9 @@ const (
 	// allowHostFlag is still accepted so older compose commands keep working.
 	allowHostFlag = "allow-host"
 
+	// catalogueLeftOut says a catalogue override file is not used, and why.
+	catalogueLeftOut = "catalogue override left out"
+
 	// Asked right under the plan table, which lists the images. Teardown is
 	// down -v without --rmi, so the images stay for the real deployment.
 	sandboxQuestion = "\nRun %s in an isolated sandbox (pulls the images above and keeps them; the sandbox and its volumes are removed afterwards)?"

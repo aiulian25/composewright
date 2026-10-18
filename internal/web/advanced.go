@@ -8,12 +8,14 @@ import (
 	"strings"
 
 	"github.com/aiulian25/composewright/internal/config"
+	"github.com/aiulian25/composewright/internal/rules"
 	"github.com/aiulian25/composewright/internal/store"
 )
 
 // The Advanced page holds the keys `composewright config set` changes that
 // no other page shows: the sandbox, Docker, code hosts and sign-in length,
-// and the GitHub token, sealed like a model key.
+// and the GitHub token, sealed like a model key. It also lists the rules
+// catalogue's override files, which are edited on the host.
 
 const (
 	sectionAdvanced        = "advanced"
@@ -40,13 +42,18 @@ type advancedView struct {
 	TokenUnused    bool
 	TokenElsewhere bool
 	TokenRef       string
+	// Catalogue is the rules catalogue new runs use, with the override
+	// files read from CatalogueDir.
+	Catalogue    *rules.Catalogue
+	CatalogueDir string
 }
 
 func (server *Server) advancedView(ctx context.Context, configuration config.Config) (advancedView, error) {
 	stored, err := server.workspace().Store.HasSecret(ctx, githubKeyName)
 	reference := configuration.SCM.GitHubTokenRef
 	return advancedView{Tiers: config.SandboxTiers(), AllowHosts: strings.Join(configuration.SCM.AllowHosts, "\n"), TokenStored: stored,
-		TokenUnused: stored && reference != githubTokenRef, TokenElsewhere: reference != "" && reference != githubTokenRef, TokenRef: reference}, err
+		TokenUnused: stored && reference != githubTokenRef, TokenElsewhere: reference != "" && reference != githubTokenRef, TokenRef: reference,
+		Catalogue: server.catalogue.Load(), CatalogueDir: server.paths().CatalogueDir()}, err
 }
 
 // advancedForm reads the Advanced page into the configuration.

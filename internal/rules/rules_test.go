@@ -326,7 +326,7 @@ func TestChooseComposeSkipsDevelopmentAndAddonFiles(t *testing.T) {
 		"docker/compose/docker-compose.yml":         "services:\n  app:\n    image: example/app:1\n",
 		"scripts/test-env/compose.yml":              "services:\n  app:\n    image: example/app:test\n",
 	})
-	chosen := chooseCompose(facts, []string{"app", "example"}, "")
+	chosen := chooseCompose(shipped, facts, []string{"app", "example"}, "")
 	if chosen == nil || chosen.Path != "docker/compose/docker-compose.yml" {
 		t.Fatalf("chose %+v", chosen)
 	}
@@ -336,7 +336,7 @@ func TestChooseComposeSkipsDevelopmentAndAddonFiles(t *testing.T) {
 		"hacks/proxy-auth/with-logout.yml": "services:\n  dex:\n    image: dexidp/dex:v2\n  app:\n    image: example/app:1\n",
 		"e2e-proxy/docker-compose.yml":     "services:\n  app:\n    image: example/app:1\n",
 	})
-	if chosen := chooseCompose(experiments, []string{"app", "example"}, ""); chosen != nil {
+	if chosen := chooseCompose(shipped, experiments, []string{"app", "example"}, ""); chosen != nil {
 		t.Fatalf("chose the experiment %s", chosen.Path)
 	}
 	// Nor a file that mounts the repository (development), a staging file, a
@@ -347,7 +347,7 @@ func TestChooseComposeSkipsDevelopmentAndAddonFiles(t *testing.T) {
 		"examples/docker-compose-caddy-proxy.yml": "services:\n  app:\n    image: example/app:1\n  caddy:\n    image: caddy:2\n",
 		"apps/workshop/docker-compose.yml":        "services:\n  workshop:\n    build: ../..\n",
 	})
-	if chosen := chooseCompose(skipped, []string{"app", "example"}, ""); chosen != nil {
+	if chosen := chooseCompose(shipped, skipped, []string{"app", "example"}, ""); chosen != nil {
 		t.Fatalf("chose %s", chosen.Path)
 	}
 }
@@ -397,7 +397,7 @@ func TestChooseComposePrefersAFileOnDisk(t *testing.T) {
 		"README.md":                   readme,
 		"deploy/docker/stack/app.yml": "services:\n  app:\n    image: ghcr.io/example/app:1.2\n  db:\n    image: postgres:17\n",
 	})
-	if chosen := chooseCompose(both, []string{"app", "example"}, ""); chosen == nil || chosen.Path != "deploy/docker/stack/app.yml" {
+	if chosen := chooseCompose(shipped, both, []string{"app", "example"}, ""); chosen == nil || chosen.Path != "deploy/docker/stack/app.yml" {
 		t.Fatalf("chose %+v", chosen)
 	}
 	crowded := "services:\n  web:\n    image: docker.io/someorg/web:1\n"
@@ -405,7 +405,7 @@ func TestChooseComposePrefersAFileOnDisk(t *testing.T) {
 		crowded += "  db" + strconv.Itoa(database) + ":\n    image: postgres:17\n"
 	}
 	many := testFacts(t, map[string]string{"README.md": readme, "deploy/docker/stack/app.yml": crowded})
-	if chosen := chooseCompose(many, []string{"app", "example"}, ""); chosen == nil || chosen.Path != "deploy/docker/stack/app.yml" {
+	if chosen := chooseCompose(shipped, many, []string{"app", "example"}, ""); chosen == nil || chosen.Path != "deploy/docker/stack/app.yml" {
 		t.Fatalf("chose %+v over a file with many services", chosen)
 	}
 	plan := Build(context.Background(), Input{Facts: testFacts(t, map[string]string{"README.md": readme}), Source: &fetch.Source{Owner: "example", Repository: "app"}})

@@ -42,7 +42,7 @@ func (builder *builder) enrich() {
 		builder.catalogueHealthcheck(service)
 		// The catalogue's figure fills only a limit upstream left out; one
 		// upstream wrote is kept, even when it is smaller.
-		if memory := known.appMemory(service.Image); service.Resources.MemoryLimit == "" && memory != "" {
+		if memory := builder.catalogue.appMemory(service.Image); service.Resources.MemoryLimit == "" && memory != "" {
 			service.Resources.MemoryLimit = memory
 			service.Resources.Provenance = ir.Provenance{Source: ir.SourceDefault, Confidence: ir.ConfidenceLow}
 		}
@@ -126,7 +126,7 @@ func escapeDollars(test []string) []string {
 // sidecar is R4: known databases and caches get their role and a named
 // volume for their data directory when upstream forgot one.
 func (builder *builder) sidecar(service *ir.Service) {
-	family, found := known.family(service.Image)
+	family, found := builder.catalogue.family(service.Image)
 	if !found || service.Role == ir.RoleApp {
 		return
 	}
@@ -172,8 +172,8 @@ func (builder *builder) catalogueHealthcheck(service *ir.Service) {
 	if service.Healthcheck.Defined() || service.Healthcheck.OmittedReason != "" {
 		return
 	}
-	test := known.appHealthcheck(service.Image)
-	if family, found := known.family(service.Image); found && test == nil {
+	test := builder.catalogue.appHealthcheck(service.Image)
+	if family, found := builder.catalogue.family(service.Image); found && test == nil {
 		test = family.Healthcheck
 	}
 	if test == nil {

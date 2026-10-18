@@ -22,9 +22,11 @@ const (
 	StatusFail = "fail"
 	tcpPrefix  = "tcp://"
 	// contactedName is the check that really asks the model.
-	contactedName = "model (contacted)"
-	tierCheckName = "sandbox tier"
-	rootlessFix   = "use a dedicated rootless daemon: composewright doctor --setup-rootless"
+	contactedName      = "model (contacted)"
+	tierCheckName      = "sandbox tier"
+	catalogueCheckName = "catalogue overrides"
+	problemsJoiner     = "; "
+	rootlessFix        = "use a dedicated rootless daemon: composewright doctor --setup-rootless"
 )
 
 type Check struct {
@@ -45,7 +47,7 @@ type Inputs struct {
 
 // Run performs every check and returns them in a fixed order.
 func Run(ctx context.Context, inputs Inputs) []Check {
-	checks := []Check{workspaceCheck(ctx, inputs.Loaded), auditCheck(ctx, inputs.Loaded), modelCheck(ctx, inputs.Loaded)}
+	checks := []Check{workspaceCheck(ctx, inputs.Loaded), auditCheck(ctx, inputs.Loaded), catalogueCheck(inputs.Loaded), modelCheck(ctx, inputs.Loaded)}
 	if inputs.ModelGuard != nil {
 		checks = append(checks, contactCheck(ctx, inputs.Loaded, inputs.ModelGuard))
 	}
@@ -86,11 +88,27 @@ func auditCheck(ctx context.Context, loaded *config.Loaded) Check {
 		return Check{Name: "audit log", Status: StatusFail, Detail: err.Error(),
 			Fix: "the database was changed outside composewright; keep a copy of it for inspection"}
 	}
-	noun := "entries"
-	if count == 1 {
-		noun = "entry"
+	return Check{Name: "audit log", Status: StatusOK, Detail: "hash chain intact, " + counted(count, "entry", "entries")}
+}
+
+// catalogueCheck counts the override files the rules read from catalogue.d,
+// as a workspace opening reads them, and names each problem that left one
+// out.
+func catalogueCheck(loaded *config.Loaded) Check {
+	catalogue := workspace.LoadCatalogue(loaded.Paths)
+	detail := counted(len(catalogue.Overrides), "file", "files") + ", " + counted(len(catalogue.Problems), "problem", "problems")
+	if len(catalogue.Problems) == 0 {
+		return Check{Name: catalogueCheckName, Status: StatusOK, Detail: detail}
 	}
-	return Check{Name: "audit log", Status: StatusOK, Detail: fmt.Sprintf("hash chain intact, %d %s", count, noun)}
+	return Check{Name: catalogueCheckName, Status: StatusWarn, Detail: detail + ": " + strings.Join(catalogue.Problems, problemsJoiner),
+		Fix: "correct or remove each file named in " + loaded.Paths.CatalogueDir() + "; until then it is left out"}
+}
+
+func counted(count int, one, many string) string {
+	if count == 1 {
+		return "1 " + one
+	}
+	return fmt.Sprintf("%d %s", count, many)
 }
 
 // modelCheck reads the model settings and whether its API key is stored;

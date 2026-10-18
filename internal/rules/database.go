@@ -33,7 +33,7 @@ func (builder *builder) addDatabase() {
 		return
 	}
 	port := settingOf(app, prefix, portSuffixes)
-	database, found := known.database(prefix, builder.valueOf(port))
+	database, found := builder.catalogue.database(prefix, builder.valueOf(port))
 	if !found {
 		return
 	}

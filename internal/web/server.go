@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/netip"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/aiulian25/composewright/internal/auth"
@@ -17,6 +18,7 @@ import (
 	"github.com/aiulian25/composewright/internal/netguard"
 	"github.com/aiulian25/composewright/internal/pipeline"
 	"github.com/aiulian25/composewright/internal/release"
+	"github.com/aiulian25/composewright/internal/rules"
 	"github.com/aiulian25/composewright/internal/workspace"
 	"github.com/aiulian25/composewright/web"
 )
@@ -98,6 +100,9 @@ type Server struct {
 	// keyMutex keeps readers of the master key out while a rotation or
 	// purge swaps it.
 	keyMutex sync.RWMutex
+	// catalogue is the rules catalogue new runs use: the workspace's, until
+	// a restore writes override files back and it is read again.
+	catalogue atomic.Pointer[rules.Catalogue]
 }
 
 func New(options Options) (*Server, error) {
@@ -126,6 +131,7 @@ func New(options Options) (*Server, error) {
 		dummy: dummy, loaded: options.Loaded, setupToken: options.SetupToken,
 		hashing: make(chan struct{}, maxConcurrentHashes)}
 	server.status = newStatusCache(server)
+	server.catalogue.Store(options.Workspace.Catalogue)
 	server.routes()
 	server.sweepUploads()
 	scheduling, stop := context.WithCancel(context.Background())

@@ -20,10 +20,11 @@ type Flags struct {
 	DataDir    string
 }
 
-func (paths Paths) Database() string    { return filepath.Join(paths.DataDir, DatabaseName) }
-func (paths Paths) KeysDir() string     { return filepath.Join(paths.DataDir, KeysDirName) }
-func (paths Paths) ProjectsDir() string { return filepath.Join(paths.DataDir, ProjectsDir) }
-func (paths Paths) BackupsDir() string  { return filepath.Join(paths.DataDir, BackupsDir) }
+func (paths Paths) Database() string     { return filepath.Join(paths.DataDir, DatabaseName) }
+func (paths Paths) KeysDir() string      { return filepath.Join(paths.DataDir, KeysDirName) }
+func (paths Paths) ProjectsDir() string  { return filepath.Join(paths.DataDir, ProjectsDir) }
+func (paths Paths) BackupsDir() string   { return filepath.Join(paths.DataDir, BackupsDir) }
+func (paths Paths) CatalogueDir() string { return filepath.Join(paths.DataDir, CatalogueDir) }
 
 // DefaultKeyFile reports whether the master key lives at its default location
 // inside the data directory, where the directory permissions are also ours.

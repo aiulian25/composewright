@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"cmp"
 	"fmt"
 	"path"
 	"regexp"
@@ -56,7 +57,7 @@ var (
 // path, whatever its kind; else, among the candidate files, prefer the
 // canonical name, files the docs mention, shallow paths and plain variants
 // over add-on ones. Any file on disk beats an example fenced in a README.
-func chooseCompose(facts *extract.Facts, identity []string, chosen string) *extract.ComposeFile {
+func chooseCompose(catalogue *Catalogue, facts *extract.Facts, identity []string, chosen string) *extract.ComposeFile {
 	if index := slices.IndexFunc(facts.ComposeFiles, func(file extract.ComposeFile) bool { return file.Path == chosen }); chosen != "" && index >= 0 {
 		return &facts.ComposeFiles[index]
 	}
@@ -66,7 +67,7 @@ func chooseCompose(facts *extract.Facts, identity []string, chosen string) *extr
 		file := &facts.ComposeFiles[index]
 		// Services behind a profile are not what a deployment starts from.
 		required := file.Started(nil)
-		if !candidate(&required, identity) {
+		if !candidate(catalogue, &required, identity) {
 			continue
 		}
 		score := composeScore(&required, facts, identity)
@@ -117,9 +118,9 @@ func composeScore(file *extract.ComposeFile, facts *extract.Facts, identity []st
 // mount, the repository itself; proxy variants, since the profile adds the
 // proxy; add-on files without an app; and files that only build another
 // program kept in the same repository.
-func candidate(file *extract.ComposeFile, identity []string) bool {
+func candidate(catalogue *Catalogue, file *extract.ComposeFile, identity []string) bool {
 	variant := excludedVariant.MatchString(file.Path) || proxyVariant.MatchString(path.Base(file.Path))
-	return !variant && !mountsRepository(file) && hasAppService(file) && !buildsAnotherProgram(file, identity)
+	return !variant && !mountsRepository(file) && hasAppService(catalogue, file) && !buildsAnotherProgram(catalogue, file, identity)
 }
 
 // mountsRepository is true for a development file: it mounts the checked-out
@@ -135,11 +136,11 @@ func mountsRepository(file *extract.ComposeFile) bool {
 // buildsAnotherProgram is true when the file builds services from source,
 // and every service that is not a database, cache or proxy is built under a
 // local name and none of them carries the project's name.
-func buildsAnotherProgram(file *extract.ComposeFile, identity []string) bool {
+func buildsAnotherProgram(catalogue *Catalogue, file *extract.ComposeFile, identity []string) bool {
 	builds := false
 	for _, service := range file.Services {
 		image, err := ir.ParseImage(service.Image)
-		if _, sidecar := known.family(image); err == nil && sidecar {
+		if _, sidecar := catalogue.family(image); err == nil && sidecar {
 			continue
 		}
 		if !builtLocally(service) || containsAny(strings.ToLower(service.Name), identity) || containsAny(strings.ToLower(service.Image), identity) {
@@ -159,7 +160,7 @@ func builtLocally(service extract.ComposeService) bool {
 // hasAppService is false for add-on files that only define databases and
 // caches to merge into the main file. A proxy counts: a file with nothing but
 // nginx deploys nginx.
-func hasAppService(file *extract.ComposeFile) bool {
+func hasAppService(catalogue *Catalogue, file *extract.ComposeFile) bool {
 	return slices.ContainsFunc(file.Services, func(service extract.ComposeService) bool {
 		if service.Build {
 			return true
@@ -168,7 +169,7 @@ func hasAppService(file *extract.ComposeFile) bool {
 		if err != nil {
 			return false
 		}
-		family, sidecar := known.family(image)
+		family, sidecar := catalogue.family(image)
 		return !sidecar || family.Role == ir.RoleProxy
 	})
 }
@@ -176,7 +177,7 @@ func hasAppService(file *extract.ComposeFile) bool {
 // ChosenCompose is the path of the compose file Build builds the plan from
 // for input; empty, it builds from the documentation.
 func ChosenCompose(input Input) string {
-	chosen := chooseCompose(input.Facts, identityNames(input.Source), input.ComposeFile)
+	chosen := chooseCompose(cmp.Or(input.Catalogue, shipped), input.Facts, identityNames(input.Source), input.ComposeFile)
 	if chosen == nil {
 		return ""
 	}
@@ -284,7 +285,7 @@ func (builder *builder) appService(file *extract.ComposeFile) string {
 		if service.Build && built == "" {
 			built = service.Name
 		}
-		family, sidecar := known.family(image)
+		family, sidecar := builder.catalogue.family(image)
 		if err == nil && !sidecar && firstOther == "" {
 			firstOther = service.Name
 		}
@@ -304,7 +305,7 @@ func (builder *builder) composeService(file *extract.ComposeFile, service extrac
 	if isApp {
 		result.Role = ir.RoleApp
 		builder.evidence("app image "+result.Image.Reference(), service.ImageAt)
-	} else if family, found := known.family(result.Image); found {
+	} else if family, found := builder.catalogue.family(result.Image); found {
 		result.Role = family.Role
 	}
 	result.User = numericUser(service.User)

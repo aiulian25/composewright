@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -125,6 +126,33 @@ func TestAuditCheck(t *testing.T) {
 	storetest.EditAuditActor(t, loaded.Paths.Database(), 1)
 	if check := auditCheck(ctx, loaded); check.Status != StatusFail || !strings.Contains(check.Detail, "entry 1 does not match the chain") {
 		t.Fatalf("edited log: %+v", check)
+	}
+}
+
+// TestCatalogueCheck: doctor counts the catalogue override files the rules
+// read, and warns, naming the file and the folder, when one is left out.
+func TestCatalogueCheck(t *testing.T) {
+	loaded := loadedIn(t)
+	if check := catalogueCheck(loaded); check.Name != catalogueCheckName || check.Status != StatusOK || check.Detail != "0 files, 0 problems" {
+		t.Fatalf("no catalogue.d: %+v", check)
+	}
+	directory := loaded.Paths.CatalogueDir()
+	if err := os.MkdirAll(directory, config.DirMode); err != nil {
+		t.Fatal(err)
+	}
+	files := map[string]string{
+		"bookorbit.yaml": "apps:\n  - images: [ghcr.io/x/bookorbit]\n    memory_limit: 1g\n",
+		"broken.yaml":    "apps:\n  - images: [ghcr.io/x/broken]\n    memory_limit: lots\n",
+	}
+	for name, content := range files {
+		if err := os.WriteFile(filepath.Join(directory, name), []byte(content), config.FileMode); err != nil {
+			t.Fatal(err)
+		}
+	}
+	check := catalogueCheck(loaded)
+	if check.Status != StatusWarn || !strings.HasPrefix(check.Detail, "1 file, 1 problem: broken.yaml: app ghcr.io/x/broken: memory_limit") ||
+		!strings.Contains(check.Fix, directory) {
+		t.Fatalf("a file left out: %+v", check)
 	}
 }
 

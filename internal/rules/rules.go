@@ -4,6 +4,7 @@
 package rules
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"regexp"
@@ -41,14 +42,18 @@ type Input struct {
 	// ComposeFile is the path of the compose file to build from; empty, or
 	// one the facts lack, R1 chooses.
 	ComposeFile string
+	// Catalogue is what the rules know of images; nil is the catalogue
+	// composewright ships.
+	Catalogue *Catalogue
 }
 
 type builder struct {
-	ctx      context.Context
-	input    Input
-	facts    *extract.Facts
-	plan     *ir.IR
-	identity []string
+	ctx       context.Context
+	input     Input
+	facts     *extract.Facts
+	plan      *ir.IR
+	identity  []string
+	catalogue *Catalogue
 	// secretOwners maps a literal secret value written upstream to the
 	// variable that now generates it, so other values can refer to it.
 	secretOwners map[string]string
@@ -69,9 +74,9 @@ func Build(ctx context.Context, input Input) *ir.IR {
 		ctx: ctx, input: input, facts: input.Facts, secretOwners: map[string]string{},
 		namedVolumes: map[string]bool{}, bindVolumes: map[string]string{}, own: OwnSecrets(input.Facts, input.Source),
 		plan:     &ir.IR{IRVersion: ir.Version},
-		identity: identityNames(input.Source),
+		identity: identityNames(input.Source), catalogue: cmp.Or(input.Catalogue, shipped),
 	}
-	compose := chooseCompose(builder.facts, builder.identity, input.ComposeFile)
+	compose := chooseCompose(builder.catalogue, builder.facts, builder.identity, input.ComposeFile)
 	builder.missingVariant(compose)
 	if compose != nil {
 		builder.plan.OptionalServices = optionalServices(compose)

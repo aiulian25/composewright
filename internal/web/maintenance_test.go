@@ -9,11 +9,15 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
+	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/aiulian25/composewright/internal/config"
+	"github.com/aiulian25/composewright/internal/ir"
 	"github.com/aiulian25/composewright/internal/netguard"
 	"github.com/aiulian25/composewright/internal/pipeline"
 	"github.com/aiulian25/composewright/internal/release"
@@ -205,6 +209,69 @@ func TestSettingsAdvanced(t *testing.T) {
 	status(t, response, http.StatusOK, page)
 	if !strings.Contains(page, "stored, not used") || strings.Contains(page, "stored, encrypted") {
 		t.Fatal("a stored token nothing reads is shown as in use")
+	}
+}
+
+// TestSettingsCatalogueOverrides: a backup carries the catalogue.d files,
+// and restoring it on another install writes them back readable only by
+// composewright. Its Advanced page then lists each file with what it adds,
+// the one left out with its problem, and the folder, and its next
+// generation takes the override's healthcheck, cited as the catalogue's.
+func TestSettingsCatalogueOverrides(t *testing.T) {
+	const passphrase = "a long backup passphrase"
+	healthcheck := []string{"CMD-SHELL", "/usr/bin/miniflux -healthcheck auto || exit 1"}
+	files := map[string]string{
+		"miniflux.yaml": "apps:\n  - images: [miniflux/miniflux]\n    healthcheck: [\"CMD-SHELL\", \"/usr/bin/miniflux -healthcheck auto || exit 1\"]\n",
+		"broken.yaml":   "apps:\n  - images: [ghcr.io/x/broken]\n    memory_limit: lots\n",
+	}
+	source := newHarness(t)
+	source.signUp()
+	if err := os.MkdirAll(source.server.paths().CatalogueDir(), config.DirMode); err != nil {
+		t.Fatal(err)
+	}
+	for name, content := range files {
+		if err := os.WriteFile(filepath.Join(source.server.paths().CatalogueDir(), name), []byte(content), config.FileMode); err != nil {
+			t.Fatal(err)
+		}
+	}
+	source.setBackupPassphrase(passphrase)
+	response, page := source.post("/settings/backup/now", nil)
+	status(t, response, http.StatusSeeOther, page)
+	download := url.Values{backupNameField: {source.storedBackups()[0].Name}, currentPasswordField: {testPassword}}
+	response, content := source.post("/settings/backup/download", download)
+	status(t, response, http.StatusOK, "")
+
+	target := newHarness(t)
+	target.signUp()
+	response, page = target.restoreFrom(content, passphrase, testPassword, false)
+	status(t, response, http.StatusSeeOther, page)
+	directory := target.server.paths().CatalogueDir()
+	for name, want := range files {
+		written, err := os.ReadFile(filepath.Join(directory, name))
+		info, statErr := os.Stat(filepath.Join(directory, name))
+		if err != nil || statErr != nil || string(written) != want || info.Mode().Perm() != config.FileMode {
+			t.Fatalf("%s was not written back as it was, readable only by composewright: %v %v", name, err, statErr)
+		}
+	}
+	response, page = target.get(settingsURL(sectionAdvanced))
+	status(t, response, http.StatusOK, page)
+	for _, want := range []string{`<th scope="row" class="mono">miniflux.yaml</th><td>0</td><td>1</td>`, "broken.yaml: app ghcr.io/x/broken: memory_limit",
+		"1 problem", directory} {
+		if !strings.Contains(page, want) {
+			t.Errorf("the Catalogue overrides card lacks %q", want)
+		}
+	}
+	target.remember(page)
+	response, page = target.post("/new", url.Values{"source": {minifluxPath}, "engine": {pipeline.EngineRules}})
+	status(t, response, http.StatusSeeOther, page)
+	target.waitForJob(response.Header.Get("Location"))
+	stored, err := pipeline.Load(context.Background(), target.server.workspace(), "miniflux")
+	if err != nil {
+		t.Fatal(err)
+	}
+	app, _ := stored.Plan.Service("miniflux")
+	if app == nil || !slices.Equal(app.Healthcheck.Test, healthcheck) || app.Healthcheck.Provenance.Source != ir.SourceHealthchecks {
+		t.Fatalf("the generation after the restore did not take the override: %+v", app)
 	}
 }
 
