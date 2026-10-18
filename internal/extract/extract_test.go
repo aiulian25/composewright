@@ -745,3 +745,20 @@ func TestDocsExampleDefaultRanksBelowTheSample(t *testing.T) {
 		t.Fatalf("MAIL_HOST %+v", variable)
 	}
 }
+
+// TestFileTwins: a secret whose *_FILE variant is documented names it, and
+// a setting that is no secret does not, whatever its twin.
+func TestFileTwins(t *testing.T) {
+	location := Location{File: ".env.example", Line: 1}
+	mentions := []Mention{}
+	for _, name := range []string{"POSTGRES_PASSWORD", "POSTGRES_PASSWORD_FILE", "LOG", "LOG_FILE"} {
+		mentions = append(mentions, Mention{Name: name, Kind: KindEnvSample, Location: location})
+	}
+	twins := map[string]string{}
+	for _, variable := range mergeVariables(mentions) {
+		twins[variable.Name] = variable.FileTwin
+	}
+	if twins["POSTGRES_PASSWORD"] != "POSTGRES_PASSWORD_FILE" || twins["LOG"] != "" || twins["POSTGRES_PASSWORD_FILE"] != "" {
+		t.Fatalf("twins %v", twins)
+	}
+}

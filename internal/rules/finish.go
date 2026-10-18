@@ -49,7 +49,7 @@ func (builder *builder) finish() {
 	}
 	for _, entry := range plan.EnvFile {
 		if entry.Generate != "" {
-			plan.PostInstallNotes = append(plan.PostInstallNotes, fmt.Sprintf("%s was generated for you; it is in .env", entry.Key))
+			plan.PostInstallNotes = append(plan.PostInstallNotes, fmt.Sprintf("%s was generated for you; it is in %s", entry.Key, kept(entry)))
 		}
 	}
 	for _, note := range builder.facts.Suspicious {
@@ -57,6 +57,14 @@ func (builder *builder) finish() {
 	}
 	plan.Confidence = rollUp(plan)
 	plan.Unfilled = Gaps(plan)
+}
+
+// kept is the file beside compose.yaml that holds an entry's value.
+func kept(entry ir.EnvFileEntry) string {
+	if entry.AsFile() {
+		return entry.SecretPath()
+	}
+	return ownEnvFile
 }
 
 // probePort is the app's first published TCP port, else its first TCP

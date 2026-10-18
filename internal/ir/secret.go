@@ -2,6 +2,7 @@ package ir
 
 import (
 	"net/url"
+	"path"
 	"regexp"
 	"slices"
 	"strings"
@@ -9,9 +10,42 @@ import (
 	"github.com/aiulian25/composewright/internal/redact"
 )
 
-// authoritySeparator follows the scheme of a URL that names a host or a
-// local path.
-const authoritySeparator = "://"
+const (
+	// authoritySeparator follows the scheme of a URL that names a host or a
+	// local path.
+	authoritySeparator = "://"
+	// FileVariableSuffix ends the variable an image reads a secret's file
+	// path from, as POSTGRES_PASSWORD_FILE for POSTGRES_PASSWORD.
+	FileVariableSuffix = "_FILE"
+	// SecretsDirectory is the folder beside compose.yaml that holds the
+	// secrets passed as files; SecretMountDirectory is where a container
+	// finds them.
+	SecretsDirectory     = "secrets"
+	SecretMountDirectory = "/run/secrets"
+)
+
+// AsFile reports whether the entry is passed to its services as a file
+// instead of in the environment.
+func (entry EnvFileEntry) AsFile() bool { return entry.FileEnvKey != "" }
+
+// SecretName is the Compose secret an entry passed as a file is, and the
+// name of its file under SecretsDirectory.
+func (entry EnvFileEntry) SecretName() string { return strings.ToLower(entry.Key) }
+
+// SecretPath is the entry's file beside compose.yaml.
+func (entry EnvFileEntry) SecretPath() string { return path.Join(SecretsDirectory, entry.SecretName()) }
+
+// SecretFiles are the files of the entries passed as files, by their path
+// beside compose.yaml, holding each value exactly, without a newline.
+func (plan *IR) SecretFiles(values map[string]string) map[string][]byte {
+	files := map[string][]byte{}
+	for _, entry := range plan.EnvFile {
+		if entry.AsFile() {
+			files[entry.SecretPath()] = []byte(values[entry.Key])
+		}
+	}
+	return files
+}
 
 var (
 	// settingSuffix ends names that describe a secret instead of holding

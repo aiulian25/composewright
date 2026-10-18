@@ -178,6 +178,7 @@ func (server *Server) routes() {
 	mux.HandleFunc("POST /projects/{name}/reveal", server.authed(server.reveal))
 	mux.HandleFunc("GET /projects/{name}/files", server.authed(server.filesPage))
 	mux.HandleFunc("POST /projects/{name}/env", server.authed(server.copyEnv))
+	mux.HandleFunc("POST /projects/{name}/shell", server.authed(server.copyShell))
 	mux.HandleFunc("POST /projects/{name}/download", server.authed(server.download))
 	mux.HandleFunc("POST /projects/{name}/save", server.authed(server.save))
 	mux.HandleFunc("POST /projects/{name}/files/check", server.authed(server.checkFiles))

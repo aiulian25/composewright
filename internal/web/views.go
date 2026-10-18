@@ -248,6 +248,9 @@ type envRow struct {
 	// Question marks a value the rules were unsure of that the person can
 	// change: the Review page highlights it.
 	Question bool
+	// SecretPath is where a secret passed as a file is kept beside
+	// compose.yaml; empty when .env holds it.
+	SecretPath string
 }
 
 // envRows shows every variable: plain values and connection strings as
@@ -278,6 +281,9 @@ func envRows(plan *ir.IR, values map[string]string, revealed bool) []envRow {
 		row.Badge, row.Confidence, row.SourceShort = sourceBadges[entry.Provenance.Source], entry.Provenance.Confidence, path.Base(row.Source)
 		row.BadgeTone = badgeTones[row.Badge]
 		row.Question = row.Kind == kindPlain && row.Confidence != ir.ConfidenceHigh
+		if entry.AsFile() {
+			row.SecretPath = entry.SecretPath()
+		}
 		rows = append(rows, row)
 	}
 	return rows

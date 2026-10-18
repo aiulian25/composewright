@@ -244,7 +244,7 @@ func (application *app) showFacts(result *pipeline.Result) error {
 }
 
 func (application *app) printPolicy(output io.Writer, report policy.Report) error {
-	fmt.Fprintf(output, "\npolicy: %d deny · %d need · %d warn · %d filled from defaults\n", report.Count(policy.Deny),
+	fmt.Fprintf(output, "\npolicy: %d deny · %d need · %d warn · %d fixed automatically\n", report.Count(policy.Deny),
 		report.Count(policy.Need), report.Count(policy.Warn), report.Count(policy.Fix))
 	return application.printFindings(output, report)
 }

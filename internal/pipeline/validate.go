@@ -237,7 +237,7 @@ func Revalidate(ctx context.Context, dependencies Dependencies, name string) (*S
 }
 
 func sandboxInput(plan *ir.IR, files Files, values map[string]string, iteration int, benign []string) sandbox.Input {
-	input := sandbox.Input{Project: plan.App.Name, Compose: files.Compose, Env: files.Env, Iteration: iteration,
+	input := sandbox.Input{Project: plan.App.Name, Compose: files.Compose, Env: files.Env, SecretFiles: plan.SecretFiles(values), Iteration: iteration,
 		Published: map[string][]string{}, CompletedOK: map[string]bool{}, Probe: httpProbe(plan), Benign: benign}
 	for _, service := range plan.Services {
 		for _, port := range service.Ports {

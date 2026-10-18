@@ -7,7 +7,8 @@ services:
     environment:
       POSTGRES_DB: "${POSTGRES_DB}"
       POSTGRES_USER: "${POSTGRES_USER}"
-      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_PASSWORD_FILE: "/run/secrets/postgres_password"
+    secrets: ["postgres_password"]
     volumes:
       - "db:/var/lib/postgresql"
     healthcheck:
@@ -35,7 +36,7 @@ services:
       POSTGRES_HOST: "${POSTGRES_HOST}"
       POSTGRES_DB: "${POSTGRES_DB}"
       POSTGRES_USER: "${POSTGRES_USER}"
-      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_PASSWORD_FILE: "/run/secrets/postgres_password"
       # optional settings the upstream documents: set them in .env
       MYSQL_DATABASE:
       MYSQL_PASSWORD:
@@ -53,6 +54,7 @@ services:
       OBJECTSTORE_SWIFT_URL:
       OBJECTSTORE_SWIFT_USER_NAME:
       OBJECTSTORE_SWIFT_USER_PASSWORD:
+    secrets: ["postgres_password"]
     networks:
       - default
       - npm_default
@@ -89,6 +91,9 @@ services:
 volumes:
   db: {}
   nextcloud: {}
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password
 networks:
   npm_default:
     external: true

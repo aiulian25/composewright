@@ -452,7 +452,8 @@
             "line": 24
           }
         }
-      ]
+      ],
+      "file_twin": "GITEA_RUNNER_REGISTRATION_TOKEN_FILE"
     },
     {
       "name": "GITEA_RUNNER_REGISTRATION_TOKEN_FILE",

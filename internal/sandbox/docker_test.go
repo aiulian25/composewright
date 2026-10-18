@@ -13,6 +13,25 @@ import (
 	"github.com/aiulian25/composewright/internal/ir"
 )
 
+// postgresWithSecretFile starts postgres with its password read from a
+// secret file, as a plan passes a secret whose *_FILE twin is documented;
+// the healthcheck signs in over TCP, so it passes only with that password.
+const postgresWithSecretFile = `services:
+  db:
+    image: docker.io/library/postgres:17-alpine
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets: [postgres_password]
+    healthcheck:
+      test: ["CMD-SHELL", "PGPASSWORD=$$(cat /run/secrets/postgres_password) psql -h 127.0.0.1 -U postgres -c 'select 1'"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password
+`
+
 // TestDocker runs real stacks against the local daemon; it pulls small
 // public images. Run with COMPOSEWRIGHT_DOCKER_TESTS=1 (make test-docker).
 func TestDocker(t *testing.T) {
@@ -59,11 +78,13 @@ func TestDocker(t *testing.T) {
 		{"upstream hardening", "services:\n  app:\n    image: " + alpine + "\n    command: [\"sleep\", \"300\"]\n    read_only: true\n    cap_drop: [ALL]\n" +
 			"    tmpfs: [/tmp]\n    shm_size: 1g\n    healthcheck: {test: [\"CMD\", \"touch\", \"/tmp/ready\"], interval: 1s, timeout: 1s, retries: 5}\n", ir.Probe{}, ResultPass, ""},
 		{"fatal log line", "services:\n  app:\n    image: " + alpine + "\n    command: [\"sh\", \"-c\", \"echo 'panic: test failure'; sleep 300\"]\n", ir.Probe{}, ResultFail, ReasonLogs},
+		{"secret file", postgresWithSecretFile, ir.Probe{}, ResultPass, ""},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {
 			verdict, err := sandbox.Validate(context.Background(), Input{Project: "dockertest-" + testCase.name, Compose: []byte(testCase.compose),
-				Env: []byte(""), Published: map[string][]string{"web": {"80/tcp"}}, Probe: testCase.probe})
+				Env: []byte(""), SecretFiles: map[string][]byte{"secrets/postgres_password": []byte("s3cret-from-a-file")},
+				Published: map[string][]string{"web": {"80/tcp"}}, Probe: testCase.probe})
 			if err != nil {
 				t.Fatal(err)
 			}

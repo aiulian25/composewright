@@ -392,3 +392,71 @@ func firstNonEmpty(values ...string) string {
 	}
 	return ""
 }
+
+// secretFiles passes a secret as a file when the upstream documents its
+// *_FILE twin, as POSTGRES_PASSWORD_FILE: compose.yaml mounts it from
+// secrets/ and names the file in the twin, and .env no longer holds it.
+// The twin a person may set by hand leaves the plan.
+func (builder *builder) secretFiles() {
+	twins := map[string]string{}
+	for _, entry := range builder.plan.EnvFile {
+		variable, _ := builder.facts.Variable(entry.Key)
+		if variable.FileTwin != "" && passableAsFile(builder.plan, entry) {
+			twins[entry.Key] = variable.FileTwin
+		}
+	}
+	for key, twin := range twins {
+		dropVariable(builder.plan, twin)
+		entry, _ := builder.plan.EnvEntry(key)
+		entry.FileEnvKey = twin
+	}
+}
+
+// passableAsFile: the secret's value is the stack's own, generated or typed
+// in, and every service reads it under its own name, the one the twin
+// belongs to. Nothing else may interpolate it, as a connection string, a
+// command or a healthcheck reading $${PASSWORD} in the container, since
+// neither .env nor the environment would hold it any more.
+func passableAsFile(plan *ir.IR, entry ir.EnvFileEntry) bool {
+	if !entry.Secret || entry.Value != "" {
+		return false
+	}
+	read := false
+	for _, service := range plan.Services {
+		for _, variable := range service.Env {
+			if variable.Ref == entry.Key && variable.Key != entry.Key {
+				return false
+			}
+			read = read || variable.Ref == entry.Key
+		}
+	}
+	return read && !interpolated(plan, entry.Key)
+}
+
+// interpolated reports whether a value, a literal, a command, an entrypoint
+// or a healthcheck of the plan reads name, as ${name} or $name.
+func interpolated(plan *ir.IR, name string) bool {
+	use := regexp.MustCompile(`\$\{?` + regexp.QuoteMeta(name) + `\b`)
+	texts := []string{}
+	for _, entry := range plan.EnvFile {
+		texts = append(texts, entry.Value)
+	}
+	for _, service := range plan.Services {
+		for _, variable := range service.Env {
+			texts = append(texts, variable.Literal)
+		}
+		texts = slices.Concat(texts, service.Command, service.Entrypoint, service.Healthcheck.Test)
+	}
+	return slices.ContainsFunc(texts, use.MatchString)
+}
+
+// dropVariable takes a variable out of the plan: its .env entry, the
+// services reading it and its optional setting.
+func dropVariable(plan *ir.IR, name string) {
+	plan.EnvFile = slices.DeleteFunc(plan.EnvFile, func(entry ir.EnvFileEntry) bool { return entry.Key == name })
+	for index := range plan.Services {
+		service := &plan.Services[index]
+		service.Env = slices.DeleteFunc(service.Env, func(variable ir.EnvRef) bool { return variable.Key == name || variable.Ref == name })
+	}
+	plan.OptionalEnv = slices.DeleteFunc(plan.OptionalEnv, func(setting ir.OptionalSetting) bool { return setting.Key == name })
+}

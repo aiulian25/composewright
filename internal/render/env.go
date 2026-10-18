@@ -29,6 +29,10 @@ func Env(plan *ir.IR, values map[string]string, header string) ([]byte, error) {
 		for _, line := range commentLines(entry) {
 			builder.WriteString("# " + line + "\n")
 		}
+		if entry.AsFile() {
+			builder.WriteString("# " + entry.Key + " is in " + entry.SecretPath() + "\n")
+			continue
+		}
 		value := values[entry.Key]
 		builder.WriteString(entry.Key + "=" + FormatValue(value, referenceValue.MatchString(value)) + "\n")
 	}

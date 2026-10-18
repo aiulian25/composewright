@@ -7,13 +7,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
+	"maps"
 	"net/http"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/aiulian25/composewright/internal/config"
 	"github.com/aiulian25/composewright/internal/export"
+	"github.com/aiulian25/composewright/internal/ir"
 	"github.com/aiulian25/composewright/internal/pipeline"
 	"github.com/aiulian25/composewright/internal/sandbox"
 	"github.com/aiulian25/composewright/internal/store"
@@ -31,9 +35,15 @@ const (
 	exportsDir      = "exports"
 	arcanePrefix    = "arcane:"
 	zipFileMode     = 0o600
-	plainText       = "text/plain; charset=utf-8"
-	zipType         = "application/zip"
-	webMask         = "<hidden: Reveal secrets shows it>"
+	zipFolderMode   = 0o700
+	// folderFiles and arcaneFiles are how many files a save writes besides
+	// the secret files: compose.yaml, .env and DEPLOY.md, or compose.yaml
+	// and .env.example for Arcane.
+	folderFiles = 3
+	arcaneFiles = 2
+	plainText   = "text/plain; charset=utf-8"
+	zipType     = "application/zip"
+	webMask     = "<hidden: Reveal secrets shows it>"
 	// retestField asks a side-by-side save to start a test run as well.
 	retestField = "retest"
 	// The Save form's fields, also read from the address once the folder
@@ -67,11 +77,15 @@ type filesView struct {
 	// gets compose.yaml and a .env.example without secrets. Choosing shows
 	// the folder chooser, Replace asks before replacing files from an
 	// earlier save, and Saved names the folder just written.
-	TargetPath   string
-	Arcane       bool
-	Choosing     bool
-	Replace      bool
-	Saved        string
+	TargetPath string
+	Arcane     bool
+	Choosing   bool
+	Replace    bool
+	Saved      string
+	// SecretFiles are the secrets passed as files a folder save writes;
+	// Saving counts every file it writes.
+	SecretFiles  []string
+	Saving       int
 	ComposeLines []badgedLine
 	EnvLines     []badgedLine
 	DeployLines  []badgedLine
@@ -183,6 +197,11 @@ func (server *Server) filesView(ctx context.Context, stored *pipeline.Stored, st
 	if target, err := server.target(view.Folder, view.Location, view.Custom); err == nil {
 		view.Target = target
 		view.TargetPath, view.Arcane = shownTarget(target, view.Folder)
+	}
+	view.SecretFiles = slices.Sorted(maps.Keys(stored.Plan.SecretFiles(nil)))
+	view.Saving = folderFiles + len(view.SecretFiles)
+	if view.Arcane {
+		view.Saving = arcaneFiles
 	}
 	generations, err := server.workspace().Store.Generations(ctx, project.ID)
 	if err != nil {
@@ -458,8 +477,35 @@ func (server *Server) copyEnv(writer http.ResponseWriter, request *http.Request,
 	return err
 }
 
-// download sends compose.yaml, .env and DEPLOY.md as a zip; the .env
-// entry is marked 0600.
+// zipEntry is one file of a download, by its path in the project folder.
+type zipEntry struct {
+	name    string
+	content []byte
+}
+
+// copyShell hands the page's copy button the files as shell commands, the
+// secrets in them, and records that in the audit log.
+func (server *Server) copyShell(writer http.ResponseWriter, request *http.Request, current *visit) error {
+	ctx := request.Context()
+	stored, err := pipeline.Load(ctx, server.workspace(), request.PathValue("name"))
+	if err != nil {
+		return err
+	}
+	bundle, err := stored.Bundle()
+	if err != nil {
+		return err
+	}
+	details := map[string]any{"generation": stored.Generation.ID, "via": "clipboard"}
+	if err := server.workspace().Store.Audit(ctx, webActorPrefix+current.user.Username, store.ActionExport, stored.Project.ID, details); err != nil {
+		return err
+	}
+	writer.Header().Set(contentType, plainText)
+	_, err = writer.Write(export.Shell(bundle)) //nolint:gosec // G705: served as text/plain with nosniff; the commands are exactly what was asked for
+	return err
+}
+
+// download sends compose.yaml, .env, DEPLOY.md and the secret files as a
+// zip; the .env and secret entries are marked 0600, their folder 0700.
 func (server *Server) download(writer http.ResponseWriter, request *http.Request, current *visit) error {
 	ctx := request.Context()
 	stored, err := pipeline.Load(ctx, server.workspace(), request.PathValue("name"))
@@ -476,10 +522,18 @@ func (server *Server) download(writer http.ResponseWriter, request *http.Request
 	if modified.IsZero() {
 		modified = time.Now()
 	}
-	for _, file := range []struct {
-		name    string
-		content []byte
-	}{{export.ComposeName, bundle.Compose}, {export.EnvName, bundle.Env}, {export.DeployName, bundle.Deploy}} {
+	files := []zipEntry{{export.ComposeName, bundle.Compose}, {export.EnvName, bundle.Env}, {export.DeployName, bundle.Deploy}}
+	if len(bundle.Secrets) > 0 {
+		folder := &zip.FileHeader{Name: bundle.Project + "/" + ir.SecretsDirectory + "/", Modified: modified}
+		folder.SetMode(fs.ModeDir | zipFolderMode)
+		if _, err := zipped.CreateHeader(folder); err != nil {
+			return err
+		}
+	}
+	for _, name := range slices.Sorted(maps.Keys(bundle.Secrets)) {
+		files = append(files, zipEntry{name, bundle.Secrets[name]})
+	}
+	for _, file := range files {
 		header := &zip.FileHeader{Name: bundle.Project + "/" + file.name, Method: zip.Deflate, Modified: modified}
 		header.SetMode(zipFileMode)
 		entry, err := zipped.CreateHeader(header)

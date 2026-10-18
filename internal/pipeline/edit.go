@@ -203,8 +203,10 @@ func editedEnv(stored *Stored, edit Edit) (*ir.IR, map[string]string, []EditProb
 			problems = append(problems, EditProblem{File: FileEnv, Line: index + 1, Severity: SeverityError, Message: err.Error()})
 		}
 	}
+	// A secret passed as a file is never a line of .env, so its absence
+	// removes nothing.
 	for _, entry := range stored.Plan.EnvFile {
-		if !present[entry.Key] {
+		if !present[entry.Key] && !entry.AsFile() {
 			removeVariable(plan, values, entry.Key)
 		}
 	}

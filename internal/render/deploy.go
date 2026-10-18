@@ -2,6 +2,8 @@ package render
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 	"strings"
 
 	"github.com/aiulian25/composewright/internal/config"
@@ -48,6 +50,11 @@ func Deploy(plan *ir.IR, options Options, status string) []byte {
 	write("")
 	write(".env holds the generated secrets in plain text. Keep it private (mode 0600) and out of version control;")
 	write("composewright keeps an encrypted copy, so `composewright show %s --reveal` prints them again.", plan.App.Name)
+	if files := slices.Sorted(maps.Keys(plan.SecretFiles(nil))); len(files) > 0 {
+		write("")
+		write("These secrets are files instead, which the containers read under %s: %s.", ir.SecretMountDirectory, strings.Join(files, ", "))
+		write("Keep the %s folder private (mode 0700) and its files at mode 0600, as the export writes them.", ir.SecretsDirectory)
+	}
 	return []byte(text.String())
 }
 

@@ -6359,7 +6359,8 @@
             "line": 20
           }
         }
-      ]
+      ],
+      "file_twin": "MYSQL_PASSWORD_FILE"
     },
     {
       "name": "MYSQL_PASSWORD_FILE",
@@ -7821,7 +7822,8 @@
             "line": 30
           }
         }
-      ]
+      ],
+      "file_twin": "OBJECTSTORE_S3_KEY_FILE"
     },
     {
       "name": "OBJECTSTORE_S3_KEY_FILE",
@@ -8616,7 +8618,8 @@
             "line": 38
           }
         }
-      ]
+      ],
+      "file_twin": "OBJECTSTORE_S3_SECRET_FILE"
     },
     {
       "name": "OBJECTSTORE_S3_SECRET_FILE",
@@ -8952,7 +8955,8 @@
             "line": 46
           }
         }
-      ]
+      ],
+      "file_twin": "OBJECTSTORE_S3_SSE_C_KEY_FILE"
     },
     {
       "name": "OBJECTSTORE_S3_SSE_C_KEY_FILE",
@@ -12176,7 +12180,8 @@
             "line": 34
           }
         }
-      ]
+      ],
+      "file_twin": "POSTGRES_PASSWORD_FILE"
     },
     {
       "name": "POSTGRES_PASSWORD_FILE",
@@ -13178,7 +13183,8 @@
             "line": 8
           }
         }
-      ]
+      ],
+      "file_twin": "REDIS_HOST_PASSWORD_FILE"
     },
     {
       "name": "REDIS_HOST_PASSWORD_FILE",
@@ -14354,7 +14360,8 @@
             "line": 18
           }
         }
-      ]
+      ],
+      "file_twin": "SMTP_PASSWORD_FILE"
     },
     {
       "name": "SMTP_PASSWORD_FILE",

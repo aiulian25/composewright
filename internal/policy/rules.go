@@ -449,12 +449,14 @@ func (check *checker) secretEntry(entry ir.EnvFileEntry, field string) {
 	case entry.Secret && !generated && entry.Value == "" && entry.Required:
 		check.add("P7", Warn, "", field, "required secret %s has no value; set it before deploying", entry.Key)
 	}
-	if entry.FileEnvKey == "" {
+	if !entry.AsFile() {
 		return
 	}
-	if !strings.HasSuffix(entry.FileEnvKey, "_FILE") || !envKeyPattern.MatchString(entry.FileEnvKey) || !entry.Secret {
+	if !strings.HasSuffix(entry.FileEnvKey, ir.FileVariableSuffix) || !envKeyPattern.MatchString(entry.FileEnvKey) || !entry.Secret {
 		check.add("P7", Deny, "", field, "file_env_key %q must be a secret's *_FILE variable", entry.FileEnvKey)
+		return
 	}
+	check.add("P7", Fix, "", field, "secret %s is passed as a file, %s, which %s names, so .env does not hold it", entry.Key, entry.SecretPath(), entry.FileEnvKey)
 }
 
 func (check *checker) value(plan *ir.IR, service, field, value string) {

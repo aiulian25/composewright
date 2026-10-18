@@ -951,3 +951,35 @@ func TestTargetOnlyPortOfTheAppIsPublished(t *testing.T) {
 		t.Fatalf("database ports %+v, want 5432 kept inside the stack", database.Ports)
 	}
 }
+
+// TestSecretWithADocumentedFileTwinIsPassedAsAFile: a generated database
+// password whose *_FILE twin the repository documents goes to a file, and
+// the twin leaves the plan. A password a connection string, another name or
+// a healthcheck reads stays in .env, since each of them needs its value.
+func TestSecretWithADocumentedFileTwinIsPassedAsAFile(t *testing.T) {
+	const sample = "POSTGRES_PASSWORD=\nPOSTGRES_PASSWORD_FILE=\n"
+	const database = "  db:\n    image: docker.io/library/postgres:17\n    environment:\n      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}\n"
+	source := &fetch.Source{Owner: "example", Repository: "app"}
+	build := func(app string, db string) *ir.IR {
+		compose := "services:\n  app:\n    image: example/app:1.0\n    environment:\n" + app + db
+		return Build(context.Background(), Input{Facts: testFacts(t, map[string]string{"docker-compose.yml": compose, ".env.example": sample}), Source: source})
+	}
+	plan := build("      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}\n      POSTGRES_PASSWORD_FILE: ${POSTGRES_PASSWORD_FILE:-}\n", database)
+	if entry, _ := plan.EnvEntry("POSTGRES_PASSWORD"); entry == nil || entry.FileEnvKey != "POSTGRES_PASSWORD_FILE" || entry.Generate == "" {
+		t.Fatalf("the password is %+v, want it generated and passed as a file", entry)
+	}
+	if _, found := plan.EnvEntry("POSTGRES_PASSWORD_FILE"); found || slices.ContainsFunc(plan.Services[0].Env, func(variable ir.EnvRef) bool { return variable.Key == "POSTGRES_PASSWORD_FILE" }) {
+		t.Fatal("the twin a person sets by hand stayed in the plan")
+	}
+	cases := map[string]*ir.IR{
+		"a connection string": build("      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}\n      DATABASE_URL: postgres://app:${POSTGRES_PASSWORD}@db/app\n", database),
+		"another name":        build("      DB_PASSWORD: ${POSTGRES_PASSWORD}\n", database),
+		"a healthcheck": build("      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}\n",
+			database+"    healthcheck:\n      test: [\"CMD-SHELL\", \"PGPASSWORD=$${POSTGRES_PASSWORD} psql -U postgres -c 'select 1'\"]\n"),
+	}
+	for name, plan := range cases {
+		if entry, _ := plan.EnvEntry("POSTGRES_PASSWORD"); entry == nil || entry.AsFile() {
+			t.Errorf("%s: the password is %+v, want it kept in .env", name, entry)
+		}
+	}
+}

@@ -78,9 +78,12 @@ func New(run Runner, limits Limits, timeout time.Duration, tier, projectsDir str
 // one-shot services may exit 0, where the app should answer from the
 // network once every service is up, and which log lines are normal for it.
 type Input struct {
-	Project     string
-	Compose     []byte
-	Env         []byte
+	Project string
+	Compose []byte
+	Env     []byte
+	// SecretFiles are the secrets passed as files, by their path beside
+	// compose.yaml.
+	SecretFiles map[string][]byte
 	Secrets     []string
 	Published   map[string][]string
 	CompletedOK map[string]bool
@@ -201,8 +204,13 @@ func (sandbox *Sandbox) prepare(ctx context.Context, directory, name string, inp
 		return nil, err
 	}
 	files := map[string][]byte{composeFile: input.Compose, overrideFile: override, envFile: input.Env}
+	maps.Copy(files, input.SecretFiles)
 	for file, content := range files {
-		if err := atomicfile.Write(filepath.Join(directory, file), content, runFileMode); err != nil {
+		path := filepath.Join(directory, filepath.FromSlash(file))
+		if err := os.MkdirAll(filepath.Dir(path), runDirMode); err != nil {
+			return nil, err
+		}
+		if err := atomicfile.Write(path, content, runFileMode); err != nil {
 			return nil, err
 		}
 	}

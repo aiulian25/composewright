@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/aiulian25/composewright/internal/config"
@@ -81,5 +82,43 @@ func TestWriteRefusesBeforeWritingAnything(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(directory, ComposeName)); !errors.Is(err, fs.ErrNotExist) {
 		t.Fatalf("compose.yaml was written beside the old .env: %v", err)
+	}
+}
+
+// TestWriteRefusesAnExistingSecretFile: a secret file left by an earlier
+// export stops the export before anything is written.
+func TestWriteRefusesAnExistingSecretFile(t *testing.T) {
+	directory := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(directory, "secrets"), dirMode); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(directory, "secrets", "db_password"), []byte("old"), fileMode); err != nil {
+		t.Fatal(err)
+	}
+	withSecret := bundle()
+	withSecret.Secrets = map[string][]byte{"secrets/db_password": []byte("new")}
+	if _, err := Write(directory, config.Default().Profile, withSecret, false); !errors.Is(err, ErrExists) {
+		t.Fatalf("an existing secret file: %v, want ErrExists", err)
+	}
+	if _, err := os.Stat(filepath.Join(directory, ComposeName)); !errors.Is(err, fs.ErrNotExist) {
+		t.Fatalf("compose.yaml was written beside the old secret file: %v", err)
+	}
+}
+
+// TestShellWritesEveryFileAsItIs: the commands write compose.yaml and .env
+// through heredocs and each secret with printf, quoted so the shell keeps a
+// quote in it, without a newline, and set the modes an export gives them.
+func TestShellWritesEveryFileAsItIs(t *testing.T) {
+	withSecret := bundle()
+	withSecret.Secrets = map[string][]byte{"secrets/db_password": []byte("it's")}
+	script := string(Shell(withSecret))
+	for _, want := range []string{"cat > compose.yaml <<'COMPOSEWRIGHT_EOF'\n", "cat > .env <<'COMPOSEWRIGHT_EOF'\n", "chmod 600 .env\n",
+		"mkdir -p -m 700 secrets\n", `printf '%s' 'it'\''s' > secrets/db_password` + "\nchmod 600 secrets/db_password\n"} {
+		if !strings.Contains(script, want) {
+			t.Errorf("the commands lack %q:\n%s", want, script)
+		}
+	}
+	if strings.Contains(string(Shell(bundle())), "secrets") {
+		t.Error("a bundle without secret files makes a secrets folder")
 	}
 }

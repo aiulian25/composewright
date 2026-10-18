@@ -180,22 +180,12 @@
         });
       });
     });
-    document.querySelectorAll("[data-copy-heredoc]").forEach(function (button) {
-      button.addEventListener("click", function () {
-        var compose = document.getElementById("compose-source");
-        fetchEnv(button).then(function (env) {
-          copyText(button, heredoc("compose.yaml", compose.value) + heredoc(".env", env) + "chmod 600 .env\n", null);
-        }, function () {
-          button.textContent = "Copy failed";
-        });
-      });
-    });
   }
 
-  // fetchEnv gets the .env with its secrets; the server writes the copy to
-  // the audit log.
+  // fetchEnv gets what carries secrets, the .env or every file as shell
+  // commands; the server writes the copy to the audit log.
   function fetchEnv(button) {
-    var url = button.getAttribute("data-copy-env") || button.getAttribute("data-copy-heredoc");
+    var url = button.getAttribute("data-copy-env");
     var headers = { "X-CSRF-Token": button.getAttribute("data-csrf") };
     return fetch(url, { method: "POST", headers: headers, credentials: "same-origin" }).then(function (response) {
       if (!response.ok) {
@@ -203,11 +193,6 @@
       }
       return response.text();
     });
-  }
-
-  function heredoc(name, content) {
-    var body = content.charAt(content.length - 1) === "\n" ? content : content + "\n";
-    return "cat > " + name + " <<'COMPOSEWRIGHT_EOF'\n" + body + "COMPOSEWRIGHT_EOF\n";
   }
 
   // Files: drop them anywhere in the window or pick them; list what is

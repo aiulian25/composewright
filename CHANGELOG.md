@@ -217,6 +217,20 @@ All notable changes to this project are documented here. The format follows
   platform's image. DEPLOY.md says "verified for linux/arm64" once every
   image has the variant, and a test run says when the sandbox tests its own
   platform instead.
+- A generated or typed-in secret whose `*_FILE` variant the repository
+  documents, such as POSTGRES_PASSWORD_FILE, is passed as a Compose secret
+  file instead of an environment value: compose.yaml mounts
+  `secrets/postgres_password` and sets POSTGRES_PASSWORD_FILE to
+  /run/secrets/postgres_password, and .env only says where it is. This
+  happens only when every service reads the secret under that name and no
+  connection string, command or healthcheck reads its value. The Review
+  page marks it "as a file", the export, the Result page's Save, the zip
+  and the shell commands write the file with mode 0600 in a 0700 folder,
+  test runs use the same file, and an Arcane template leaves it out.
+  `composewright show --file secrets` lists these files, values only with
+  `--reveal`. The shell copy writes each secret with printf, so no newline
+  ends up in a password, and `composewright gen` now counts automatic fixes
+  as "fixed automatically".
 
 ### Changed
 

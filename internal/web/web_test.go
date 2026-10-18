@@ -2763,3 +2763,47 @@ func TestLimitAndHardeningBadgesFollowTheirSource(t *testing.T) {
 		t.Fatal("upstream hardening or limits not badged as upstream's")
 	}
 }
+
+// TestSecretPassedAsAFileTravelsWithTheFiles: a password whose *_FILE twin
+// the upload documents is marked on Review, counted by Save, and carried by
+// the zip and the shell commands as a 0600 file, never in .env.
+func TestSecretPassedAsAFileTravelsWithTheFiles(t *testing.T) {
+	harness := newHarness(t)
+	harness.signUp()
+	compose := "services:\n  web:\n    image: docker.io/library/nginx:1.27\n    environment:\n      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}\n" +
+		"  db:\n    image: docker.io/library/postgres:17\n    environment:\n      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}\n"
+	fields := map[string]string{"engine": pipeline.EngineRules, "name": "notes", "compose": compose, "test": skipTest}
+	response, page := harness.uploadForm("/new", fields, map[string][]byte{".env.example": []byte("POSTGRES_PASSWORD=\nPOSTGRES_PASSWORD_FILE=\n")})
+	status(t, response, http.StatusSeeOther, page)
+	if job := harness.waitForJob(response.Header.Get("Location")); job.Failure != "" {
+		t.Fatalf("generation: %s", job.Failure)
+	}
+	response, page = harness.get("/projects/notes/review")
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, `title="Passed to the containers as the file secrets/postgres_password, not in .env">as a file</span>`) {
+		t.Fatal("Review does not mark the password passed as a file")
+	}
+	response, page = harness.get("/projects/notes/files")
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, "Save 4 files") {
+		t.Fatal("Save does not count the secret file")
+	}
+	response, archive := harness.post("/projects/notes/download", nil)
+	status(t, response, http.StatusOK, "")
+	reader, err := zip.NewReader(bytes.NewReader([]byte(archive)), int64(len(archive)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	modes := map[string]fs.FileMode{}
+	for _, file := range reader.File {
+		modes[file.Name] = file.Mode()
+	}
+	if modes["notes/secrets/postgres_password"].Perm() != 0o600 || modes["notes/secrets/"] != fs.ModeDir|0o700 {
+		t.Fatalf("zip entries %v", modes)
+	}
+	response, script := harness.do(http.MethodPost, "/projects/notes/shell", url.Values{}, map[string]string{csrfHeader: harness.token})
+	status(t, response, http.StatusOK, script)
+	if !strings.Contains(script, "mkdir -p -m 700 secrets\nprintf '%s' '") || !strings.Contains(script, "# POSTGRES_PASSWORD is in secrets/postgres_password") {
+		t.Fatalf("the shell commands do not write the secret file:\n%s", script)
+	}
+}

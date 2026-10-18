@@ -51,7 +51,7 @@
       {{if .Replace}}<input type="hidden" name="overwrite" value="1">{{end}}
       <div class="save-row">
         <span class="path-box">{{template "icon-folder"}}<span class="mono grow">{{.TargetPath}}</span><a href="/projects/{{.Project.Name}}/files?change&amp;location={{.Location}}&amp;custom={{.Custom}}&amp;folder={{.Folder}}">Change</a></span>
-        {{if not .Replace}}<button class="button button-primary" type="submit">Save {{if .Arcane}}2{{else}}3{{end}} files</button>{{end}}
+        {{if not .Replace}}<button class="button button-primary" type="submit">Save {{.Saving}} files</button>{{end}}
       </div>
       {{if .Replace}}
       <div class="replace-prompt" role="alert">
@@ -61,7 +61,7 @@
       {{end}}
     </form>
     {{end}}
-    <p class="muted small">{{if .Arcane}}Arcane gets a .env.example; the secrets stay here.{{else}}The .env is written with mode 0600; it holds the real secrets.{{end}}</p>
+    <p class="muted small">{{if .Arcane}}Arcane gets a .env.example; the secrets stay here.{{if .SecretFiles}} The stack also reads {{range $index, $file := .SecretFiles}}{{if $index}}, {{end}}<span class="mono">{{$file}}</span>{{end}} beside compose.yaml: create them in its folder before it starts.{{end}}{{else}}The .env is written with mode 0600; it holds the real secrets{{if .SecretFiles}}, and so do {{range $index, $file := .SecretFiles}}{{if $index}}, {{end}}<span class="mono">{{$file}}</span>{{end}}, written with mode 0600 in a 0700 folder{{end}}.{{end}}</p>
     {{end}}
     <hr class="divider">
     <p class="deploy-step"><span class="step-mark{{if .Saved}} step-next{{end}}">2</span><span class="strong">Start it</span><span class="muted">{{if .Saved}}on this machine{{else}}once the files are saved{{end}}</span></p>
@@ -121,7 +121,7 @@
       <div class="menu-panel">
         <button class="button button-small" type="button" data-copy-target="compose-source">compose.yaml</button>
         <button class="button button-small" type="button" data-copy-env="/projects/{{.Project.Name}}/env" data-csrf="{{$csrf}}">.env</button>
-        <button class="button button-small" type="button" data-copy-heredoc="/projects/{{.Project.Name}}/env" data-csrf="{{$csrf}}">{{template "icon-terminal"}}Both as shell heredoc</button>
+        <button class="button button-small" type="button" data-copy-env="/projects/{{.Project.Name}}/shell" data-csrf="{{$csrf}}">{{template "icon-terminal"}}All as shell commands</button>
       </div>
     </details></span>
 </div>

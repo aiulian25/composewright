@@ -100,7 +100,7 @@
         <tbody>
           {{range .Env}}
           <tr{{if .Question}} class="row-question"{{end}}>
-            <th scope="row" class="mono">{{.Key}}{{if .Description}}<span class="block muted small">{{.Description}}</span>{{end}}</th>
+            <th scope="row" class="mono">{{.Key}}{{if .SecretPath}} <span class="chip" title="Passed to the containers as the file {{.SecretPath}}, not in .env">as a file</span>{{end}}{{if .Description}}<span class="block muted small">{{.Description}}</span>{{end}}</th>
             <td>
               {{if eq .Kind "generated"}}
               <span class="secret">{{if $.Data.Revealed}}<code>{{.Value}}</code>{{else}}<span class="secret-dots" aria-label="hidden">••••••••••••</span>{{end}}<span class="chip">{{template "icon-key"}}generated</span><button class="button button-small" type="submit" name="regenerate" value="{{.Key}}">Regenerate</button></span>

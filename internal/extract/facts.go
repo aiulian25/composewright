@@ -224,6 +224,9 @@ type Variable struct {
 	Description string    `json:"description"`
 	Required    bool      `json:"required"`
 	Mentions    []Mention `json:"mentions"`
+	// FileTwin is the documented variable that reads this secret from a
+	// file instead, as POSTGRES_PASSWORD_FILE for POSTGRES_PASSWORD.
+	FileTwin string `json:"file_twin,omitempty"`
 }
 
 type Mention struct {
@@ -311,6 +314,12 @@ func mergeVariables(mentions []Mention) []Variable {
 		variables = append(variables, *variable)
 	}
 	sort.Slice(variables, func(left, right int) bool { return variables[left].Name < variables[right].Name })
+	for index := range variables {
+		twin := variables[index].Name + ir.FileVariableSuffix
+		if _, documented := byName[twin]; documented && redact.IsSecretName(variables[index].Name) {
+			variables[index].FileTwin = twin
+		}
+	}
 	return variables
 }
 

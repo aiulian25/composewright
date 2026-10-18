@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -19,6 +21,7 @@ const (
 	fileEnv     = "env"
 	fileDeploy  = "deploy"
 	filePlan    = "plan"
+	fileSecrets = "secrets"
 )
 
 func (application *app) showCommand() *cobra.Command {
@@ -26,19 +29,21 @@ func (application *app) showCommand() *cobra.Command {
 	var file string
 	command := &cobra.Command{
 		Use:   "show <project>",
-		Short: "Print a project's compose.yaml, .env, DEPLOY.md or plan",
-		Long: `Print the files of a project's latest generation. Secret values in .env are
-hidden unless you pass --reveal; every reveal is written to the audit log.`,
+		Short: "Print a project's compose.yaml, .env, DEPLOY.md, secret files or plan",
+		Long: `Print the files of a project's latest generation. Secret values in .env and
+in the secret files are hidden unless you pass --reveal; every reveal is
+written to the audit log.`,
 		Example: `  composewright show miniflux
   composewright show miniflux --file plan
-  composewright show miniflux --file env --reveal`,
+  composewright show miniflux --file env --reveal
+  composewright show nextcloud --file secrets`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(command *cobra.Command, arguments []string) error {
 			return application.runShow(command.Context(), arguments[0], file, reveal)
 		},
 	}
 	command.Flags().BoolVar(&reveal, "reveal", false, "print secret values (audited)")
-	command.Flags().StringVar(&file, "file", "", "only this file: compose, env, deploy or plan")
+	command.Flags().StringVar(&file, "file", "", "only this file: compose, env, deploy, secrets or plan")
 	return command
 }
 
@@ -68,7 +73,8 @@ func (application *app) runShow(ctx context.Context, name, file string, reveal b
 	if application.global.json {
 		return writeJSON(application.stdout, map[string]any{"project": stored.Project, "generation": stored.Generation.ID, "plan": stored.Plan,
 			"engine": stored.Generation.Engine, "provider": stored.Generation.Provider, "model": stored.Generation.Model,
-			"policy": stored.Report, "compose": stored.Generation.ComposeYAML, "env": string(env), "deploy": stored.Generation.DeployMD})
+			"policy": stored.Report, "compose": stored.Generation.ComposeYAML, "env": string(env), "deploy": stored.Generation.DeployMD,
+			"secret_files": secretFiles(stored, reveal)})
 	}
 	switch file {
 	case fileCompose:
@@ -79,6 +85,8 @@ func (application *app) runShow(ctx context.Context, name, file string, reveal b
 		_, err = fmt.Fprint(application.stdout, stored.Generation.DeployMD)
 	case filePlan:
 		err = errors.Join(application.printPlan(application.stdout, stored.Plan), application.printPolicy(application.stdout, stored.Report))
+	case fileSecrets:
+		err = application.printSecretFiles(stored, reveal)
 	case "":
 		fmt.Fprintf(application.stdout, "%s · status %s · generation %s · engine %s\n\n", stored.Project.Name, stored.Project.Status,
 			short(stored.Generation.ID), sanitize(strings.TrimSpace(stored.Generation.Engine+" "+stored.Generation.Model)))
@@ -87,9 +95,36 @@ func (application *app) runShow(ctx context.Context, name, file string, reveal b
 		fmt.Fprintln(application.stdout, application.colours.muted("── .env"))
 		_, err = application.stdout.Write(env)
 	default:
-		err = fmt.Errorf("--file %q must be compose, env, deploy or plan", file)
+		err = fmt.Errorf("--file %q must be compose, env, deploy, secrets or plan", file)
 	}
 	return err
+}
+
+// secretFiles are the project's secrets passed as files, by their path
+// beside compose.yaml, each value hidden unless revealed.
+func secretFiles(stored *pipeline.Stored, reveal bool) map[string]string {
+	files := map[string]string{}
+	for name, content := range stored.Plan.SecretFiles(stored.Values) {
+		files[name] = cliMask
+		if reveal {
+			files[name] = string(content)
+		}
+	}
+	return files
+}
+
+func (application *app) printSecretFiles(stored *pipeline.Stored, reveal bool) error {
+	files := secretFiles(stored, reveal)
+	if len(files) == 0 {
+		_, err := fmt.Fprintf(application.stdout, "%s passes no secret as a file; they are all in .env\n", stored.Project.Name)
+		return err
+	}
+	for _, name := range slices.Sorted(maps.Keys(files)) {
+		if _, err := fmt.Fprintf(application.stdout, "%s: %s\n", name, files[name]); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (application *app) rmCommand() *cobra.Command {

@@ -22,7 +22,7 @@ func (stored *Stored) Bundle() (export.Bundle, error) {
 		return export.Bundle{}, err
 	}
 	return export.Bundle{Project: stored.Project.Name, Compose: []byte(stored.Generation.ComposeYAML), Env: env,
-		EnvExample: example, Deploy: []byte(stored.Generation.DeployMD)}, nil
+		EnvExample: example, Deploy: []byte(stored.Generation.DeployMD), Secrets: stored.Plan.SecretFiles(stored.Values)}, nil
 }
 
 // Export writes a project's files to target (a folder, or arcane:DIR) and

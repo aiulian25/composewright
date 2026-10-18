@@ -801,3 +801,24 @@ func TestImageWithoutThePlatformVariantIsDenied(t *testing.T) {
 		t.Errorf("a profile naming no platform denied: %+v", report.Findings)
 	}
 }
+
+// TestSecretPassedAsAFileIsExplained: a secret passed as a file is a P7 fix
+// naming its file, which blocks nothing; a twin that is no *_FILE variable
+// is denied.
+func TestSecretPassedAsAFileIsExplained(t *testing.T) {
+	plan := goodPlan()
+	index := slices.IndexFunc(plan.EnvFile, func(entry ir.EnvFileEntry) bool { return entry.Generate != "" })
+	entry := &plan.EnvFile[index]
+	entry.FileEnvKey = entry.Key + ir.FileVariableSuffix
+	report := policy.Evaluate(baseInput(plan))
+	explained := slices.ContainsFunc(report.Findings, func(finding policy.Finding) bool {
+		return finding.Rule == "P7" && finding.Severity == policy.Fix && strings.Contains(finding.Message, entry.SecretPath())
+	})
+	if report.Blocked() || !explained {
+		t.Fatalf("a secret passed as a file: %+v", report.Findings)
+	}
+	entry.FileEnvKey = "PASSWORD_PATH"
+	if report := policy.Evaluate(baseInput(plan)); !report.Has("P7", policy.Deny) {
+		t.Fatalf("a twin that is no *_FILE variable was accepted: %+v", report.Findings)
+	}
+}

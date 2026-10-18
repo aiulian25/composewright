@@ -5,6 +5,7 @@ package render
 import (
 	"cmp"
 	"fmt"
+	"path"
 	"slices"
 	"strconv"
 	"strings"
@@ -36,7 +37,10 @@ const (
 	keyLabels          = "labels"
 	keyExpose          = "expose"
 	pathSeparator      = "/"
-	stripMiddleware    = "-stripprefix"
+	// relativePrefix makes a path beside compose.yaml one Compose reads as
+	// relative to the file, as the gate requires.
+	relativePrefix  = "./"
+	stripMiddleware = "-stripprefix"
 )
 
 var exposeModes = []string{ExposeLocal, ExposeLAN, ExposeNone}
@@ -129,6 +133,9 @@ func Compose(plan *ir.IR, options Options) ([]byte, error) {
 	if len(volumes.Content) > 0 {
 		root.Content = append(root.Content, key("volumes"), volumes)
 	}
+	if secrets := secretFiles(plan); secrets != nil {
+		root.Content = append(root.Content, key("secrets"), secrets)
+	}
 	if networks := options.networks(); len(networks) > 0 {
 		external := mapping()
 		for _, network := range networks {
@@ -158,6 +165,9 @@ func (options Options) service(plan *ir.IR, service *ir.Service, volumes *yaml.N
 	}
 	if environment := environment(plan, service); environment != nil {
 		node.Content = append(node.Content, key("environment"), environment)
+	}
+	if secrets := serviceSecrets(plan, service); len(secrets) > 0 {
+		node.Content = append(node.Content, key("secrets"), flowSequence(secrets...))
 	}
 	isApp := service.Role == ir.RoleApp
 	if !hostNetwork {
@@ -467,11 +477,14 @@ func environment(plan *ir.IR, service *ir.Service) *yaml.Node {
 	}
 	node := mapping()
 	for _, variable := range service.Env {
-		value := variable.Literal
+		name, value := variable.Key, variable.Literal
 		if variable.Ref != "" {
 			value = "${" + variable.Ref + "}"
 		}
-		node.Content = append(node.Content, key(variable.Key), quoted(value))
+		if entry, found := plan.EnvEntry(variable.Ref); found && entry.AsFile() {
+			name, value = entry.FileEnvKey, path.Join(ir.SecretMountDirectory, entry.SecretName())
+		}
+		node.Content = append(node.Content, key(name), quoted(value))
 	}
 	for index, setting := range optional {
 		name := key(setting.Key)
@@ -479,6 +492,32 @@ func environment(plan *ir.IR, service *ir.Service) *yaml.Node {
 			name.HeadComment = optionalComposeComment
 		}
 		node.Content = append(node.Content, name, unset())
+	}
+	return node
+}
+
+// serviceSecrets are the secrets passed as files that the service reads.
+func serviceSecrets(plan *ir.IR, service *ir.Service) []string {
+	var secrets []string
+	for _, variable := range service.Env {
+		if entry, found := plan.EnvEntry(variable.Ref); found && entry.AsFile() {
+			secrets = append(secrets, entry.SecretName())
+		}
+	}
+	return secrets
+}
+
+// secretFiles is the top-level secrets block: each secret passed as a file,
+// read from its file beside compose.yaml.
+func secretFiles(plan *ir.IR) *yaml.Node {
+	node := mapping()
+	for _, entry := range plan.EnvFile {
+		if entry.AsFile() {
+			node.Content = append(node.Content, key(entry.SecretName()), mapping(key("file"), scalar(relativePrefix+entry.SecretPath())))
+		}
+	}
+	if len(node.Content) == 0 {
+		return nil
 	}
 	return node
 }
