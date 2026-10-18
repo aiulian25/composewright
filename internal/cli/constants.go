@@ -39,4 +39,16 @@ const (
 	// Asked right under the plan table, which lists the images. Teardown is
 	// down -v without --rmi, so the images stay for the real deployment.
 	sandboxQuestion = "\nRun %s in an isolated sandbox (pulls the images above and keeps them; the sandbox and its volumes are removed afterwards)?"
+
+	// The repair a model proposes after a failed run: the heading, its
+	// lines, and the question that applies it.
+	proposalHeading = "proposed repair of %s by %s; nothing is stored yet\n"
+	addedMark       = "  + "
+	removedMark     = "  - "
+	leftOutPrefix   = "left out: "
+	notePrefix      = "note: "
+	gateClear       = "policy gate: passed"
+	gateBlocked     = "policy gate: blocks it"
+	repairQuestion  = "\nStore this repair as version %d and run the test again?"
+	noModelHint     = "; choose one with: composewright config set llm.provider <provider>"
 )

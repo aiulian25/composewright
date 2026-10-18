@@ -167,31 +167,40 @@ func statusAfter(verdict sandbox.Verdict, canRetry bool) string {
 	return store.StatusNeedsHuman
 }
 
-// repair asks the repairer for a new plan, keeps only the changes a repair
-// may make (ir.MergeRepair), and runs it through the same gates as the
-// first plan; it becomes a new generation.
+// repair asks the repairer for a new plan and runs it through the same
+// gates as the first plan; it becomes a new generation.
 func repair(ctx context.Context, dependencies Dependencies, options Options, result *Result, verdict sandbox.Verdict, iteration int) error {
-	proposal, call, err := dependencies.Repairer.Repair(ctx, result.Plan, verdict)
+	_, rejected, err := repaired(ctx, dependencies, options, result, verdict)
+	result.Notices = append(result.Notices, rejected...)
 	if err != nil {
 		return err
 	}
+	if result.Report.Blocked() {
+		return fmt.Errorf("the repaired plan is blocked by the policy gate")
+	}
+	options.Edited = false
+	return persist(ctx, dependencies, options, result, iteration, store.ActionGenerate)
+}
+
+// repaired lays the repairer's answer over result's plan, keeping only the
+// changes a repair may make (ir.MergeRepair), and renders and gates it
+// from the plan; call is the repairer's even when its answer is no repair,
+// and rejected says what was left out.
+func repaired(ctx context.Context, dependencies Dependencies, options Options, result *Result, verdict sandbox.Verdict) (call llm.Call, rejected []string, err error) {
+	proposal, call, err := dependencies.Repairer.Repair(ctx, result.Plan, verdict)
+	if err != nil {
+		return call, nil, fmt.Errorf("%w: %w", ErrNoRepair, err)
+	}
 	plan, rejected := ir.MergeRepair(result.Plan, proposal)
-	result.Notices = append(result.Notices, rejected...)
 	if samePlan(plan, result.Plan) {
-		return errors.New("the repair changed nothing a repair may change")
+		return call, rejected, fmt.Errorf("%w: it changes nothing a repair may change", ErrNoRepair)
 	}
 	plan.Unfilled = rules.Gaps(plan)
 	result.Plan, result.Call = plan, call
 	options.Edited = false
 	input := policyInput(dependencies.Config, plan, result.Source, options)
 	input.Images = result.Checks
-	if err := renderAndGate(ctx, dependencies, options, result, input, nil); err != nil {
-		return err
-	}
-	if result.Report.Blocked() {
-		return fmt.Errorf("the repaired plan is blocked by the policy gate")
-	}
-	return persist(ctx, dependencies, options, result, iteration, store.ActionGenerate)
+	return call, rejected, renderAndGate(ctx, dependencies, options, result, input, nil)
 }
 
 // Revalidate runs a stored project's latest generation once more, as the
@@ -301,17 +310,10 @@ func record(ctx context.Context, workspace *workspace.Workspace, project store.P
 // compose's own output, then the services' lines. A run whose file is gone
 // has none.
 func KeptLogs(generation store.Generation) ([]sandbox.Line, error) {
-	if generation.LogsPath == "" {
-		return nil, nil
-	}
-	content, err := os.ReadFile(generation.LogsPath)
-	if errors.Is(err, fs.ErrNotExist) {
-		return nil, nil
-	}
+	start, logs, err := keptRun(generation)
 	if err != nil {
 		return nil, err
 	}
-	start, logs, _ := strings.Cut(strings.TrimPrefix(string(content), startHeader), logsHeader)
 	lines := []sandbox.Line{}
 	for _, text := range strings.Split(start, "\n") {
 		if strings.TrimSpace(text) == "" {
@@ -320,6 +322,23 @@ func KeptLogs(generation store.Generation) ([]sandbox.Line, error) {
 		lines = append(lines, sandbox.Line{Source: sandbox.SourceCompose, Text: text})
 	}
 	return append(lines, sandbox.ParseLogs(logs)...), nil
+}
+
+// keptRun reads back a generation's kept logs file as the run wrote it:
+// compose's own output and the services' log lines.
+func keptRun(generation store.Generation) (start, logs string, err error) {
+	if generation.LogsPath == "" {
+		return "", "", nil
+	}
+	content, err := os.ReadFile(generation.LogsPath)
+	if errors.Is(err, fs.ErrNotExist) {
+		return "", "", nil
+	}
+	if err != nil {
+		return "", "", err
+	}
+	start, logs, _ = strings.Cut(strings.TrimPrefix(string(content), startHeader), logsHeader)
+	return start, logs, nil
 }
 
 // describe is the one-line validation status written into DEPLOY.md.

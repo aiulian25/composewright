@@ -157,7 +157,7 @@ func (sandbox *Sandbox) Validate(ctx context.Context, input Input) (verdict Verd
 		return Verdict{}, err
 	}
 	verdict.Project, verdict.Iteration, verdict.Duration = name, input.Iteration, sandbox.now().Sub(started)
-	verdict.Logs, verdict.StartOutput, verdict.LogTails = logs, startOutput, tails(logs)
+	verdict.Logs, verdict.StartOutput, verdict.LogTails = logs, startOutput, Tails(logs)
 	verdict.Sandbox = environment
 	output.say("%s", verdictLine(verdict))
 	return verdict, nil

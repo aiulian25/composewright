@@ -57,10 +57,12 @@
     {{end}}
     {{end}}
     <p class="muted">Fix it on the Review page, or in compose.yaml yourself, then run the test again. The whole log is on the right; <span class="strong">Errors only</span> shows just the lines that look like errors.</p>
+    {{if .Repairable}}<p class="muted">Or ask the model: it reads this run's verdict and logs, without any secret, and shows what it would change. Nothing changes until you apply it.</p>{{end}}
   </div>
   <div class="card-foot">
     <a class="button button-primary" href="/projects/{{.Project}}/review?pane=compose&amp;edit">{{template "icon-pencil"}}Edit compose.yaml</a>
     <a class="button" href="/projects/{{.Project}}/review">{{template "icon-arrow-left"}}Back to review</a>
+    {{if .Repairable}}<form method="post" action="/projects/{{.Project}}/repair/propose"><input type="hidden" name="csrf" value="{{$csrf}}"><button class="button" type="submit">{{template "icon-wrench"}}Ask the model</button></form>{{end}}
     <form method="post" action="/projects/{{.Project}}/validate"><input type="hidden" name="csrf" value="{{$csrf}}"><button class="button" type="submit">{{template "icon-play"}}Run again</button></form>
     <a class="button button-ghost push-right" href="/projects/{{.Project}}/files">Keep the files anyway</a>
   </div>

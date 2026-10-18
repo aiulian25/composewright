@@ -303,9 +303,9 @@ func parseStates(output []byte) ([]ServiceState, error) {
 	return states, nil
 }
 
-// tails keeps the last few kilobytes of each service's log lines for the
+// Tails keeps the last few kilobytes of each service's log lines for the
 // repair prompt and the user.
-func tails(logs string) map[string]string {
+func Tails(logs string) map[string]string {
 	byService := map[string][]string{}
 	for _, line := range strings.Split(logs, "\n") {
 		match := logPrefix.FindStringSubmatch(line)

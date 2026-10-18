@@ -563,6 +563,9 @@ type validateView struct {
 	Matches []string
 	// Ignorable offers to keep each matched line as normal for the app.
 	Ignorable bool
+	// Repairable offers to ask the configured model for a repair of the
+	// latest version's failed run.
+	Repairable bool
 	// Hint, Service, HealthSaid and Tail explain a failed run: what it
 	// usually means, the service it points at, that service's last
 	// healthcheck answer and its last lines.
@@ -602,6 +605,7 @@ func (server *Server) validateView(snapshot snapshot) validateView {
 		view.Title, view.Hint, view.Service, view.HealthSaid = failureText(verdict), failureHints[verdict.Reason], failing.Service, failing.HealthOutput
 		view.Detail, view.Tail = "The sandbox has been removed; its logs are kept with the project.", tailOf(view.Lines, failing.Service)
 		view.Ignorable = verdict.Reason == sandbox.ReasonLogs
+		view.Repairable = server.config().LLM.Provider != config.ProviderNone && !slices.Contains(snapshot.Notices, olderRunNotice)
 	}
 	return view
 }

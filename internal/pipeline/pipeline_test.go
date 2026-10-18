@@ -77,12 +77,15 @@ type fakeRepairer struct {
 	calls  int
 	mutate func(*ir.IR)
 	err    error
+	// verdict is the last one it was asked to repair.
+	verdict sandbox.Verdict
 }
 
 // Repair proposes the plan with one more healthcheck retry unless the case
 // says otherwise.
-func (repairer *fakeRepairer) Repair(_ context.Context, plan *ir.IR, _ sandbox.Verdict) (*ir.IR, llm.Call, error) {
+func (repairer *fakeRepairer) Repair(_ context.Context, plan *ir.IR, verdict sandbox.Verdict) (*ir.IR, llm.Call, error) {
 	repairer.calls++
+	repairer.verdict = verdict
 	if repairer.err != nil {
 		return nil, llm.Call{}, repairer.err
 	}
@@ -91,7 +94,7 @@ func (repairer *fakeRepairer) Repair(_ context.Context, plan *ir.IR, _ sandbox.V
 	if repairer.mutate != nil {
 		repairer.mutate(repaired)
 	}
-	return repaired, llm.Call{Provider: "fake", Model: "repairer", PromptHash: "hash"}, nil
+	return repaired, llm.Call{Provider: "fake", Model: repairModel, PromptHash: repairPromptHash}, nil
 }
 
 // TestAnotherSourceCannotTakeOverAProject: a second repository whose plan

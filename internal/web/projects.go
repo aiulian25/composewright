@@ -117,7 +117,7 @@ func (server *Server) projectPage(writer http.ResponseWriter, request *http.Requ
 func generationRowFor(generation store.Generation) generationRow {
 	row := generationRow{ID: generation.ID, When: generation.CreatedAt.Local().Format(timeLayout), Engine: engineText(generation),
 		Iteration: generation.Iteration, Validation: "not run", Tone: toneNeutral}
-	verdict, tested := storedVerdict(generation)
+	verdict, tested := pipeline.StoredVerdict(generation)
 	if !tested {
 		return row
 	}

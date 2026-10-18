@@ -35,6 +35,7 @@ import (
 	"github.com/aiulian25/composewright/internal/config"
 	"github.com/aiulian25/composewright/internal/doctor"
 	"github.com/aiulian25/composewright/internal/ir"
+	"github.com/aiulian25/composewright/internal/llm"
 	"github.com/aiulian25/composewright/internal/pipeline"
 	"github.com/aiulian25/composewright/internal/policy"
 	"github.com/aiulian25/composewright/internal/redact"
@@ -2038,6 +2039,156 @@ func TestFailedRunExplainsItself(t *testing.T) {
 	status(t, response, http.StatusOK, page)
 	if !strings.Contains(page, olderRunNotice) || !strings.Contains(page, "cannot open the database") {
 		t.Fatal("the last run is not shown after the plan changed")
+	}
+}
+
+// repairedFlag is in the command the fake model proposes; the app crashes
+// until compose.yaml runs it.
+const repairedFlag = "-repaired"
+
+var proposalPattern = regexp.MustCompile(`name="proposal" value="([^"]+)"`)
+
+// commandModel proposes command for the app after a failed run.
+type commandModel struct {
+	command []string
+}
+
+func (model *commandModel) Repair(_ context.Context, plan *ir.IR, _ sandbox.Verdict) (*ir.IR, llm.Call, error) {
+	repaired := plan.Clone()
+	service, _ := repaired.Service("miniflux")
+	service.Command = model.command
+	return repaired, llm.Call{Provider: "fake", Model: "fixer", PromptHash: "prompt-hash"}, nil
+}
+
+// crashesUntilRepaired answers like docker, but the app crashes until
+// compose.yaml runs the repaired command.
+func crashesUntilRepaired(ctx context.Context, directory string, live io.Writer, arguments ...string) ([]byte, []byte, error) {
+	command := strings.Join(arguments, " ")
+	content, _ := os.ReadFile(filepath.Join(directory, "compose.yaml"))
+	broken := !strings.Contains(string(content), repairedFlag)
+	switch {
+	case broken && strings.Contains(command, " ps "):
+		return []byte(crashedPS), nil, nil
+	case broken && strings.Contains(command, " logs "):
+		return []byte(crashLog), nil, nil
+	}
+	return docker(ctx, directory, live, arguments...)
+}
+
+// repairing connects like offline, with the scripted app that crashes until
+// repaired, and model as the repairer of an assisted connection only.
+func repairing(model pipeline.Repairer) Connector {
+	return func(ctx context.Context, setup pipeline.Setup) (pipeline.Connection, error) {
+		connection, err := offline(ctx, setup)
+		if err != nil {
+			return connection, err
+		}
+		if setup.Validate {
+			limits, _ := sandbox.ParseLimits("1g", 1, 128)
+			connection.Dependencies.Sandbox = sandbox.New(crashesUntilRepaired, limits, time.Minute, "policy", setup.Paths.ProjectsDir())
+		}
+		if setup.Engine == pipeline.EngineAssisted {
+			connection.Dependencies.Repairer = model
+		}
+		return connection, nil
+	}
+}
+
+// TestAskTheModelToRepair: a rules-only project whose run failed offers the
+// model once one is configured; the proposal marks its lines M and stores
+// nothing, Apply stores the next version and its run passes, and an edited
+// version shows a proposal it refuses to apply.
+func TestAskTheModelToRepair(t *testing.T) {
+	harness := newHarness(t)
+	model := &commandModel{command: []string{"miniflux", repairedFlag}}
+	harness.server.options.Connect = repairing(model)
+	harness.signUp()
+	response, page := harness.post("/new", url.Values{"source": {minifluxPath}, "engine": {pipeline.EngineRules}})
+	status(t, response, http.StatusSeeOther, page)
+	harness.waitForJob(response.Header.Get("Location"))
+	response, page = harness.post("/projects/miniflux/review", url.Values{"trust": {"docker.io/miniflux/*"}})
+	status(t, response, http.StatusSeeOther, page)
+	response, page = harness.post("/projects/miniflux/validate", nil)
+	status(t, response, http.StatusSeeOther, page)
+	harness.waitForJob(response.Header.Get("Location"))
+	response, page = harness.get("/projects/miniflux/validate")
+	status(t, response, http.StatusOK, page)
+	if strings.Contains(page, "Ask the model") {
+		t.Fatal("the model is offered with none configured")
+	}
+	if err := config.SetInFile(harness.server.paths().ConfigFile, "llm.provider", config.ProviderOllama); err != nil || harness.server.reload() != nil {
+		t.Fatalf("configure a model: %v", err)
+	}
+	response, page = harness.get("/projects/miniflux/validate")
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, `action="/projects/miniflux/repair/propose"`) || !strings.Contains(page, "Ask the model") {
+		t.Fatal("the failed run does not offer the model")
+	}
+	response, page = harness.post("/projects/nosuch/repair/propose", nil)
+	status(t, response, http.StatusNotFound, page)
+	before, err := pipeline.Load(context.Background(), harness.server.workspace(), "miniflux")
+	if err != nil {
+		t.Fatal(err)
+	}
+	response, page = harness.post("/projects/miniflux/repair/propose", nil)
+	status(t, response, http.StatusOK, page)
+	marked := regexp.MustCompile(`is-marked"><span class="code-gutter"><span class="badge badge-you">M</span>.*` + repairedFlag)
+	if !marked.MatchString(page) || !strings.Contains(page, "Apply and re-test") || !strings.Contains(page, "Policy gate: passed") {
+		t.Fatalf("the proposal does not mark its change:\n%s", page)
+	}
+	if stored, _ := pipeline.Load(context.Background(), harness.server.workspace(), "miniflux"); stored.Generation.ID != before.Generation.ID {
+		t.Fatal("a proposal was stored before Apply")
+	}
+	hash := proposalPattern.FindStringSubmatch(page)
+	if hash == nil {
+		t.Fatal("the proposal has no hash to apply")
+	}
+	response, page = harness.post("/projects/miniflux/repair/apply", url.Values{"proposal": {hash[1]}})
+	status(t, response, http.StatusSeeOther, page)
+	run := harness.waitForJob(response.Header.Get("Location"))
+	after, err := pipeline.Load(context.Background(), harness.server.workspace(), "miniflux")
+	if err != nil {
+		t.Fatal(err)
+	}
+	verdict, passed := pipeline.StoredVerdict(after.Generation)
+	if run.Failure != "" || !passed || !verdict.Passed() || after.Generation.Number != before.Generation.Number+1 {
+		t.Fatalf("the applied repair: version %d, run %+v", after.Generation.Number, run.Failure)
+	}
+	response, page = harness.post("/projects/miniflux/repair/apply", url.Values{"proposal": {hash[1]}})
+	status(t, response, http.StatusConflict, page)
+	if !strings.Contains(page, "no longer kept") {
+		t.Fatal("a proposal was applied twice")
+	}
+	response, page = harness.post("/projects/miniflux/repair/propose", nil)
+	status(t, response, http.StatusConflict, page)
+	if !strings.Contains(page, "no failed test run to repair") || !strings.Contains(page, "Dismiss") {
+		t.Fatal("a passing version is offered a repair")
+	}
+	image := "    image: " + after.Plan.Services[0].Image.String() + "\n"
+	edited := strings.Replace(after.Generation.ComposeYAML, image, image+"    entrypoint: "+crashMark+"\n", 1)
+	response, page = harness.post("/projects/miniflux/compose", url.Values{"compose": {edited}})
+	status(t, response, http.StatusSeeOther, page)
+	response, page = harness.post("/projects/miniflux/validate", nil)
+	status(t, response, http.StatusSeeOther, page)
+	harness.waitForJob(response.Header.Get("Location"))
+	model.command = []string{"miniflux", repairedFlag, "-debug"}
+	response, page = harness.post("/projects/miniflux/repair/propose", nil)
+	status(t, response, http.StatusOK, page)
+	if strings.Contains(page, "Apply and re-test") || !strings.Contains(page, "renders compose.yaml from the plan") {
+		t.Fatal("an edited version offers to apply a repair")
+	}
+	dependencies, err := harness.server.repairDependencies(context.Background(), "admin")
+	if err != nil {
+		t.Fatal(err)
+	}
+	shown, err := pipeline.ProposeRepair(context.Background(), dependencies, "miniflux", webMask)
+	if err != nil {
+		t.Fatal(err)
+	}
+	response, page = harness.post("/projects/miniflux/repair/apply", url.Values{"proposal": {shown.Hash}})
+	status(t, response, http.StatusConflict, page)
+	if !strings.Contains(page, "your edited compose.yaml: a repair renders") || strings.Contains(page, "no longer kept") {
+		t.Fatal("the refusal does not say why")
 	}
 }
 

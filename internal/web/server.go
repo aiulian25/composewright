@@ -86,6 +86,8 @@ type Server struct {
 	// settingsMutex makes Settings saves take turns, from reading the
 	// configuration they change to writing it back.
 	settingsMutex sync.Mutex
+	// proposals keeps each repair a person was shown until they apply it.
+	proposals shownProposals
 }
 
 func New(options Options) (*Server, error) {
@@ -170,6 +172,8 @@ func (server *Server) routes() {
 	mux.HandleFunc("GET /projects/{name}/validate", server.authed(server.validatePage))
 	mux.HandleFunc("POST /projects/{name}/validate", server.authed(server.validate))
 	mux.HandleFunc("POST /projects/{name}/benign", server.authed(server.markBenign))
+	mux.HandleFunc("POST /projects/{name}/repair/propose", server.authed(server.proposeRepair))
+	mux.HandleFunc("POST /projects/{name}/repair/apply", server.authed(server.applyRepair))
 	mux.HandleFunc("GET /projects/{name}/delete", server.authed(server.deletePage))
 	mux.HandleFunc("POST /projects/{name}/delete", server.authed(server.delete))
 	mux.HandleFunc("GET /settings", server.authed(server.settingsPage))

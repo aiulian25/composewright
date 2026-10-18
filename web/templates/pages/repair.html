@@ -1,0 +1,68 @@
+{{define "content"}}
+{{$csrf := .CSRF}}
+{{with .Data}}
+<div class="page-head">
+  <h1>{{.Project}}</h1>
+  {{if .Found}}
+  <span class="chip chip-accent">{{template "icon-wrench"}}proposed repair</span>
+  <span class="chip chip-{{.PolicyTone}}">{{.PolicyText}}</span>
+  {{if .Model}}<span class="chip chip-neutral">model: {{.Model}}</span>{{end}}
+  {{end}}
+</div>
+{{if .Found}}
+<p class="banner banner-info" role="note">Nothing has changed yet. Lines marked M are the model's changes; Apply stores them as version {{.Version}} and runs the test again.</p>
+{{if .Edited}}<p class="banner banner-warn" role="note">This version is your edited compose.yaml. A repair renders compose.yaml from the plan and would drop your edits, so it cannot be applied here: make the change in compose.yaml yourself.</p>{{end}}
+
+{{if .Rejected}}
+<section class="card" aria-labelledby="rejected-title">
+  <div class="card-head"><h2 id="rejected-title">{{template "icon-shield"}}Left out</h2><span class="note">changes a repair may not make</span></div>
+  <ul class="notes card-body">{{range .Rejected}}<li>{{.}}</li>{{end}}</ul>
+</section>
+{{end}}
+
+{{if .Removed}}
+<section class="card" aria-labelledby="removed-title">
+  <div class="card-head"><h2 id="removed-title">{{template "icon-diff"}}Lines it removes</h2></div>
+  <ul class="notes card-body">{{range .Removed}}<li class="mono">{{.}}</li>{{end}}</ul>
+</section>
+{{end}}
+
+{{if .Findings}}
+<section class="card" aria-labelledby="findings-title">
+  <div class="card-head"><h2 id="findings-title">{{template "icon-warning"}}Policy findings</h2><span class="note">{{plural (len .Findings) "finding" "findings"}}</span></div>
+  {{range .Findings}}<div class="finding finding-{{.Tone}}"><span class="finding-rule">{{.Rule}} · {{.Label}}{{if .Service}} · {{.Service}}{{end}}</span><span>{{.Message}}</span></div>{{end}}
+</section>
+{{end}}
+
+{{if .Notes}}
+<section class="card" aria-labelledby="notes-title">
+  <div class="card-head"><h2 id="notes-title">{{template "icon-book"}}The model's notes</h2></div>
+  <ul class="notes card-body">{{range .Notes}}<li>{{.}}</li>{{end}}</ul>
+</section>
+{{end}}
+{{end}}
+
+<div class="row">
+  {{if and .Found (not .Edited) (not .Blocked)}}
+  <form method="post" action="/projects/{{.Project}}/repair/apply"><input type="hidden" name="csrf" value="{{$csrf}}"><input type="hidden" name="proposal" value="{{.Hash}}"><button class="button button-primary" type="submit">{{template "icon-play"}}Apply and re-test</button></form>
+  {{end}}
+  <a class="button" href="/projects/{{.Project}}/validate">{{template "icon-cross"}}Dismiss</a>
+</div>
+{{end}}
+{{end}}
+
+{{define "context"}}
+{{with .Data}}
+{{if .Found}}
+<section class="context-section" aria-labelledby="compose-title">
+  <h3 id="compose-title">compose.yaml</h3>
+  <div class="code">{{template "code-lines" .Compose}}</div>
+</section>
+<section class="context-section" aria-labelledby="env-title">
+  <h3 id="env-title">.env</h3>
+  <div class="code">{{template "code-lines" .Env}}</div>
+</section>
+<div class="legend"><span><span class="badge">R1–R6</span>Rules from the repository</span><span><span class="badge badge-profile">P</span>Your profile</span><span><span class="badge badge-gate">G</span>Policy gate</span><span><span class="badge badge-you">M</span>Changed by the model</span></div>
+{{end}}
+{{end}}
+{{end}}

@@ -190,7 +190,7 @@ func (server *Server) filesView(ctx context.Context, stored *pipeline.Stored, st
 	}
 	view.Versions = versionRows(generations, stored.Generation.ID)
 	view.EnvText, view.NextVersion = env, stored.Generation.Number+1
-	_, tested := storedVerdict(stored.Generation)
+	_, tested := pipeline.StoredVerdict(stored.Generation)
 	view.EditedUntested = stored.Options.Edited && !tested
 	marks := make([]provenanceMark, 0, len(view.ComposeLines))
 	for _, line := range view.ComposeLines {
@@ -201,21 +201,11 @@ func (server *Server) filesView(ctx context.Context, stored *pipeline.Stored, st
 	return view, err
 }
 
-// storedVerdict reads the sandbox verdict kept with a version, if it was
-// tested.
-func storedVerdict(generation store.Generation) (sandbox.Verdict, bool) {
-	var verdict sandbox.Verdict
-	if generation.ValidationJSON == "" || json.Unmarshal([]byte(generation.ValidationJSON), &verdict) != nil {
-		return verdict, false
-	}
-	return verdict, verdict.Result != ""
-}
-
 // testedRun is the newest version that ran in the sandbox, or the one a
 // link names. The plan may have changed since it ran.
 func testedRun(generations []store.Generation, wanted string) (store.Generation, sandbox.Verdict, bool) {
 	for _, generation := range generations {
-		verdict, tested := storedVerdict(generation)
+		verdict, tested := pipeline.StoredVerdict(generation)
 		if tested && (wanted == "" || generation.ID == wanted) {
 			return generation, verdict, true
 		}
@@ -245,7 +235,7 @@ func versionRows(generations []store.Generation, current string) []versionRow {
 		case row.Number == 1:
 			row.Change = "Initial plan"
 		}
-		verdict, tested := storedVerdict(generation)
+		verdict, tested := pipeline.StoredVerdict(generation)
 		row.Tested = tested
 		if tested && verdict.Passed() {
 			row.Result, row.Tone = "passed", toneOk
@@ -358,7 +348,7 @@ func filesBanner(stored *pipeline.Stored) (tone, headline, summary string) {
 }
 
 func passedText(generation store.Generation) string {
-	verdict, found := storedVerdict(generation)
+	verdict, found := pipeline.StoredVerdict(generation)
 	if !found {
 		return "Passed"
 	}

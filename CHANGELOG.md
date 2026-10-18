@@ -8,6 +8,18 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- After a failed test run, the Validate page offers Ask the model whenever a
+  model is set up, whichever engine made the project. The model reads the
+  run's verdict and logs, never a secret, and its proposal is shown before
+  anything changes: the lines it changes in compose.yaml and .env are marked
+  M, with what it was not allowed to change, its notes and the policy gate's
+  answer. Apply and re-test stores exactly that proposal as the next version,
+  without asking the model again, and runs the test again; Dismiss leaves
+  the project as it was. A version whose compose.yaml
+  you edited shows the proposal but is never repaired, since a repair
+  renders compose.yaml from the plan. `composewright validate --repair` does
+  the same from the command line, asking before it applies. Every time the
+  model is asked, the audit log records it with a hash of what it was sent.
 - Test runs now measure how much memory and CPU each service uses while it
   starts and once every service is up. The Validate page's Containers list
   and `composewright validate` show each peak against the service's memory

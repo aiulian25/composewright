@@ -136,6 +136,48 @@ func TestValidateIgnoreLog(t *testing.T) {
 	}
 }
 
+// TestValidateRepair: --repair shows the model's proposal and stores
+// nothing when declined; with --yes it stores the next version and runs it.
+func TestValidateRepair(t *testing.T) {
+	environment := isolate(t)
+	run(t, environment, "init")
+	fakeDocker(t, environment, "fail")
+	if result := generate(t, environment); result.code != exitOK {
+		t.Fatalf("gen: %+v", result)
+	}
+	if failed := run(t, environment, "validate", "miniflux"); failed.code != exitInvalid {
+		t.Fatalf("the failing run: %+v", failed)
+	}
+	answer := `{"services":[],"env_file":[],"post_install_notes":["Give the database a minute."],"confidence":"low"}`
+	content, _ := json.Marshal(map[string]any{"model": "fixer", "message": map[string]string{"content": answer}, "done": true})
+	model := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
+		_, _ = writer.Write(append(content, '\n'))
+	}))
+	t.Cleanup(model.Close)
+	run(t, environment, "config", "set", "llm.provider", "ollama")
+	run(t, environment, "config", "set", "llm.base_url", model.URL)
+	declined := runWithInput(t, environment, "n\n", "validate", "miniflux", "--repair")
+	if declined.code != exitOK || !strings.Contains(declined.stdout, "proposed repair of miniflux by fixer") ||
+		!strings.Contains(declined.stdout, "note: Give the database a minute.") || !strings.Contains(declined.stderr, "Store this repair as version 2") {
+		t.Fatalf("the proposal: %+v", declined)
+	}
+	if shown := run(t, environment, "--json", "show", "miniflux"); !strings.Contains(shown.stdout, `"status": "needs_human"`) {
+		t.Fatalf("a declined repair changed the project: %s", shown.stdout)
+	}
+	fakeDocker(t, environment, "pass")
+	applied := run(t, environment, "--json", "--yes", "validate", "miniflux", "--repair")
+	var proposal struct{ Model string }
+	var validated struct{ Verdict struct{ Result string } }
+	decoder := json.NewDecoder(strings.NewReader(applied.stdout))
+	if applied.code != exitOK || decoder.Decode(&proposal) != nil || decoder.Decode(&validated) != nil ||
+		proposal.Model != "fixer" || validated.Verdict.Result != "PASS" {
+		t.Fatalf("the applied repair: %+v", applied)
+	}
+	if deploy := run(t, environment, "show", "miniflux", "--file", "deploy"); !strings.Contains(deploy.stdout, "Give the database a minute.") {
+		t.Fatalf("the repaired version lacks the model's note:\n%s", deploy.stdout)
+	}
+}
+
 func TestDoctor(t *testing.T) {
 	environment := isolate(t)
 	run(t, environment, "init")
