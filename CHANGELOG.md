@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-18
+
+Generated stacks can now pass secrets as files, carry the config files their
+mounts need, and be checked for the platform they will run on; repositories
+can come from GitLab, Codeberg and other Gitea or Forgejo hosts. A failed test
+run can be repaired by the model on demand, test runs show each service's
+memory and CPU, and Settings gains Maintenance and Advanced pages.
+
 ### Added
 
 - After a failed test run, the Validate page offers Ask the model whenever a
