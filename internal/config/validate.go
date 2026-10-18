@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"net"
 	"net/netip"
 	"net/url"
@@ -39,6 +40,7 @@ func (config Config) Validate() error {
 		validateRegistries(config.Registries.Allow),
 		validateHosts("scm.allow_hosts", config.SCM.AllowHosts),
 		validateSecretRef("scm.github_token_ref", config.SCM.GitHubTokenRef),
+		validateTokenRefs("scm.token_refs", config.SCM.TokenRefs),
 		validatePrivateTargets(config.Network.AllowPrivateTargets),
 		updateCheckDisabled(config.Network.UpdateCheck),
 		oneOf("ui.theme", config.UI.Theme, themes),
@@ -263,6 +265,16 @@ func validateHosts(field string, hosts []string) error {
 		if !hostnamePattern.MatchString(host) {
 			problems = append(problems, fmt.Errorf("%s entry %q is not a hostname", field, host))
 		}
+	}
+	return errors.Join(problems...)
+}
+
+// validateTokenRefs checks that every entry maps a host name to a secret
+// reference.
+func validateTokenRefs(field string, references map[string]string) error {
+	var problems []error
+	for _, host := range slices.Sorted(maps.Keys(references)) {
+		problems = append(problems, validateHosts(field, []string{host}), validateSecretRef(field+"."+host, references[host]))
 	}
 	return errors.Join(problems...)
 }

@@ -29,12 +29,14 @@ registries:
     - quay.io/*
     - docker.io/valkey/*     # the Valkey project's own images, a common cache sidecar
 scm:
+  # add gitlab.com, codeberg.org or your own GitLab, Gitea or Forgejo host to fetch from it
   allow_hosts:
     - github.com
     - api.github.com
     - codeload.github.com
     - raw.githubusercontent.com  # single files of a repository too large for a tarball
   github_token_ref: ""       # optional keyring:<name> or env:<VARIABLE>; raises the GitHub API limit from 60 to 5000 requests per hour
+  token_refs: {}             # other code hosts' tokens by host, for private repositories, e.g. {gitlab.com: keyring:gitlab}
 network:
   allow_private_targets: []  # explicit opt-in for LAN or loopback services, e.g. ["192.168.1.10:3000"]
   update_check: false        # must stay false: updates are checked only when you ask (version --check or Settings › Maintenance)

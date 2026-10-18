@@ -2,8 +2,10 @@ package pipeline
 
 import (
 	"context"
+	"maps"
 
 	"github.com/aiulian25/composewright/internal/config"
+	"github.com/aiulian25/composewright/internal/fetch"
 	"github.com/aiulian25/composewright/internal/images"
 	"github.com/aiulian25/composewright/internal/llm"
 	"github.com/aiulian25/composewright/internal/netguard"
@@ -59,7 +61,7 @@ func Connect(ctx context.Context, setup Setup) (Connection, error) {
 		dependencies.Inspector = images.NewInspector(guard, imageCache(setup.Workspace), images.Options{ReadConfig: !setup.NoLabelCheck,
 			Mirror: setup.Config.Profile.RegistryMirror, Platform: setup.Config.Profile.Platform})
 	}
-	if dependencies.GitHubToken, err = resolveSecret(ctx, setup.Workspace, setup.Config.SCM.GitHubTokenRef); err != nil {
+	if dependencies.Tokens, err = resolveTokens(ctx, setup.Workspace, setup.Config.SCM); err != nil {
 		return Connection{}, err
 	}
 	connection := Connection{Dependencies: dependencies}
@@ -95,6 +97,23 @@ func connectModel(ctx context.Context, dependencies *Dependencies, setup Setup, 
 	assistant := llm.NewAssistant(provider, settings.Model, settings.MaxInputTokens)
 	dependencies.Assistant, dependencies.Repairer = assistant, assistant
 	return setup.Engine, ""
+}
+
+// resolveTokens reads each code host's token: GitHub's from
+// scm.github_token_ref alone, any other host's from scm.token_refs.
+func resolveTokens(ctx context.Context, opened *workspace.Workspace, scm config.SCM) (map[string]string, error) {
+	references := map[string]string{}
+	maps.Copy(references, scm.TokenRefs)
+	references[fetch.GitHubHost] = scm.GitHubTokenRef
+	tokens := make(map[string]string, len(references))
+	for host, reference := range references {
+		token, err := resolveSecret(ctx, opened, reference)
+		if err != nil {
+			return nil, err
+		}
+		tokens[host] = token
+	}
+	return tokens, nil
 }
 
 // resolveSecret reads keyring: references from the workspace and env:

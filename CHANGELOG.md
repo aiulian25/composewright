@@ -93,6 +93,21 @@ All notable changes to this project are documented here. The format follows
   out, `composewright doctor` reports it in a catalogue overrides row, and
   `composewright gen` notes it. Backups include the files and a restore
   writes them back.
+- Repositories on GitLab, Codeberg and any other GitLab, Gitea or Forgejo
+  host can now be generated from as GitHub ones are: paste
+  `https://gitlab.com/<group>/<project>` or
+  `https://codeberg.org/<owner>/<repo>` once the host is in
+  `scm.allow_hosts` (Code hosts under Settings › Advanced); a host left out
+  is refused by the egress guard, by name. The latest release, else the
+  default branch, is fetched as one tarball with the same size limits, and
+  generating a project again reads the same commit. github.com, gitlab.com
+  and codeberg.org are known by name; any other host is asked once whether
+  it runs Gitea or GitLab, and one listed in
+  `network.allow_private_targets`, such as a Gitea on your network, can be
+  read over plain HTTP. Private repositories take a token from
+  `scm.token_refs`, such as `{gitlab.com: keyring:gitlab}`. The owner's own
+  image namespaces are trusted as a GitHub owner's are, and the Analyse
+  page names the source as codeberg.org/owner/repo @ commit.
 - Try it on the Model providers page sends a connection one tiny request and
   says whether it answered: the model name it answered as, the tokens in and
   out and the time, or the provider's error with the key left out. It works

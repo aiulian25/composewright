@@ -36,10 +36,11 @@ func (application *app) genCommand() *cobra.Command {
 		Use:   "gen <url|path>",
 		Short: "Generate a validated compose.yaml and .env for a repository",
 		Long: `Run the pipeline for a repository (a local checkout or a .zip or .tar.gz of
-one; GitHub URLs are fetched as a tarball): extract deployment facts with
-their file and line, build a plan with deterministic rules, gate it with the
-policy, render compose.yaml, .env and DEPLOY.md with the environment profile,
-re-check the rendered file, and store the result with secrets encrypted.
+one; GitHub, GitLab, Gitea and Forgejo URLs of a host in scm.allow_hosts are
+fetched as a tarball): extract deployment facts with their file and line,
+build a plan with deterministic rules, gate it with the policy, render
+compose.yaml, .env and DEPLOY.md with the environment profile, re-check the
+rendered file, and store the result with secrets encrypted.
 
 --engine picks who writes the plan, by default llm.engine ("rules" unless you
 change it): "rules" uses deterministic rules only; "assisted" lets the
@@ -74,7 +75,7 @@ still stored so you can inspect it, and gen exits with status 2.
 	set := command.Flags()
 	set.StringVar(&flags.options.Name, "name", "", "project name (default: the app service, else the repository name)")
 	set.StringVar(&flags.options.Ref, "ref", "", "branch, tag or commit to fetch (default: the latest release, else the default branch)")
-	set.StringVar(&flags.options.Owner, "owner", "", "repository owner whose image namespaces are trusted (default: the GitHub owner)")
+	set.StringVar(&flags.options.Owner, "owner", "", "repository owner whose image namespaces are trusted (default: the owner in the repository URL)")
 	set.StringVar(&flags.options.Upstream, "upstream", "", "repository URL a local directory was checked out from (default: its origin remote)")
 	set.StringVar(&flags.options.ExposeVia, "expose-via", "", "how the app's ports are published: local, lan or none (default: none when it joins a network, else local)")
 	set.StringSliceVar(&flags.options.Networks, "network", nil, "join this network from profile.networks (repeatable; default: the profile's default networks)")

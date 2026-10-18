@@ -1,6 +1,6 @@
-// Package fetch turns a source (GitHub repository, local directory, local
-// .zip or .tar.gz archive) into a private directory that holds only the
-// files fact extraction reads.
+// Package fetch turns a source (a repository on GitHub, GitLab or a Gitea
+// host, local directory, local .zip or .tar.gz archive) into a private
+// directory that holds only the files fact extraction reads.
 package fetch
 
 import (

@@ -114,8 +114,8 @@ func (check *checker) image(service *ir.Service, field string) {
 			image.Reference(), namespacePattern(image))
 	}
 	if trustedByNameOnly(image.Reference(), check.input.AllowRegistries, check.input.ExtraRegistries, check.input.RepositoryOwner) {
-		check.add("P1", Warn, service.Name, field, "image %s is trusted only because its namespace matches the GitHub owner %s; %s "+NotGitHubAccounts+
-			", so trust %s if it is the project's own", image.Reference(), check.input.RepositoryOwner, image.Registry, namespacePattern(image))
+		check.add("P1", Warn, service.Name, field, "image %s is "+TrustedByName+" the repository owner %s; %s accounts are not the repository owner's, "+
+			"so trust %s if it is the project's own", image.Reference(), check.input.RepositoryOwner, image.Registry, namespacePattern(image))
 	}
 	switch {
 	case image.Tag == "":

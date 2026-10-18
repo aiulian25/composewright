@@ -94,6 +94,9 @@ type Registries struct {
 type SCM struct {
 	AllowHosts     []string `yaml:"allow_hosts"`
 	GitHubTokenRef string   `yaml:"github_token_ref"`
+	// TokenRefs are the secret references of other code hosts' tokens, by
+	// host name.
+	TokenRefs map[string]string `yaml:"token_refs"`
 }
 
 type Network struct {

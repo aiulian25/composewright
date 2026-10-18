@@ -32,7 +32,7 @@ const (
 	kindSupplied   = "supplied"
 	kindReference  = "reference"
 	lineTimeLayout = "15:04:05.000"
-	githubPrefix   = "https://"
+	httpsPrefix    = "https://"
 	// optionalServiceSub shows a service upstream starts only with a
 	// Compose profile.
 	optionalServiceSub = "%s · upstream profile %s"
@@ -60,7 +60,7 @@ type stepInfo struct {
 }
 
 var generationSteps = []stepInfo{
-	{pipeline.StepFetch, "Fetch", "GitHub tarball through the egress guard, or the files you gave; no git clone, no hooks"},
+	{pipeline.StepFetch, "Fetch", "repository tarball through the egress guard, or the files you gave; no git clone, no hooks"},
 	{pipeline.StepExtract, "Extract facts (no model)", "compose files, Dockerfiles, env samples and docs, each with its file and line"},
 	{pipeline.StepPlan, "Build the plan", "deterministic rules R1 to R6 with provenance and confidence"},
 	{pipeline.StepImages, "Verify images", "registry allowlist · manifest HEAD · pin digest · source label against the repository"},
@@ -100,13 +100,13 @@ func steps(catalogue []stepInfo, job snapshot, details map[string]string) []step
 	return views
 }
 
-// sourceText is a source the way a person names it: owner/repository at a
-// short commit, or the folder.
+// sourceText is a source the way a person names it: host/owner/repository
+// at a short commit, or the folder.
 func sourceText(source *fetch.Source) string {
 	if source == nil {
 		return ""
 	}
-	text := strings.TrimPrefix(source.URL, githubPrefix)
+	text := strings.TrimPrefix(source.URL, httpsPrefix)
 	if source.Ref != "" {
 		text += " " + source.Ref
 	}
@@ -417,7 +417,7 @@ type trustOffer struct {
 func trustOffers(plan *ir.IR, report policy.Report, allow []string) []trustOffer {
 	var offers []trustOffer
 	for _, finding := range report.Findings {
-		settledByTrust := strings.Contains(finding.Message, policy.OutsideAllowlist) || strings.Contains(finding.Message, policy.NotGitHubAccounts)
+		settledByTrust := strings.Contains(finding.Message, policy.OutsideAllowlist) || strings.Contains(finding.Message, policy.TrustedByName)
 		if finding.Rule != "P1" || !settledByTrust {
 			continue
 		}

@@ -522,7 +522,7 @@ func (server *Server) analyseView(snapshot snapshot) analyseView {
 	}
 	heading := "Analysing " + snapshot.Title
 	if source != nil && source.URL != "" {
-		heading = "Analysing " + strings.TrimPrefix(source.URL, githubPrefix)
+		heading = "Analysing " + strings.TrimPrefix(source.URL, httpsPrefix)
 	}
 	end := snapshot.Ended
 	if end.IsZero() {

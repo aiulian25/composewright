@@ -29,14 +29,14 @@ const (
 	mebibyteSuffix = "m"
 )
 
-// ownerRegistries are the hosts where a GitHub owner's namespace is trusted
-// automatically (P1): projects publish under their own name there.
+// ownerRegistries are the hosts where the repository owner's namespace is
+// trusted automatically (P1): projects publish under their own name there.
 var ownerRegistries = []string{"docker.io", "ghcr.io", "quay.io"}
 
-// nameOnlyRegistries are the owner registries whose accounts are not
-// GitHub's: the owner's name there may belong to someone else, so an image
-// trusted by that name alone gets a P1 warning. ghcr.io namespaces are the
-// GitHub accounts themselves.
+// nameOnlyRegistries are the owner registries whose accounts are not the
+// repository owner's accounts: the owner's name there may belong to
+// someone else, so an image trusted by that name alone gets a P1 warning.
+// ghcr.io namespaces are the GitHub accounts themselves.
 var nameOnlyRegistries = []string{"docker.io", "quay.io"}
 
 // portTakenMessage warns that a host port is taken, by what
@@ -46,11 +46,13 @@ const (
 	portTakersSeparator = " and "
 )
 
-// OutsideAllowlist and NotGitHubAccounts mark the P1 findings a person
-// settles by trusting the image's namespace on the Review page.
+// OutsideAllowlist and TrustedByName mark the P1 findings a person settles
+// by trusting the image's namespace on the Review page. TrustedByName is
+// the part of the warning that versions stored while it named only GitHub
+// owners share.
 const (
-	OutsideAllowlist  = "outside the registry allowlist"
-	NotGitHubAccounts = "accounts are not GitHub's"
+	OutsideAllowlist = "outside the registry allowlist"
+	TrustedByName    = "trusted only because its namespace matches"
 )
 
 var forbiddenTargets = []string{"/var/run/docker.sock", "/run/docker.sock", "/proc", "/sys", "/dev"}

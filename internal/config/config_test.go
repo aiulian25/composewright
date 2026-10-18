@@ -261,3 +261,23 @@ func TestSetInFileKeepsCommentsAndValidates(t *testing.T) {
 		t.Fatal("unknown key looked up")
 	}
 }
+
+// TestTokenRefsNameHostsAndSecrets: every scm.token_refs entry maps a host
+// name to a keyring: or env: reference, never to a token itself.
+func TestTokenRefsNameHostsAndSecrets(t *testing.T) {
+	cases := []struct {
+		references map[string]string
+		valid      bool
+	}{
+		{map[string]string{"gitlab.com": "keyring:gitlab", "git.example.com": "env:GITEA_TOKEN"}, true},
+		{map[string]string{"https://gitlab.com": "keyring:gitlab"}, false},
+		{map[string]string{"gitlab.com": "glpat-not-a-reference"}, false},
+	}
+	for _, testCase := range cases {
+		config := Default()
+		config.SCM.TokenRefs = testCase.references
+		if err := config.Validate(); (err == nil) != testCase.valid {
+			t.Errorf("%v: error %v, want valid %v", testCase.references, err, testCase.valid)
+		}
+	}
+}

@@ -118,17 +118,18 @@ type Result struct {
 
 // Dependencies are what the pipeline needs from the outside world.
 type Dependencies struct {
-	Config      config.Config
-	Workspace   *workspace.Workspace
-	Guard       *netguard.Guard
-	Inspector   *images.Inspector
-	Sandbox     *sandbox.Sandbox
-	Assistant   *llm.Assistant
-	Observer    Observer
-	Approve     Approval
-	Repairer    Repairer
-	GitHubToken string
-	Version     string
+	Config    config.Config
+	Workspace *workspace.Workspace
+	Guard     *netguard.Guard
+	Inspector *images.Inspector
+	Sandbox   *sandbox.Sandbox
+	Assistant *llm.Assistant
+	Observer  Observer
+	Approve   Approval
+	Repairer  Repairer
+	// Tokens are the code hosts' tokens, by host name.
+	Tokens  map[string]string
+	Version string
 }
 
 func (options Options) Check() error {
@@ -359,18 +360,26 @@ func approveAndValidate(ctx context.Context, dependencies Dependencies, options 
 	return validationLoop(ctx, dependencies, options, result, result.Generation.Iteration)
 }
 
-// openSource fetches a GitHub repository as a tarball, or uses a local
-// directory as it is, or unpacks a local .zip or .tar.gz.
+// offlineFetchProblem and unsupportedURLProblem say why a repository URL
+// is not read.
+const (
+	offlineFetchProblem   = "fetching from %s needs network access through netguard"
+	unsupportedURLProblem = "%s: only https://<host>/<owner>/<repository> URLs of a GitHub, GitLab or Gitea host in scm.allow_hosts (%s), " +
+		"local directories and .zip or .tar.gz archives are supported"
+)
+
+// openSource fetches a repository from its code host as a tarball, or uses
+// a local directory as it is, or unpacks a local .zip or .tar.gz.
 func openSource(ctx context.Context, dependencies Dependencies, options Options) (*fetch.Source, error) {
-	owner, repository, isGitHub := fetch.ParseGitHub(options.Source)
-	if isGitHub && dependencies.Guard == nil {
-		return nil, errors.New("fetching from GitHub needs network access through netguard")
+	location, isRemote := fetch.ParseRepository(options.Source)
+	if isRemote && dependencies.Guard == nil {
+		return nil, fmt.Errorf(offlineFetchProblem, location.Host)
 	}
-	if isGitHub {
-		return fetch.GitHub(ctx, dependencies.Guard, dependencies.GitHubToken, owner, repository, options.Ref)
+	if isRemote {
+		return fetch.Remote(ctx, dependencies.Guard, dependencies.Tokens[location.Host], location, options.Ref)
 	}
 	if remoteURL(options.Source) {
-		return nil, fmt.Errorf("%s: only https://github.com/<owner>/<repository> URLs, local directories and .zip or .tar.gz archives are supported", options.Source)
+		return nil, fmt.Errorf(unsupportedURLProblem, options.Source, strings.Join(dependencies.Config.SCM.AllowHosts, ", "))
 	}
 	source, err := fetch.Local(options.Source, options.Upstream)
 	if err == nil && options.Uploaded {

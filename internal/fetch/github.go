@@ -76,6 +76,7 @@ const (
 	tarballPath        = "/tarball"
 	latestReleasePath  = "/releases/latest"
 	maxReleaseBytes    = 1 << 20
+	invalidRef         = "ref %q is not a branch, tag or commit"
 )
 
 var refPattern = regexp.MustCompile(`^[A-Za-z0-9._/-]{1,200}$`)
@@ -89,7 +90,7 @@ var refPattern = regexp.MustCompile(`^[A-Za-z0-9._/-]{1,200}$`)
 // describe the image people pull; the default branch can be ahead of it.
 func GitHub(ctx context.Context, guard *netguard.Guard, token, owner, repository, ref string) (*Source, error) {
 	if ref != "" && !validRef(ref) {
-		return nil, fmt.Errorf("ref %q is not a branch, tag or commit", ref)
+		return nil, fmt.Errorf(invalidRef, ref)
 	}
 	if ref == "" {
 		release, err := latestRelease(ctx, guard, token, owner, repository)

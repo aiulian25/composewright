@@ -171,8 +171,8 @@ func (stored *Stored) verifiedImages() (map[string]images.Metadata, map[string]p
 const Revealed = ""
 
 // Rereadable reports whether the project's source can be read again: a
-// GitHub repository, or a folder or archive on this machine, not files
-// someone uploaded or pasted.
+// repository on a code host, or a folder or archive on this machine, not
+// files someone uploaded or pasted.
 func (stored *Stored) Rereadable() bool {
 	return !stored.Options.Uploaded
 }
@@ -206,8 +206,8 @@ func (stored *Stored) CanBuildFrom(path string) bool {
 // Regeneration are the options that generate the project again from its
 // source as its latest version was, with the optional services enabled
 // switched on, from the compose file composeFile when one is named. A
-// GitHub repository is read at the stored commit, so the files are the
-// same.
+// repository on a code host is read at the stored commit, so the files are
+// the same.
 func (stored *Stored) Regeneration(enabled []string, composeFile string) (Options, error) {
 	if !stored.Rereadable() {
 		return Options{}, ErrNotRereadable
@@ -217,7 +217,7 @@ func (stored *Stored) Regeneration(enabled []string, composeFile string) (Option
 		Upstream: kept.Upstream, ExposeVia: kept.ExposeVia, Networks: kept.Networks, PublicHost: kept.PublicHost, Storage: kept.Storage, ProfileFile: kept.ProfileFile,
 		AllowNeeds: kept.AllowNeeds, AllowRegistries: kept.AllowRegistries, BenignLogPatterns: kept.BenignLogPatterns, EnabledOptional: enabled,
 		ComposeFile: cmp.Or(composeFile, kept.ComposeFile), Ports: kept.Ports, ImageTags: kept.ImageTags, Regenerating: true}
-	if project.SourceKind == fetch.SourceGitHub && project.SourceCommit != "" {
+	if project.SourceKind != fetch.SourceLocal && project.SourceCommit != "" {
 		options.Ref = project.SourceCommit
 	}
 	return options, nil

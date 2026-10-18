@@ -12,6 +12,8 @@ import (
 const (
 	SourceLocal  = "local"
 	SourceGitHub = "github"
+	SourceGitLab = "gitlab"
+	SourceGitea  = "gitea"
 )
 
 // unpackedNote says what an archive held and what of it was kept.

@@ -91,10 +91,11 @@ func (application *app) rootCommand() *cobra.Command {
 	root := &cobra.Command{
 		Use:   "composewright",
 		Short: "Turn a repository into a validated compose.yaml and a documented .env",
-		Long: `composewright reads a repository (a GitHub URL or a local directory), works out how
-the application is meant to be deployed, writes a compose.yaml and a documented
-.env with every secret generated, and proves the stack boots by running it in an
-isolated, resource-capped Compose project before you deploy it yourself.
+		Long: `composewright reads a repository (a GitHub, GitLab or Gitea URL or a local
+directory), works out how the application is meant to be deployed, writes a
+compose.yaml and a documented .env with every secret generated, and proves the
+stack boots by running it in an isolated, resource-capped Compose project
+before you deploy it yourself.
 
 Deterministic rules fill the plan first; a language model (Ollama, Anthropic or
 any OpenAI-compatible endpoint) is only asked about what the rules could not

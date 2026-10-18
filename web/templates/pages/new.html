@@ -10,14 +10,16 @@
     <div class="card-head"><h2 id="repository-title">{{template "icon-branch"}}Repository</h2></div>
     <div class="card-body">
       <div class="repository-row">
-        <label class="input-icon" for="source">{{template "icon-link"}}<input id="source" name="source" type="text" placeholder="github.com/miniflux/v2 or a folder on this machine" value="{{.Source}}" autocomplete="off" spellcheck="false"></label>
+        <label class="input-icon" for="source">{{template "icon-link"}}<input id="source" name="source" type="text" placeholder="github.com/miniflux/v2, a GitLab or Codeberg link, or a folder on this machine" value="{{.Source}}" autocomplete="off" spellcheck="false"></label>
         <input id="ref" name="ref" type="text" placeholder="default branch" value="{{.Ref}}" aria-label="Branch, tag or commit" autocomplete="off" spellcheck="false">
         <button class="button button-primary" type="submit">{{template "icon-download"}}Fetch <span class="kbd">Enter</span></button>
       </div>
       <div class="row">
         <span class="chip chip-neutral">GitHub</span>
+        <span class="chip chip-neutral">GitLab</span>
+        <span class="chip chip-neutral">Gitea and Forgejo</span>
         <span class="chip chip-neutral">a folder on this machine</span>
-        <span class="muted small">Fetched through the GitHub API as a tarball: no git clone, no hooks, no submodules.</span>
+        <span class="muted small">Fetched through the code host's API as a tarball: no git clone, no hooks, no submodules.</span>
       </div>
     </div>
   </section>
@@ -63,10 +65,10 @@
 <div class="context-section">
   <p class="context-hint">What happens when you press Fetch. Nothing from the repository is executed.</p>
   <dl class="kv">
-    <dt>request</dt><dd>GET api.github.com/repos/…/tarball</dd>
+    <dt>request</dt><dd>GET the tarball from the code host's API</dd>
     <dt>through</dt><dd>netguard, code host allowlist</dd>
     <dt>size cap</dt><dd>{{.Data.ArchiveLimit}} compressed</dd>
-    <dt>too large</dt><dd>trees API, relevant files only</dd>
+    <dt>too large</dt><dd>GitHub trees API, relevant files only</dd>
     <dt>extract</dt><dd>into an os.Root jail</dd>
     <dt>refuse</dt><dd>symlinks out, devices, setuid bits</dd>
     <dt>keep</dt><dd>README, compose, Dockerfile, env samples, docs</dd>
@@ -78,6 +80,7 @@
   <h3>Accepted sources</h3>
   <ul class="context-list">
     <li>github.com/&lt;owner&gt;/&lt;repo&gt;</li>
+    <li>a GitLab, Codeberg, Gitea or Forgejo repository link, once its host is under Code hosts in Settings › Advanced</li>
     <li>/path/to/a/folder on this machine</li>
     <li>one .zip or .tar.gz of a repository</li>
     <li>files you drop or paste</li>

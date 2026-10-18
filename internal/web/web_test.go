@@ -1720,6 +1720,18 @@ func TestTrustOffers(t *testing.T) {
 	}
 }
 
+// TestTrustOffersReadEarlierVersions: a warning stored while it named the
+// GitHub owner still offers the namespace to trust.
+func TestTrustOffersReadEarlierVersions(t *testing.T) {
+	const stored = "image docker.io/miniflux/miniflux is trusted only because its namespace matches the GitHub owner miniflux; " +
+		"docker.io accounts are not GitHub's, so trust docker.io/miniflux/* if it is the project's own"
+	plan := &ir.IR{Services: []ir.Service{{Name: "app", Image: ir.Image{Registry: "docker.io", Repository: "miniflux/miniflux", Tag: "2"}}}}
+	report := policy.Report{Findings: []policy.Finding{{Rule: "P1", Severity: policy.Warn, Service: "app", Message: stored}}}
+	if offers := trustOffers(plan, report, nil); !slices.Equal(offers, []trustOffer{{Pattern: "docker.io/miniflux/*"}}) {
+		t.Fatalf("offers %+v", offers)
+	}
+}
+
 // TestTrustingANamespaceAlways: trusting for one project leaves
 // registries.allow alone; the Always button writes the namespace there,
 // audits the change and lifts the block on this project at once, and the
