@@ -20,6 +20,17 @@ func TestIsSecretSetting(t *testing.T) {
 		{"POSTGRES_PASSWORD_FILE", "/run/secrets/db", false},
 		{"TOKEN_LIFETIME_HOURS", "24", false},
 		{"APP_URL", "http://localhost", false},
+		{"MAILER_DSN", "smtp://127.0.0.1", false},
+		{"MAILER_DSN", "smtp://mail:25/", false},
+		{"DATABASE_DSN", "sqlite:///data/app.db", false},
+		{"MAILER_DSN", "smtp://user:hunter2@mail.example.com:587", true},
+		{"MAILER_DSN", "smtp://mail.example.com?api_key=abc123", true},
+		{"SENTRY_DSN", "https://publickey@o1.ingest.sentry.io/2", true},
+		{"DB_PASSWORD", "Tr0ub4dor://x9", true},
+		{"APP_KEY", "base64:/Zm9vYmFyYmF6cXV4", true},
+		{"DB_PASSWORD", "Tr0ub4dor:/x9", true},
+		{"NOTIFY_SECRET", "discord://123456/abcdefTOKEN", true},
+		{"SLACK_WEBHOOK_TOKEN", "https://hooks.slack.com/services/T/B/XXXX", true},
 	}
 	for _, testCase := range cases {
 		if got := IsSecretSetting(testCase.name, testCase.value); got != testCase.secret {

@@ -46,6 +46,11 @@ const (
 	minimumVariants = 2
 	serviceSingular = "service"
 	servicePlural   = "services"
+	// composeExample and composeExamples count the compose examples of
+	// the README and docs pages.
+	composeExample   = "compose example in the docs"
+	composeExamples  = "compose examples in the docs"
+	summarySeparator = " · "
 )
 
 type stepInfo struct {
@@ -183,7 +188,11 @@ func factRows(facts *extract.Facts) ([]factRow, []string) {
 	if extra := len(facts.Variables) - variables; extra > 0 {
 		chips = append(chips, fmt.Sprintf("+%d more variables", extra))
 	}
-	chips = append(chips, countText(len(facts.ComposeFiles), "upstream compose file", "upstream compose files")+" (read as hints)")
+	files, examples := facts.ComposeCounts()
+	chips = append(chips, countText(files, "upstream compose file", "upstream compose files")+" (read as hints)")
+	if examples > 0 {
+		chips = append(chips, countText(examples, composeExample, composeExamples))
+	}
 	chips = append(chips, countText(len(facts.Suspicious), "suspicious instruction", "suspicious instructions")+" in the documentation")
 	return rows, chips
 }
@@ -198,9 +207,14 @@ func extractSummary(facts *extract.Facts) string {
 			images[service.Image] = service.Image != ""
 		}
 	}
-	return fmt.Sprintf("%s · %s · %s · %s", countText(len(facts.Variables), "variable", "variables"),
-		countText(len(images), "image", "images"), countText(len(facts.ComposeFiles), "compose file", "compose files"),
-		countText(len(facts.Files), "file read", "files read"))
+	files, examples := facts.ComposeCounts()
+	parts := []string{countText(len(facts.Variables), "variable", "variables"), countText(len(images), "image", "images"),
+		countText(files, "compose file", "compose files")}
+	if examples > 0 {
+		parts = append(parts, countText(examples, composeExample, composeExamples))
+	}
+	parts = append(parts, countText(len(facts.Files), "file read", "files read"))
+	return strings.Join(parts, summarySeparator)
 }
 
 func countText(count int, one, many string) string {

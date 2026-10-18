@@ -4,7 +4,280 @@
     "README.md",
     "root/etc/wallabag/parameters.template.yml"
   ],
-  "compose_files": null,
+  "compose_files": [
+    {
+      "path": "README.md#L111",
+      "services": [
+        {
+          "name": "wallabag",
+          "location": {
+            "file": "README.md#L111",
+            "line": 113
+          },
+          "image": "wallabag/wallabag",
+          "image_at": {
+            "file": "README.md#L111",
+            "line": 114
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 80,
+              "published": "",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "README.md#L111",
+                "line": 131
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "/opt/wallabag/images",
+              "target": "/var/www/wallabag/web/assets/images",
+              "read_only": false,
+              "location": {
+                "file": "README.md#L111",
+                "line": 133
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "MYSQL_ROOT_PASSWORD",
+              "raw": "wallaroot",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L111",
+                "line": 117
+              }
+            },
+            {
+              "key": "SYMFONY__ENV__DATABASE_DRIVER",
+              "raw": "pdo_mysql",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L111",
+                "line": 118
+              }
+            },
+            {
+              "key": "SYMFONY__ENV__DATABASE_HOST",
+              "raw": "db",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L111",
+                "line": 119
+              }
+            },
+            {
+              "key": "SYMFONY__ENV__DATABASE_PORT",
+              "raw": "3306",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L111",
+                "line": 120
+              }
+            },
+            {
+              "key": "SYMFONY__ENV__DATABASE_NAME",
+              "raw": "wallabag",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L111",
+                "line": 121
+              }
+            },
+            {
+              "key": "SYMFONY__ENV__DATABASE_USER",
+              "raw": "wallabag",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L111",
+                "line": 122
+              }
+            },
+            {
+              "key": "SYMFONY__ENV__DATABASE_PASSWORD",
+              "raw": "wallapass",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L111",
+                "line": 123
+              }
+            },
+            {
+              "key": "SYMFONY__ENV__DATABASE_CHARSET",
+              "raw": "utf8mb4",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L111",
+                "line": 124
+              }
+            },
+            {
+              "key": "SYMFONY__ENV__DATABASE_TABLE_PREFIX",
+              "raw": "\"wallabag_\"",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L111",
+                "line": 125
+              }
+            },
+            {
+              "key": "SYMFONY__ENV__MAILER_DSN",
+              "raw": "smtp://127.0.0.1",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L111",
+                "line": 126
+              }
+            },
+            {
+              "key": "SYMFONY__ENV__FROM_EMAIL",
+              "raw": "wallabag@example.com",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L111",
+                "line": 127
+              }
+            },
+            {
+              "key": "SYMFONY__ENV__DOMAIN_NAME",
+              "raw": "https://your-wallabag-instance.wallabag.org",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L111",
+                "line": 128
+              }
+            },
+            {
+              "key": "SYMFONY__ENV__SERVER_NAME",
+              "raw": "\"Your wallabag instance\"",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L111",
+                "line": 129
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": [
+            {
+              "service": "db",
+              "condition": "service_started"
+            },
+            {
+              "service": "redis",
+              "condition": "service_started"
+            }
+          ],
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "db",
+          "location": {
+            "file": "README.md#L111",
+            "line": 137
+          },
+          "image": "mariadb",
+          "image_at": {
+            "file": "README.md#L111",
+            "line": 138
+          },
+          "build": false,
+          "ports": null,
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "/opt/wallabag/data",
+              "target": "/var/lib/mysql",
+              "read_only": false,
+              "location": {
+                "file": "README.md#L111",
+                "line": 143
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "MYSQL_ROOT_PASSWORD",
+              "raw": "wallaroot",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L111",
+                "line": 141
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "healthcheck": {
+            "test": [
+              "CMD",
+              "/usr/local/bin/healthcheck.sh",
+              "--innodb_initialized"
+            ],
+            "interval": "20s",
+            "timeout": "3s",
+            "start_period": "",
+            "retries": 0,
+            "disabled": false,
+            "location": {
+              "file": "README.md#L111",
+              "line": 144
+            }
+          },
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "redis",
+          "location": {
+            "file": "README.md#L111",
+            "line": 148
+          },
+          "image": "redis:alpine",
+          "image_at": {
+            "file": "README.md#L111",
+            "line": 149
+          },
+          "build": false,
+          "ports": null,
+          "volumes": null,
+          "environment": null,
+          "env_files": null,
+          "depends_on": null,
+          "healthcheck": {
+            "test": [
+              "CMD",
+              "redis-cli",
+              "ping"
+            ],
+            "interval": "20s",
+            "timeout": "3s",
+            "start_period": "",
+            "retries": 0,
+            "disabled": false,
+            "location": {
+              "file": "README.md#L111",
+              "line": 151
+            }
+          },
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": [],
+      "fenced": true
+    }
+  ],
   "dockerfiles": [
     {
       "path": "Dockerfile",
@@ -92,6 +365,24 @@
             "file": "README.md",
             "line": 65
           }
+        },
+        {
+          "name": "MYSQL_ROOT_PASSWORD",
+          "kind": "readme",
+          "default": "wallaroot",
+          "location": {
+            "file": "README.md#L111",
+            "line": 117
+          }
+        },
+        {
+          "name": "MYSQL_ROOT_PASSWORD",
+          "kind": "readme",
+          "default": "wallaroot",
+          "location": {
+            "file": "README.md#L111",
+            "line": 141
+          }
         }
       ]
     },
@@ -147,6 +438,142 @@
       ]
     },
     {
+      "name": "SYMFONY__ENV__DATABASE_CHARSET",
+      "default": "utf8mb4",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SYMFONY__ENV__DATABASE_CHARSET",
+          "kind": "readme",
+          "default": "utf8mb4",
+          "location": {
+            "file": "README.md#L111",
+            "line": 124
+          }
+        }
+      ]
+    },
+    {
+      "name": "SYMFONY__ENV__DATABASE_DRIVER",
+      "default": "pdo_mysql",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SYMFONY__ENV__DATABASE_DRIVER",
+          "kind": "readme",
+          "default": "pdo_mysql",
+          "location": {
+            "file": "README.md#L111",
+            "line": 118
+          }
+        }
+      ]
+    },
+    {
+      "name": "SYMFONY__ENV__DATABASE_HOST",
+      "default": "db",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SYMFONY__ENV__DATABASE_HOST",
+          "kind": "readme",
+          "default": "db",
+          "location": {
+            "file": "README.md#L111",
+            "line": 119
+          }
+        }
+      ]
+    },
+    {
+      "name": "SYMFONY__ENV__DATABASE_NAME",
+      "default": "wallabag",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SYMFONY__ENV__DATABASE_NAME",
+          "kind": "readme",
+          "default": "wallabag",
+          "location": {
+            "file": "README.md#L111",
+            "line": 121
+          }
+        }
+      ]
+    },
+    {
+      "name": "SYMFONY__ENV__DATABASE_PASSWORD",
+      "default": "wallapass",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SYMFONY__ENV__DATABASE_PASSWORD",
+          "kind": "readme",
+          "default": "wallapass",
+          "location": {
+            "file": "README.md#L111",
+            "line": 123
+          }
+        }
+      ]
+    },
+    {
+      "name": "SYMFONY__ENV__DATABASE_PORT",
+      "default": "3306",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SYMFONY__ENV__DATABASE_PORT",
+          "kind": "readme",
+          "default": "3306",
+          "location": {
+            "file": "README.md#L111",
+            "line": 120
+          }
+        }
+      ]
+    },
+    {
+      "name": "SYMFONY__ENV__DATABASE_TABLE_PREFIX",
+      "default": "\"wallabag_\"",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SYMFONY__ENV__DATABASE_TABLE_PREFIX",
+          "kind": "readme",
+          "default": "\"wallabag_\"",
+          "location": {
+            "file": "README.md#L111",
+            "line": 125
+          }
+        }
+      ]
+    },
+    {
+      "name": "SYMFONY__ENV__DATABASE_USER",
+      "default": "wallabag",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SYMFONY__ENV__DATABASE_USER",
+          "kind": "readme",
+          "default": "wallabag",
+          "location": {
+            "file": "README.md#L111",
+            "line": 122
+          }
+        }
+      ]
+    },
+    {
       "name": "SYMFONY__ENV__DOMAIN_NAME",
       "default": "http://localhost",
       "description": "",
@@ -187,6 +614,49 @@
             "file": "README.md",
             "line": 90
           }
+        },
+        {
+          "name": "SYMFONY__ENV__DOMAIN_NAME",
+          "kind": "readme",
+          "default": "https://your-wallabag-instance.wallabag.org",
+          "location": {
+            "file": "README.md#L111",
+            "line": 128
+          }
+        }
+      ]
+    },
+    {
+      "name": "SYMFONY__ENV__FROM_EMAIL",
+      "default": "wallabag@example.com",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SYMFONY__ENV__FROM_EMAIL",
+          "kind": "readme",
+          "default": "wallabag@example.com",
+          "location": {
+            "file": "README.md#L111",
+            "line": 127
+          }
+        }
+      ]
+    },
+    {
+      "name": "SYMFONY__ENV__MAILER_DSN",
+      "default": "smtp://127.0.0.1",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SYMFONY__ENV__MAILER_DSN",
+          "kind": "readme",
+          "default": "smtp://127.0.0.1",
+          "location": {
+            "file": "README.md#L111",
+            "line": 126
+          }
         }
       ]
     },
@@ -223,9 +693,50 @@
           }
         }
       ]
+    },
+    {
+      "name": "SYMFONY__ENV__SERVER_NAME",
+      "default": "\"Your wallabag instance\"",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SYMFONY__ENV__SERVER_NAME",
+          "kind": "readme",
+          "default": "\"Your wallabag instance\"",
+          "location": {
+            "file": "README.md#L111",
+            "line": 129
+          }
+        }
+      ]
     }
   ],
   "images": [
+    {
+      "reference": "wallabag/wallabag",
+      "kind": "compose",
+      "location": {
+        "file": "README.md#L111",
+        "line": 114
+      }
+    },
+    {
+      "reference": "mariadb",
+      "kind": "compose",
+      "location": {
+        "file": "README.md#L111",
+        "line": 138
+      }
+    },
+    {
+      "reference": "redis:alpine",
+      "kind": "compose",
+      "location": {
+        "file": "README.md#L111",
+        "line": 149
+      }
+    },
     {
       "reference": "wallabag/wallabag",
       "kind": "readme",

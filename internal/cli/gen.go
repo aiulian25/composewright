@@ -264,8 +264,9 @@ func short(identifier string) string {
 // printFacts is the CLI form of the Analyse screen: every row names the file
 // and line it came from.
 func (application *app) printFacts(output io.Writer, facts *extract.Facts) error {
-	fmt.Fprintf(output, "%d files read · %d compose files · %d Dockerfiles · %d env samples · %d variables\n\n",
-		len(facts.Files), len(facts.ComposeFiles), len(facts.Dockerfiles), len(facts.EnvSamples), len(facts.Variables))
+	composeFiles, composeExamples := facts.ComposeCounts()
+	fmt.Fprintf(output, "%d files read · %d compose files · %d compose examples in the docs · %d Dockerfiles · %d env samples · %d variables\n\n",
+		len(facts.Files), composeFiles, composeExamples, len(facts.Dockerfiles), len(facts.EnvSamples), len(facts.Variables))
 	rows := [][]string{{"KIND", "VALUE", "SOURCE"}}
 	for _, image := range facts.Images {
 		rows = append(rows, []string{"image", sanitize(image.Reference), image.Location.String()})

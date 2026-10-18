@@ -6,7 +6,158 @@
     "jenkins-vars.yml",
     "readme-vars.yml"
   ],
-  "compose_files": null,
+  "compose_files": [
+    {
+      "path": "README.md#L116",
+      "services": [
+        {
+          "name": "bookstack",
+          "location": {
+            "file": "README.md#L116",
+            "line": 119
+          },
+          "image": "lscr.io/linuxserver/bookstack:latest",
+          "image_at": {
+            "file": "README.md#L116",
+            "line": 120
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 80,
+              "published": "6875",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "README.md#L116",
+                "line": 137
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "/path/to/bookstack/config",
+              "target": "/config",
+              "read_only": false,
+              "location": {
+                "file": "README.md#L116",
+                "line": 135
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "PUID",
+              "raw": "1000",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L116",
+                "line": 123
+              }
+            },
+            {
+              "key": "PGID",
+              "raw": "1000",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L116",
+                "line": 124
+              }
+            },
+            {
+              "key": "TZ",
+              "raw": "Etc/UTC",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L116",
+                "line": 125
+              }
+            },
+            {
+              "key": "APP_URL",
+              "raw": "",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L116",
+                "line": 126
+              }
+            },
+            {
+              "key": "APP_KEY",
+              "raw": "",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L116",
+                "line": 127
+              }
+            },
+            {
+              "key": "DB_HOST",
+              "raw": "",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L116",
+                "line": 128
+              }
+            },
+            {
+              "key": "DB_PORT",
+              "raw": "3306",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L116",
+                "line": 129
+              }
+            },
+            {
+              "key": "DB_USERNAME",
+              "raw": "",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L116",
+                "line": 130
+              }
+            },
+            {
+              "key": "DB_PASSWORD",
+              "raw": "",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L116",
+                "line": 131
+              }
+            },
+            {
+              "key": "DB_DATABASE",
+              "raw": "",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L116",
+                "line": 132
+              }
+            },
+            {
+              "key": "QUEUE_CONNECTION",
+              "raw": "",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L116",
+                "line": 133
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": [],
+      "fenced": true
+    }
+  ],
   "dockerfiles": [
     {
       "path": "Dockerfile",
@@ -172,6 +323,14 @@
             "file": "README.md",
             "line": 144
           }
+        },
+        {
+          "name": "APP_KEY",
+          "kind": "readme",
+          "location": {
+            "file": "README.md#L116",
+            "line": 127
+          }
         }
       ]
     },
@@ -187,6 +346,14 @@
           "location": {
             "file": "README.md",
             "line": 144
+          }
+        },
+        {
+          "name": "APP_URL",
+          "kind": "readme",
+          "location": {
+            "file": "README.md#L116",
+            "line": 126
           }
         }
       ]
@@ -204,6 +371,14 @@
             "file": "README.md",
             "line": 144
           }
+        },
+        {
+          "name": "DB_DATABASE",
+          "kind": "readme",
+          "location": {
+            "file": "README.md#L116",
+            "line": 132
+          }
         }
       ]
     },
@@ -220,6 +395,14 @@
             "file": "README.md",
             "line": 144
           }
+        },
+        {
+          "name": "DB_HOST",
+          "kind": "readme",
+          "location": {
+            "file": "README.md#L116",
+            "line": 128
+          }
         }
       ]
     },
@@ -235,6 +418,14 @@
           "location": {
             "file": "README.md",
             "line": 144
+          }
+        },
+        {
+          "name": "DB_PASSWORD",
+          "kind": "readme",
+          "location": {
+            "file": "README.md#L116",
+            "line": 131
           }
         }
       ]
@@ -253,6 +444,15 @@
             "file": "README.md",
             "line": 144
           }
+        },
+        {
+          "name": "DB_PORT",
+          "kind": "readme",
+          "default": "3306",
+          "location": {
+            "file": "README.md#L116",
+            "line": 129
+          }
         }
       ]
     },
@@ -268,6 +468,14 @@
           "location": {
             "file": "README.md",
             "line": 144
+          }
+        },
+        {
+          "name": "DB_USERNAME",
+          "kind": "readme",
+          "location": {
+            "file": "README.md#L116",
+            "line": 130
           }
         }
       ]
@@ -286,6 +494,15 @@
             "file": "README.md",
             "line": 144
           }
+        },
+        {
+          "name": "PGID",
+          "kind": "readme",
+          "default": "1000",
+          "location": {
+            "file": "README.md#L116",
+            "line": 124
+          }
         }
       ]
     },
@@ -303,6 +520,15 @@
             "file": "README.md",
             "line": 144
           }
+        },
+        {
+          "name": "PUID",
+          "kind": "readme",
+          "default": "1000",
+          "location": {
+            "file": "README.md#L116",
+            "line": 123
+          }
         }
       ]
     },
@@ -318,6 +544,14 @@
           "location": {
             "file": "README.md",
             "line": 144
+          }
+        },
+        {
+          "name": "QUEUE_CONNECTION",
+          "kind": "readme",
+          "location": {
+            "file": "README.md#L116",
+            "line": 133
           }
         }
       ]
@@ -362,11 +596,28 @@
             "file": "README.md",
             "line": 144
           }
+        },
+        {
+          "name": "TZ",
+          "kind": "readme",
+          "default": "Etc/UTC",
+          "location": {
+            "file": "README.md#L116",
+            "line": 125
+          }
         }
       ]
     }
   ],
   "images": [
+    {
+      "reference": "lscr.io/linuxserver/bookstack:latest",
+      "kind": "compose",
+      "location": {
+        "file": "README.md#L116",
+        "line": 120
+      }
+    },
     {
       "reference": "quay.io/repository/linuxserver.io/bookstack",
       "kind": "readme",

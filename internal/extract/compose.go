@@ -56,12 +56,15 @@ var referenceName = regexp.MustCompile(`\$\{?([A-Za-z_][A-Za-z0-9_]*)`)
 
 // extractCompose reads one compose file twice: as YAML nodes for line numbers
 // and raw environment values, and through compose-go for normalised ports,
-// volumes and healthchecks, interpolated with the upstream defaults.
-func extractCompose(ctx context.Context, relative string, content []byte, interpolation map[string]string) (ComposeFile, []Mention, error) {
+// volumes and healthchecks, interpolated with the upstream defaults. Line
+// numbers are shifted by lineOffset, the lines above a block fenced in a
+// page.
+func extractCompose(ctx context.Context, relative string, content []byte, lineOffset int, interpolation map[string]string) (ComposeFile, []Mention, error) {
 	var document yaml.Node
 	if err := yaml.Unmarshal(content, &document); err != nil {
 		return ComposeFile{}, nil, errNotCompose
 	}
+	shiftLines(&document, lineOffset)
 	root := documentRoot(&document)
 	services := child(root, "services")
 	if !isCompose(root, services) {
@@ -75,7 +78,7 @@ func extractCompose(ctx context.Context, relative string, content []byte, interp
 		return ComposeFile{}, nil, fmt.Errorf("%s: %w", relative, err)
 	}
 	extracted := variablesInOrder(root)
-	mentions := interpolationMentions(relative, content, extracted)
+	mentions := interpolationMentions(relative, content, lineOffset, extracted)
 	environment := map[string]string{}
 	for name, value := range interpolation {
 		environment[name] = value
@@ -425,7 +428,7 @@ func environmentMention(variable ComposeVariable) Mention {
 	return mention
 }
 
-func interpolationMentions(relative string, content []byte, variables map[string]template.Variable) []Mention {
+func interpolationMentions(relative string, content []byte, lineOffset int, variables map[string]template.Variable) []Mention {
 	lines := strings.Split(string(content), "\n")
 	names := make([]string, 0, len(variables))
 	for name := range variables {
@@ -438,7 +441,7 @@ func interpolationMentions(relative string, content []byte, variables map[string
 		line := 0
 		for index, text := range lines {
 			if strings.Contains(text, "${"+name) || strings.Contains(text, "$"+name) {
-				line = index + 1
+				line = lineOffset + index + 1
 				break
 			}
 		}
@@ -446,6 +449,13 @@ func interpolationMentions(relative string, content []byte, variables map[string
 			Location: Location{File: relative, Line: line}})
 	}
 	return mentions
+}
+
+func shiftLines(node *yaml.Node, lineOffset int) {
+	node.Line += lineOffset
+	for _, content := range node.Content {
+		shiftLines(content, lineOffset)
+	}
 }
 
 // References lists the ${VAR} names used inside a raw compose value.

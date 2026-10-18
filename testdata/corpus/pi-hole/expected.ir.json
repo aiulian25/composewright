@@ -1,14 +1,14 @@
 {
   "ir_version": "1",
   "app": {
-    "name": "docker-pi-hole",
+    "name": "pihole",
     "summary": "Using Docker-compose:",
     "upstream_url": "https://github.com/pi-hole/docker-pi-hole",
     "docs_url": ""
   },
   "services": [
     {
-      "name": "docker-pi-hole",
+      "name": "pihole",
       "role": "app",
       "image": {
         "registry": "docker.io",
@@ -16,14 +16,54 @@
         "tag": "latest",
         "digest": "",
         "provenance": {
-          "source": "readme",
-          "source_ref": "README.md:45",
-          "confidence": "medium"
+          "source": "compose",
+          "source_ref": "README.md#L40:45",
+          "confidence": "high"
         }
       },
       "command": [],
       "entrypoint": [],
-      "env": [],
+      "env": [
+        {
+          "key": "TZ",
+          "ref": "TZ",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "README.md#L40:60",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "FTLCONF_webserver_api_password",
+          "ref": "FTLCONF_webserver_api_password",
+          "literal": "",
+          "required": true,
+          "secret": true,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "README.md#L40:62",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "FTLCONF_dns_listeningMode",
+          "ref": "FTLCONF_dns_listeningMode",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "README.md#L40:64",
+            "confidence": "high"
+          }
+        }
+      ],
       "ports": [
         {
           "container": 53,
@@ -32,9 +72,9 @@
           "host_port": 0,
           "description": "",
           "provenance": {
-            "source": "dockerfile",
-            "source_ref": "src/Dockerfile:104",
-            "confidence": "medium"
+            "source": "compose",
+            "source_ref": "README.md#L40:48",
+            "confidence": "high"
           }
         },
         {
@@ -44,21 +84,9 @@
           "host_port": 0,
           "description": "",
           "provenance": {
-            "source": "dockerfile",
-            "source_ref": "src/Dockerfile:104",
-            "confidence": "medium"
-          }
-        },
-        {
-          "container": 67,
-          "protocol": "udp",
-          "publish": true,
-          "host_port": 0,
-          "description": "",
-          "provenance": {
-            "source": "dockerfile",
-            "source_ref": "src/Dockerfile:105",
-            "confidence": "medium"
+            "source": "compose",
+            "source_ref": "README.md#L40:49",
+            "confidence": "high"
           }
         },
         {
@@ -68,21 +96,9 @@
           "host_port": 0,
           "description": "",
           "provenance": {
-            "source": "dockerfile",
-            "source_ref": "src/Dockerfile:106",
-            "confidence": "medium"
-          }
-        },
-        {
-          "container": 123,
-          "protocol": "udp",
-          "publish": true,
-          "host_port": 0,
-          "description": "",
-          "provenance": {
-            "source": "dockerfile",
-            "source_ref": "src/Dockerfile:107",
-            "confidence": "medium"
+            "source": "compose",
+            "source_ref": "README.md#L40:51",
+            "confidence": "high"
           }
         },
         {
@@ -92,13 +108,24 @@
           "host_port": 0,
           "description": "",
           "provenance": {
-            "source": "dockerfile",
-            "source_ref": "src/Dockerfile:108",
-            "confidence": "medium"
+            "source": "compose",
+            "source_ref": "README.md#L40:53",
+            "confidence": "high"
           }
         }
       ],
-      "volumes": [],
+      "volumes": [
+        {
+          "name": "etc-pihole",
+          "container_path": "/etc/pihole",
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "README.md#L40:68",
+            "confidence": "high"
+          }
+        }
+      ],
       "depends_on": [],
       "healthcheck": {
         "test": [
@@ -138,27 +165,142 @@
           "confidence": "low"
         }
       },
-      "notes": [],
+      "notes": [
+        "upstream publishes host port 53; a port above 1024 is used so no extra privilege is needed",
+        "upstream publishes host port 53; a port above 1024 is used so no extra privilege is needed",
+        "upstream publishes host port 80; a port above 1024 is used so no extra privilege is needed",
+        "upstream publishes host port 443; a port above 1024 is used so no extra privilege is needed",
+        "upstream bind mount ./etc-pihole:/etc/pihole is a named volume here (use --storage bind for a host folder)"
+      ],
       "provenance": {
-        "source": "readme",
-        "source_ref": "README.md:45",
-        "confidence": "medium"
+        "source": "compose",
+        "source_ref": "README.md#L40:43",
+        "confidence": "high"
       }
     }
   ],
-  "env_file": [],
+  "env_file": [
+    {
+      "key": "TZ",
+      "value": "Europe/London",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "README.md#L40:60",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "FTLCONF_webserver_api_password",
+      "value": "",
+      "generate": "hex32",
+      "secret": true,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "README.md#L40:62",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "FTLCONF_dns_listeningMode",
+      "value": "ALL",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "README.md#L40:64",
+        "confidence": "high"
+      }
+    }
+  ],
   "optional_env": [],
   "optional_services": [],
-  "needs": [],
+  "needs": [
+    {
+      "capability": "cap_add",
+      "service": "pihole",
+      "detail": "NET_ADMIN",
+      "reason": "upstream compose asks for it (README.md#L40:74)",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "README.md#L40:74",
+        "confidence": "high"
+      }
+    },
+    {
+      "capability": "cap_add",
+      "service": "pihole",
+      "detail": "SYS_TIME",
+      "reason": "upstream compose asks for it (README.md#L40:76)",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "README.md#L40:76",
+        "confidence": "high"
+      }
+    },
+    {
+      "capability": "cap_add",
+      "service": "pihole",
+      "detail": "SYS_NICE",
+      "reason": "upstream compose asks for it (README.md#L40:78)",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "README.md#L40:78",
+        "confidence": "high"
+      }
+    }
+  ],
   "probe": {
-    "service": "docker-pi-hole",
+    "service": "pihole",
     "port": 53,
     "path": "/",
     "expect": []
   },
-  "post_install_notes": [],
-  "confidence": "medium",
-  "evidence": [],
+  "post_install_notes": [
+    "FTLCONF_webserver_api_password was generated for you; it is in .env"
+  ],
+  "confidence": "high",
+  "evidence": [
+    {
+      "claim": "compose file README.md#L40 chosen among 1 upstream compose files and 1 compose examples in the docs",
+      "file": "README.md#L40",
+      "line": 0
+    },
+    {
+      "claim": "app image docker.io/pihole/pihole",
+      "file": "README.md#L40",
+      "line": 45
+    },
+    {
+      "claim": "pihole asks for cap_add NET_ADMIN",
+      "file": "README.md#L40",
+      "line": 74
+    },
+    {
+      "claim": "pihole asks for cap_add SYS_TIME",
+      "file": "README.md#L40",
+      "line": 76
+    },
+    {
+      "claim": "pihole asks for cap_add SYS_NICE",
+      "file": "README.md#L40",
+      "line": 78
+    }
+  ],
   "suspicious_instructions": [],
-  "unfilled": []
+  "unfilled": [
+    "env_file.TZ.description",
+    "env_file.FTLCONF_webserver_api_password.description",
+    "env_file.FTLCONF_dns_listeningMode.description"
+  ]
 }

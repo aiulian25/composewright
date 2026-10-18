@@ -1933,6 +1933,135 @@
           }
         }
       ]
+    },
+    {
+      "path": "docs/docs/guides/database-gui.md#L9",
+      "services": [
+        {
+          "name": "pgadmin",
+          "location": {
+            "file": "docs/docs/guides/database-gui.md#L9",
+            "line": 13
+          },
+          "image": "dpage/pgadmin4",
+          "image_at": {
+            "file": "docs/docs/guides/database-gui.md#L9",
+            "line": 14
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 80,
+              "published": "8888",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docs/docs/guides/database-gui.md#L9",
+                "line": 18
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "pgadmin-data",
+              "target": "/var/lib/pgadmin",
+              "read_only": false,
+              "location": {
+                "file": "docs/docs/guides/database-gui.md#L9",
+                "line": 23
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "PGADMIN_DEFAULT_EMAIL",
+              "raw": "admin@example.com",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/guides/database-gui.md#L9",
+                "line": 20
+              }
+            },
+            {
+              "key": "PGADMIN_DEFAULT_PASSWORD",
+              "raw": "strong-password",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/guides/database-gui.md#L9",
+                "line": 21
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": [],
+      "fenced": true
+    },
+    {
+      "path": "docs/docs/guides/remote-machine-learning.md#L22",
+      "services": [
+        {
+          "name": "immich-machine-learning",
+          "location": {
+            "file": "docs/docs/guides/remote-machine-learning.md#L22",
+            "line": 26
+          },
+          "image": "ghcr.io/immich-app/immich-machine-learning:release",
+          "image_at": {
+            "file": "docs/docs/guides/remote-machine-learning.md#L22",
+            "line": 30
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 3003,
+              "published": "3003",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docs/docs/guides/remote-machine-learning.md#L22",
+                "line": 38
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "model-cache",
+              "target": "/cache",
+              "read_only": false,
+              "location": {
+                "file": "docs/docs/guides/remote-machine-learning.md#L22",
+                "line": 35
+              }
+            }
+          ],
+          "environment": null,
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": [
+        {
+          "name": "IMMICH_VERSION",
+          "kind": "compose",
+          "default": "release",
+          "location": {
+            "file": "docs/docs/guides/remote-machine-learning.md#L22",
+            "line": 29
+          }
+        }
+      ],
+      "fenced": true
     }
   ],
   "dockerfiles": [
@@ -4318,6 +4447,15 @@
         {
           "name": "IMMICH_VERSION",
           "kind": "readme",
+          "default": "release",
+          "location": {
+            "file": "docs/docs/guides/remote-machine-learning.md#L22",
+            "line": 29
+          }
+        },
+        {
+          "name": "IMMICH_VERSION",
+          "kind": "readme",
           "default": "v3",
           "text": "Image tags",
           "location": {
@@ -5019,6 +5157,40 @@
           "location": {
             "file": "server/src/services/database-backup.service.ts",
             "line": 444
+          }
+        }
+      ]
+    },
+    {
+      "name": "PGADMIN_DEFAULT_EMAIL",
+      "default": "admin@example.com",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PGADMIN_DEFAULT_EMAIL",
+          "kind": "readme",
+          "default": "admin@example.com",
+          "location": {
+            "file": "docs/docs/guides/database-gui.md#L9",
+            "line": 20
+          }
+        }
+      ]
+    },
+    {
+      "name": "PGADMIN_DEFAULT_PASSWORD",
+      "default": "strong-password",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PGADMIN_DEFAULT_PASSWORD",
+          "kind": "readme",
+          "default": "strong-password",
+          "location": {
+            "file": "docs/docs/guides/database-gui.md#L9",
+            "line": 21
           }
         }
       ]
@@ -5771,10 +5943,26 @@
     },
     {
       "reference": "dpage/pgadmin4",
+      "kind": "compose",
+      "location": {
+        "file": "docs/docs/guides/database-gui.md#L9",
+        "line": 14
+      }
+    },
+    {
+      "reference": "dpage/pgadmin4",
       "kind": "readme",
       "location": {
         "file": "docs/docs/guides/database-gui.md",
         "line": 14
+      }
+    },
+    {
+      "reference": "ghcr.io/immich-app/immich-machine-learning:release",
+      "kind": "compose",
+      "location": {
+        "file": "docs/docs/guides/remote-machine-learning.md#L22",
+        "line": 30
       }
     },
     {

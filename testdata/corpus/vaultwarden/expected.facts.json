@@ -17,7 +17,68 @@
     "src/main.rs",
     "src/util.rs"
   ],
-  "compose_files": null,
+  "compose_files": [
+    {
+      "path": "README.md#L99",
+      "services": [
+        {
+          "name": "vaultwarden",
+          "location": {
+            "file": "README.md#L99",
+            "line": 101
+          },
+          "image": "vaultwarden/server:latest",
+          "image_at": {
+            "file": "README.md#L99",
+            "line": 102
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 80,
+              "published": "8000",
+              "host_ip": "127.0.0.1",
+              "protocol": "tcp",
+              "location": {
+                "file": "README.md#L99",
+                "line": 110
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "./vw-data/",
+              "target": "/data",
+              "read_only": false,
+              "location": {
+                "file": "README.md#L99",
+                "line": 108
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "DOMAIN",
+              "raw": "https://vw.domain.tld",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L99",
+                "line": 106
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": [],
+      "fenced": true
+    }
+  ],
   "dockerfiles": [
     {
       "path": "docker/Dockerfile.alpine",
@@ -2538,6 +2599,15 @@
           "location": {
             "file": "README.md",
             "line": 85
+          }
+        },
+        {
+          "name": "DOMAIN",
+          "kind": "readme",
+          "default": "https://vw.domain.tld",
+          "location": {
+            "file": "README.md#L99",
+            "line": 106
           }
         }
       ]
@@ -5086,6 +5156,14 @@
     }
   ],
   "images": [
+    {
+      "reference": "vaultwarden/server:latest",
+      "kind": "compose",
+      "location": {
+        "file": "README.md#L99",
+        "line": 102
+      }
+    },
     {
       "reference": "quay.io/repository/vaultwarden/server",
       "kind": "readme",

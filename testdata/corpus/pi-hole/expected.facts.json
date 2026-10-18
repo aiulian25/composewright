@@ -6,6 +6,137 @@
   ],
   "compose_files": [
     {
+      "path": "README.md#L40",
+      "services": [
+        {
+          "name": "pihole",
+          "location": {
+            "file": "README.md#L40",
+            "line": 43
+          },
+          "image": "pihole/pihole:latest",
+          "image_at": {
+            "file": "README.md#L40",
+            "line": 45
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 53,
+              "published": "53",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "README.md#L40",
+                "line": 48
+              }
+            },
+            {
+              "target": 53,
+              "published": "53",
+              "host_ip": "",
+              "protocol": "udp",
+              "location": {
+                "file": "README.md#L40",
+                "line": 49
+              }
+            },
+            {
+              "target": 80,
+              "published": "80",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "README.md#L40",
+                "line": 51
+              }
+            },
+            {
+              "target": 443,
+              "published": "443",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "README.md#L40",
+                "line": 53
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "./etc-pihole",
+              "target": "/etc/pihole",
+              "read_only": false,
+              "location": {
+                "file": "README.md#L40",
+                "line": 68
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "TZ",
+              "raw": "Europe/London",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L40",
+                "line": 60
+              }
+            },
+            {
+              "key": "FTLCONF_webserver_api_password",
+              "raw": "correct horse battery staple",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L40",
+                "line": 62
+              }
+            },
+            {
+              "key": "FTLCONF_dns_listeningMode",
+              "raw": "ALL",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L40",
+                "line": 64
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": "",
+          "cap_add": [
+            {
+              "value": "NET_ADMIN",
+              "location": {
+                "file": "README.md#L40",
+                "line": 74
+              }
+            },
+            {
+              "value": "SYS_TIME",
+              "location": {
+                "file": "README.md#L40",
+                "line": 76
+              }
+            },
+            {
+              "value": "SYS_NICE",
+              "location": {
+                "file": "README.md#L40",
+                "line": 78
+              }
+            }
+          ]
+        }
+      ],
+      "variables": [],
+      "fenced": true
+    },
+    {
       "path": "examples/docker-compose-caddy-proxy.yml",
       "services": [
         {
@@ -408,6 +539,23 @@
       ]
     },
     {
+      "name": "FTLCONF_dns_listeningMode",
+      "default": "ALL",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "FTLCONF_dns_listeningMode",
+          "kind": "readme",
+          "default": "ALL",
+          "location": {
+            "file": "README.md#L40",
+            "line": 64
+          }
+        }
+      ]
+    },
+    {
       "name": "FTLCONF_webserver_api_password",
       "default": "correct horse battery staple",
       "description": "",
@@ -420,6 +568,15 @@
           "location": {
             "file": "examples/docker-compose-caddy-proxy.yml",
             "line": 37
+          }
+        },
+        {
+          "name": "FTLCONF_webserver_api_password",
+          "kind": "readme",
+          "default": "correct horse battery staple",
+          "location": {
+            "file": "README.md#L40",
+            "line": 62
           }
         }
       ]
@@ -455,11 +612,28 @@
             "file": "examples/docker-compose-caddy-proxy.yml",
             "line": 35
           }
+        },
+        {
+          "name": "TZ",
+          "kind": "readme",
+          "default": "Europe/London",
+          "location": {
+            "file": "README.md#L40",
+            "line": 60
+          }
         }
       ]
     }
   ],
   "images": [
+    {
+      "reference": "pihole/pihole:latest",
+      "kind": "compose",
+      "location": {
+        "file": "README.md#L40",
+        "line": 45
+      }
+    },
     {
       "reference": "pihole/pihole:latest",
       "kind": "readme",
@@ -474,14 +648,6 @@
       "location": {
         "file": "examples/docker-compose-caddy-proxy.yml",
         "line": 6
-      }
-    },
-    {
-      "reference": "pihole/pihole:latest",
-      "kind": "compose",
-      "location": {
-        "file": "examples/docker-compose-caddy-proxy.yml",
-        "line": 25
       }
     }
   ],

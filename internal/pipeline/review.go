@@ -209,7 +209,7 @@ func unpinShownURL(plan *ir.IR, shown string) {
 	}
 }
 
-func (revision Revision) apply(plan *ir.IR) error {
+func (revision *Revision) apply(plan *ir.IR) error {
 	edited := ir.Provenance{Source: ir.SourceUser, SourceRef: reviewSource, Confidence: ir.ConfidenceHigh}
 	for key, value := range revision.Values {
 		entry, found := plan.EnvEntry(key)
@@ -220,6 +220,9 @@ func (revision Revision) apply(plan *ir.IR) error {
 			return fmt.Errorf("%w: %s holds a secret", ErrNotEditable, key)
 		case entry.Value != value:
 			entry.Value, entry.Provenance = value, edited
+			if sealCredential(entry) {
+				revision.supply(entry.Key, value)
+			}
 		}
 	}
 	for _, variable := range revision.Add {
@@ -248,6 +251,24 @@ func setMemoryLimit(plan *ir.IR, name, limit string, provenance ir.Provenance) e
 	}
 	service.Resources.MemoryLimit, service.Resources.Provenance = limit, provenance
 	return nil
+}
+
+// sealCredential turns an entry whose typed value carries a credential,
+// such as a mailer address with a password, into a secret a person
+// supplies, taking the value out of the plan; it reports whether it did.
+func sealCredential(entry *ir.EnvFileEntry) bool {
+	if strings.Contains(entry.Value, referenceMarker) || !rules.HoldsSecret(entry.Key, entry.Value) {
+		return false
+	}
+	entry.Secret, entry.Value = true, ""
+	return true
+}
+
+func (revision *Revision) supply(key, value string) {
+	if revision.Secrets == nil {
+		revision.Secrets = map[string]string{}
+	}
+	revision.Secrets[key] = value
 }
 
 func addVariable(plan *ir.IR, variable Variable, provenance ir.Provenance) error {

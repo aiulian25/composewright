@@ -548,7 +548,7 @@
   "confidence": "high",
   "evidence": [
     {
-      "claim": "compose file Docker/freshrss/docker-compose.yml chosen among 3 upstream compose files",
+      "claim": "compose file Docker/freshrss/docker-compose.yml chosen among 3 upstream compose files and 2 compose examples in the docs",
       "file": "Docker/freshrss/docker-compose.yml",
       "line": 1
     },

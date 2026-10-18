@@ -7,6 +7,7 @@ import (
 	"go.yaml.in/yaml/v3"
 
 	"github.com/aiulian25/composewright/internal/composefile"
+	"github.com/aiulian25/composewright/internal/extract"
 	"github.com/aiulian25/composewright/internal/ir"
 )
 
@@ -112,6 +113,7 @@ func ruleFiles(plan *ir.IR) map[string]string {
 	}
 	for _, field := range plan.Fields() {
 		file, _, _ := strings.Cut(field.SourceRef, refSeparator)
+		file, _, _ = strings.Cut(file, extract.FencedLineMark)
 		badge := sourceBadges[field.Source]
 		if badges[file] == "" && strings.HasPrefix(badge, rulePrefix) {
 			badges[file] = badge

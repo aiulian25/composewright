@@ -36,6 +36,9 @@ const (
 	missingVariantNote  = missingVariantHead + "; used %s"
 	missingVariantHead  = "compose variant %s not found"
 	documentationSource = "the documentation"
+	// composeExamplesClaim names the compose examples of the README and
+	// docs pages among the files R1 chose from.
+	composeExamplesClaim = " and %d compose examples in the docs"
 )
 
 var (
@@ -54,7 +57,7 @@ var (
 // chooseCompose is R1's variant selection: the file a person chose, by its
 // path, whatever its kind; else, among the candidate files, prefer the
 // canonical name, files the docs mention, shallow paths and plain variants
-// over add-on ones.
+// over add-on ones. Any file on disk beats an example fenced in a README.
 func chooseCompose(facts *extract.Facts, identity []string, chosen string) *extract.ComposeFile {
 	if index := slices.IndexFunc(facts.ComposeFiles, func(file extract.ComposeFile) bool { return file.Path == chosen }); chosen != "" && index >= 0 {
 		return &facts.ComposeFiles[index]
@@ -69,12 +72,23 @@ func chooseCompose(facts *extract.Facts, identity []string, chosen string) *extr
 			continue
 		}
 		score := composeScore(&required, facts, identity)
-		better := best == nil || score > bestScore || (score == bestScore && len(file.Path) < len(best.Path))
-		if better {
+		if best == nil || ranksAbove(file, score, best, bestScore) {
 			best, bestScore = file, score
 		}
 	}
 	return best
+}
+
+// ranksAbove orders candidates by where they live first, a file on disk
+// before a fenced example, then by score, then by the shorter path.
+func ranksAbove(file *extract.ComposeFile, score int, best *extract.ComposeFile, bestScore int) bool {
+	if file.Fenced != best.Fenced {
+		return best.Fenced
+	}
+	if score != bestScore {
+		return score > bestScore
+	}
+	return len(file.Path) < len(best.Path)
 }
 
 func composeScore(file *extract.ComposeFile, facts *extract.Facts, identity []string) int {
@@ -202,8 +216,12 @@ func MissingVariantNote(plan *ir.IR, chosen string) (string, bool) {
 // built first, so a password one of them shares with a switched-on service
 // stays theirs; the plan keeps the file's order.
 func (builder *builder) fromCompose(chosen *extract.ComposeFile, enabled []string) {
-	builder.evidence("compose file "+chosen.Path+" chosen among "+strconv.Itoa(len(builder.facts.ComposeFiles))+" upstream compose files",
-		extract.Location{File: chosen.Path, Line: 1})
+	files, examples := builder.facts.ComposeCounts()
+	claim := "compose file " + chosen.Path + " chosen among " + strconv.Itoa(files) + " upstream compose files"
+	if examples > 0 {
+		claim += fmt.Sprintf(composeExamplesClaim, examples)
+	}
+	builder.evidence(claim, chosen.Opening())
 	required := chosen.Started(nil)
 	app := builder.appService(&required)
 	file := chosen.Started(enabled)

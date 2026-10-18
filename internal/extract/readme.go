@@ -3,11 +3,12 @@ package extract
 import (
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 )
 
 var (
-	fenceLine     = regexp.MustCompile("^\\s*(```|~~~)")
+	fenceLine     = regexp.MustCompile("^\\s*(`{3,}|~{3,})\\s*([^\\s`{]*)(.*)$")
 	listVariable  = regexp.MustCompile("^\\s*[-*+]\\s+`?([A-Z][A-Z0-9_]{1,})`?\\s*(?:[:=–—]|\\s-\\s|\\s\\|)\\s*(.+)$")
 	variableToken = regexp.MustCompile("^`?\\$?([A-Z][A-Z0-9_]+)`?$")
 	// snakeName is what a table without a name column must hold to count:
@@ -52,15 +53,40 @@ var dockerRunValueFlags = []string{
 }
 
 type markdownScan struct {
-	relative     string
-	mentions     []Mention
-	images       []ImageMention
-	dockerRuns   []DockerRun
-	notes        []Note
-	summary      Note
-	fileMentions []Note
-	healthPaths  []Note
+	relative      string
+	mentions      []Mention
+	images        []ImageMention
+	dockerRuns    []DockerRun
+	notes         []Note
+	summary       Note
+	fileMentions  []Note
+	healthPaths   []Note
+	composeBlocks []sourceFile
 }
+
+// openFence is the fenced block being read: the marker run that opened it,
+// the line it opened on and its type.
+type openFence struct {
+	marker    string
+	start     int
+	fenceType string
+}
+
+// closedBy reports whether a fence line closes the block. As in CommonMark,
+// only a bare run of the same character, at least as long, does; any other
+// fence line inside the block is content, such as ```yaml shown in ````markdown.
+func (fence openFence) closedBy(match []string) bool {
+	marker, rest := match[1], match[2]+match[3]
+	return marker[0] == fence.marker[0] && len(marker) >= len(fence.marker) && strings.TrimSpace(rest) == ""
+}
+
+// composeFenceTypes are the info strings of a fence that may hold a compose
+// file; an untyped fence is read too.
+var composeFenceTypes = []string{"", "yaml", "yml"}
+
+// FencedLineMark joins a page and the line its fence opens on, like GitHub's
+// README.md#L42.
+const FencedLineMark = "#L"
 
 // scanMarkdown mines a README or docs page: docker run commands, image names,
 // tables and lists that name UPPER_SNAKE variables, and sentences about
@@ -69,12 +95,20 @@ func scanMarkdown(relative string, content []byte) markdownScan {
 	scan := markdownScan{relative: relative}
 	lines := strings.Split(string(content), "\n")
 	inFence := false
+	var fence openFence
 	var header []string
 	for index := 0; index < len(lines); index++ {
 		line := lines[index]
 		at := Location{File: relative, Line: index + 1}
-		if fenceLine.MatchString(line) {
-			inFence = !inFence
+		match := fenceLine.FindStringSubmatch(line)
+		if match != nil && inFence && fence.closedBy(match) {
+			scan.keepComposeBlock(lines, fence.start, index, fence.fenceType)
+			inFence = false
+			continue
+		}
+		if match != nil && !inFence {
+			fence = openFence{marker: match[1], start: index, fenceType: strings.ToLower(match[2])}
+			inFence = true
 			continue
 		}
 		scan.imagesIn(line, at)
@@ -104,7 +138,24 @@ func scanMarkdown(relative string, content []byte) markdownScan {
 			scan.healthPaths = append(scan.healthPaths, Note{Text: match[1], Location: at})
 		}
 	}
+	// As in CommonMark, a fence left open runs to the end of the page.
+	if inFence {
+		scan.keepComposeBlock(lines, fence.start, len(lines), fence.fenceType)
+	}
 	return scan
+}
+
+// keepComposeBlock keeps the fenced block between the opening line start
+// and the closing line end when its type may be YAML. Its lines are read
+// from 1 and shifted by the lines above the block to the page's own.
+func (scan *markdownScan) keepComposeBlock(lines []string, start, end int, fenceType string) {
+	if !slices.Contains(composeFenceTypes, fenceType) {
+		return
+	}
+	scan.composeBlocks = append(scan.composeBlocks, sourceFile{
+		relative: scan.relative + FencedLineMark + strconv.Itoa(start+1),
+		content:  []byte(strings.Join(lines[start+1:end], "\n")), fenced: true, lineOffset: start + 1,
+	})
 }
 
 func (scan *markdownScan) imagesIn(line string, at Location) {

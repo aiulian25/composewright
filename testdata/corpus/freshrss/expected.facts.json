@@ -104,6 +104,239 @@
   ],
   "compose_files": [
     {
+      "path": "Docker/README.md#L308",
+      "services": [
+        {
+          "name": "freshrss",
+          "location": {
+            "file": "Docker/README.md#L308",
+            "line": 314
+          },
+          "image": "freshrss/freshrss:edge",
+          "image_at": {
+            "file": "Docker/README.md#L308",
+            "line": 315
+          },
+          "build": true,
+          "ports": [
+            {
+              "target": 80,
+              "published": "8080",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "Docker/README.md#L308",
+                "line": 337
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "data",
+              "target": "/var/www/FreshRSS/data",
+              "read_only": false,
+              "location": {
+                "file": "Docker/README.md#L308",
+                "line": 328
+              }
+            },
+            {
+              "type": "volume",
+              "source": "extensions",
+              "target": "/var/www/FreshRSS/extensions",
+              "read_only": false,
+              "location": {
+                "file": "Docker/README.md#L308",
+                "line": 330
+              }
+            },
+            {
+              "type": "bind",
+              "source": "./config.custom.php",
+              "target": "/var/www/FreshRSS/data/config.custom.php",
+              "read_only": false,
+              "location": {
+                "file": "Docker/README.md#L308",
+                "line": 332
+              }
+            },
+            {
+              "type": "bind",
+              "source": "./config-user.custom.php",
+              "target": "/var/www/FreshRSS/data/config-user.custom.php",
+              "read_only": false,
+              "location": {
+                "file": "Docker/README.md#L308",
+                "line": 334
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "TZ",
+              "raw": "Europe/Paris",
+              "has_value": true,
+              "location": {
+                "file": "Docker/README.md#L308",
+                "line": 340
+              }
+            },
+            {
+              "key": "CRON_MIN",
+              "raw": "2,32",
+              "has_value": true,
+              "location": {
+                "file": "Docker/README.md#L308",
+                "line": 342
+              }
+            },
+            {
+              "key": "FRESHRSS_ENV",
+              "raw": "development",
+              "has_value": true,
+              "location": {
+                "file": "Docker/README.md#L308",
+                "line": 344
+              }
+            },
+            {
+              "key": "LISTEN",
+              "raw": "0.0.0.0:80",
+              "has_value": true,
+              "location": {
+                "file": "Docker/README.md#L308",
+                "line": 346
+              }
+            },
+            {
+              "key": "TRUSTED_PROXY",
+              "raw": "172.16.0.1/12 192.168.0.1/16",
+              "has_value": true,
+              "location": {
+                "file": "Docker/README.md#L308",
+                "line": 359
+              }
+            },
+            {
+              "key": "OIDC_ENABLED",
+              "raw": "0",
+              "has_value": true,
+              "location": {
+                "file": "Docker/README.md#L308",
+                "line": 362
+              }
+            },
+            {
+              "key": "FRESHRSS_INSTALL",
+              "raw": "--api-enabled\n--base-url ${BASE_URL}\n--db-base ${DB_BASE}\n--db-host ${DB_HOST}\n--db-password ${DB_PASSWORD}\n--db-type pgsql\n--db-user ${DB_USER}\n--default-user admin\n--language en",
+              "has_value": true,
+              "location": {
+                "file": "Docker/README.md#L308",
+                "line": 367
+              }
+            },
+            {
+              "key": "FRESHRSS_USER",
+              "raw": "--api-password ${ADMIN_API_PASSWORD}\n--email ${ADMIN_EMAIL}\n--language en\n--password ${ADMIN_PASSWORD}\n--user admin",
+              "has_value": true,
+              "location": {
+                "file": "Docker/README.md#L308",
+                "line": 377
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "healthcheck": {
+            "test": [
+              "CMD",
+              "cli/health.php"
+            ],
+            "interval": "1m15s",
+            "timeout": "10s",
+            "start_period": "1m0s",
+            "retries": 3,
+            "disabled": false,
+            "location": {
+              "file": "Docker/README.md#L308",
+              "line": 384
+            }
+          },
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": [
+        {
+          "name": "ADMIN_API_PASSWORD",
+          "kind": "compose",
+          "location": {
+            "file": "Docker/README.md#L308",
+            "line": 378
+          }
+        },
+        {
+          "name": "ADMIN_EMAIL",
+          "kind": "compose",
+          "location": {
+            "file": "Docker/README.md#L308",
+            "line": 379
+          }
+        },
+        {
+          "name": "ADMIN_PASSWORD",
+          "kind": "compose",
+          "location": {
+            "file": "Docker/README.md#L308",
+            "line": 381
+          }
+        },
+        {
+          "name": "BASE_URL",
+          "kind": "compose",
+          "location": {
+            "file": "Docker/README.md#L308",
+            "line": 369
+          }
+        },
+        {
+          "name": "DB_BASE",
+          "kind": "compose",
+          "location": {
+            "file": "Docker/README.md#L308",
+            "line": 370
+          }
+        },
+        {
+          "name": "DB_HOST",
+          "kind": "compose",
+          "location": {
+            "file": "Docker/README.md#L308",
+            "line": 371
+          }
+        },
+        {
+          "name": "DB_PASSWORD",
+          "kind": "compose",
+          "location": {
+            "file": "Docker/README.md#L308",
+            "line": 372
+          }
+        },
+        {
+          "name": "DB_USER",
+          "kind": "compose",
+          "location": {
+            "file": "Docker/README.md#L308",
+            "line": 374
+          }
+        }
+      ],
+      "fenced": true
+    },
+    {
       "path": "Docker/freshrss/docker-compose-db.yml",
       "services": [
         {
@@ -429,6 +662,148 @@
         }
       ],
       "variables": []
+    },
+    {
+      "path": "docs/en/admins/18_Pocket-ID.md#L29",
+      "services": [
+        {
+          "name": "freshrss",
+          "location": {
+            "file": "docs/en/admins/18_Pocket-ID.md#L29",
+            "line": 31
+          },
+          "image": "freshrss/freshrss:edge",
+          "image_at": {
+            "file": "docs/en/admins/18_Pocket-ID.md#L29",
+            "line": 32
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 80,
+              "published": "8080",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docs/en/admins/18_Pocket-ID.md#L29",
+                "line": 35
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "/freshrss_data",
+              "target": "/var/www/FreshRSS/data",
+              "read_only": false,
+              "location": {
+                "file": "docs/en/admins/18_Pocket-ID.md#L29",
+                "line": 37
+              }
+            },
+            {
+              "type": "bind",
+              "source": "/freshrss_extensions",
+              "target": "/var/www/FreshRSS/extensions",
+              "read_only": false,
+              "location": {
+                "file": "docs/en/admins/18_Pocket-ID.md#L29",
+                "line": 38
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "CRON_MIN",
+              "raw": "1,31",
+              "has_value": true,
+              "location": {
+                "file": "docs/en/admins/18_Pocket-ID.md#L29",
+                "line": 40
+              }
+            },
+            {
+              "key": "TZ",
+              "raw": "Etc/UTC",
+              "has_value": true,
+              "location": {
+                "file": "docs/en/admins/18_Pocket-ID.md#L29",
+                "line": 41
+              }
+            },
+            {
+              "key": "OIDC_ENABLED",
+              "raw": "1",
+              "has_value": true,
+              "location": {
+                "file": "docs/en/admins/18_Pocket-ID.md#L29",
+                "line": 42
+              }
+            },
+            {
+              "key": "OIDC_CLIENT_ID",
+              "raw": "\u003cPOCKET_ID_CLIENT_ID\u003e",
+              "has_value": true,
+              "location": {
+                "file": "docs/en/admins/18_Pocket-ID.md#L29",
+                "line": 43
+              }
+            },
+            {
+              "key": "OIDC_CLIENT_SECRET",
+              "raw": "\u003cPOCKET_ID_SECRET\u003e",
+              "has_value": true,
+              "location": {
+                "file": "docs/en/admins/18_Pocket-ID.md#L29",
+                "line": 44
+              }
+            },
+            {
+              "key": "OIDC_PROVIDER_METADATA_URL",
+              "raw": "https://pocketid.example.net/.well-known/openid-configuration",
+              "has_value": true,
+              "location": {
+                "file": "docs/en/admins/18_Pocket-ID.md#L29",
+                "line": 45
+              }
+            },
+            {
+              "key": "OIDC_SCOPES",
+              "raw": "openid email profile",
+              "has_value": true,
+              "location": {
+                "file": "docs/en/admins/18_Pocket-ID.md#L29",
+                "line": 46
+              }
+            },
+            {
+              "key": "OIDC_X_FORWARDED_HEADERS",
+              "raw": "X-Forwarded-Proto X-Forwarded-Host",
+              "has_value": true,
+              "location": {
+                "file": "docs/en/admins/18_Pocket-ID.md#L29",
+                "line": 47
+              }
+            },
+            {
+              "key": "OIDC_REMOTE_USER_CLAIM",
+              "raw": "preferred_username",
+              "has_value": true,
+              "location": {
+                "file": "docs/en/admins/18_Pocket-ID.md#L29",
+                "line": 48
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": [],
+      "fenced": true
     }
   ],
   "dockerfiles": [
@@ -1203,6 +1578,14 @@
             "file": "Docker/freshrss/example.env",
             "line": 18
           }
+        },
+        {
+          "name": "ADMIN_API_PASSWORD",
+          "kind": "readme",
+          "location": {
+            "file": "Docker/README.md#L308",
+            "line": 378
+          }
         }
       ]
     },
@@ -1228,6 +1611,14 @@
             "file": "Docker/freshrss/example.env",
             "line": 8
           }
+        },
+        {
+          "name": "ADMIN_EMAIL",
+          "kind": "readme",
+          "location": {
+            "file": "Docker/README.md#L308",
+            "line": 379
+          }
         }
       ]
     },
@@ -1244,6 +1635,14 @@
           "location": {
             "file": "Docker/freshrss/example.env",
             "line": 17
+          }
+        },
+        {
+          "name": "ADMIN_PASSWORD",
+          "kind": "readme",
+          "location": {
+            "file": "Docker/README.md#L308",
+            "line": 381
           }
         }
       ]
@@ -1262,6 +1661,14 @@
           "location": {
             "file": "Docker/freshrss/example.env",
             "line": 21
+          }
+        },
+        {
+          "name": "BASE_URL",
+          "kind": "readme",
+          "location": {
+            "file": "Docker/README.md#L308",
+            "line": 369
           }
         }
       ]
@@ -1468,6 +1875,24 @@
         },
         {
           "name": "CRON_MIN",
+          "kind": "readme",
+          "default": "2,32",
+          "location": {
+            "file": "Docker/README.md#L308",
+            "line": 342
+          }
+        },
+        {
+          "name": "CRON_MIN",
+          "kind": "readme",
+          "default": "1,31",
+          "location": {
+            "file": "docs/en/admins/18_Pocket-ID.md#L29",
+            "line": 40
+          }
+        },
+        {
+          "name": "CRON_MIN",
           "kind": "dockerfile",
           "location": {
             "file": "Docker/Dockerfile",
@@ -1597,6 +2022,14 @@
             "file": "Docker/freshrss/example.env",
             "line": 33
           }
+        },
+        {
+          "name": "DB_BASE",
+          "kind": "readme",
+          "location": {
+            "file": "Docker/README.md#L308",
+            "line": 370
+          }
         }
       ]
     },
@@ -1614,6 +2047,14 @@
           "location": {
             "file": "Docker/freshrss/example.env",
             "line": 26
+          }
+        },
+        {
+          "name": "DB_HOST",
+          "kind": "readme",
+          "location": {
+            "file": "Docker/README.md#L308",
+            "line": 371
           }
         }
       ]
@@ -1642,6 +2083,14 @@
             "file": "Docker/freshrss/example.env",
             "line": 39
           }
+        },
+        {
+          "name": "DB_PASSWORD",
+          "kind": "readme",
+          "location": {
+            "file": "Docker/README.md#L308",
+            "line": 372
+          }
         }
       ]
     },
@@ -1668,6 +2117,14 @@
           "location": {
             "file": "Docker/freshrss/example.env",
             "line": 36
+          }
+        },
+        {
+          "name": "DB_USER",
+          "kind": "readme",
+          "location": {
+            "file": "Docker/README.md#L308",
+            "line": 374
           }
         }
       ]
@@ -1772,6 +2229,15 @@
           "kind": "readme",
           "default": "development",
           "location": {
+            "file": "Docker/README.md#L308",
+            "line": 344
+          }
+        },
+        {
+          "name": "FRESHRSS_ENV",
+          "kind": "readme",
+          "default": "development",
+          "location": {
             "file": "docs/en/developers/03_Running_tests.md",
             "line": 30
           }
@@ -1857,6 +2323,14 @@
             "file": "Docker/README.md",
             "line": 103
           }
+        },
+        {
+          "name": "FRESHRSS_INSTALL",
+          "kind": "readme",
+          "location": {
+            "file": "Docker/README.md#L308",
+            "line": 367
+          }
         }
       ]
     },
@@ -1873,6 +2347,14 @@
           "location": {
             "file": "Docker/README.md",
             "line": 104
+          }
+        },
+        {
+          "name": "FRESHRSS_USER",
+          "kind": "readme",
+          "location": {
+            "file": "Docker/README.md#L308",
+            "line": 377
           }
         }
       ]
@@ -1904,7 +2386,7 @@
     },
     {
       "name": "LISTEN",
-      "default": "",
+      "default": "0.0.0.0:80",
       "description": "(default is 80) Modifies the internal Apache listening address and port, e.g. 0.0.0.0:8080 (for advanced users; useful for [Docker host networking](https://docs.docker.com/engine/network/drivers/host/))",
       "required": false,
       "mentions": [
@@ -1915,6 +2397,15 @@
           "location": {
             "file": "Docker/README.md",
             "line": 101
+          }
+        },
+        {
+          "name": "LISTEN",
+          "kind": "readme",
+          "default": "0.0.0.0:80",
+          "location": {
+            "file": "Docker/README.md#L308",
+            "line": 346
           }
         },
         {
@@ -2046,7 +2537,7 @@
     },
     {
       "name": "OIDC_CLIENT_ID",
-      "default": "",
+      "default": "\u003cPOCKET_ID_CLIENT_ID\u003e",
       "description": "The OIDC client id from your issuer.",
       "required": false,
       "mentions": [
@@ -2058,12 +2549,21 @@
             "file": "docs/en/admins/16_OpenID-Connect.md",
             "line": 40
           }
+        },
+        {
+          "name": "OIDC_CLIENT_ID",
+          "kind": "readme",
+          "default": "\u003cPOCKET_ID_CLIENT_ID\u003e",
+          "location": {
+            "file": "docs/en/admins/18_Pocket-ID.md#L29",
+            "line": 43
+          }
         }
       ]
     },
     {
       "name": "OIDC_CLIENT_SECRET",
-      "default": "",
+      "default": "\u003cPOCKET_ID_SECRET\u003e",
       "description": "The OIDC client secret issuer.",
       "required": false,
       "mentions": [
@@ -2074,6 +2574,15 @@
           "location": {
             "file": "docs/en/admins/16_OpenID-Connect.md",
             "line": 41
+          }
+        },
+        {
+          "name": "OIDC_CLIENT_SECRET",
+          "kind": "readme",
+          "default": "\u003cPOCKET_ID_SECRET\u003e",
+          "location": {
+            "file": "docs/en/admins/18_Pocket-ID.md#L29",
+            "line": 44
           }
         }
       ]
@@ -2097,10 +2606,19 @@
     },
     {
       "name": "OIDC_ENABLED",
-      "default": "",
+      "default": "0",
       "description": "Activates OIDC support.",
       "required": false,
       "mentions": [
+        {
+          "name": "OIDC_ENABLED",
+          "kind": "readme",
+          "default": "0",
+          "location": {
+            "file": "Docker/README.md#L308",
+            "line": 362
+          }
+        },
         {
           "name": "OIDC_ENABLED",
           "kind": "readme",
@@ -2108,6 +2626,15 @@
           "location": {
             "file": "docs/en/admins/16_OpenID-Connect.md",
             "line": 38
+          }
+        },
+        {
+          "name": "OIDC_ENABLED",
+          "kind": "readme",
+          "default": "1",
+          "location": {
+            "file": "docs/en/admins/18_Pocket-ID.md#L29",
+            "line": 42
           }
         },
         {
@@ -2154,7 +2681,7 @@
     },
     {
       "name": "OIDC_PROVIDER_METADATA_URL",
-      "default": "",
+      "default": "https://pocketid.example.net/.well-known/openid-configuration",
       "description": "The config URL. Usually looks like: \u003cissuer\u003e/.well-known/openid-configuration",
       "required": false,
       "mentions": [
@@ -2166,12 +2693,21 @@
             "file": "docs/en/admins/16_OpenID-Connect.md",
             "line": 39
           }
+        },
+        {
+          "name": "OIDC_PROVIDER_METADATA_URL",
+          "kind": "readme",
+          "default": "https://pocketid.example.net/.well-known/openid-configuration",
+          "location": {
+            "file": "docs/en/admins/18_Pocket-ID.md#L29",
+            "line": 45
+          }
         }
       ]
     },
     {
       "name": "OIDC_REMOTE_USER_CLAIM",
-      "default": "",
+      "default": "preferred_username",
       "description": "The claim to use as the username within FreshRSS. Defaults to preferred_username. Depending on what you choose here, and your identity provider, you’ll need to adjust the scopes you request so that this claim will be accessible. Refer to your identity provider’s documentation.",
       "required": false,
       "mentions": [
@@ -2183,12 +2719,21 @@
             "file": "docs/en/admins/16_OpenID-Connect.md",
             "line": 43
           }
+        },
+        {
+          "name": "OIDC_REMOTE_USER_CLAIM",
+          "kind": "readme",
+          "default": "preferred_username",
+          "location": {
+            "file": "docs/en/admins/18_Pocket-ID.md#L29",
+            "line": 48
+          }
         }
       ]
     },
     {
       "name": "OIDC_SCOPES",
-      "default": "",
+      "default": "openid email profile",
       "description": "The OIDC scopes to request separated by an empty space. Defaults to openid. As mentioned previously, make sure the scopes you pick contain whatever OIDC_REMOTE_USER_CLAIM you chose. For example, Authelia would require setting this value to openid profile to make preferred_username accessible.",
       "required": false,
       "mentions": [
@@ -2199,6 +2744,15 @@
           "location": {
             "file": "docs/en/admins/16_OpenID-Connect.md",
             "line": 44
+          }
+        },
+        {
+          "name": "OIDC_SCOPES",
+          "kind": "readme",
+          "default": "openid email profile",
+          "location": {
+            "file": "docs/en/admins/18_Pocket-ID.md#L29",
+            "line": 46
           }
         }
       ]
@@ -2256,7 +2810,7 @@
     },
     {
       "name": "OIDC_X_FORWARDED_HEADERS",
-      "default": "",
+      "default": "X-Forwarded-Proto X-Forwarded-Host",
       "description": "Optional, but required when running FreshRSS behind a reverse proxy so that the OIDC module can determine what hostname, port and protocol were used to access FreshRSS, in order to generate a return URL for the OIDC authorization flow. Must be one or more of Forwarded, X-Forwarded-Host, X-Forwarded-Port or X-Forwarded-Proto (separate multiple values with a space). See [mod_auth_openidc’s documentation for details](https://github.com/OpenIDC/mod_auth_openidc/blob/72c9f479c2d228477ff0a9518964f61879c83fb6/auth_openidc.conf#L1041-L1048).",
       "required": false,
       "mentions": [
@@ -2267,6 +2821,15 @@
           "location": {
             "file": "docs/en/admins/16_OpenID-Connect.md",
             "line": 45
+          }
+        },
+        {
+          "name": "OIDC_X_FORWARDED_HEADERS",
+          "kind": "readme",
+          "default": "X-Forwarded-Proto X-Forwarded-Host",
+          "location": {
+            "file": "docs/en/admins/18_Pocket-ID.md#L29",
+            "line": 47
           }
         }
       ]
@@ -2415,6 +2978,15 @@
         },
         {
           "name": "TRUSTED_PROXY",
+          "kind": "readme",
+          "default": "172.16.0.1/12 192.168.0.1/16",
+          "location": {
+            "file": "Docker/README.md#L308",
+            "line": 359
+          }
+        },
+        {
+          "name": "TRUSTED_PROXY",
           "kind": "dockerfile",
           "location": {
             "file": "Docker/Dockerfile",
@@ -2517,6 +3089,24 @@
         {
           "name": "TZ",
           "kind": "readme",
+          "default": "Europe/Paris",
+          "location": {
+            "file": "Docker/README.md#L308",
+            "line": 340
+          }
+        },
+        {
+          "name": "TZ",
+          "kind": "readme",
+          "default": "Etc/UTC",
+          "location": {
+            "file": "docs/en/admins/18_Pocket-ID.md#L29",
+            "line": 41
+          }
+        },
+        {
+          "name": "TZ",
+          "kind": "readme",
           "default": "UTC",
           "location": {
             "file": "docs/en/developers/03_Running_tests.md",
@@ -2581,6 +3171,14 @@
     }
   ],
   "images": [
+    {
+      "reference": "freshrss/freshrss:edge",
+      "kind": "compose",
+      "location": {
+        "file": "Docker/README.md#L308",
+        "line": 315
+      }
+    },
     {
       "reference": "ghcr.io/freshrss/freshrss",
       "kind": "readme",

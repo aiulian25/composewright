@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
+	"maps"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -257,7 +258,7 @@ func TestExtractComposeKeepsRawValuesAndLines(t *testing.T) {
 volumes:
   named:
 `
-	file, mentions, err := extractCompose(context.Background(), "compose.yaml", []byte(content), nil)
+	file, mentions, err := extractCompose(context.Background(), "compose.yaml", []byte(content), 0, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -281,7 +282,7 @@ volumes:
 	if !required {
 		t.Fatal("${TOKEN:?} not marked required")
 	}
-	if _, _, err := extractCompose(context.Background(), "ci.yml", []byte("on: push\njobs: {}\nservices:\n  db:\n    image: postgres\n"), nil); !errors.Is(err, errNotCompose) {
+	if _, _, err := extractCompose(context.Background(), "ci.yml", []byte("on: push\njobs: {}\nservices:\n  db:\n    image: postgres\n"), 0, nil); !errors.Is(err, errNotCompose) {
 		t.Fatalf("workflow taken for compose: %v", err)
 	}
 }
@@ -323,7 +324,7 @@ func TestExtractLeavesOutUnreadableFiles(t *testing.T) {
 // (actualbudget/actual), and line numbers still point at the original.
 func TestExtractComposeReadsEmptyKeys(t *testing.T) {
 	content := "services:\n  app:\n    image: example/app:1\n    environment:\n      # - PORT=5006\n    ports:\n      - '5006:5006'\n"
-	file, _, err := extractCompose(context.Background(), "compose.yaml", []byte(content), nil)
+	file, _, err := extractCompose(context.Background(), "compose.yaml", []byte(content), 0, nil)
 	if err != nil || len(file.Services) != 1 || len(file.Services[0].Ports) != 1 || file.Services[0].Ports[0].Location.Line != 7 {
 		t.Fatalf("file %+v, err %v", file, err)
 	}
@@ -371,7 +372,7 @@ func TestExtractComposeReadsLimitsAndHardening(t *testing.T) {
           size: 1048576
           mode: 0o1777
 `
-	file, _, err := extractCompose(context.Background(), "compose.yaml", []byte(content), nil)
+	file, _, err := extractCompose(context.Background(), "compose.yaml", []byte(content), 0, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -413,7 +414,7 @@ func TestExtractComposeReadsPrivileges(t *testing.T) {
   plain:
     image: example/plain:1
 `
-	file, _, err := extractCompose(context.Background(), "compose.yaml", []byte(content), nil)
+	file, _, err := extractCompose(context.Background(), "compose.yaml", []byte(content), 0, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -438,7 +439,7 @@ func TestExtractComposeReadsPrivileges(t *testing.T) {
 // a profile is read like any other and carries its profiles.
 func TestExtractComposeKeepsProfileServices(t *testing.T) {
 	content := "services:\n  app:\n    image: example/app:1\n  tts:\n    image: example/tts:1\n    profiles: [gpu]\n    environment:\n      VOICE: ${TTS_VOICE:-alto}\n"
-	file, _, err := extractCompose(context.Background(), "compose.yaml", []byte(content), nil)
+	file, _, err := extractCompose(context.Background(), "compose.yaml", []byte(content), 0, nil)
 	if err != nil || len(file.Services) != 2 {
 		t.Fatalf("file %+v, err %v", file, err)
 	}
@@ -527,7 +528,7 @@ func TestComposeDefaultsFollowTheDocument(t *testing.T) {
 	const runs = 20
 	content := "services:\n  app:\n    image: example/app:1\n    environment:\n      API: ${API_URL:-http://localhost:8090}\n      WEB: ${API_URL:-http://localhost:3003}\n"
 	for range runs {
-		_, mentions, err := extractCompose(context.Background(), "compose.yaml", []byte(content), nil)
+		_, mentions, err := extractCompose(context.Background(), "compose.yaml", []byte(content), 0, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -645,7 +646,7 @@ func FuzzExtractCompose(f *testing.F) {
 		f.Add(content)
 	}
 	f.Fuzz(func(t *testing.T, data []byte) {
-		_, _, _ = extractCompose(context.Background(), "compose.yaml", data, nil)
+		_, _, _ = extractCompose(context.Background(), "compose.yaml", data, 0, nil)
 	})
 }
 
@@ -682,5 +683,65 @@ func TestScanMarkdownHealthPaths(t *testing.T) {
 	}
 	if !slices.Equal(paths, []string{"/healthz", "/api/health", "/ping", "/-/healthy"}) || scan.healthPaths[0].Location.Line != 1 {
 		t.Fatalf("health paths %+v", scan.healthPaths)
+	}
+}
+
+// TestReadmeFenceIsAComposeFile: a yaml, yml or untyped fence holding
+// services is read as a compose file named after the page and the fence's
+// line, with the page's own line numbers; a json fence is not, however many
+// backticks open it, nor a fence shown inside a longer one, which does not
+// put the rest of the page out of step. A fence left open runs to the end
+// of the page.
+func TestReadmeFenceIsAComposeFile(t *testing.T) {
+	directory := t.TempDir()
+	readme := "# App\n\nRun it:\n\n```yaml\nservices:\n  app:\n    image: ghcr.io/x/y:1.2\n```\n\n" +
+		"````json\nservices:\n  other:\n    image: ghcr.io/x/z:1\n````\n\n```\nservices:\n  plain:\n    image: ghcr.io/x/p:1\n```\n" +
+		"\n````text\nOpen a block with\n```yaml\n```` yaml\n~~~\n````\n\n```yaml\nservices:\n  after:\n    image: ghcr.io/x/a:1\n```\n"
+	docs := "# Install\n```yml\nservices:\n  docs:\n    image: ghcr.io/x/d:1\n"
+	if err := os.MkdirAll(filepath.Join(directory, "docs"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	for name, content := range map[string]string{"README.md": readme, "docs/install.md": docs} {
+		if err := os.WriteFile(filepath.Join(directory, name), []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	facts, err := Extract(context.Background(), directory)
+	if err != nil {
+		t.Fatal(err)
+	}
+	imagesAt := map[string]string{}
+	for _, file := range facts.ComposeFiles {
+		if !file.Fenced || len(file.Services) != 1 {
+			t.Fatalf("fenced file %+v", file)
+		}
+		imagesAt[file.Path] = file.Services[0].ImageAt.String()
+	}
+	want := map[string]string{"README.md#L5": "README.md#L5:8", "README.md#L17": "README.md#L17:20", "README.md#L30": "README.md#L30:33", "docs/install.md#L2": "docs/install.md#L2:5"}
+	if !maps.Equal(imagesAt, want) {
+		t.Fatalf("images at %v", imagesAt)
+	}
+}
+
+// TestDocsExampleDefaultRanksBelowTheSample: a value in a docs example does
+// not replace the one the repository's .env sample gives.
+func TestDocsExampleDefaultRanksBelowTheSample(t *testing.T) {
+	directory := t.TempDir()
+	files := map[string]string{
+		"docker-compose.yml": "services:\n  app:\n    image: ghcr.io/x/y:1\n    environment:\n      MAIL_HOST: ${MAIL_HOST}\n",
+		".env.example":       "MAIL_HOST=localhost\n",
+		"README.md":          "```yaml\nservices:\n  app:\n    image: ghcr.io/x/y:1\n    environment:\n      MAIL_HOST: smtp.example.com\n```\n",
+	}
+	for name, content := range files {
+		if err := os.WriteFile(filepath.Join(directory, name), []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	facts, err := Extract(context.Background(), directory)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if variable, _ := facts.Variable("MAIL_HOST"); variable.Default != "localhost" {
+		t.Fatalf("MAIL_HOST %+v", variable)
 	}
 }

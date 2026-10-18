@@ -20,6 +20,9 @@ const (
 	maxFiles = 5000
 	// maxUnreadableNamed is how many unreadable files a problem names.
 	maxUnreadableNamed = 5
+	// maxFencedComposeFiles is how many compose examples one page gives;
+	// each costs a compose load, and no real page shows more.
+	maxFencedComposeFiles = 20
 )
 
 // suspiciousText catches repository text addressed to a language model. It is
@@ -30,6 +33,10 @@ type sourceFile struct {
 	relative string
 	kind     fetch.Kind
 	content  []byte
+	// fenced marks a block of a README or docs page; lineOffset is the
+	// number of the page's lines above it.
+	fenced     bool
+	lineOffset int
 }
 
 // Extract reads the repository at directory. Files are read through os.Root,
@@ -69,7 +76,7 @@ func (facts *Facts) read(ctx context.Context, file sourceFile, samples map[strin
 	case isEnvSample(file.relative):
 		return nil
 	case file.kind == fetch.Document:
-		return facts.readMarkdown(file)
+		return facts.readMarkdown(ctx, file, samples)
 	case file.kind == fetch.Code:
 		return codeMentions(file.relative, file.content)
 	case isDockerfile(base):
@@ -90,8 +97,21 @@ func (facts *Facts) read(ctx context.Context, file sourceFile, samples map[strin
 	return nil
 }
 
-func (facts *Facts) readMarkdown(file sourceFile) []Mention {
+func (facts *Facts) readMarkdown(ctx context.Context, file sourceFile, samples map[string]map[string]string) []Mention {
 	scan := scanMarkdown(file.relative, file.content)
+	mentions := scan.mentions
+	firstFenced := len(facts.ComposeFiles)
+	for _, block := range scan.composeBlocks {
+		if ctx.Err() != nil || len(facts.ComposeFiles)-firstFenced == maxFencedComposeFiles {
+			break
+		}
+		// A value in a docs example ranks with the page, below the samples
+		// the repository ships.
+		for _, mention := range facts.readCompose(ctx, block, samples) {
+			mention.Kind = KindReadme
+			mentions = append(mentions, mention)
+		}
+	}
 	facts.Images = append(facts.Images, scan.images...)
 	facts.DockerRuns = append(facts.DockerRuns, scan.dockerRuns...)
 	facts.Notes = append(facts.Notes, scan.notes...)
@@ -111,7 +131,7 @@ func (facts *Facts) readMarkdown(file sourceFile) []Mention {
 			facts.Suspicious = append(facts.Suspicious, Note{Text: strings.TrimSpace(line), Location: Location{File: file.relative, Line: index + 1}})
 		}
 	}
-	return scan.mentions
+	return mentions
 }
 
 func (facts *Facts) readCompose(ctx context.Context, file sourceFile, samples map[string]map[string]string) []Mention {
@@ -121,7 +141,7 @@ func (facts *Facts) readCompose(ctx context.Context, file sourceFile, samples ma
 			interpolation[name] = value
 		}
 	}
-	compose, mentions, err := extractCompose(ctx, file.relative, file.content, interpolation)
+	compose, mentions, err := extractCompose(ctx, file.relative, file.content, file.lineOffset, interpolation)
 	if errors.Is(err, errNotCompose) {
 		return nil
 	}
@@ -129,6 +149,7 @@ func (facts *Facts) readCompose(ctx context.Context, file sourceFile, samples ma
 		facts.Problems = append(facts.Problems, err.Error())
 		return mentions
 	}
+	compose.Fenced = file.fenced
 	facts.ComposeFiles = append(facts.ComposeFiles, compose)
 	for _, service := range compose.Services {
 		if service.Image != "" && !strings.Contains(service.Image, "$") {

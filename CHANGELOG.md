@@ -48,6 +48,14 @@ All notable changes to this project are documented here. The format follows
   before the app. Blank keeps the derived host; a regeneration keeps the
   address, and `composewright gen --public-host` sets it from the command
   line.
+- A compose example written in a fenced yaml or untyped block of a README or
+  docs page is now read as an upstream compose file, named after the page and
+  the line the block opens on, such as README.md#L42. A plan built from it
+  cites those lines with high confidence instead of falling back to a docker
+  run line or the Dockerfile. A compose file the repository ships for
+  deployment always wins over such an example, and an .env sample's value
+  over one the example gives. The Analyse page counts these examples apart
+  from the compose files.
 - Try it on the Model providers page sends a connection one tiny request and
   says whether it answered: the model name it answered as, the tokens in and
   out and the time, or the provider's error with the key left out. It works
@@ -184,6 +192,13 @@ All notable changes to this project are documented here. The format follows
   such as `"80"`, is now published on a port of its own, as Compose would
   publish it; a database or cache written that way stays inside the stack.
   `DEPLOY.md` no longer sends you to port 0 when nothing is published.
+- An address with no place for a credential under a secret name, a host
+  alone such as MAILER_DSN=smtp://127.0.0.1 or a local path such as
+  sqlite:///data/app.db, is kept as written. It used to be replaced by a
+  generated string, which no app reads as a mailer or database address.
+- A password typed into a value shown as plain text, on the Review page or
+  in the editor, such as a mailer address with a user and password, is
+  stored sealed as a secret and kept out of the plan.
 - The file panel's buttons wrap onto a second row instead of running off a
   narrow panel.
 - The healthcheck an app's image ships with no longer blocks the stack: one

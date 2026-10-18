@@ -286,6 +286,31 @@ func TestPublicHostFollowsEveryRevision(t *testing.T) {
 	}
 }
 
+// TestTypedCredentialIsSealed: a password typed into a value shown as plain
+// text, on the Review page or in the editor, is stored sealed and leaves the
+// plan.
+func TestTypedCredentialIsSealed(t *testing.T) {
+	dependencies := testDependencies(t, &scriptedDocker{states: []string{healthy}})
+	generated(t, dependencies)
+	ctx := context.Background()
+	const typed = "postgres://miniflux:hunter22@db/feeds"
+	if _, err := Revise(ctx, dependencies, "miniflux", Revision{ExposeVia: "lan", Values: map[string]string{"DATABASE_URL": typed}}); err != nil {
+		t.Fatal(err)
+	}
+	after, err := Load(ctx, dependencies.Workspace, "miniflux")
+	if err != nil {
+		t.Fatal(err)
+	}
+	variables, err := storedVariables(ctx, dependencies.Workspace.Store, "miniflux")
+	if err != nil {
+		t.Fatal(err)
+	}
+	sealed := slices.ContainsFunc(variables, func(variable store.EnvVar) bool { return variable.Key == "DATABASE_URL" && variable.Secret })
+	if !sealed || after.Values["DATABASE_URL"] != typed || strings.Contains(after.Generation.IRJSON, "hunter22") {
+		t.Fatalf("typed credential not sealed: %+v", variables)
+	}
+}
+
 func TestApproveAndValidate(t *testing.T) {
 	docker := &scriptedDocker{states: []string{unhealthy, healthy}}
 	dependencies := testDependencies(t, docker)

@@ -312,6 +312,597 @@
         }
       ],
       "variables": []
+    },
+    {
+      "path": "docs/docs/documentation/community-guide/swag.md#L20",
+      "services": [
+        {
+          "name": "swag",
+          "location": {
+            "file": "docs/docs/documentation/community-guide/swag.md#L20",
+            "line": 23
+          },
+          "image": "ghcr.io/linuxserver/swag",
+          "image_at": {
+            "file": "docs/docs/documentation/community-guide/swag.md#L20",
+            "line": 24
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 443,
+              "published": "443",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docs/docs/documentation/community-guide/swag.md#L20",
+                "line": 45
+              }
+            },
+            {
+              "target": 80,
+              "published": "80",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docs/docs/documentation/community-guide/swag.md#L20",
+                "line": 46
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "/etc/config/swag",
+              "target": "/config",
+              "read_only": false,
+              "location": {
+                "file": "docs/docs/documentation/community-guide/swag.md#L20",
+                "line": 43
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "PUID",
+              "raw": "1000",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/community-guide/swag.md#L20",
+                "line": 29
+              }
+            },
+            {
+              "key": "PGID",
+              "raw": "1000",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/community-guide/swag.md#L20",
+                "line": 30
+              }
+            },
+            {
+              "key": "TZ",
+              "raw": "Europe/Brussels",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/community-guide/swag.md#L20",
+                "line": 31
+              }
+            },
+            {
+              "key": "URL",
+              "raw": "\u003cmydomain.duckdns\u003e",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/community-guide/swag.md#L20",
+                "line": 32
+              }
+            },
+            {
+              "key": "SUBDOMAINS",
+              "raw": "wildcard",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/community-guide/swag.md#L20",
+                "line": 33
+              }
+            },
+            {
+              "key": "VALIDATION",
+              "raw": "duckdns",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/community-guide/swag.md#L20",
+                "line": 34
+              }
+            },
+            {
+              "key": "CERTPROVIDER",
+              "raw": "",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/community-guide/swag.md#L20",
+                "line": 35
+              }
+            },
+            {
+              "key": "DNSPLUGIN",
+              "raw": "",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/community-guide/swag.md#L20",
+                "line": 36
+              }
+            },
+            {
+              "key": "DUCKDNSTOKEN",
+              "raw": "\u003cduckdnstoken\u003e",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/community-guide/swag.md#L20",
+                "line": 37
+              }
+            },
+            {
+              "key": "EMAIL",
+              "raw": "\u003ce-mail\u003e",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/community-guide/swag.md#L20",
+                "line": 38
+              }
+            },
+            {
+              "key": "ONLY_SUBDOMAINS",
+              "raw": "false",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/community-guide/swag.md#L20",
+                "line": 39
+              }
+            },
+            {
+              "key": "EXTRA_DOMAINS",
+              "raw": "\u003cextradomains\u003e",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/community-guide/swag.md#L20",
+                "line": 40
+              }
+            },
+            {
+              "key": "STAGING",
+              "raw": "false",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/community-guide/swag.md#L20",
+                "line": 41
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": "",
+          "cap_add": [
+            {
+              "value": "NET_ADMIN",
+              "location": {
+                "file": "docs/docs/documentation/community-guide/swag.md#L20",
+                "line": 27
+              }
+            }
+          ]
+        }
+      ],
+      "variables": [],
+      "fenced": true
+    },
+    {
+      "path": "docs/docs/documentation/getting-started/installation/backend-config.md#L182",
+      "services": [
+        {
+          "name": "mealie",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md#L182",
+            "line": 184
+          },
+          "image": "ghcr.io/mealie-recipes/mealie:latest",
+          "image_at": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md#L182",
+            "line": 185
+          },
+          "build": false,
+          "ports": null,
+          "volumes": null,
+          "environment": [
+            {
+              "key": "SCRAPER_FLARESOLVERR_URL",
+              "raw": "http://flaresolverr:8191",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/getting-started/installation/backend-config.md#L182",
+                "line": 187
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "flaresolverr",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md#L182",
+            "line": 191
+          },
+          "image": "ghcr.io/flaresolverr/flaresolverr:latest",
+          "image_at": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md#L182",
+            "line": 192
+          },
+          "build": false,
+          "ports": null,
+          "volumes": null,
+          "environment": null,
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": [],
+      "fenced": true
+    },
+    {
+      "path": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+      "services": [
+        {
+          "name": "mealie",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+            "line": 12
+          },
+          "image": "ghcr.io/mealie-recipes/mealie:v3.28.0",
+          "image_at": {
+            "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+            "line": 13
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 9000,
+              "published": "9925",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+                "line": 17
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "mealie-data",
+              "target": "/app/data",
+              "read_only": false,
+              "location": {
+                "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+                "line": 23
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "ALLOW_SIGNUP",
+              "raw": "false",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+                "line": 26
+              }
+            },
+            {
+              "key": "PUID",
+              "raw": "1000",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+                "line": 27
+              }
+            },
+            {
+              "key": "PGID",
+              "raw": "1000",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+                "line": 28
+              }
+            },
+            {
+              "key": "TZ",
+              "raw": "America/Anchorage",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+                "line": 29
+              }
+            },
+            {
+              "key": "BASE_URL",
+              "raw": "https://mealie.yourdomain.com",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+                "line": 30
+              }
+            },
+            {
+              "key": "DB_ENGINE",
+              "raw": "postgres",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+                "line": 32
+              }
+            },
+            {
+              "key": "POSTGRES_USER",
+              "raw": "mealie",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+                "line": 33
+              }
+            },
+            {
+              "key": "POSTGRES_PASSWORD",
+              "raw": "mealie",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+                "line": 34
+              }
+            },
+            {
+              "key": "POSTGRES_SERVER",
+              "raw": "postgres",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+                "line": 35
+              }
+            },
+            {
+              "key": "POSTGRES_PORT",
+              "raw": "5432",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+                "line": 36
+              }
+            },
+            {
+              "key": "POSTGRES_DB",
+              "raw": "mealie",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+                "line": 37
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": [
+            {
+              "service": "postgres",
+              "condition": "service_healthy"
+            }
+          ],
+          "command": null,
+          "entrypoint": null,
+          "user": "",
+          "memory_limit": "1000M",
+          "limits_at": {
+            "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+            "line": 21
+          }
+        },
+        {
+          "name": "postgres",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+            "line": 42
+          },
+          "image": "postgres:17",
+          "image_at": {
+            "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+            "line": 44
+          },
+          "build": false,
+          "ports": null,
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "mealie-pgdata",
+              "target": "/var/lib/postgresql/data",
+              "read_only": false,
+              "location": {
+                "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+                "line": 47
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "POSTGRES_PASSWORD",
+              "raw": "mealie",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+                "line": 49
+              }
+            },
+            {
+              "key": "POSTGRES_USER",
+              "raw": "mealie",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+                "line": 50
+              }
+            },
+            {
+              "key": "PGUSER",
+              "raw": "mealie",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+                "line": 51
+              }
+            },
+            {
+              "key": "POSTGRES_DB",
+              "raw": "mealie",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+                "line": 52
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "healthcheck": {
+            "test": [
+              "CMD",
+              "pg_isready"
+            ],
+            "interval": "30s",
+            "timeout": "20s",
+            "start_period": "",
+            "retries": 3,
+            "disabled": false,
+            "location": {
+              "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+              "line": 53
+            }
+          },
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": [],
+      "fenced": true
+    },
+    {
+      "path": "docs/docs/documentation/getting-started/installation/sqlite.md#L11",
+      "services": [
+        {
+          "name": "mealie",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/sqlite.md#L11",
+            "line": 13
+          },
+          "image": "ghcr.io/mealie-recipes/mealie:v3.28.0",
+          "image_at": {
+            "file": "docs/docs/documentation/getting-started/installation/sqlite.md#L11",
+            "line": 14
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 9000,
+              "published": "9925",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "docs/docs/documentation/getting-started/installation/sqlite.md#L11",
+                "line": 18
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "mealie-data",
+              "target": "/app/data",
+              "read_only": false,
+              "location": {
+                "file": "docs/docs/documentation/getting-started/installation/sqlite.md#L11",
+                "line": 24
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "ALLOW_SIGNUP",
+              "raw": "false",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/getting-started/installation/sqlite.md#L11",
+                "line": 27
+              }
+            },
+            {
+              "key": "PUID",
+              "raw": "1000",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/getting-started/installation/sqlite.md#L11",
+                "line": 28
+              }
+            },
+            {
+              "key": "PGID",
+              "raw": "1000",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/getting-started/installation/sqlite.md#L11",
+                "line": 29
+              }
+            },
+            {
+              "key": "TZ",
+              "raw": "America/Anchorage",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/getting-started/installation/sqlite.md#L11",
+                "line": 30
+              }
+            },
+            {
+              "key": "BASE_URL",
+              "raw": "https://mealie.yourdomain.com",
+              "has_value": true,
+              "location": {
+                "file": "docs/docs/documentation/getting-started/installation/sqlite.md#L11",
+                "line": 31
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": "",
+          "memory_limit": "1000M",
+          "limits_at": {
+            "file": "docs/docs/documentation/getting-started/installation/sqlite.md#L11",
+            "line": 22
+          }
+        }
+      ],
+      "variables": [],
+      "fenced": true
     }
   ],
   "dockerfiles": [
@@ -739,6 +1330,24 @@
             "file": "frontend/template.env",
             "line": 3
           }
+        },
+        {
+          "name": "ALLOW_SIGNUP",
+          "kind": "readme",
+          "default": "false",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+            "line": 26
+          }
+        },
+        {
+          "name": "ALLOW_SIGNUP",
+          "kind": "readme",
+          "default": "false",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/sqlite.md#L11",
+            "line": 27
+          }
         }
       ]
     },
@@ -834,6 +1443,40 @@
             "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
             "line": 13
           }
+        },
+        {
+          "name": "BASE_URL",
+          "kind": "readme",
+          "default": "https://mealie.yourdomain.com",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+            "line": 30
+          }
+        },
+        {
+          "name": "BASE_URL",
+          "kind": "readme",
+          "default": "https://mealie.yourdomain.com",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/sqlite.md#L11",
+            "line": 31
+          }
+        }
+      ]
+    },
+    {
+      "name": "CERTPROVIDER",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "CERTPROVIDER",
+          "kind": "readme",
+          "location": {
+            "file": "docs/docs/documentation/community-guide/swag.md#L20",
+            "line": 35
+          }
         }
       ]
     },
@@ -911,6 +1554,15 @@
             "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
             "line": 40
           }
+        },
+        {
+          "name": "DB_ENGINE",
+          "kind": "readme",
+          "default": "postgres",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+            "line": 32
+          }
         }
       ]
     },
@@ -946,6 +1598,73 @@
           "location": {
             "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
             "line": 12
+          }
+        }
+      ]
+    },
+    {
+      "name": "DNSPLUGIN",
+      "default": "",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DNSPLUGIN",
+          "kind": "readme",
+          "location": {
+            "file": "docs/docs/documentation/community-guide/swag.md#L20",
+            "line": 36
+          }
+        }
+      ]
+    },
+    {
+      "name": "DUCKDNSTOKEN",
+      "default": "\u003cduckdnstoken\u003e",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "DUCKDNSTOKEN",
+          "kind": "readme",
+          "default": "\u003cduckdnstoken\u003e",
+          "location": {
+            "file": "docs/docs/documentation/community-guide/swag.md#L20",
+            "line": 37
+          }
+        }
+      ]
+    },
+    {
+      "name": "EMAIL",
+      "default": "\u003ce-mail\u003e",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "EMAIL",
+          "kind": "readme",
+          "default": "\u003ce-mail\u003e",
+          "location": {
+            "file": "docs/docs/documentation/community-guide/swag.md#L20",
+            "line": 38
+          }
+        }
+      ]
+    },
+    {
+      "name": "EXTRA_DOMAINS",
+      "default": "\u003cextradomains\u003e",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "EXTRA_DOMAINS",
+          "kind": "readme",
+          "default": "\u003cextradomains\u003e",
+          "location": {
+            "file": "docs/docs/documentation/community-guide/swag.md#L20",
+            "line": 40
           }
         }
       ]
@@ -1624,6 +2343,23 @@
       ]
     },
     {
+      "name": "ONLY_SUBDOMAINS",
+      "default": "false",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "ONLY_SUBDOMAINS",
+          "kind": "readme",
+          "default": "false",
+          "location": {
+            "file": "docs/docs/documentation/community-guide/swag.md#L20",
+            "line": 39
+          }
+        }
+      ]
+    },
+    {
       "name": "PATH",
       "default": "$VENV_PATH/bin:$PATH",
       "description": "",
@@ -1642,10 +2378,19 @@
     },
     {
       "name": "PGID",
-      "default": "911",
+      "default": "1000",
       "description": "GroupID permissions between host OS and container",
       "required": false,
       "mentions": [
+        {
+          "name": "PGID",
+          "kind": "readme",
+          "default": "1000",
+          "location": {
+            "file": "docs/docs/documentation/community-guide/swag.md#L20",
+            "line": 30
+          }
+        },
         {
           "name": "PGID",
           "kind": "readme",
@@ -1654,6 +2399,41 @@
           "location": {
             "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
             "line": 10
+          }
+        },
+        {
+          "name": "PGID",
+          "kind": "readme",
+          "default": "1000",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+            "line": 28
+          }
+        },
+        {
+          "name": "PGID",
+          "kind": "readme",
+          "default": "1000",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/sqlite.md#L11",
+            "line": 29
+          }
+        }
+      ]
+    },
+    {
+      "name": "PGUSER",
+      "default": "mealie",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "PGUSER",
+          "kind": "readme",
+          "default": "mealie",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+            "line": 51
           }
         }
       ]
@@ -1723,6 +2503,24 @@
             "file": "docker/docker-compose.yml",
             "line": 25
           }
+        },
+        {
+          "name": "POSTGRES_DB",
+          "kind": "readme",
+          "default": "mealie",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+            "line": 37
+          }
+        },
+        {
+          "name": "POSTGRES_DB",
+          "kind": "readme",
+          "default": "mealie",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+            "line": 52
+          }
         }
       ]
     },
@@ -1749,6 +2547,24 @@
             "file": "docker/docker-compose.yml",
             "line": 22
           }
+        },
+        {
+          "name": "POSTGRES_PASSWORD",
+          "kind": "readme",
+          "default": "mealie",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+            "line": 34
+          }
+        },
+        {
+          "name": "POSTGRES_PASSWORD",
+          "kind": "readme",
+          "default": "mealie",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+            "line": 49
+          }
         }
       ]
     },
@@ -1766,6 +2582,15 @@
             "file": "docker/docker-compose.yml",
             "line": 24
           }
+        },
+        {
+          "name": "POSTGRES_PORT",
+          "kind": "readme",
+          "default": "5432",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+            "line": 36
+          }
         }
       ]
     },
@@ -1782,6 +2607,15 @@
           "location": {
             "file": "docker/docker-compose.yml",
             "line": 23
+          }
+        },
+        {
+          "name": "POSTGRES_SERVER",
+          "kind": "readme",
+          "default": "postgres",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+            "line": 35
           }
         }
       ]
@@ -1808,6 +2642,24 @@
           "location": {
             "file": "docker/docker-compose.yml",
             "line": 21
+          }
+        },
+        {
+          "name": "POSTGRES_USER",
+          "kind": "readme",
+          "default": "mealie",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+            "line": 33
+          }
+        },
+        {
+          "name": "POSTGRES_USER",
+          "kind": "readme",
+          "default": "mealie",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+            "line": 50
           }
         }
       ]
@@ -1839,10 +2691,19 @@
     },
     {
       "name": "PUID",
-      "default": "911",
+      "default": "1000",
       "description": "UserID permissions between host OS and container",
       "required": false,
       "mentions": [
+        {
+          "name": "PUID",
+          "kind": "readme",
+          "default": "1000",
+          "location": {
+            "file": "docs/docs/documentation/community-guide/swag.md#L20",
+            "line": 29
+          }
+        },
         {
           "name": "PUID",
           "kind": "readme",
@@ -1851,6 +2712,24 @@
           "location": {
             "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
             "line": 9
+          }
+        },
+        {
+          "name": "PUID",
+          "kind": "readme",
+          "default": "1000",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+            "line": 27
+          }
+        },
+        {
+          "name": "PUID",
+          "kind": "readme",
+          "default": "1000",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/sqlite.md#L11",
+            "line": 28
           }
         }
       ]
@@ -1921,6 +2800,15 @@
           "location": {
             "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
             "line": 151
+          }
+        },
+        {
+          "name": "SCRAPER_FLARESOLVERR_URL",
+          "kind": "readme",
+          "default": "http://flaresolverr:8191",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/backend-config.md#L182",
+            "line": 187
           }
         }
       ]
@@ -2081,6 +2969,40 @@
           "location": {
             "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
             "line": 41
+          }
+        }
+      ]
+    },
+    {
+      "name": "STAGING",
+      "default": "false",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "STAGING",
+          "kind": "readme",
+          "default": "false",
+          "location": {
+            "file": "docs/docs/documentation/community-guide/swag.md#L20",
+            "line": 41
+          }
+        }
+      ]
+    },
+    {
+      "name": "SUBDOMAINS",
+      "default": "wildcard",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "SUBDOMAINS",
+          "kind": "readme",
+          "default": "wildcard",
+          "location": {
+            "file": "docs/docs/documentation/community-guide/swag.md#L20",
+            "line": 33
           }
         }
       ]
@@ -2704,10 +3626,19 @@
     },
     {
       "name": "TZ",
-      "default": "UTC",
+      "default": "Europe/Brussels",
       "description": "Must be set to get correct date/time on the server",
       "required": false,
       "mentions": [
+        {
+          "name": "TZ",
+          "kind": "readme",
+          "default": "Europe/Brussels",
+          "location": {
+            "file": "docs/docs/documentation/community-guide/swag.md#L20",
+            "line": 31
+          }
+        },
         {
           "name": "TZ",
           "kind": "readme",
@@ -2716,6 +3647,41 @@
           "location": {
             "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
             "line": 17
+          }
+        },
+        {
+          "name": "TZ",
+          "kind": "readme",
+          "default": "America/Anchorage",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+            "line": 29
+          }
+        },
+        {
+          "name": "TZ",
+          "kind": "readme",
+          "default": "America/Anchorage",
+          "location": {
+            "file": "docs/docs/documentation/getting-started/installation/sqlite.md#L11",
+            "line": 30
+          }
+        }
+      ]
+    },
+    {
+      "name": "URL",
+      "default": "\u003cmydomain.duckdns\u003e",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "URL",
+          "kind": "readme",
+          "default": "\u003cmydomain.duckdns\u003e",
+          "location": {
+            "file": "docs/docs/documentation/community-guide/swag.md#L20",
+            "line": 32
           }
         }
       ]
@@ -2734,6 +3700,23 @@
           "location": {
             "file": "docs/docs/documentation/getting-started/installation/backend-config.md",
             "line": 67
+          }
+        }
+      ]
+    },
+    {
+      "name": "VALIDATION",
+      "default": "duckdns",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "VALIDATION",
+          "kind": "readme",
+          "default": "duckdns",
+          "location": {
+            "file": "docs/docs/documentation/community-guide/swag.md#L20",
+            "line": 34
           }
         }
       ]
@@ -2825,10 +3808,34 @@
     },
     {
       "reference": "ghcr.io/linuxserver/swag",
+      "kind": "compose",
+      "location": {
+        "file": "docs/docs/documentation/community-guide/swag.md#L20",
+        "line": 24
+      }
+    },
+    {
+      "reference": "ghcr.io/linuxserver/swag",
       "kind": "readme",
       "location": {
         "file": "docs/docs/documentation/community-guide/swag.md",
         "line": 24
+      }
+    },
+    {
+      "reference": "ghcr.io/mealie-recipes/mealie:latest",
+      "kind": "compose",
+      "location": {
+        "file": "docs/docs/documentation/getting-started/installation/backend-config.md#L182",
+        "line": 185
+      }
+    },
+    {
+      "reference": "ghcr.io/flaresolverr/flaresolverr:latest",
+      "kind": "compose",
+      "location": {
+        "file": "docs/docs/documentation/getting-started/installation/backend-config.md#L182",
+        "line": 192
       }
     },
     {
@@ -2845,6 +3852,22 @@
       "location": {
         "file": "docs/docs/documentation/getting-started/installation/installation-checklist.md",
         "line": 34
+      }
+    },
+    {
+      "reference": "ghcr.io/mealie-recipes/mealie:v3.28.0",
+      "kind": "compose",
+      "location": {
+        "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+        "line": 13
+      }
+    },
+    {
+      "reference": "postgres:17",
+      "kind": "compose",
+      "location": {
+        "file": "docs/docs/documentation/getting-started/installation/postgres.md#L10",
+        "line": 44
       }
     },
     {

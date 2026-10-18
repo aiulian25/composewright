@@ -11,14 +11,14 @@
       "name": "vaultwarden",
       "role": "app",
       "image": {
-        "registry": "ghcr.io",
-        "repository": "dani-garcia/vaultwarden",
+        "registry": "docker.io",
+        "repository": "vaultwarden/server",
         "tag": "latest",
         "digest": "",
         "provenance": {
-          "source": "readme",
-          "source_ref": "docker/README.md:187",
-          "confidence": "medium"
+          "source": "compose",
+          "source_ref": "README.md#L99:102",
+          "confidence": "high"
         }
       },
       "command": [],
@@ -32,9 +32,9 @@
           "secret": false,
           "description": "Domain settings The domain must match the address from where you access the server It's recommended to configure this value, otherwise certain functionality might not work, like attachment downloads, email links and U2F. For U2F to work, the server must use HTTPS, you can use Let's Encrypt for free certs To use HTTPS, the recommended way is to put Vaultwarden behind a reverse proxy Details: - https://github.com/dani-garcia/vaultwarden/wiki/Enabling-HTTPS - https://github.com/dani-garcia/vaultwarden/wiki/Proxy-examples For development",
           "provenance": {
-            "source": "readme",
-            "source_ref": "README.md:85",
-            "confidence": "medium"
+            "source": "compose",
+            "source_ref": "README.md#L99:106",
+            "confidence": "high"
           }
         }
       ],
@@ -46,21 +46,21 @@
           "host_port": 8000,
           "description": "",
           "provenance": {
-            "source": "readme",
-            "source_ref": "README.md:85",
-            "confidence": "medium"
+            "source": "compose",
+            "source_ref": "README.md#L99:110",
+            "confidence": "high"
           }
         }
       ],
       "volumes": [
         {
-          "name": "data",
+          "name": "vw-data",
           "container_path": "/data",
           "description": "",
           "provenance": {
-            "source": "readme",
-            "source_ref": "README.md:85",
-            "confidence": "medium"
+            "source": "compose",
+            "source_ref": "README.md#L99:108",
+            "confidence": "high"
           }
         }
       ],
@@ -103,11 +103,13 @@
           "confidence": "low"
         }
       },
-      "notes": [],
+      "notes": [
+        "upstream bind mount ./vw-data/:/data is a named volume here (use --storage bind for a host folder)"
+      ],
       "provenance": {
-        "source": "readme",
-        "source_ref": "docker/README.md:187",
-        "confidence": "medium"
+        "source": "compose",
+        "source_ref": "README.md#L99:101",
+        "confidence": "high"
       }
     }
   ],
@@ -122,7 +124,7 @@
       "file_env_key": "",
       "provenance": {
         "source": "default",
-        "source_ref": "README.md:85",
+        "source_ref": "README.md#L99:106",
         "confidence": "medium"
       }
     }
@@ -1733,12 +1735,17 @@
     "expect": []
   },
   "post_install_notes": [],
-  "confidence": "medium",
+  "confidence": "high",
   "evidence": [
     {
-      "claim": "documented docker run command",
-      "file": "README.md",
-      "line": 85
+      "claim": "compose file README.md#L99 chosen among 0 upstream compose files and 1 compose examples in the docs",
+      "file": "README.md#L99",
+      "line": 0
+    },
+    {
+      "claim": "app image docker.io/vaultwarden/server",
+      "file": "README.md#L99",
+      "line": 102
     }
   ],
   "suspicious_instructions": [],

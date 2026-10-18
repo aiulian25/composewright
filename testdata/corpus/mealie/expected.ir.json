@@ -1062,7 +1062,7 @@
   "confidence": "medium",
   "evidence": [
     {
-      "claim": "compose file docker/docker-compose.yml chosen among 2 upstream compose files",
+      "claim": "compose file docker/docker-compose.yml chosen among 2 upstream compose files and 4 compose examples in the docs",
       "file": "docker/docker-compose.yml",
       "line": 1
     },

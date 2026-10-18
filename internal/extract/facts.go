@@ -60,6 +60,30 @@ type ComposeFile struct {
 	Path      string           `json:"path"`
 	Services  []ComposeService `json:"services"`
 	Variables []Mention        `json:"variables"`
+	// Fenced marks a file read from a fenced block of a README or docs page.
+	Fenced bool `json:"fenced,omitempty"`
+}
+
+// ComposeCounts are how many compose files the repository ships and how
+// many compose examples its README and docs pages show.
+func (facts *Facts) ComposeCounts() (files, examples int) {
+	for _, file := range facts.ComposeFiles {
+		if file.Fenced {
+			examples++
+			continue
+		}
+		files++
+	}
+	return files, examples
+}
+
+// Opening is where the file starts: its first line, or the fence its path
+// already names.
+func (file ComposeFile) Opening() Location {
+	if file.Fenced {
+		return Location{File: file.Path}
+	}
+	return Location{File: file.Path, Line: 1}
 }
 
 type ComposeService struct {
@@ -305,7 +329,7 @@ func (facts *Facts) Started(enabled []string) *Facts {
 	if len(hidden) == 0 {
 		return &copied
 	}
-	return copied.without(facts, func(location Location) bool { return hidden[location] })
+	return copied.without(facts, func(_ string, location Location) bool { return hidden[location] })
 }
 
 // FromCompose returns a copy holding only the compose file path, with the
@@ -317,14 +341,14 @@ func (facts *Facts) FromCompose(path string) *Facts {
 	}
 	copied := *facts
 	copied.ComposeFiles = slices.DeleteFunc(slices.Clone(facts.ComposeFiles), func(file ComposeFile) bool { return file.Path != path })
-	return copied.without(facts, func(location Location) bool { return location.File != path })
+	return copied.without(facts, func(kind string, location Location) bool { return kind == KindCompose && location.File != path })
 }
 
 // without fills copied, which holds the compose files kept, with the images
-// and variables of facts but those of the compose lines dropped. One mention
-// stands for every service of an image, so it stays while a kept service
-// uses that image.
-func (copied Facts) without(facts *Facts, dropped func(Location) bool) *Facts {
+// and variables of facts but the mentions dropped names by their kind and
+// line. One mention stands for every service of an image, so it stays while
+// a kept service uses that image.
+func (copied Facts) without(facts *Facts, dropped func(kind string, location Location) bool) *Facts {
 	keptImages := map[string]bool{}
 	for _, file := range copied.ComposeFiles {
 		for _, service := range file.Services {
@@ -332,12 +356,12 @@ func (copied Facts) without(facts *Facts, dropped func(Location) bool) *Facts {
 		}
 	}
 	copied.Images = slices.DeleteFunc(slices.Clone(facts.Images), func(mention ImageMention) bool {
-		return mention.Kind == KindCompose && dropped(mention.Location) && !keptImages[mention.Reference]
+		return dropped(mention.Kind, mention.Location) && !keptImages[mention.Reference]
 	})
 	var mentions []Mention
 	for _, variable := range facts.Variables {
 		for _, mention := range variable.Mentions {
-			if mention.Kind != KindCompose || !dropped(mention.Location) {
+			if !dropped(mention.Kind, mention.Location) {
 				mentions = append(mentions, mention)
 			}
 		}

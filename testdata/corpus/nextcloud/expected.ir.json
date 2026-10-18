@@ -602,7 +602,7 @@
   "confidence": "high",
   "evidence": [
     {
-      "claim": "compose file stack.yml chosen among 9 upstream compose files",
+      "claim": "compose file stack.yml chosen among 9 upstream compose files and 3 compose examples in the docs",
       "file": "stack.yml",
       "line": 1
     },

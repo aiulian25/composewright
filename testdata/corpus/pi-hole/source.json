@@ -3,5 +3,5 @@
   "owner": "pi-hole",
   "commit": "dd91b4847d97f0aac68bfefd1c108ed0627e6c68",
   "allow_registries": "docker.io/pihole/*",
-  "verdict": "pass"
+  "verdict": "need:cap_add"
 }

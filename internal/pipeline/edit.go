@@ -254,6 +254,7 @@ func setVariable(plan *ir.IR, values map[string]string, key, value string) error
 	entry, found := plan.EnvEntry(key)
 	if found && Editable(*entry) {
 		entry.Value, entry.Provenance = value, edited
+		sealCredential(entry)
 	}
 	if found {
 		return nil

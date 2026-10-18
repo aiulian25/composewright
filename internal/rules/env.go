@@ -197,7 +197,7 @@ func (builder *builder) ensureEntry(name, value string, required bool, at ir.Pro
 	if entry.Description != "" && at.Confidence == ir.ConfidenceHigh {
 		entry.Provenance.SourceRef = at.SourceRef
 	}
-	entry.Secret = ir.IsSecretSetting(name, value) || hasURLPassword(value)
+	entry.Secret = HoldsSecret(name, value)
 	builder.secretValue(&entry)
 	builder.plan.EnvFile = append(builder.plan.EnvFile, entry)
 	created, _ := builder.plan.EnvEntry(name)
@@ -367,6 +367,12 @@ func (builder *builder) knownDefault(name string) string {
 		return ""
 	}
 	return variable.Default
+}
+
+// HoldsSecret reports whether a .env entry's value must be sealed: secret
+// material under its name, or a URL that carries a password.
+func HoldsSecret(name, value string) bool {
+	return ir.IsSecretSetting(name, value) || hasURLPassword(value)
 }
 
 func hasURLPassword(value string) bool {

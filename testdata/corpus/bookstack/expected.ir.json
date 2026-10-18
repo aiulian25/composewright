@@ -1,14 +1,14 @@
 {
   "ir_version": "1",
   "app": {
-    "name": "docker-bookstack",
+    "name": "bookstack",
     "summary": "The LinuxServer.io team brings you another container release featuring:",
     "upstream_url": "https://github.com/linuxserver/docker-bookstack",
     "docs_url": ""
   },
   "services": [
     {
-      "name": "docker-bookstack",
+      "name": "bookstack",
       "role": "app",
       "image": {
         "registry": "lscr.io",
@@ -16,9 +16,9 @@
         "tag": "latest",
         "digest": "",
         "provenance": {
-          "source": "readme",
-          "source_ref": "README.md:51",
-          "confidence": "medium"
+          "source": "compose",
+          "source_ref": "README.md#L116:120",
+          "confidence": "high"
         }
       },
       "command": [],
@@ -32,9 +32,9 @@
           "secret": false,
           "description": "",
           "provenance": {
-            "source": "readme",
-            "source_ref": "README.md:144",
-            "confidence": "medium"
+            "source": "compose",
+            "source_ref": "README.md#L116:123",
+            "confidence": "high"
           }
         },
         {
@@ -45,9 +45,9 @@
           "secret": false,
           "description": "",
           "provenance": {
-            "source": "readme",
-            "source_ref": "README.md:144",
-            "confidence": "medium"
+            "source": "compose",
+            "source_ref": "README.md#L116:124",
+            "confidence": "high"
           }
         },
         {
@@ -58,9 +58,9 @@
           "secret": false,
           "description": "",
           "provenance": {
-            "source": "readme",
-            "source_ref": "README.md:144",
-            "confidence": "medium"
+            "source": "compose",
+            "source_ref": "README.md#L116:125",
+            "confidence": "high"
           }
         },
         {
@@ -71,9 +71,9 @@
           "secret": false,
           "description": "",
           "provenance": {
-            "source": "readme",
-            "source_ref": "README.md:144",
-            "confidence": "medium"
+            "source": "compose",
+            "source_ref": "README.md#L116:126",
+            "confidence": "high"
           }
         },
         {
@@ -84,9 +84,9 @@
           "secret": true,
           "description": "",
           "provenance": {
-            "source": "readme",
-            "source_ref": "README.md:144",
-            "confidence": "medium"
+            "source": "compose",
+            "source_ref": "README.md#L116:127",
+            "confidence": "high"
           }
         },
         {
@@ -97,9 +97,9 @@
           "secret": false,
           "description": "",
           "provenance": {
-            "source": "readme",
-            "source_ref": "README.md:144",
-            "confidence": "medium"
+            "source": "compose",
+            "source_ref": "README.md#L116:128",
+            "confidence": "high"
           }
         },
         {
@@ -110,9 +110,9 @@
           "secret": false,
           "description": "",
           "provenance": {
-            "source": "readme",
-            "source_ref": "README.md:144",
-            "confidence": "medium"
+            "source": "compose",
+            "source_ref": "README.md#L116:129",
+            "confidence": "high"
           }
         },
         {
@@ -123,9 +123,9 @@
           "secret": false,
           "description": "",
           "provenance": {
-            "source": "readme",
-            "source_ref": "README.md:144",
-            "confidence": "medium"
+            "source": "compose",
+            "source_ref": "README.md#L116:130",
+            "confidence": "high"
           }
         },
         {
@@ -136,9 +136,9 @@
           "secret": true,
           "description": "",
           "provenance": {
-            "source": "readme",
-            "source_ref": "README.md:144",
-            "confidence": "medium"
+            "source": "compose",
+            "source_ref": "README.md#L116:131",
+            "confidence": "high"
           }
         },
         {
@@ -149,9 +149,9 @@
           "secret": false,
           "description": "",
           "provenance": {
-            "source": "readme",
-            "source_ref": "README.md:144",
-            "confidence": "medium"
+            "source": "compose",
+            "source_ref": "README.md#L116:132",
+            "confidence": "high"
           }
         },
         {
@@ -162,9 +162,9 @@
           "secret": false,
           "description": "",
           "provenance": {
-            "source": "readme",
-            "source_ref": "README.md:144",
-            "confidence": "medium"
+            "source": "compose",
+            "source_ref": "README.md#L116:133",
+            "confidence": "high"
           }
         }
       ],
@@ -176,9 +176,9 @@
           "host_port": 6875,
           "description": "",
           "provenance": {
-            "source": "readme",
-            "source_ref": "README.md:144",
-            "confidence": "medium"
+            "source": "compose",
+            "source_ref": "README.md#L116:137",
+            "confidence": "high"
           }
         }
       ],
@@ -188,9 +188,9 @@
           "container_path": "/config",
           "description": "",
           "provenance": {
-            "source": "readme",
-            "source_ref": "README.md:144",
-            "confidence": "medium"
+            "source": "compose",
+            "source_ref": "README.md#L116:135",
+            "confidence": "high"
           }
         }
       ],
@@ -236,12 +236,13 @@
         }
       },
       "notes": [
+        "upstream bind mount /path/to/bookstack/config:/config is a named volume here (use --storage bind for a host folder)",
         "DB_HOST was left for a database you run; the stack runs docker.io/library/mariadb:11.8 as mariadb and points DB_HOST at it"
       ],
       "provenance": {
-        "source": "readme",
-        "source_ref": "README.md:51",
-        "confidence": "medium"
+        "source": "compose",
+        "source_ref": "README.md#L116:119",
+        "confidence": "high"
       }
     },
     {
@@ -386,9 +387,9 @@
       "description": "",
       "file_env_key": "",
       "provenance": {
-        "source": "readme",
-        "source_ref": "README.md:144",
-        "confidence": "medium"
+        "source": "compose",
+        "source_ref": "README.md#L116:123",
+        "confidence": "high"
       }
     },
     {
@@ -400,9 +401,9 @@
       "description": "",
       "file_env_key": "",
       "provenance": {
-        "source": "readme",
-        "source_ref": "README.md:144",
-        "confidence": "medium"
+        "source": "compose",
+        "source_ref": "README.md#L116:124",
+        "confidence": "high"
       }
     },
     {
@@ -414,9 +415,9 @@
       "description": "",
       "file_env_key": "",
       "provenance": {
-        "source": "readme",
-        "source_ref": "README.md:144",
-        "confidence": "medium"
+        "source": "compose",
+        "source_ref": "README.md#L116:125",
+        "confidence": "high"
       }
     },
     {
@@ -429,7 +430,7 @@
       "file_env_key": "",
       "provenance": {
         "source": "default",
-        "source_ref": "README.md:144",
+        "source_ref": "README.md#L116:126",
         "confidence": "medium"
       }
     },
@@ -442,9 +443,9 @@
       "description": "",
       "file_env_key": "",
       "provenance": {
-        "source": "readme",
-        "source_ref": "README.md:144",
-        "confidence": "medium"
+        "source": "compose",
+        "source_ref": "README.md#L116:127",
+        "confidence": "high"
       }
     },
     {
@@ -457,7 +458,7 @@
       "file_env_key": "",
       "provenance": {
         "source": "sidecar_rule",
-        "source_ref": "README.md:144",
+        "source_ref": "README.md#L116:128",
         "confidence": "medium"
       }
     },
@@ -470,9 +471,9 @@
       "description": "",
       "file_env_key": "",
       "provenance": {
-        "source": "readme",
-        "source_ref": "README.md:144",
-        "confidence": "medium"
+        "source": "compose",
+        "source_ref": "README.md#L116:129",
+        "confidence": "high"
       }
     },
     {
@@ -485,7 +486,7 @@
       "file_env_key": "",
       "provenance": {
         "source": "sidecar_rule",
-        "source_ref": "README.md:144",
+        "source_ref": "README.md#L116:130",
         "confidence": "medium"
       }
     },
@@ -498,9 +499,9 @@
       "description": "",
       "file_env_key": "",
       "provenance": {
-        "source": "readme",
-        "source_ref": "README.md:144",
-        "confidence": "medium"
+        "source": "compose",
+        "source_ref": "README.md#L116:131",
+        "confidence": "high"
       }
     },
     {
@@ -513,7 +514,7 @@
       "file_env_key": "",
       "provenance": {
         "source": "sidecar_rule",
-        "source_ref": "README.md:144",
+        "source_ref": "README.md#L116:132",
         "confidence": "medium"
       }
     },
@@ -526,9 +527,9 @@
       "description": "",
       "file_env_key": "",
       "provenance": {
-        "source": "readme",
-        "source_ref": "README.md:144",
-        "confidence": "medium"
+        "source": "compose",
+        "source_ref": "README.md#L116:133",
+        "confidence": "high"
       }
     },
     {
@@ -550,7 +551,7 @@
   "optional_services": [],
   "needs": [],
   "probe": {
-    "service": "docker-bookstack",
+    "service": "bookstack",
     "port": 80,
     "path": "/",
     "expect": []
@@ -561,12 +562,17 @@
     "DB_PASSWORD was generated for you; it is in .env",
     "MARIADB_ROOT_PASSWORD was generated for you; it is in .env"
   ],
-  "confidence": "medium",
+  "confidence": "high",
   "evidence": [
     {
-      "claim": "documented docker run command",
-      "file": "README.md",
-      "line": 144
+      "claim": "compose file README.md#L116 chosen among 0 upstream compose files and 1 compose examples in the docs",
+      "file": "README.md#L116",
+      "line": 0
+    },
+    {
+      "claim": "app image lscr.io/linuxserver/bookstack",
+      "file": "README.md#L116",
+      "line": 120
     }
   ],
   "suspicious_instructions": [],

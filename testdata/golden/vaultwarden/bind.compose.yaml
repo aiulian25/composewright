@@ -2,7 +2,7 @@
 name: vaultwarden
 services:
   vaultwarden:
-    image: ghcr.io/dani-garcia/vaultwarden:latest
+    image: docker.io/vaultwarden/server:latest
     restart: unless-stopped
     environment:
       DOMAIN: "${DOMAIN}"
@@ -155,7 +155,7 @@ services:
     ports:
       - "127.0.0.1:8000:80/tcp"
     volumes:
-      - "/srv/docker/vaultwarden/data:/data"
+      - "/srv/docker/vaultwarden/vw-data:/data"
     healthcheck:
       test: ["CMD", "/healthcheck.sh"]
       interval: 60s

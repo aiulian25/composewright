@@ -1,14 +1,14 @@
 {
   "ir_version": "1",
   "app": {
-    "name": "docker",
+    "name": "wallabag",
     "summary": "With this application you will not miss content anymore. Click, save, read it when you want. It saves the content you select so that you can read it when you have time.",
     "upstream_url": "https://github.com/wallabag/docker",
     "docs_url": ""
   },
   "services": [
     {
-      "name": "docker",
+      "name": "wallabag",
       "role": "app",
       "image": {
         "registry": "docker.io",
@@ -16,14 +16,157 @@
         "tag": "latest",
         "digest": "",
         "provenance": {
-          "source": "readme",
-          "source_ref": "README.md:51",
-          "confidence": "medium"
+          "source": "compose",
+          "source_ref": "README.md#L111:114",
+          "confidence": "high"
         }
       },
       "command": [],
       "entrypoint": [],
       "env": [
+        {
+          "key": "MYSQL_ROOT_PASSWORD",
+          "ref": "MYSQL_ROOT_PASSWORD",
+          "literal": "",
+          "required": true,
+          "secret": true,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "README.md#L111:117",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "SYMFONY__ENV__DATABASE_DRIVER",
+          "ref": "SYMFONY__ENV__DATABASE_DRIVER",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "README.md#L111:118",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "SYMFONY__ENV__DATABASE_HOST",
+          "ref": "SYMFONY__ENV__DATABASE_HOST",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "README.md#L111:119",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "SYMFONY__ENV__DATABASE_PORT",
+          "ref": "SYMFONY__ENV__DATABASE_PORT",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "README.md#L111:120",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "SYMFONY__ENV__DATABASE_NAME",
+          "ref": "SYMFONY__ENV__DATABASE_NAME",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "README.md#L111:121",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "SYMFONY__ENV__DATABASE_USER",
+          "ref": "SYMFONY__ENV__DATABASE_USER",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "README.md#L111:122",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "SYMFONY__ENV__DATABASE_PASSWORD",
+          "ref": "SYMFONY__ENV__DATABASE_PASSWORD",
+          "literal": "",
+          "required": true,
+          "secret": true,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "README.md#L111:123",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "SYMFONY__ENV__DATABASE_CHARSET",
+          "ref": "SYMFONY__ENV__DATABASE_CHARSET",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "README.md#L111:124",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "SYMFONY__ENV__DATABASE_TABLE_PREFIX",
+          "ref": "SYMFONY__ENV__DATABASE_TABLE_PREFIX",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "README.md#L111:125",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "SYMFONY__ENV__MAILER_DSN",
+          "ref": "SYMFONY__ENV__MAILER_DSN",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "README.md#L111:126",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "SYMFONY__ENV__FROM_EMAIL",
+          "ref": "SYMFONY__ENV__FROM_EMAIL",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "README.md#L111:127",
+            "confidence": "high"
+          }
+        },
         {
           "key": "SYMFONY__ENV__DOMAIN_NAME",
           "ref": "SYMFONY__ENV__DOMAIN_NAME",
@@ -32,9 +175,22 @@
           "secret": false,
           "description": "",
           "provenance": {
-            "source": "readme",
-            "source_ref": "README.md:51",
-            "confidence": "medium"
+            "source": "compose",
+            "source_ref": "README.md#L111:128",
+            "confidence": "high"
+          }
+        },
+        {
+          "key": "SYMFONY__ENV__SERVER_NAME",
+          "ref": "SYMFONY__ENV__SERVER_NAME",
+          "literal": "",
+          "required": true,
+          "secret": false,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "README.md#L111:129",
+            "confidence": "high"
           }
         }
       ],
@@ -46,14 +202,34 @@
           "host_port": 0,
           "description": "",
           "provenance": {
-            "source": "readme",
-            "source_ref": "README.md:51",
-            "confidence": "medium"
+            "source": "compose",
+            "source_ref": "README.md#L111:131",
+            "confidence": "high"
           }
         }
       ],
-      "volumes": [],
-      "depends_on": [],
+      "volumes": [
+        {
+          "name": "images",
+          "container_path": "/var/www/wallabag/web/assets/images",
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "README.md#L111:133",
+            "confidence": "high"
+          }
+        }
+      ],
+      "depends_on": [
+        {
+          "service": "db",
+          "condition": "service_healthy"
+        },
+        {
+          "service": "redis",
+          "condition": "service_healthy"
+        }
+      ],
       "healthcheck": {
         "test": [
           "CMD-SHELL",
@@ -92,27 +268,368 @@
           "confidence": "low"
         }
       },
+      "notes": [
+        "upstream publishes container port 80 on any free host port; host port 8080 is used so the address stays the same",
+        "upstream bind mount /opt/wallabag/images:/var/www/wallabag/web/assets/images is a named volume here (use --storage bind for a host folder)"
+      ],
+      "provenance": {
+        "source": "compose",
+        "source_ref": "README.md#L111:113",
+        "confidence": "high"
+      }
+    },
+    {
+      "name": "db",
+      "role": "db",
+      "image": {
+        "registry": "docker.io",
+        "repository": "library/mariadb",
+        "tag": "latest",
+        "digest": "",
+        "provenance": {
+          "source": "compose",
+          "source_ref": "README.md#L111:138",
+          "confidence": "high"
+        }
+      },
+      "command": [],
+      "entrypoint": [],
+      "env": [
+        {
+          "key": "MYSQL_ROOT_PASSWORD",
+          "ref": "MYSQL_ROOT_PASSWORD",
+          "literal": "",
+          "required": true,
+          "secret": true,
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "README.md#L111:141",
+            "confidence": "high"
+          }
+        }
+      ],
+      "ports": [],
+      "volumes": [
+        {
+          "name": "data",
+          "container_path": "/var/lib/mysql",
+          "description": "",
+          "provenance": {
+            "source": "compose",
+            "source_ref": "README.md#L111:143",
+            "confidence": "high"
+          }
+        }
+      ],
+      "depends_on": [],
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "/usr/local/bin/healthcheck.sh",
+          "--innodb_initialized"
+        ],
+        "interval": "20s",
+        "timeout": "3s",
+        "retries": 0,
+        "start_period": "",
+        "omitted_reason": "",
+        "provenance": {
+          "source": "compose",
+          "source_ref": "README.md#L111:144",
+          "confidence": "high"
+        }
+      },
+      "user": "",
+      "resources": {
+        "memory_limit": "",
+        "cpus": "",
+        "pids_limit": 0,
+        "shm_size": "",
+        "provenance": {
+          "source": "default",
+          "source_ref": "",
+          "confidence": "low"
+        }
+      },
+      "hardening": {
+        "cap_drop": [],
+        "read_only": false,
+        "tmpfs": [],
+        "provenance": {
+          "source": "default",
+          "source_ref": "",
+          "confidence": "low"
+        }
+      },
+      "notes": [
+        "upstream bind mount /opt/wallabag/data:/var/lib/mysql is a named volume here (use --storage bind for a host folder)"
+      ],
+      "provenance": {
+        "source": "compose",
+        "source_ref": "README.md#L111:137",
+        "confidence": "high"
+      }
+    },
+    {
+      "name": "redis",
+      "role": "cache",
+      "image": {
+        "registry": "docker.io",
+        "repository": "library/redis",
+        "tag": "alpine",
+        "digest": "",
+        "provenance": {
+          "source": "compose",
+          "source_ref": "README.md#L111:149",
+          "confidence": "high"
+        }
+      },
+      "command": [],
+      "entrypoint": [],
+      "env": [],
+      "ports": [],
+      "volumes": [
+        {
+          "name": "redis-data",
+          "container_path": "/data",
+          "description": "redis data",
+          "provenance": {
+            "source": "sidecar_rule",
+            "source_ref": "",
+            "confidence": "medium"
+          }
+        }
+      ],
+      "depends_on": [],
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "redis-cli",
+          "ping"
+        ],
+        "interval": "20s",
+        "timeout": "3s",
+        "retries": 0,
+        "start_period": "",
+        "omitted_reason": "",
+        "provenance": {
+          "source": "compose",
+          "source_ref": "README.md#L111:151",
+          "confidence": "high"
+        }
+      },
+      "user": "",
+      "resources": {
+        "memory_limit": "",
+        "cpus": "",
+        "pids_limit": 0,
+        "shm_size": "",
+        "provenance": {
+          "source": "default",
+          "source_ref": "",
+          "confidence": "low"
+        }
+      },
+      "hardening": {
+        "cap_drop": [],
+        "read_only": false,
+        "tmpfs": [],
+        "provenance": {
+          "source": "default",
+          "source_ref": "",
+          "confidence": "low"
+        }
+      },
       "notes": [],
       "provenance": {
-        "source": "readme",
-        "source_ref": "README.md:51",
-        "confidence": "medium"
+        "source": "compose",
+        "source_ref": "README.md#L111:148",
+        "confidence": "high"
       }
     }
   ],
   "env_file": [
     {
-      "key": "SYMFONY__ENV__DOMAIN_NAME",
-      "value": "http://localhost",
+      "key": "MYSQL_ROOT_PASSWORD",
+      "value": "",
+      "generate": "hex32",
+      "secret": true,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "README.md#L111:117",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "SYMFONY__ENV__DATABASE_DRIVER",
+      "value": "pdo_mysql",
       "generate": "",
       "secret": false,
       "required": true,
       "description": "",
       "file_env_key": "",
       "provenance": {
-        "source": "readme",
-        "source_ref": "README.md:51",
-        "confidence": "medium"
+        "source": "compose",
+        "source_ref": "README.md#L111:118",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "SYMFONY__ENV__DATABASE_HOST",
+      "value": "db",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "README.md#L111:119",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "SYMFONY__ENV__DATABASE_PORT",
+      "value": "3306",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "README.md#L111:120",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "SYMFONY__ENV__DATABASE_NAME",
+      "value": "wallabag",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "README.md#L111:121",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "SYMFONY__ENV__DATABASE_USER",
+      "value": "wallabag",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "README.md#L111:122",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "SYMFONY__ENV__DATABASE_PASSWORD",
+      "value": "",
+      "generate": "hex32",
+      "secret": true,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "README.md#L111:123",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "SYMFONY__ENV__DATABASE_CHARSET",
+      "value": "utf8mb4",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "README.md#L111:124",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "SYMFONY__ENV__DATABASE_TABLE_PREFIX",
+      "value": "\"wallabag_\"",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "README.md#L111:125",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "SYMFONY__ENV__MAILER_DSN",
+      "value": "smtp://127.0.0.1",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "README.md#L111:126",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "SYMFONY__ENV__FROM_EMAIL",
+      "value": "wallabag@example.com",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "README.md#L111:127",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "SYMFONY__ENV__DOMAIN_NAME",
+      "value": "https://your-wallabag-instance.wallabag.org",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "README.md#L111:128",
+        "confidence": "high"
+      }
+    },
+    {
+      "key": "SYMFONY__ENV__SERVER_NAME",
+      "value": "\"Your wallabag instance\"",
+      "generate": "",
+      "secret": false,
+      "required": true,
+      "description": "",
+      "file_env_key": "",
+      "provenance": {
+        "source": "compose",
+        "source_ref": "README.md#L111:129",
+        "confidence": "high"
       }
     }
   ],
@@ -120,7 +637,7 @@
   "optional_services": [],
   "needs": [],
   "probe": {
-    "service": "docker",
+    "service": "wallabag",
     "port": 80,
     "path": "/api/info",
     "expect": [
@@ -137,18 +654,37 @@
     ]
   },
   "post_install_notes": [
-    "Default login is wallabag:wallabag. (README.md:13)"
+    "Default login is wallabag:wallabag. (README.md:13)",
+    "MYSQL_ROOT_PASSWORD was generated for you; it is in .env",
+    "SYMFONY__ENV__DATABASE_PASSWORD was generated for you; it is in .env"
   ],
-  "confidence": "medium",
+  "confidence": "high",
   "evidence": [
     {
-      "claim": "documented docker run command",
-      "file": "README.md",
-      "line": 51
+      "claim": "compose file README.md#L111 chosen among 0 upstream compose files and 1 compose examples in the docs",
+      "file": "README.md#L111",
+      "line": 0
+    },
+    {
+      "claim": "app image docker.io/wallabag/wallabag",
+      "file": "README.md#L111",
+      "line": 114
     }
   ],
   "suspicious_instructions": [],
   "unfilled": [
-    "env_file.SYMFONY__ENV__DOMAIN_NAME.description"
+    "env_file.MYSQL_ROOT_PASSWORD.description",
+    "env_file.SYMFONY__ENV__DATABASE_DRIVER.description",
+    "env_file.SYMFONY__ENV__DATABASE_HOST.description",
+    "env_file.SYMFONY__ENV__DATABASE_PORT.description",
+    "env_file.SYMFONY__ENV__DATABASE_NAME.description",
+    "env_file.SYMFONY__ENV__DATABASE_USER.description",
+    "env_file.SYMFONY__ENV__DATABASE_PASSWORD.description",
+    "env_file.SYMFONY__ENV__DATABASE_CHARSET.description",
+    "env_file.SYMFONY__ENV__DATABASE_TABLE_PREFIX.description",
+    "env_file.SYMFONY__ENV__MAILER_DSN.description",
+    "env_file.SYMFONY__ENV__FROM_EMAIL.description",
+    "env_file.SYMFONY__ENV__DOMAIN_NAME.description",
+    "env_file.SYMFONY__ENV__SERVER_NAME.description"
   ]
 }

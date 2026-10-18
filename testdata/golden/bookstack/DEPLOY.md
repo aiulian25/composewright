@@ -1,4 +1,4 @@
-# docker-bookstack
+# bookstack
 
 The LinuxServer.io team brings you another container release featuring:
 
@@ -18,7 +18,7 @@ Published on this machine only: http://localhost:6875
 
 ## Data
 
-Data lives in named Docker volumes (`docker volume ls | grep docker-bookstack`); `docker compose down -v` deletes them.
+Data lives in named Docker volumes (`docker volume ls | grep bookstack`); `docker compose down -v` deletes them.
 
 ## After the first start
 
@@ -26,9 +26,10 @@ Data lives in named Docker volumes (`docker volume ls | grep docker-bookstack`);
 - APP_KEY was generated for you; it is in .env
 - DB_PASSWORD was generated for you; it is in .env
 - MARIADB_ROOT_PASSWORD was generated for you; it is in .env
-- docker-bookstack: DB_HOST was left for a database you run; the stack runs docker.io/library/mariadb:11.8 as mariadb and points DB_HOST at it
+- bookstack: upstream bind mount /path/to/bookstack/config:/config is a named volume here (use --storage bind for a host folder)
+- bookstack: DB_HOST was left for a database you run; the stack runs docker.io/library/mariadb:11.8 as mariadb and points DB_HOST at it
 
 ## Secrets
 
 .env holds the generated secrets in plain text. Keep it private (mode 0600) and out of version control;
-composewright keeps an encrypted copy, so `composewright show docker-bookstack --reveal` prints them again.
+composewright keeps an encrypted copy, so `composewright show bookstack --reveal` prints them again.

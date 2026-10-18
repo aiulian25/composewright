@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -106,6 +107,28 @@ func TestNamedSecretsKeepTheirOwnValue(t *testing.T) {
 	}
 	if values["DB_PASS"].Value != "${POSTGRES_PASSWORD}" {
 		t.Errorf("literal not linked to the named secret: %+v", values["DB_PASS"])
+	}
+}
+
+// TestBareAddressIsKeptAsWritten: a mailer address with no place for a
+// credential is a setting kept as written; a key or password that only
+// looks like a URL, a webhook with its token in the path or a DSN with its
+// key as the user is still a secret, replaced by a generated one.
+func TestBareAddressIsKeptAsWritten(t *testing.T) {
+	facts := testFacts(t, map[string]string{"docker-compose.yml": "services:\n  app:\n    image: example/app:1.0\n    environment:\n" +
+		"      MAILER_DSN: smtp://127.0.0.1\n      DATABASE_DSN: sqlite:///data/app.db\n" +
+		"      APP_KEY: base64:/Zm9vYmFyYmF6cXV4\n      DB_PASSWORD: Tr0ub4dor:/x9\n      NOTIFY_SECRET: discord://123456/abcdefTOKEN\n" +
+		"      SENTRY_DSN: https://publickey@o1.ingest.sentry.io/2\n"})
+	plan := Build(context.Background(), Input{Facts: facts, Source: &fetch.Source{Owner: "example", Repository: "app"}})
+	for key, value := range map[string]string{"MAILER_DSN": "smtp://127.0.0.1", "DATABASE_DSN": "sqlite:///data/app.db"} {
+		if entry, _ := plan.EnvEntry(key); entry == nil || entry.Value != value || entry.Secret {
+			t.Errorf("%s is %+v, want %q kept as written", key, entry, value)
+		}
+	}
+	for _, key := range []string{"APP_KEY", "DB_PASSWORD", "NOTIFY_SECRET", "SENTRY_DSN"} {
+		if entry, _ := plan.EnvEntry(key); entry == nil || !entry.Secret || entry.Generate == "" {
+			t.Errorf("%s is %+v, want a generated secret", key, entry)
+		}
 	}
 }
 
@@ -360,6 +383,35 @@ func TestChosenComposeFile(t *testing.T) {
 	documented := Build(context.Background(), Input{Facts: experiments, Source: source, ComposeFile: "gone.yml"})
 	if note := "compose variant gone.yml not found; used the documentation"; !slices.Contains(documented.PostInstallNotes, note) {
 		t.Fatalf("notes %q", documented.PostInstallNotes)
+	}
+}
+
+// TestChooseComposePrefersAFileOnDisk: a README example is the plan only
+// when the repository ships no compose file of its own, even a deep one.
+func TestChooseComposePrefersAFileOnDisk(t *testing.T) {
+	// crowdedServices databases are enough for the file on disk to score
+	// below the README example.
+	const crowdedServices = 11
+	readme := "# App\n\n```yaml\nservices:\n  app:\n    image: ghcr.io/example/app:1.2\n```\n"
+	both := testFacts(t, map[string]string{
+		"README.md":                   readme,
+		"deploy/docker/stack/app.yml": "services:\n  app:\n    image: ghcr.io/example/app:1.2\n  db:\n    image: postgres:17\n",
+	})
+	if chosen := chooseCompose(both, []string{"app", "example"}, ""); chosen == nil || chosen.Path != "deploy/docker/stack/app.yml" {
+		t.Fatalf("chose %+v", chosen)
+	}
+	crowded := "services:\n  web:\n    image: docker.io/someorg/web:1\n"
+	for database := range crowdedServices {
+		crowded += "  db" + strconv.Itoa(database) + ":\n    image: postgres:17\n"
+	}
+	many := testFacts(t, map[string]string{"README.md": readme, "deploy/docker/stack/app.yml": crowded})
+	if chosen := chooseCompose(many, []string{"app", "example"}, ""); chosen == nil || chosen.Path != "deploy/docker/stack/app.yml" {
+		t.Fatalf("chose %+v over a file with many services", chosen)
+	}
+	plan := Build(context.Background(), Input{Facts: testFacts(t, map[string]string{"README.md": readme}), Source: &fetch.Source{Owner: "example", Repository: "app"}})
+	app, found := plan.Service("app")
+	if !found || app.Image.Provenance.SourceRef != "README.md#L3:6" || app.Image.Provenance.Confidence != ir.ConfidenceHigh {
+		t.Fatalf("app %+v", app)
 	}
 }
 

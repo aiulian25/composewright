@@ -2595,6 +2595,614 @@
       "variables": []
     },
     {
+      "path": "README.md#L444",
+      "services": [
+        {
+          "name": "db",
+          "location": {
+            "file": "README.md#L444",
+            "line": 448
+          },
+          "image": "mariadb:lts",
+          "image_at": {
+            "file": "README.md#L444",
+            "line": 450
+          },
+          "build": false,
+          "ports": null,
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "db",
+              "target": "/var/lib/mysql",
+              "read_only": false,
+              "location": {
+                "file": "README.md#L444",
+                "line": 454
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "MYSQL_ROOT_PASSWORD",
+              "raw": "",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L444",
+                "line": 456
+              }
+            },
+            {
+              "key": "MYSQL_PASSWORD",
+              "raw": "",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L444",
+                "line": 457
+              }
+            },
+            {
+              "key": "MYSQL_DATABASE",
+              "raw": "nextcloud",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L444",
+                "line": 458
+              }
+            },
+            {
+              "key": "MYSQL_USER",
+              "raw": "nextcloud",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L444",
+                "line": 459
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "command": [
+            "--transaction-isolation=READ-COMMITTED"
+          ],
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "redis",
+          "location": {
+            "file": "README.md#L444",
+            "line": 463
+          },
+          "image": "redis:alpine",
+          "image_at": {
+            "file": "README.md#L444",
+            "line": 464
+          },
+          "build": false,
+          "ports": null,
+          "volumes": null,
+          "environment": null,
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "app",
+          "location": {
+            "file": "README.md#L444",
+            "line": 467
+          },
+          "image": "nextcloud",
+          "image_at": {
+            "file": "README.md#L444",
+            "line": 468
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 80,
+              "published": "8080",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "README.md#L444",
+                "line": 471
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "nextcloud",
+              "target": "/var/www/html",
+              "read_only": false,
+              "location": {
+                "file": "README.md#L444",
+                "line": 476
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "MYSQL_PASSWORD",
+              "raw": "",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L444",
+                "line": 478
+              }
+            },
+            {
+              "key": "MYSQL_DATABASE",
+              "raw": "nextcloud",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L444",
+                "line": 479
+              }
+            },
+            {
+              "key": "MYSQL_USER",
+              "raw": "nextcloud",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L444",
+                "line": 480
+              }
+            },
+            {
+              "key": "MYSQL_HOST",
+              "raw": "db",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L444",
+                "line": 481
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": [
+            {
+              "service": "db",
+              "condition": "service_started"
+            },
+            {
+              "service": "redis",
+              "condition": "service_started"
+            }
+          ],
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": [],
+      "fenced": true
+    },
+    {
+      "path": "README.md#L497",
+      "services": [
+        {
+          "name": "db",
+          "location": {
+            "file": "README.md#L497",
+            "line": 501
+          },
+          "image": "mariadb:lts",
+          "image_at": {
+            "file": "README.md#L497",
+            "line": 503
+          },
+          "build": false,
+          "ports": null,
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "db",
+              "target": "/var/lib/mysql",
+              "read_only": false,
+              "location": {
+                "file": "README.md#L497",
+                "line": 507
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "MYSQL_ROOT_PASSWORD",
+              "raw": "",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L497",
+                "line": 509
+              }
+            },
+            {
+              "key": "MYSQL_PASSWORD",
+              "raw": "",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L497",
+                "line": 510
+              }
+            },
+            {
+              "key": "MYSQL_DATABASE",
+              "raw": "nextcloud",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L497",
+                "line": 511
+              }
+            },
+            {
+              "key": "MYSQL_USER",
+              "raw": "nextcloud",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L497",
+                "line": 512
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "command": [
+            "--transaction-isolation=READ-COMMITTED"
+          ],
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "redis",
+          "location": {
+            "file": "README.md#L497",
+            "line": 516
+          },
+          "image": "redis:alpine",
+          "image_at": {
+            "file": "README.md#L497",
+            "line": 517
+          },
+          "build": false,
+          "ports": null,
+          "volumes": null,
+          "environment": null,
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "app",
+          "location": {
+            "file": "README.md#L497",
+            "line": 520
+          },
+          "image": "nextcloud:fpm",
+          "image_at": {
+            "file": "README.md#L497",
+            "line": 521
+          },
+          "build": false,
+          "ports": null,
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "nextcloud",
+              "target": "/var/www/html",
+              "read_only": false,
+              "location": {
+                "file": "README.md#L497",
+                "line": 527
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "MYSQL_PASSWORD",
+              "raw": "",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L497",
+                "line": 529
+              }
+            },
+            {
+              "key": "MYSQL_DATABASE",
+              "raw": "nextcloud",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L497",
+                "line": 530
+              }
+            },
+            {
+              "key": "MYSQL_USER",
+              "raw": "nextcloud",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L497",
+                "line": 531
+              }
+            },
+            {
+              "key": "MYSQL_HOST",
+              "raw": "db",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L497",
+                "line": 532
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": [
+            {
+              "service": "db",
+              "condition": "service_started"
+            },
+            {
+              "service": "redis",
+              "condition": "service_started"
+            }
+          ],
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "web",
+          "location": {
+            "file": "README.md#L497",
+            "line": 536
+          },
+          "image": "nginx:alpine-slim",
+          "image_at": {
+            "file": "README.md#L497",
+            "line": 537
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 80,
+              "published": "8080",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "README.md#L497",
+                "line": 540
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "./nginx.conf",
+              "target": "/etc/nginx/nginx.conf",
+              "read_only": true,
+              "location": {
+                "file": "README.md#L497",
+                "line": 545
+              }
+            }
+          ],
+          "environment": null,
+          "env_files": null,
+          "depends_on": [
+            {
+              "service": "app",
+              "condition": "service_started"
+            }
+          ],
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": [],
+      "fenced": true
+    },
+    {
+      "path": "README.md#L568",
+      "services": [
+        {
+          "name": "db",
+          "location": {
+            "file": "README.md#L568",
+            "line": 572
+          },
+          "image": "postgres:alpine",
+          "image_at": {
+            "file": "README.md#L568",
+            "line": 574
+          },
+          "build": false,
+          "ports": null,
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "db",
+              "target": "/var/lib/postgresql/data",
+              "read_only": false,
+              "location": {
+                "file": "README.md#L568",
+                "line": 577
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "POSTGRES_DB_FILE",
+              "raw": "/run/secrets/postgres_db",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L568",
+                "line": 579
+              }
+            },
+            {
+              "key": "POSTGRES_USER_FILE",
+              "raw": "/run/secrets/postgres_user",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L568",
+                "line": 580
+              }
+            },
+            {
+              "key": "POSTGRES_PASSWORD_FILE",
+              "raw": "/run/secrets/postgres_password",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L568",
+                "line": 581
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "redis",
+          "location": {
+            "file": "README.md#L568",
+            "line": 588
+          },
+          "image": "redis:alpine",
+          "image_at": {
+            "file": "README.md#L568",
+            "line": 589
+          },
+          "build": false,
+          "ports": null,
+          "volumes": null,
+          "environment": null,
+          "env_files": null,
+          "depends_on": null,
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        },
+        {
+          "name": "app",
+          "location": {
+            "file": "README.md#L568",
+            "line": 592
+          },
+          "image": "nextcloud",
+          "image_at": {
+            "file": "README.md#L568",
+            "line": 593
+          },
+          "build": false,
+          "ports": [
+            {
+              "target": 80,
+              "published": "8080",
+              "host_ip": "",
+              "protocol": "tcp",
+              "location": {
+                "file": "README.md#L568",
+                "line": 596
+              }
+            }
+          ],
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "nextcloud",
+              "target": "/var/www/html",
+              "read_only": false,
+              "location": {
+                "file": "README.md#L568",
+                "line": 598
+              }
+            }
+          ],
+          "environment": [
+            {
+              "key": "POSTGRES_HOST",
+              "raw": "db",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L568",
+                "line": 600
+              }
+            },
+            {
+              "key": "POSTGRES_DB_FILE",
+              "raw": "/run/secrets/postgres_db",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L568",
+                "line": 601
+              }
+            },
+            {
+              "key": "POSTGRES_USER_FILE",
+              "raw": "/run/secrets/postgres_user",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L568",
+                "line": 602
+              }
+            },
+            {
+              "key": "POSTGRES_PASSWORD_FILE",
+              "raw": "/run/secrets/postgres_password",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L568",
+                "line": 603
+              }
+            },
+            {
+              "key": "NEXTCLOUD_ADMIN_PASSWORD_FILE",
+              "raw": "/run/secrets/nextcloud_admin_password",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L568",
+                "line": 604
+              }
+            },
+            {
+              "key": "NEXTCLOUD_ADMIN_USER_FILE",
+              "raw": "/run/secrets/nextcloud_admin_user",
+              "has_value": true,
+              "location": {
+                "file": "README.md#L568",
+                "line": 605
+              }
+            }
+          ],
+          "env_files": null,
+          "depends_on": [
+            {
+              "service": "db",
+              "condition": "service_started"
+            },
+            {
+              "service": "redis",
+              "condition": "service_started"
+            }
+          ],
+          "command": null,
+          "entrypoint": null,
+          "user": ""
+        }
+      ],
+      "variables": [],
+      "fenced": true
+    },
+    {
       "path": "stack.yml",
       "services": [
         {
@@ -4775,6 +5383,42 @@
         },
         {
           "name": "MYSQL_DATABASE",
+          "kind": "readme",
+          "default": "nextcloud",
+          "location": {
+            "file": "README.md#L444",
+            "line": 458
+          }
+        },
+        {
+          "name": "MYSQL_DATABASE",
+          "kind": "readme",
+          "default": "nextcloud",
+          "location": {
+            "file": "README.md#L444",
+            "line": 479
+          }
+        },
+        {
+          "name": "MYSQL_DATABASE",
+          "kind": "readme",
+          "default": "nextcloud",
+          "location": {
+            "file": "README.md#L497",
+            "line": 511
+          }
+        },
+        {
+          "name": "MYSQL_DATABASE",
+          "kind": "readme",
+          "default": "nextcloud",
+          "location": {
+            "file": "README.md#L497",
+            "line": 530
+          }
+        },
+        {
+          "name": "MYSQL_DATABASE",
           "kind": "code",
           "location": {
             "file": ".config/autoconfig.php",
@@ -5147,6 +5791,24 @@
         },
         {
           "name": "MYSQL_HOST",
+          "kind": "readme",
+          "default": "db",
+          "location": {
+            "file": "README.md#L444",
+            "line": 481
+          }
+        },
+        {
+          "name": "MYSQL_HOST",
+          "kind": "readme",
+          "default": "db",
+          "location": {
+            "file": "README.md#L497",
+            "line": 532
+          }
+        },
+        {
+          "name": "MYSQL_HOST",
           "kind": "code",
           "location": {
             "file": ".config/autoconfig.php",
@@ -5503,6 +6165,38 @@
           "location": {
             "file": ".examples/docker-compose/with-nginx-proxy/mariadb/fpm/db.env",
             "line": 1
+          }
+        },
+        {
+          "name": "MYSQL_PASSWORD",
+          "kind": "readme",
+          "location": {
+            "file": "README.md#L444",
+            "line": 457
+          }
+        },
+        {
+          "name": "MYSQL_PASSWORD",
+          "kind": "readme",
+          "location": {
+            "file": "README.md#L444",
+            "line": 478
+          }
+        },
+        {
+          "name": "MYSQL_PASSWORD",
+          "kind": "readme",
+          "location": {
+            "file": "README.md#L497",
+            "line": 510
+          }
+        },
+        {
+          "name": "MYSQL_PASSWORD",
+          "kind": "readme",
+          "location": {
+            "file": "README.md#L497",
+            "line": 529
           }
         },
         {
@@ -5872,6 +6566,22 @@
             "file": ".examples/docker-compose/with-nginx-proxy/mariadb/fpm/compose.yaml",
             "line": 13
           }
+        },
+        {
+          "name": "MYSQL_ROOT_PASSWORD",
+          "kind": "readme",
+          "location": {
+            "file": "README.md#L444",
+            "line": 456
+          }
+        },
+        {
+          "name": "MYSQL_ROOT_PASSWORD",
+          "kind": "readme",
+          "location": {
+            "file": "README.md#L497",
+            "line": 509
+          }
         }
       ]
     },
@@ -5915,6 +6625,42 @@
           "location": {
             "file": ".examples/docker-compose/with-nginx-proxy/mariadb/fpm/db.env",
             "line": 3
+          }
+        },
+        {
+          "name": "MYSQL_USER",
+          "kind": "readme",
+          "default": "nextcloud",
+          "location": {
+            "file": "README.md#L444",
+            "line": 459
+          }
+        },
+        {
+          "name": "MYSQL_USER",
+          "kind": "readme",
+          "default": "nextcloud",
+          "location": {
+            "file": "README.md#L444",
+            "line": 480
+          }
+        },
+        {
+          "name": "MYSQL_USER",
+          "kind": "readme",
+          "default": "nextcloud",
+          "location": {
+            "file": "README.md#L497",
+            "line": 512
+          }
+        },
+        {
+          "name": "MYSQL_USER",
+          "kind": "readme",
+          "default": "nextcloud",
+          "location": {
+            "file": "README.md#L497",
+            "line": 531
           }
         },
         {
@@ -6243,6 +6989,40 @@
           "location": {
             "file": "34/fpm/config/autoconfig.php",
             "line": 12
+          }
+        }
+      ]
+    },
+    {
+      "name": "NEXTCLOUD_ADMIN_PASSWORD_FILE",
+      "default": "/run/secrets/nextcloud_admin_password",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "NEXTCLOUD_ADMIN_PASSWORD_FILE",
+          "kind": "readme",
+          "default": "/run/secrets/nextcloud_admin_password",
+          "location": {
+            "file": "README.md#L568",
+            "line": 604
+          }
+        }
+      ]
+    },
+    {
+      "name": "NEXTCLOUD_ADMIN_USER_FILE",
+      "default": "/run/secrets/nextcloud_admin_user",
+      "description": "",
+      "required": false,
+      "mentions": [
+        {
+          "name": "NEXTCLOUD_ADMIN_USER_FILE",
+          "kind": "readme",
+          "default": "/run/secrets/nextcloud_admin_user",
+          "location": {
+            "file": "README.md#L568",
+            "line": 605
           }
         }
       ]
@@ -10614,10 +11394,28 @@
     },
     {
       "name": "POSTGRES_DB_FILE",
-      "default": "",
+      "default": "/run/secrets/postgres_db",
       "description": "",
       "required": false,
       "mentions": [
+        {
+          "name": "POSTGRES_DB_FILE",
+          "kind": "readme",
+          "default": "/run/secrets/postgres_db",
+          "location": {
+            "file": "README.md#L568",
+            "line": 579
+          }
+        },
+        {
+          "name": "POSTGRES_DB_FILE",
+          "kind": "readme",
+          "default": "/run/secrets/postgres_db",
+          "location": {
+            "file": "README.md#L568",
+            "line": 601
+          }
+        },
         {
           "name": "POSTGRES_DB_FILE",
           "kind": "code",
@@ -10829,6 +11627,15 @@
           "location": {
             "file": "stack.yml",
             "line": 22
+          }
+        },
+        {
+          "name": "POSTGRES_HOST",
+          "kind": "readme",
+          "default": "db",
+          "location": {
+            "file": "README.md#L568",
+            "line": 600
           }
         },
         {
@@ -11373,10 +12180,28 @@
     },
     {
       "name": "POSTGRES_PASSWORD_FILE",
-      "default": "",
+      "default": "/run/secrets/postgres_password",
       "description": "",
       "required": false,
       "mentions": [
+        {
+          "name": "POSTGRES_PASSWORD_FILE",
+          "kind": "readme",
+          "default": "/run/secrets/postgres_password",
+          "location": {
+            "file": "README.md#L568",
+            "line": 581
+          }
+        },
+        {
+          "name": "POSTGRES_PASSWORD_FILE",
+          "kind": "readme",
+          "default": "/run/secrets/postgres_password",
+          "location": {
+            "file": "README.md#L568",
+            "line": 603
+          }
+        },
         {
           "name": "POSTGRES_PASSWORD_FILE",
           "kind": "code",
@@ -11763,10 +12588,28 @@
     },
     {
       "name": "POSTGRES_USER_FILE",
-      "default": "",
+      "default": "/run/secrets/postgres_user",
       "description": "",
       "required": false,
       "mentions": [
+        {
+          "name": "POSTGRES_USER_FILE",
+          "kind": "readme",
+          "default": "/run/secrets/postgres_user",
+          "location": {
+            "file": "README.md#L568",
+            "line": 580
+          }
+        },
+        {
+          "name": "POSTGRES_USER_FILE",
+          "kind": "readme",
+          "default": "/run/secrets/postgres_user",
+          "location": {
+            "file": "README.md#L568",
+            "line": 602
+          }
+        },
         {
           "name": "POSTGRES_USER_FILE",
           "kind": "code",
@@ -14373,6 +15216,22 @@
     },
     {
       "reference": "nextcloud",
+      "kind": "compose",
+      "location": {
+        "file": "README.md#L444",
+        "line": 468
+      }
+    },
+    {
+      "reference": "nextcloud:fpm",
+      "kind": "compose",
+      "location": {
+        "file": "README.md#L497",
+        "line": 521
+      }
+    },
+    {
+      "reference": "nextcloud",
       "kind": "readme",
       "location": {
         "file": "README.md",
@@ -14457,14 +15316,6 @@
       "location": {
         "file": "stack.yml",
         "line": 5
-      }
-    },
-    {
-      "reference": "nextcloud",
-      "kind": "compose",
-      "location": {
-        "file": "stack.yml",
-        "line": 15
       }
     }
   ],

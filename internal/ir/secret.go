@@ -1,12 +1,17 @@
 package ir
 
 import (
+	"net/url"
 	"regexp"
 	"slices"
 	"strings"
 
 	"github.com/aiulian25/composewright/internal/redact"
 )
+
+// authoritySeparator follows the scheme of a URL that names a host or a
+// local path.
+const authoritySeparator = "://"
 
 var (
 	// settingSuffix ends names that describe a secret instead of holding
@@ -26,13 +31,30 @@ var (
 // IsSecretSetting reports whether a .env entry holds secret material. The
 // name decides, unless the name or the value shows a setting about a
 // secret: JWT_ACCESS_TOKEN_EXPIRES, CORS_SUPPORTS_CREDENTIALS=true, or a
-// number in anything but a password. Such values are kept as written; a
-// secret is replaced by a generated one.
+// number or a bare address in anything but a password, as
+// MAILER_DSN=smtp://127.0.0.1. Such values are kept as written; a secret is
+// replaced by a generated one.
 func IsSecretSetting(name, value string) bool {
 	upper := strings.ToUpper(name)
 	describesSecret := settingSuffix.MatchString(upper)
-	settingValue := booleanValue.MatchString(value) || (numberValue.MatchString(value) && !passwordName.MatchString(upper))
+	plainUnlessPassword := numberValue.MatchString(value) || isBareAddress(value)
+	settingValue := booleanValue.MatchString(value) || (plainUnlessPassword && !passwordName.MatchString(upper))
 	return redact.IsSecretName(name) && !describesSecret && !settingValue
+}
+
+// isBareAddress reports whether value is a URL with no place for a
+// credential: a host alone, as smtp://127.0.0.1:25, or a local path, as
+// sqlite:///data/app.db, with no user, query or fragment. A path after a
+// host can carry a token, as a webhook does, and base64:/Zm9v is no URL.
+func isBareAddress(value string) bool {
+	parsed, err := url.Parse(value)
+	if err != nil || parsed.Scheme == "" || !strings.HasPrefix(value, parsed.Scheme+authoritySeparator) {
+		return false
+	}
+	bare := parsed.User == nil && parsed.RawQuery == "" && parsed.Fragment == "" && !parsed.ForceQuery
+	hostOnly := parsed.Host != "" && strings.Trim(parsed.Path, "/") == ""
+	localPath := parsed.Host == "" && strings.HasPrefix(parsed.Path, "/")
+	return bare && (hostOnly || localPath)
 }
 
 // IsSettingValue reports whether value cannot be secret material, whatever

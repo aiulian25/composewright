@@ -24,6 +24,10 @@ Data lives in named Docker volumes (`docker volume ls | grep vaultwarden`); `doc
 
 .env lists 145 settings the upstream documents, commented out, such as ADMIN_RATELIMIT_MAX_BURST, ADMIN_RATELIMIT_SECONDS, ADMIN_SESSION_LIFETIME, ADMIN_TOKEN, ALLOWED_CONNECT_SRC. To use one, remove the "# " before it in .env and run `docker compose up -d` again.
 
+## After the first start
+
+- vaultwarden: upstream bind mount ./vw-data/:/data is a named volume here (use --storage bind for a host folder)
+
 ## Secrets
 
 .env holds the generated secrets in plain text. Keep it private (mode 0600) and out of version control;
