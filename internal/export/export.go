@@ -15,6 +15,7 @@ import (
 
 	"github.com/aiulian25/composewright/internal/atomicfile"
 	"github.com/aiulian25/composewright/internal/config"
+	"github.com/aiulian25/composewright/internal/ir"
 )
 
 const (
@@ -34,8 +35,10 @@ const (
 var ErrExists = errors.New("file exists; pass --overwrite to replace it")
 
 // Bundle is what an export writes. Env carries secrets in plain text;
-// EnvExample carries none. Secrets are the secrets passed as files, by their
-// path beside compose.yaml, such as secrets/postgres_password.
+// EnvExample carries none. Secrets are the secrets passed as files and
+// Config the repository's files the services mount, each by its path
+// beside compose.yaml, such as secrets/postgres_password or
+// config/nginx.conf.
 type Bundle struct {
 	Project    string
 	Compose    []byte
@@ -43,6 +46,13 @@ type Bundle struct {
 	EnvExample []byte
 	Deploy     []byte
 	Secrets    map[string][]byte
+	Config     map[string][]byte
+}
+
+// file is one file an export writes, with its mode.
+type file struct {
+	content []byte
+	mode    fs.FileMode
 }
 
 type Written struct {
@@ -53,37 +63,51 @@ type Written struct {
 
 // Write exports to target: "arcane:DIR" writes an Arcane template without
 // secrets into DIR/<project>/; any other value is a folder for compose.yaml,
-// .env (0600), DEPLOY.md and the secret files (0600, in a 0700 folder). An
+// .env (0600), DEPLOY.md and the secret files (0600, in a 0700 folder). The
+// config files go to both, readable by the container's user (0644). An
 // empty target uses profile.storage.save_dir.
 func Write(target string, profile config.Profile, bundle Bundle, overwrite bool) (Written, error) {
 	if templates, isArcane := strings.CutPrefix(target, arcanePrefix); isArcane {
 		directory := filepath.Join(templates, bundle.Project)
-		files := map[string][]byte{ComposeName: bundle.Compose, EnvExampleName: bundle.EnvExample}
+		files := map[string]file{ComposeName: {bundle.Compose, fileMode}, EnvExampleName: {bundle.EnvExample, fileMode}}
+		withMode(files, bundle.Config, ir.ConfigFileMode)
 		return write(directory, files, overwrite, false)
 	}
 	directory, err := folder(target, profile, bundle.Project)
 	if err != nil {
 		return Written{}, err
 	}
-	files := map[string][]byte{ComposeName: bundle.Compose, EnvName: bundle.Env, DeployName: bundle.Deploy}
-	maps.Copy(files, bundle.Secrets)
+	files := map[string]file{ComposeName: {bundle.Compose, fileMode}, EnvName: {bundle.Env, fileMode}, DeployName: {bundle.Deploy, fileMode}}
+	withMode(files, bundle.Secrets, fileMode)
+	withMode(files, bundle.Config, ir.ConfigFileMode)
 	return write(directory, files, overwrite, true)
 }
 
-// Shell is the bundle as commands that write compose.yaml, .env and each
-// secret file with the modes Write gives them. A secret is written with
-// printf, so its file holds the value without a newline.
+// withMode adds contents to files, each with mode.
+func withMode(files map[string]file, contents map[string][]byte, mode fs.FileMode) {
+	for name, content := range contents {
+		files[name] = file{content: content, mode: mode}
+	}
+}
+
+// Shell is the bundle as commands that write compose.yaml, .env, each
+// secret file and each config file with the modes Write gives them. Those
+// are written with printf, so each holds its content exactly: no newline
+// ends up in a password.
 func Shell(bundle Bundle) []byte {
 	var script strings.Builder
 	heredoc(&script, ComposeName, bundle.Compose)
 	heredoc(&script, EnvName, bundle.Env)
 	fmt.Fprintf(&script, "chmod %o %s\n", fileMode, EnvName)
-	paths := slices.Sorted(maps.Keys(bundle.Secrets))
+	files := map[string]file{}
+	withMode(files, bundle.Secrets, fileMode)
+	withMode(files, bundle.Config, ir.ConfigFileMode)
+	paths := slices.Sorted(maps.Keys(files))
 	for _, folder := range slices.Compact(directoriesOf(paths)) {
 		fmt.Fprintf(&script, "mkdir -p -m %o %s\n", dirMode, folder)
 	}
 	for _, name := range paths {
-		fmt.Fprintf(&script, "printf '%%s' %s > %s\nchmod %o %s\n", shellQuoted(string(bundle.Secrets[name])), name, fileMode, name)
+		fmt.Fprintf(&script, "printf '%%s' %s > %s\nchmod %o %s\n", shellQuoted(string(files[name].content)), name, files[name].mode, name)
 	}
 	return []byte(script.String())
 }
@@ -121,7 +145,7 @@ func folder(target string, profile config.Profile, project string) (string, erro
 	return strings.NewReplacer(config.LayoutBase, profile.Storage.BasePath, config.LayoutProject, project).Replace(saveDir), nil
 }
 
-func write(directory string, files map[string][]byte, overwrite, secrets bool) (Written, error) {
+func write(directory string, files map[string]file, overwrite, secrets bool) (Written, error) {
 	if err := os.MkdirAll(directory, dirMode); err != nil {
 		return Written{}, err
 	}
@@ -138,7 +162,7 @@ func write(directory string, files map[string][]byte, overwrite, secrets bool) (
 		}
 	}
 	for _, name := range names {
-		content, present := files[name]
+		entry, present := files[name]
 		if !present {
 			continue
 		}
@@ -146,7 +170,7 @@ func write(directory string, files map[string][]byte, overwrite, secrets bool) (
 		if err := os.MkdirAll(filepath.Dir(target), dirMode); err != nil {
 			return written, err
 		}
-		if err := atomicfile.Write(target, content, fileMode); err != nil {
+		if err := atomicfile.Write(target, entry.content, entry.mode); err != nil {
 			return written, err
 		}
 		written.Files = append(written.Files, target)
@@ -156,7 +180,7 @@ func write(directory string, files map[string][]byte, overwrite, secrets bool) (
 
 // refuseExisting checks every file an export would write before it writes
 // any, so a refused export leaves the folder as it was.
-func refuseExisting(directory string, names []string, files map[string][]byte) error {
+func refuseExisting(directory string, names []string, files map[string]file) error {
 	for _, name := range names {
 		if _, present := files[name]; !present {
 			continue

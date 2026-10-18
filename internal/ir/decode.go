@@ -58,9 +58,9 @@ func Decode(data []byte) (*IR, error) {
 
 // DecodeModelOutput validates untrusted model output against the JSON schema
 // before decoding, so a missing field is rejected instead of zero-filled.
-// optional_env and optional_services are the exception: composewright fills
-// them from the repository and never from a model, so an answer that leaves
-// them out loses nothing.
+// optional_env, optional_services and config_files are the exception:
+// composewright fills them from the repository and never from a model, so
+// an answer that leaves them out loses nothing.
 func DecodeModelOutput(data []byte) (*IR, error) {
 	instance, err := jsonschema.UnmarshalJSON(bytes.NewReader(data))
 	if err != nil {
@@ -68,7 +68,7 @@ func DecodeModelOutput(data []byte) (*IR, error) {
 	}
 	lowercaseEnums(instance)
 	if object, isObject := instance.(map[string]any); isObject {
-		for _, field := range []string{optionalEnvField, optionalServicesField} {
+		for _, field := range []string{optionalEnvField, optionalServicesField, configFilesField} {
 			if _, present := object[field]; !present {
 				object[field] = []any{}
 			}
@@ -135,6 +135,7 @@ func (plan *IR) Normalize() {
 	plan.EnvFile = nonNil(plan.EnvFile)
 	plan.OptionalEnv = nonNil(plan.OptionalEnv)
 	plan.OptionalServices = nonNil(plan.OptionalServices)
+	plan.ConfigFiles = nonNil(plan.ConfigFiles)
 	plan.Needs = nonNil(plan.Needs)
 	plan.PostInstallNotes = nonNil(plan.PostInstallNotes)
 	plan.Evidence = nonNil(plan.Evidence)
@@ -153,6 +154,9 @@ func (plan *IR) Normalize() {
 		for dependency := range optional.DependsOn {
 			optional.DependsOn[dependency] = strings.ToLower(optional.DependsOn[dependency])
 		}
+	}
+	for index := range plan.ConfigFiles {
+		plan.ConfigFiles[index].Service = strings.ToLower(plan.ConfigFiles[index].Service)
 	}
 	for index := range plan.OptionalEnv {
 		plan.OptionalEnv[index].Service = strings.ToLower(plan.OptionalEnv[index].Service)

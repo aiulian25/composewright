@@ -261,6 +261,20 @@ All notable changes to this project are documented here. The format follows
   `--reveal`. The shell copy writes each secret with printf, so no newline
   ends up in a password, and `composewright gen` now counts automatic fixes
   as "fixed automatically".
+- A file of the repository that upstream's compose file bind-mounts, such
+  as `./nginx.conf:/etc/nginx/nginx.conf`, now travels with the stack
+  instead of being left to you: it is kept beside compose.yaml as
+  `config/nginx.conf` and mounted read-only. When the repository ships only
+  an example of it, such as `configuration.example.yaml` for
+  `configuration.yaml`, the example is used. The Review page shows each
+  such file in a tab of its own, DEPLOY.md lists them, and the export, the
+  Result page's Save, the zip and the shell commands write them readable
+  by the container's user, Arcane templates included. Test runs mount the
+  same copy. The files are stored with each version encrypted with the
+  master key, a key rotation moves them to the new key, backups carry
+  them, and generating the project again reads them anew. Fetches now keep
+  `.conf`, `.toml`, `.ini`, `.cfg` and `.properties` files and Caddyfiles
+  so they can be bundled.
 
 ### Changed
 

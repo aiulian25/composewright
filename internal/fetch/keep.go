@@ -36,6 +36,14 @@ var codeExtensions = []string{".go", ".js", ".mjs", ".cjs", ".ts", ".py", ".rs",
 
 var stackHintFiles = []string{"package.json", "go.mod", "pyproject.toml", "Cargo.toml", "composer.json", "Gemfile", "requirements.txt"}
 
+// mountedConfigExtensions and mountedConfigNames are the configuration
+// files a compose file commonly bind-mounts into a container, such as
+// nginx.conf or a Caddyfile; they are kept so a plan can bundle them.
+var (
+	mountedConfigExtensions = []string{".conf", ".toml", ".ini", ".cfg", ".properties"}
+	mountedConfigNames      = []string{"Caddyfile"}
+)
+
 var (
 	dockerfileName = regexp.MustCompile(`(?i)^(dockerfile|containerfile)([._-].*)?$|\.dockerfile$`)
 	envSampleName  = regexp.MustCompile(`(?i)^(\.env(\..+)?|.+\.env|env\.(example|sample|template|dist)|example\.env)$`)
@@ -87,7 +95,7 @@ func Classify(name string) Kind {
 	case readmeName.MatchString(base), isDocsMarkdown(directories, base):
 		return Document
 	case dockerfileName.MatchString(base), envSampleName.MatchString(base), exampleName.MatchString(base),
-		slices.Contains(stackHintFiles, base), isYAML(base):
+		slices.Contains(stackHintFiles, base), isYAML(base), isMountedConfig(base):
 		return Config
 	case slices.Contains(codeExtensions, strings.ToLower(path.Ext(base))) && !testCodeName.MatchString(base):
 		return Code
@@ -109,6 +117,10 @@ func Limit(kind Kind) int64 {
 func isYAML(base string) bool {
 	extension := strings.ToLower(path.Ext(base))
 	return extension == ".yml" || extension == ".yaml"
+}
+
+func isMountedConfig(base string) bool {
+	return slices.Contains(mountedConfigNames, base) || slices.Contains(mountedConfigExtensions, strings.ToLower(path.Ext(base)))
 }
 
 func isWorkflow(name string) bool {

@@ -76,6 +76,9 @@ func Load(ctx context.Context, workspace *workspace.Workspace, name string) (*St
 	for _, variable := range variables {
 		stored.Values[variable.Key] = variable.Value
 	}
+	if stored.Generation.Files, err = database.Files(ctx, generation.ID); err != nil {
+		return nil, err
+	}
 	stored.Images, err = database.Images(ctx, generation.ID)
 	return stored, err
 }
@@ -139,7 +142,8 @@ func (stored *Stored) result() (*Result, error) {
 	}
 	project := stored.Project
 	result := &Result{Source: stored.source(), Facts: stored.Facts, Plan: stored.Plan.Clone(), Report: stored.Report, Values: stored.Values,
-		Files:   Files{Compose: []byte(stored.Generation.ComposeYAML), Env: env, Deploy: []byte(stored.Generation.DeployMD)},
+		Files: Files{Compose: []byte(stored.Generation.ComposeYAML), Env: env, Deploy: []byte(stored.Generation.DeployMD),
+			Config: stored.Generation.Files},
 		Project: project, Generation: stored.Generation, Engine: stored.Generation.Engine,
 		Call: llm.Call{Provider: stored.Generation.Provider, Model: stored.Generation.Model, PromptHash: stored.Generation.PromptHash}}
 	result.Inspected, result.Checks = stored.verifiedImages()

@@ -26,8 +26,13 @@ const (
 	scoreAddon         = 5
 	lowPortLimit       = 1024
 	targetOnlyPortNote = "upstream publishes container port %d on any free host port; host port %d is used so the address stays the same"
-	volumeBind         = "bind"
-	volumeTmpfs        = "tmpfs"
+	// mountedFileNote is for a file upstream mounts that the stack cannot
+	// carry; bundledNameSeparator joins a service to a bundled file's name
+	// when another file has the name.
+	mountedFileNote      = "upstream mounts the file %s at %s; provide it yourself after export"
+	bundledNameSeparator = "-"
+	volumeBind           = "bind"
+	volumeTmpfs          = "tmpfs"
 	// A tmpfs entry's options are size=bytes,mode=octal.
 	tmpfsOptionSeparator = ","
 	tmpfsSizeOption      = "size="
@@ -413,17 +418,37 @@ func (builder *builder) composeVolumes(result *ir.Service, service extract.Compo
 		case volume.Type == volumeBind && ir.IsDockerSocket(volume.Source):
 			builder.needDockerSocket(result, volume.Target, at)
 			continue
+		case volume.Type == volumeBind && volume.RepositoryFile != "":
+			builder.bundleFile(result, volume, at)
+			continue
 		case volume.Type == volumeBind && isHostPath(volume.Source):
 			builder.note(result, "upstream mounts the host path %s; it is left out", volume.Source)
 			continue
 		case volume.Type == volumeBind && looksLikeFile(volume.Target):
-			builder.note(result, "upstream mounts the file %s at %s; provide it yourself after export", volume.Source, volume.Target)
+			builder.note(result, mountedFileNote, volume.Source, volume.Target)
 			continue
 		case volume.Type == volumeBind:
 			builder.bindNote(result, volume)
 		}
 		mountVolume(result, ir.Volume{Name: builder.composeVolumeName(result, volume), ContainerPath: volume.Target, Provenance: at})
 	}
+}
+
+// bundleFile keeps a bind mount of a file the repository ships: the file
+// travels with compose.yaml under config/, named as upstream mounts it, or
+// after its service too when another file has that name.
+func (builder *builder) bundleFile(service *ir.Service, volume extract.ComposeVolume, at ir.Provenance) {
+	name := path.Base(volume.Source)
+	for _, candidate := range []string{name, service.Name + bundledNameSeparator + name} {
+		bundled, valid := ir.ConfigPath(candidate)
+		taken := slices.ContainsFunc(builder.plan.ConfigFiles, func(file ir.ConfigFile) bool { return file.Path == bundled })
+		if valid && !taken {
+			builder.plan.ConfigFiles = append(builder.plan.ConfigFiles, ir.ConfigFile{Service: service.Name, Path: bundled,
+				Source: volume.RepositoryFile, ContainerPath: volume.Target, Provenance: at})
+			return
+		}
+	}
+	builder.note(service, mountedFileNote, volume.Source, volume.Target)
 }
 
 // composeLimits copies the limits upstream sets.

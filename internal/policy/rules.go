@@ -3,6 +3,7 @@ package policy
 import (
 	"fmt"
 	"path"
+	"path/filepath"
 	"regexp"
 	"slices"
 	"strconv"
@@ -523,6 +524,49 @@ func (check *checker) volumes(service *ir.Service, field string) {
 		}
 		targets[target] = true
 	}
+}
+
+// configFiles is P8 for the files bundled beside compose.yaml: each is a
+// file of its own directly under config/, copied from inside the
+// repository, and mounted in a planned service at a path nothing else of
+// that service takes.
+func (check *checker) configFiles(plan *ir.IR) {
+	kept, mounted := map[string]bool{}, map[string]bool{}
+	for index, file := range plan.ConfigFiles {
+		field := fmt.Sprintf("config_files.%d", index)
+		target := path.Clean(file.ContainerPath)
+		service, planned := plan.Service(file.Service)
+		mount := file.Service + ":" + target
+		switch {
+		case !planned:
+			check.add("P8", Deny, file.Service, field, "%s is mounted in %q, which is not a service", file.Path, file.Service)
+		case !ir.IsConfigPath(file.Path) || kept[file.Path]:
+			check.add("P8", Deny, file.Service, field, "bundled file %q must be a file of its own directly under %s/", file.Path, ir.ConfigDirectory)
+		case !filepath.IsLocal(file.Source):
+			check.add("P8", Deny, file.Service, field, "%s must be copied from a file inside the repository, not %q", file.Path, file.Source)
+		case !path.IsAbs(file.ContainerPath) || target == "/":
+			check.add("P8", Deny, file.Service, field, "container path %q must be an absolute path below /", file.ContainerPath)
+		case ForbiddenTarget(target):
+			check.add("P8", Deny, file.Service, field, "container path %s is reserved for the host", target)
+		case mounted[mount] || slices.Contains(mountTargets(service), target):
+			check.add("P8", Deny, file.Service, field, "container path %s is mounted twice", target)
+		}
+		kept[file.Path], mounted[mount] = true, true
+	}
+}
+
+// mountTargets are the container paths a service's volumes and tmpfs
+// mounts take.
+func mountTargets(service *ir.Service) []string {
+	targets := make([]string, 0, len(service.Volumes)+len(service.Hardening.Tmpfs))
+	for _, volume := range service.Volumes {
+		targets = append(targets, path.Clean(volume.ContainerPath))
+	}
+	for _, entry := range service.Hardening.Tmpfs {
+		mountPath, _, _ := strings.Cut(entry, composefile.TmpfsOptionsSeparator)
+		targets = append(targets, path.Clean(mountPath))
+	}
+	return targets
 }
 
 // ForbiddenTarget reports container paths that must never receive a mount.

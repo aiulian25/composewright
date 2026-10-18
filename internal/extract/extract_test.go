@@ -762,3 +762,41 @@ func TestFileTwins(t *testing.T) {
 		t.Fatalf("twins %v", twins)
 	}
 }
+
+// TestBindMountsNameTheRepositoryFile: a bind mount of a file the
+// repository ships names it, relative to its compose file, or names the
+// example shipped for it; a missing file, a folder outside the repository
+// and an absolute host path name nothing.
+func TestBindMountsNameTheRepositoryFile(t *testing.T) {
+	directory := t.TempDir()
+	files := map[string]string{
+		"deploy/compose.yaml": "services:\n  app:\n    image: example/app:1.0\n    volumes:\n" +
+			"      - ./configuration.yaml:/app/data/configuration.yaml\n      - ./nginx.conf:/etc/nginx/nginx.conf:ro\n" +
+			"      - ./missing.conf:/etc/missing.conf\n      - ../outside.conf:/etc/outside.conf\n      - /etc/hosts:/etc/hosts:ro\n",
+		"deploy/configuration.example.yaml": "homeassistant: false\n",
+		"deploy/nginx.conf":                 "events {}\n",
+		"outside.conf":                      "x = 1\n",
+	}
+	for name, content := range files {
+		path := filepath.Join(directory, filepath.FromSlash(name))
+		if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	facts, err := Extract(context.Background(), directory)
+	if err != nil {
+		t.Fatal(err)
+	}
+	named := map[string]string{}
+	for _, volume := range facts.ComposeFiles[0].Services[0].Volumes {
+		named[volume.Target] = volume.RepositoryFile
+	}
+	want := map[string]string{"/app/data/configuration.yaml": "deploy/configuration.example.yaml", "/etc/nginx/nginx.conf": "deploy/nginx.conf",
+		"/etc/missing.conf": "", "/etc/outside.conf": "outside.conf", "/etc/hosts": ""}
+	if !maps.Equal(named, want) {
+		t.Fatalf("repository files %v, want %v", named, want)
+	}
+}

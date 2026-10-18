@@ -225,6 +225,7 @@
   ],
   "optional_env": [],
   "optional_services": [],
+  "config_files": [],
   "needs": [
     {
       "capability": "cap_add",

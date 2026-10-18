@@ -81,9 +81,11 @@ type Input struct {
 	Project string
 	Compose []byte
 	Env     []byte
-	// SecretFiles are the secrets passed as files, by their path beside
+	// SecretFiles are the secrets passed as files and ConfigFiles the
+	// repository's files the services mount, each by its path beside
 	// compose.yaml.
 	SecretFiles map[string][]byte
+	ConfigFiles map[string][]byte
 	Secrets     []string
 	Published   map[string][]string
 	CompletedOK map[string]bool
@@ -205,16 +207,24 @@ func (sandbox *Sandbox) prepare(ctx context.Context, directory, name string, inp
 	}
 	files := map[string][]byte{composeFile: input.Compose, overrideFile: override, envFile: input.Env}
 	maps.Copy(files, input.SecretFiles)
+	if err := writeRunFiles(directory, files, runFileMode); err != nil {
+		return nil, err
+	}
+	return project, writeRunFiles(directory, input.ConfigFiles, ir.ConfigFileMode)
+}
+
+// writeRunFiles writes files, by their path in the run's folder, with mode.
+func writeRunFiles(directory string, files map[string][]byte, mode os.FileMode) error {
 	for file, content := range files {
 		path := filepath.Join(directory, filepath.FromSlash(file))
 		if err := os.MkdirAll(filepath.Dir(path), runDirMode); err != nil {
-			return nil, err
+			return err
 		}
-		if err := atomicfile.Write(path, content, runFileMode); err != nil {
-			return nil, err
+		if err := atomicfile.Write(path, content, mode); err != nil {
+			return err
 		}
 	}
-	return project, nil
+	return nil
 }
 
 // everyImagePinned reports whether each service names its image by digest.

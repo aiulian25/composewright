@@ -983,3 +983,36 @@ func TestSecretWithADocumentedFileTwinIsPassedAsAFile(t *testing.T) {
 		}
 	}
 }
+
+// TestRepositoryFilesAreBundled: a bind mount of a file the repository
+// ships, or of one it ships an example for, bundles that file under config/
+// with the name upstream mounts; a second file of the same name takes its
+// service's name too, and a file the repository lacks keeps the note.
+func TestRepositoryFilesAreBundled(t *testing.T) {
+	compose := "services:\n  app:\n    image: example/app:1.0\n    volumes:\n      - ./configuration.yaml:/app/data/configuration.yaml\n" +
+		"      - ./missing.conf:/etc/missing.conf\n  proxy:\n    image: docker.io/library/nginx:1.27\n    volumes:\n      - ./proxy/nginx.conf:/etc/nginx/nginx.conf:ro\n" +
+		"  admin:\n    image: docker.io/library/nginx:1.27\n    volumes:\n      - ./admin/nginx.conf:/etc/nginx/nginx.conf:ro\n"
+	facts := testFacts(t, map[string]string{"docker-compose.yml": compose, "configuration.example.yaml": "permit_join: false\n",
+		"proxy/nginx.conf": "events {}\n", "admin/nginx.conf": "events {}\n"})
+	plan := Build(context.Background(), Input{Facts: facts, Source: &fetch.Source{Owner: "example", Repository: "app"}})
+	bundled := map[string]ir.ConfigFile{}
+	for _, file := range plan.ConfigFiles {
+		bundled[file.Path] = file
+	}
+	if file := bundled["config/configuration.yaml"]; file.Service != "app" || file.Source != "configuration.example.yaml" || file.ContainerPath != "/app/data/configuration.yaml" {
+		t.Errorf("configuration.yaml is bundled as %+v", file)
+	}
+	prefixed := bundled["config/admin-nginx.conf"].Source + bundled["config/proxy-nginx.conf"].Source
+	if len(bundled) != 3 || bundled["config/nginx.conf"].Source == "" || !strings.HasSuffix(prefixed, "/nginx.conf") || strings.Count(prefixed, "nginx.conf") != 1 {
+		t.Errorf("the two nginx.conf files are bundled as %v", bundled)
+	}
+	app, _ := plan.Service("app")
+	if !slices.ContainsFunc(app.Notes, func(note string) bool {
+		return strings.Contains(note, "./missing.conf at /etc/missing.conf; provide it yourself")
+	}) {
+		t.Errorf("the missing file has no note: %v", app.Notes)
+	}
+	if err := ir.ValidateSchema(plan); err != nil {
+		t.Fatal(err)
+	}
+}

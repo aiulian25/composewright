@@ -12,6 +12,9 @@ import (
 const (
 	aadVersion     = "v1"
 	settingsPrefix = "settings"
+	// filePrefix starts a bundled file's associated data; it is no
+	// hexadecimal id, so it never reads as a project's.
+	filePrefix = "file"
 )
 
 var ErrUnknownKey = errors.New("value was sealed with a key that is not available")
@@ -61,6 +64,12 @@ func ProjectAAD(projectID, key string) []byte {
 // SettingsAAD binds a value that belongs to no project, such as the LLM key.
 func SettingsAAD(key string) []byte {
 	return []byte(settingsPrefix + key + aadVersion)
+}
+
+// FileAAD binds a file a generation bundles to that generation and to its
+// path beside compose.yaml.
+func FileAAD(generationID, path string) []byte {
+	return []byte(filePrefix + generationID + path + aadVersion)
 }
 
 func (sealer *Sealer) Seal(plaintext, aad []byte) (Sealed, error) {

@@ -2819,3 +2819,42 @@ func TestSecretPassedAsAFileTravelsWithTheFiles(t *testing.T) {
 		t.Fatalf("the shell commands do not write the secret file:\n%s", script)
 	}
 }
+
+// TestBundledFileIsShownAndSaved: a file the upload's compose file mounts
+// has its own tab on Review, counts on Save and is in the zip, readable by
+// the container's user.
+func TestBundledFileIsShownAndSaved(t *testing.T) {
+	harness := newHarness(t)
+	harness.signUp()
+	compose := "services:\n  web:\n    image: docker.io/library/nginx:1.27\n    ports: [\"8080:80\"]\n    volumes:\n      - ./nginx.conf:/etc/nginx/nginx.conf:ro\n"
+	fields := map[string]string{"engine": pipeline.EngineRules, "name": "site", "compose": compose, "test": skipTest}
+	response, page := harness.uploadForm("/new", fields, map[string][]byte{"nginx.conf": []byte("events {}\n# served by the bundled file\n")})
+	status(t, response, http.StatusSeeOther, page)
+	if job := harness.waitForJob(response.Header.Get("Location")); job.Failure != "" {
+		t.Fatalf("generation: %s", job.Failure)
+	}
+	response, page = harness.get("/projects/site/review?pane=file:config/nginx.conf")
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, `data-tab="file:config/nginx.conf"`) || !strings.Contains(page, "# served by the bundled file") ||
+		!strings.Contains(page, `data-panel="file:config/nginx.conf">`) {
+		t.Fatal("Review does not show the bundled file in its own pane")
+	}
+	response, page = harness.get("/projects/site/files")
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, "Save 4 files") {
+		t.Fatal("Save does not count the bundled file")
+	}
+	response, archive := harness.post("/projects/site/download", nil)
+	status(t, response, http.StatusOK, "")
+	reader, err := zip.NewReader(bytes.NewReader([]byte(archive)), int64(len(archive)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	modes := map[string]fs.FileMode{}
+	for _, file := range reader.File {
+		modes[file.Name] = file.Mode()
+	}
+	if modes["site/config/nginx.conf"].Perm() != 0o644 || modes["site/config/"] != fs.ModeDir|0o700 {
+		t.Fatalf("zip entries %v", modes)
+	}
+}

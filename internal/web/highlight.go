@@ -16,6 +16,8 @@ const (
 	languageYAML     = "yaml"
 	languageEnv      = "env"
 	languageMarkdown = "markdown"
+	// languageText is any other file, shown as it is.
+	languageText = "text"
 
 	nameIndent = "  "
 )
@@ -46,6 +48,8 @@ func highlight(text, language string) []codeLine {
 			result = append(result, yamlLine(line, &section))
 		case languageEnv:
 			result = append(result, envLine(line))
+		case languageText:
+			result = append(result, codeLine{{Text: line}})
 		default:
 			result = append(result, markdownLine(line))
 		}

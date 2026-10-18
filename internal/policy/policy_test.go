@@ -822,3 +822,29 @@ func TestSecretPassedAsAFileIsExplained(t *testing.T) {
 		t.Fatalf("a twin that is no *_FILE variable was accepted: %+v", report.Findings)
 	}
 }
+
+// TestBundledFilesStayInTheirFolder: a bundled file sits directly under
+// config/, comes from inside the repository and is mounted in a planned
+// service at a path nothing else of that service takes.
+func TestBundledFilesStayInTheirFolder(t *testing.T) {
+	plan := goodPlan()
+	plan.ConfigFiles = []ir.ConfigFile{{Service: "db", Path: "config/postgresql.conf", Source: "deploy/postgresql.conf", ContainerPath: "/etc/postgresql/postgresql.conf"}}
+	if report := policy.Evaluate(baseInput(plan)); report.Has("P8", policy.Deny) {
+		t.Fatalf("a bundled file was refused: %+v", report.Findings)
+	}
+	cases := map[string]func(*ir.ConfigFile){
+		"another folder":         func(file *ir.ConfigFile) { file.Path = "secrets/postgresql.conf" },
+		"a nested path":          func(file *ir.ConfigFile) { file.Path = "config/../postgresql.conf" },
+		"outside the repository": func(file *ir.ConfigFile) { file.Source = "../postgresql.conf" },
+		"no such service":        func(file *ir.ConfigFile) { file.Service = "ghost" },
+		"a reserved path":        func(file *ir.ConfigFile) { file.ContainerPath = "/proc/postgresql.conf" },
+		"a volume's path":        func(file *ir.ConfigFile) { file.ContainerPath = "/var/lib/postgresql/data" },
+	}
+	for name, change := range cases {
+		changed := plan.Clone()
+		change(&changed.ConfigFiles[0])
+		if report := policy.Evaluate(baseInput(changed)); !report.Has("P8", policy.Deny) {
+			t.Errorf("%s: not refused: %+v", name, report.Findings)
+		}
+	}
+}

@@ -209,8 +209,12 @@ func (check *checker) grantedSocket(service string, volume types.ServiceVolumeCo
 }
 
 // bindSource is P9a: bind mounts come only from the profile base path (after
-// resolving symlinks) or from a bind_mount need the user granted.
+// resolving symlinks), from a bind_mount need the user granted, or from
+// beside compose.yaml for a file the plan bundles for that service.
 func (check *checker) bindSource(service, field, source string) {
+	if check.bundled(service, source) {
+		return
+	}
 	if !filepath.IsAbs(source) {
 		check.add("P9a", Deny, service, field, "bind source %q must be an absolute path", source)
 		return
@@ -224,6 +228,14 @@ func (check *checker) bindSource(service, field, source string) {
 		return
 	}
 	check.add("P9a", Deny, service, field, "bind mount %s is outside the profile base path %q", source, base)
+}
+
+// bundled is a bind of a file the plan bundles beside compose.yaml, into
+// the service that mounts it.
+func (check *checker) bundled(service, source string) bool {
+	return check.input.Plan != nil && slices.ContainsFunc(check.input.Plan.ConfigFiles, func(file ir.ConfigFile) bool {
+		return file.Service == service && source == relativePrefix+file.Path
+	})
 }
 
 func (check *checker) composePorts(name string, service types.ServiceConfig) {

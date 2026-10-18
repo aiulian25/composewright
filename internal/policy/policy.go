@@ -170,6 +170,7 @@ func Evaluate(input Input) Report {
 	}
 	check.envFile(plan)
 	check.optionalEnv(plan)
+	check.configFiles(plan)
 	check.needs(plan)
 	check.dependencies(plan)
 	return Report{Findings: check.findings}

@@ -6,7 +6,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
+	"slices"
 	"time"
+
+	"github.com/aiulian25/composewright/internal/secrets"
 )
 
 type Generation struct {
@@ -28,6 +32,10 @@ type Generation struct {
 	LogsPath       string    `json:"logs_path"`
 	FactsJSON      string    `json:"facts_json"`
 	CreatedAt      time.Time `json:"created_at"`
+	// Files are the files the generation bundles beside compose.yaml, by
+	// path, kept sealed. Reading generations leaves them out; Files reads
+	// them.
+	Files map[string][]byte `json:"files,omitempty"`
 }
 
 type Image struct {
@@ -55,24 +63,25 @@ func (store *Store) AddGeneration(ctx context.Context, generation Generation, im
 	var added Generation
 	err := store.transaction(ctx, func(transaction *sql.Tx) error {
 		var err error
-		added, err = addGeneration(ctx, transaction, generation, images)
+		added, err = store.addGeneration(ctx, transaction, generation, images)
 		return err
 	})
 	return added, err
 }
 
-func addGeneration(ctx context.Context, transaction *sql.Tx, generation Generation, images []Image) (Generation, error) {
+func (store *Store) addGeneration(ctx context.Context, transaction *sql.Tx, generation Generation, images []Image) (Generation, error) {
 	generation.ID, generation.CreatedAt = newID(), time.Now()
 	err := transaction.QueryRowContext(ctx, `SELECT COALESCE(MAX(number), 0) + 1 FROM generations WHERE project_id=?`, generation.ProjectID).
 		Scan(&generation.Number)
 	if err != nil {
 		return Generation{}, err
 	}
-	return generation, insertGeneration(ctx, transaction, generation, images)
+	return generation, store.insertGeneration(ctx, transaction, generation, images)
 }
 
-// insertGeneration writes a generation and its images as they are.
-func insertGeneration(ctx context.Context, transaction *sql.Tx, generation Generation, images []Image) error {
+// insertGeneration writes a generation, its images and its files as they
+// are, the files sealed.
+func (store *Store) insertGeneration(ctx context.Context, transaction *sql.Tx, generation Generation, images []Image) error {
 	_, err := transaction.ExecContext(ctx, `INSERT INTO generations (`+generationColumns+`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 		generation.ID, generation.ProjectID, generation.Iteration, generation.Engine, generation.Provider, generation.Model,
 		generation.PromptHash, generation.IRJSON, generation.ComposeYAML, generation.DeployMD, generation.OptionsJSON,
@@ -92,7 +101,43 @@ func insertGeneration(ctx context.Context, transaction *sql.Tx, generation Gener
 			return err
 		}
 	}
+	return store.insertFiles(ctx, transaction, generation.ID, generation.Files)
+}
+
+func (store *Store) insertFiles(ctx context.Context, transaction *sql.Tx, generationID string, files map[string][]byte) error {
+	for _, path := range slices.Sorted(maps.Keys(files)) {
+		sealed, err := store.sealer.Load().Seal(files[path], secrets.FileAAD(generationID, path))
+		if err != nil {
+			return err
+		}
+		_, err = transaction.ExecContext(ctx, `INSERT INTO generation_files (id, generation_id, path, content_ct, nonce, key_id) VALUES (?,?,?,?,?,?)`,
+			newID(), generationID, path, sealed.Ciphertext, sealed.Nonce, sealed.KeyID)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
+}
+
+// Files reads the files a generation bundles, by path.
+func (store *Store) Files(ctx context.Context, generationID string) (map[string][]byte, error) {
+	rows, err := store.database.QueryContext(ctx, `SELECT path, content_ct, nonce, key_id FROM generation_files WHERE generation_id=?`, generationID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	files := map[string][]byte{}
+	for rows.Next() {
+		var path string
+		var sealed secrets.Sealed
+		if err := rows.Scan(&path, &sealed.Ciphertext, &sealed.Nonce, &sealed.KeyID); err != nil {
+			return nil, err
+		}
+		if files[path], err = store.sealer.Load().Open(sealed, secrets.FileAAD(generationID, path)); err != nil {
+			return nil, fmt.Errorf("open %s: %w", path, err)
+		}
+	}
+	return files, rows.Err()
 }
 
 // RecordGeneration stores a generation with everything that belongs to it
@@ -111,7 +156,7 @@ func (store *Store) RecordGeneration(ctx context.Context, project Project, gener
 			return err
 		}
 		generation.ProjectID = saved.ID
-		if added, err = addGeneration(ctx, transaction, generation, images); err != nil {
+		if added, err = store.addGeneration(ctx, transaction, generation, images); err != nil {
 			return err
 		}
 		if err := pruneGenerations(ctx, transaction, saved.ID); err != nil {

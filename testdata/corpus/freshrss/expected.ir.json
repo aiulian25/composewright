@@ -521,6 +521,7 @@
     }
   ],
   "optional_services": [],
+  "config_files": [],
   "needs": [],
   "probe": {
     "service": "freshrss",

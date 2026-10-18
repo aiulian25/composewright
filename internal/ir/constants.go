@@ -31,9 +31,16 @@ const (
 	DockerSocket     = "/var/run/docker.sock"
 	dockerSocketName = "docker.sock"
 	optionalEnvField = "optional_env"
-	// optionalServicesField is filled from the repository, never by a model.
+	// optionalServicesField and configFilesField are filled from the
+	// repository, never by a model.
 	optionalServicesField = "optional_services"
-	profileSeparator      = ", "
+	configFilesField      = "config_files"
+	// ConfigDirectory is the folder beside compose.yaml that holds the
+	// files bundled for the services; ConfigFileMode is their mode, so
+	// the container reads them whatever user it runs as.
+	ConfigDirectory  = "config"
+	ConfigFileMode   = 0o644
+	profileSeparator = ", "
 
 	GeneratePassword24 = secrets.GeneratePassword24
 	GenerateHex32      = secrets.GenerateHex32

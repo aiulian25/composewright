@@ -10,6 +10,8 @@ const (
 	hostWideSuffix    = "/*"
 	wildcard          = "*"
 	secretsDirPrefix  = "./secrets/"
+	// relativePrefix starts a mount source beside compose.yaml.
+	relativePrefix    = "./"
 	digestPrefix      = "sha256:"
 	latestTag         = "latest"
 	includeKey        = "include"

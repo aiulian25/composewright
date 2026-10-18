@@ -180,6 +180,7 @@ func TestClassify(t *testing.T) {
 		"apps/docs/guide/configuration.md": Document, "website/Docs/setup.md": Document, "apps/docs/de/guide/configuration.md": Skip,
 		"docs/zh_CN/setup.md": Skip, "docs/pt-BR/compose.yml": Skip, "docs/en/setup.md": Document, "src/main/java/de/app/Main.java": Code,
 		"de/compose.yml": Config, "apps/api/notes.md": Skip,
+		"web/nginx.conf": Config, "contrib/Caddyfile": Config, "config/app.ini": Config, "tests/nginx.conf": Skip,
 	}
 	for name, want := range cases {
 		if got := Classify(name); got != want {

@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"slices"
@@ -85,6 +86,8 @@ const (
 	paneCompose        = "compose"
 	paneEnv            = "env"
 	paneDeploy         = "deploy"
+	// paneFilePrefix starts the pane of a bundled file, followed by its path.
+	paneFilePrefix = "file:"
 	// durationPrecision is how finely a run's time is shown: 14.2s.
 	durationPrecision = 100 * time.Millisecond
 	generationQuery   = "generation"
@@ -668,6 +671,8 @@ type reviewView struct {
 	ComposeText string
 	EnvLines    []badgedLine
 	DeployLines []badgedLine
+	// ConfigFiles are the bundled files, each a tab of the context pane.
+	ConfigFiles []configPane
 	Edited      bool
 	Variables   int
 	Secrets     int
@@ -769,6 +774,7 @@ func (server *Server) reviewView(ctx context.Context, stored *pipeline.Stored, r
 	view.Compose, view.Pane = server.composeView(stored), paneCompose
 	view.EnvLines = plainLines(server.envText(stored, revealed), languageEnv)
 	view.DeployLines = plainLines(stored.Generation.DeployMD, languageMarkdown)
+	view.ConfigFiles = configPanes(stored)
 	if tested, verdict, found := testedRun(generations, ""); found && !verdict.Passed() {
 		view.LastFailure, view.ChangedSince = failureText(verdict), tested.ID != stored.Generation.ID
 	}
@@ -897,7 +903,7 @@ func (server *Server) reviewPage(writer http.ResponseWriter, request *http.Reque
 	if err != nil {
 		return err
 	}
-	view.Pane = paneFor(query.Get("pane"))
+	view.Pane = paneFor(query.Get("pane"), view.ConfigFiles)
 	if query.Has("edit") {
 		view.Draft = view.ComposeText
 	}
@@ -910,12 +916,35 @@ func (server *Server) reviewPage(writer http.ResponseWriter, request *http.Reque
 }
 
 // paneFor picks the file the context pane shows; compose.yaml unless the
-// link asks for another.
-func paneFor(value string) string {
-	if value == paneEnv || value == paneDeploy {
+// link asks for another, a bundled file included.
+func paneFor(value string, files []configPane) string {
+	bundled := slices.ContainsFunc(files, func(file configPane) bool { return file.Pane == value })
+	if value == paneEnv || value == paneDeploy || bundled {
 		return value
 	}
 	return paneCompose
+}
+
+// configPane is a bundled file as the context pane shows it: under its
+// path beside compose.yaml, with the repository file it was copied from.
+type configPane struct {
+	Pane   string
+	Path   string
+	Source string
+	Lines  []badgedLine
+}
+
+func configPanes(stored *pipeline.Stored) []configPane {
+	panes := make([]configPane, 0, len(stored.Plan.ConfigFiles))
+	for _, file := range stored.Plan.ConfigFiles {
+		language := languageText
+		if extension := path.Ext(file.Path); extension == ".yml" || extension == ".yaml" {
+			language = languageYAML
+		}
+		panes = append(panes, configPane{Pane: paneFilePrefix + file.Path, Path: file.Path, Source: file.Source,
+			Lines: plainLines(string(stored.Generation.Files[file.Path]), language)})
+	}
+	return panes
 }
 
 // reviewPageFor is the Review page's frame: under the project, with the

@@ -1190,6 +1190,7 @@
               "source": "./prometheus.yml",
               "target": "/etc/prometheus/prometheus.yml",
               "read_only": false,
+              "repository_file": "docker/prometheus.yml",
               "location": {
                 "file": "docker/docker-compose.prod.yml",
                 "line": 90

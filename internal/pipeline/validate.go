@@ -227,7 +227,7 @@ func Revalidate(ctx context.Context, dependencies Dependencies, name string) (*S
 	if err != nil {
 		return stored, sandbox.Verdict{}, err
 	}
-	files := Files{Compose: []byte(stored.Generation.ComposeYAML), Env: env}
+	files := Files{Compose: []byte(stored.Generation.ComposeYAML), Env: env, Config: stored.Generation.Files}
 	verdict, err := dependencies.Sandbox.Validate(ctx, sandboxInput(stored.Plan, files, stored.Values, stored.Generation.Iteration, stored.Options.BenignLogPatterns))
 	if err != nil {
 		return stored, verdict, err
@@ -237,7 +237,8 @@ func Revalidate(ctx context.Context, dependencies Dependencies, name string) (*S
 }
 
 func sandboxInput(plan *ir.IR, files Files, values map[string]string, iteration int, benign []string) sandbox.Input {
-	input := sandbox.Input{Project: plan.App.Name, Compose: files.Compose, Env: files.Env, SecretFiles: plan.SecretFiles(values), Iteration: iteration,
+	input := sandbox.Input{Project: plan.App.Name, Compose: files.Compose, Env: files.Env, SecretFiles: plan.SecretFiles(values),
+		ConfigFiles: files.Config, Iteration: iteration,
 		Published: map[string][]string{}, CompletedOK: map[string]bool{}, Probe: httpProbe(plan), Benign: benign}
 	for _, service := range plan.Services {
 		for _, port := range service.Ports {

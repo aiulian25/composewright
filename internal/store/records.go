@@ -50,6 +50,9 @@ func (store *Store) projectRecord(ctx context.Context, project Project) (Project
 		if err != nil {
 			return record, err
 		}
+		if generation.Files, err = store.Files(ctx, generation.ID); err != nil {
+			return record, err
+		}
 		record.Generations = append(record.Generations, GenerationRecord{Generation: generation, Images: images})
 	}
 	record.Variables, err = store.EnvVars(ctx, project.ID)
@@ -93,7 +96,7 @@ func (store *Store) RestoreProject(ctx context.Context, record ProjectRecord, re
 		for _, kept := range oldestFirst {
 			generation := kept.Generation
 			generation.ID, generation.ProjectID, generation.LogsPath = newID(), project.ID, ""
-			if err := insertGeneration(ctx, transaction, generation, kept.Images); err != nil {
+			if err := store.insertGeneration(ctx, transaction, generation, kept.Images); err != nil {
 				return err
 			}
 		}

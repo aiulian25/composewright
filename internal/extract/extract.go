@@ -13,6 +13,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/compose-spec/compose-go/v2/types"
+
 	"github.com/aiulian25/composewright/internal/fetch"
 )
 
@@ -28,6 +30,10 @@ const (
 // suspiciousText catches repository text addressed to a language model. It is
 // reported to the user; nothing ever acts on it.
 var suspiciousText = regexp.MustCompile(`(?i)(ignore (all |any |the )?(previous|prior|above|earlier) (instructions|prompts?)|disregard (all |any |the )?(previous|prior|above) |you are (an? )?(ai|assistant|language model|llm)\b|system prompt|as an ai model)`)
+
+// exampleMarkers name the twin a repository ships for a file it leaves to
+// the person, as configuration.example.yaml or nginx.conf.sample.
+var exampleMarkers = []string{".example", ".sample", ".dist"}
 
 type sourceFile struct {
 	relative string
@@ -67,7 +73,50 @@ func Extract(ctx context.Context, directory string) (*Facts, error) {
 	}
 	facts.Variables = mergeVariables(mentions)
 	facts.Images = dedupeImages(facts.Images)
+	facts.markRepositoryFiles()
 	return facts, nil
+}
+
+// markRepositoryFiles names, on each bind mount of a file of the
+// repository, the file to bundle with the stack.
+func (facts *Facts) markRepositoryFiles() {
+	files := map[string]bool{}
+	for _, name := range facts.Files {
+		files[name] = true
+	}
+	for fileIndex := range facts.ComposeFiles {
+		compose := &facts.ComposeFiles[fileIndex]
+		page, _, _ := strings.Cut(compose.Path, FencedLineMark)
+		for serviceIndex := range compose.Services {
+			volumes := compose.Services[serviceIndex].Volumes
+			for volumeIndex := range volumes {
+				if volume := &volumes[volumeIndex]; volume.Type == types.VolumeTypeBind {
+					volume.RepositoryFile = repositoryFile(files, path.Dir(page), volume.Source)
+				}
+			}
+		}
+	}
+}
+
+// repositoryFile is the file a bind mount's source names, relative to its
+// compose file, or the twin the repository ships for it, such as
+// configuration.example.yaml for configuration.yaml; empty when neither
+// is a file of the repository within the size kept.
+func repositoryFile(files map[string]bool, folder, source string) string {
+	mounted := path.Join(folder, source)
+	if path.IsAbs(source) || !filepath.IsLocal(mounted) {
+		return ""
+	}
+	extension := path.Ext(mounted)
+	stem := strings.TrimSuffix(mounted, extension)
+	candidates := []string{mounted}
+	for _, marker := range exampleMarkers {
+		candidates = append(candidates, stem+marker+extension, mounted+marker)
+	}
+	if index := slices.IndexFunc(candidates, func(name string) bool { return files[name] }); index >= 0 {
+		return candidates[index]
+	}
+	return ""
 }
 
 func (facts *Facts) read(ctx context.Context, file sourceFile, samples map[string]map[string]string) []Mention {

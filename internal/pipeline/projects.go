@@ -11,7 +11,8 @@ import (
 )
 
 // Bundle is the stored project as files: compose.yaml, the .env with its
-// secrets, a secret-free .env.example and DEPLOY.md.
+// secrets, a secret-free .env.example, DEPLOY.md, the secrets passed as
+// files and the repository's files the services mount.
 func (stored *Stored) Bundle() (export.Bundle, error) {
 	env, err := stored.EnvFile(Revealed)
 	if err != nil {
@@ -22,7 +23,8 @@ func (stored *Stored) Bundle() (export.Bundle, error) {
 		return export.Bundle{}, err
 	}
 	return export.Bundle{Project: stored.Project.Name, Compose: []byte(stored.Generation.ComposeYAML), Env: env,
-		EnvExample: example, Deploy: []byte(stored.Generation.DeployMD), Secrets: stored.Plan.SecretFiles(stored.Values)}, nil
+		EnvExample: example, Deploy: []byte(stored.Generation.DeployMD), Secrets: stored.Plan.SecretFiles(stored.Values),
+		Config: stored.Generation.Files}, nil
 }
 
 // Export writes a project's files to target (a folder, or arcane:DIR) and

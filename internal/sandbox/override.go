@@ -5,19 +5,24 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/docker/go-units"
 	"go.yaml.in/yaml/v3"
+
+	"github.com/aiulian25/composewright/internal/ir"
 )
 
 const (
-	LabelProject    = "io.composewright.sandbox"
-	LabelStarted    = "io.composewright.started"
-	tagOverride     = "!override"
-	tagReset        = "!reset"
-	sandboxVolume   = "cw-bind-"
+	LabelProject  = "io.composewright.sandbox"
+	LabelStarted  = "io.composewright.started"
+	tagOverride   = "!override"
+	tagReset      = "!reset"
+	sandboxVolume = "cw-bind-"
+	// bundledPrefix starts the source of a file bundled beside compose.yaml.
+	bundledPrefix   = "./" + ir.ConfigDirectory + "/"
 	noNewPrivileges = "no-new-privileges:true"
 	logDriver       = "json-file"
 	logMaxSize      = "10m"
@@ -193,8 +198,13 @@ func sandboxMounts(service types.ServiceConfig, volumes *yaml.Node) *yaml.Node {
 
 // sandboxMount writes one mount as source:target, read-only when it was.
 // A tmpfs or an anonymous volume has no source, so it takes the long form.
+// A file bundled beside compose.yaml is mounted from the run's copy, always
+// read-only; any other bind becomes a throw-away volume.
 func sandboxMount(serviceName string, index int, volume types.ServiceVolumeConfig, volumes *yaml.Node) *yaml.Node {
 	source := volume.Source
+	if volume.Type == volumeTypeBind && strings.HasPrefix(source, bundledPrefix) {
+		return quoted(source + ":" + volume.Target + readOnlySuffix)
+	}
 	if volume.Type == volumeTypeBind {
 		source = sandboxVolume + serviceName + "-" + strconv.Itoa(index)
 		volumes.Content = append(volumes.Content, scalar(source), &yaml.Node{Kind: yaml.MappingNode, Style: yaml.FlowStyle})

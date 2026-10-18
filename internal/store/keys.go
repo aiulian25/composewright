@@ -15,10 +15,12 @@ func (store *Store) RecordKey(ctx context.Context, keyID string) error {
 	return err
 }
 
-// KeyUsage counts sealed values per key id across env vars and settings.
+// KeyUsage counts sealed values per key id across env vars, settings and
+// bundled files.
 func (store *Store) KeyUsage(ctx context.Context) (map[string]int, error) {
 	rows, err := store.database.QueryContext(ctx, `SELECT key_id, COUNT(*) FROM (
 		SELECT key_id FROM env_vars WHERE is_secret = 1 UNION ALL SELECT key_id FROM settings WHERE value_ct IS NOT NULL
+		UNION ALL SELECT key_id FROM generation_files
 	) GROUP BY key_id`)
 	if err != nil {
 		return nil, err
@@ -50,7 +52,11 @@ func (store *Store) ResealAll(ctx context.Context, target secrets.Key) (int, err
 		if err != nil {
 			return err
 		}
-		resealed = count + settings
+		files, err := store.resealFiles(ctx, transaction, target)
+		if err != nil {
+			return err
+		}
+		resealed = count + settings + files
 		now := unix(time.Now())
 		if _, err := transaction.ExecContext(ctx, `UPDATE keys SET retired_at=? WHERE retired_at IS NULL AND key_id<>?`, now, target.ID); err != nil {
 			return err
@@ -87,6 +93,14 @@ func (store *Store) resealSettings(ctx context.Context, transaction *sql.Tx, tar
 		return 0, err
 	}
 	return len(rows), store.rewrite(ctx, transaction, rows, target, `UPDATE settings SET value_ct=?, nonce=?, key_id=? WHERE key=?`)
+}
+
+func (store *Store) resealFiles(ctx context.Context, transaction *sql.Tx, target secrets.Key) (int, error) {
+	rows, err := collect(ctx, transaction, `SELECT id, generation_id, path, content_ct, nonce, key_id FROM generation_files`, secrets.FileAAD)
+	if err != nil {
+		return 0, err
+	}
+	return len(rows), store.rewrite(ctx, transaction, rows, target, `UPDATE generation_files SET content_ct=?, nonce=?, key_id=? WHERE id=?`)
 }
 
 func collect(ctx context.Context, transaction *sql.Tx, query string, aad func(owner, key string) []byte) ([]sealedRow, error) {

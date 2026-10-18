@@ -10,6 +10,7 @@ import (
 	"io/fs"
 	"maps"
 	"net/http"
+	"path"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -83,7 +84,7 @@ type filesView struct {
 	Replace    bool
 	Saved      string
 	// SecretFiles are the secrets passed as files a folder save writes;
-	// Saving counts every file it writes.
+	// Saving counts every file a save writes, bundled config files too.
 	SecretFiles  []string
 	Saving       int
 	ComposeLines []badgedLine
@@ -199,9 +200,9 @@ func (server *Server) filesView(ctx context.Context, stored *pipeline.Stored, st
 		view.TargetPath, view.Arcane = shownTarget(target, view.Folder)
 	}
 	view.SecretFiles = slices.Sorted(maps.Keys(stored.Plan.SecretFiles(nil)))
-	view.Saving = folderFiles + len(view.SecretFiles)
+	view.Saving = folderFiles + len(view.SecretFiles) + len(stored.Generation.Files)
 	if view.Arcane {
-		view.Saving = arcaneFiles
+		view.Saving = arcaneFiles + len(stored.Generation.Files)
 	}
 	generations, err := server.workspace().Store.Generations(ctx, project.ID)
 	if err != nil {
@@ -481,6 +482,19 @@ func (server *Server) copyEnv(writer http.ResponseWriter, request *http.Request,
 type zipEntry struct {
 	name    string
 	content []byte
+	mode    fs.FileMode
+}
+
+// zipFolders are the folders the files of a download sit in, beside
+// compose.yaml, each once.
+func zipFolders(files []zipEntry) []string {
+	var folders []string
+	for _, file := range files {
+		if folder := path.Dir(file.name); folder != "." && !slices.Contains(folders, folder) {
+			folders = append(folders, folder)
+		}
+	}
+	return folders
 }
 
 // copyShell hands the page's copy button the files as shell commands, the
@@ -522,20 +536,23 @@ func (server *Server) download(writer http.ResponseWriter, request *http.Request
 	if modified.IsZero() {
 		modified = time.Now()
 	}
-	files := []zipEntry{{export.ComposeName, bundle.Compose}, {export.EnvName, bundle.Env}, {export.DeployName, bundle.Deploy}}
-	if len(bundle.Secrets) > 0 {
-		folder := &zip.FileHeader{Name: bundle.Project + "/" + ir.SecretsDirectory + "/", Modified: modified}
+	files := []zipEntry{{export.ComposeName, bundle.Compose, zipFileMode}, {export.EnvName, bundle.Env, zipFileMode}, {export.DeployName, bundle.Deploy, zipFileMode}}
+	for _, name := range slices.Sorted(maps.Keys(bundle.Secrets)) {
+		files = append(files, zipEntry{name, bundle.Secrets[name], zipFileMode})
+	}
+	for _, name := range slices.Sorted(maps.Keys(bundle.Config)) {
+		files = append(files, zipEntry{name, bundle.Config[name], ir.ConfigFileMode})
+	}
+	for _, name := range zipFolders(files) {
+		folder := &zip.FileHeader{Name: bundle.Project + "/" + name + "/", Modified: modified}
 		folder.SetMode(fs.ModeDir | zipFolderMode)
 		if _, err := zipped.CreateHeader(folder); err != nil {
 			return err
 		}
 	}
-	for _, name := range slices.Sorted(maps.Keys(bundle.Secrets)) {
-		files = append(files, zipEntry{name, bundle.Secrets[name]})
-	}
 	for _, file := range files {
 		header := &zip.FileHeader{Name: bundle.Project + "/" + file.name, Method: zip.Deflate, Modified: modified}
-		header.SetMode(zipFileMode)
+		header.SetMode(file.mode)
 		entry, err := zipped.CreateHeader(header)
 		if err != nil {
 			return err

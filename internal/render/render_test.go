@@ -532,3 +532,39 @@ func TestProxyStepUnderAPath(t *testing.T) {
 		}
 	}
 }
+
+// TestBundledFilesAreMountedReadOnly: a bundled file is mounted from beside
+// compose.yaml, read-only, the gate passes the rendered file, and DEPLOY.md
+// lists it; another file bound from config/ is refused.
+func TestBundledFilesAreMountedReadOnly(t *testing.T) {
+	ctx := context.Background()
+	options := testOptions(t, variant{})
+	plan := &ir.IR{App: ir.App{Name: "demo"}, Services: []ir.Service{{Name: "web", Role: ir.RoleApp,
+		Image: ir.Image{Registry: ir.DockerHubHost, Repository: "library/nginx", Tag: "1.27"}}},
+		ConfigFiles: []ir.ConfigFile{{Service: "web", Path: "config/nginx.conf", Source: "deploy/nginx.conf", ContainerPath: "/etc/nginx/nginx.conf"}}}
+	compose, err := Compose(plan, options)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(compose), `- "./config/nginx.conf:/etc/nginx/nginx.conf:ro"`) {
+		t.Fatalf("the bundled file is not mounted read-only:\n%s", compose)
+	}
+	input := policy.Input{Plan: plan, Profile: options.Profile, AllowRegistries: config.Default().Registries.Allow}
+	project, err := composefile.Load(ctx, "compose.yaml", compose, nil, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report := policy.EvaluateYAML(ctx, project, compose, input); report.Blocked() {
+		t.Fatalf("the rendered file is blocked: %+v", report.Findings)
+	}
+	if deploy := string(Deploy(plan, options, "not validated yet")); !strings.Contains(deploy, "- config/nginx.conf, from deploy/nginx.conf, at /etc/nginx/nginx.conf in web") {
+		t.Errorf("DEPLOY.md does not list the bundled file:\n%s", deploy)
+	}
+	other := []byte(strings.Replace(string(compose), "./config/nginx.conf", "./config/other.conf", 1))
+	if project, err = composefile.Load(ctx, "compose.yaml", other, nil, false); err != nil {
+		t.Fatal(err)
+	}
+	if report := policy.EvaluateYAML(ctx, project, other, input); !report.Has("P9a", policy.Deny) {
+		t.Fatalf("a file the plan does not bundle was mounted from config/: %+v", report.Findings)
+	}
+}

@@ -39,7 +39,9 @@ const (
 	pathSeparator      = "/"
 	// relativePrefix makes a path beside compose.yaml one Compose reads as
 	// relative to the file, as the gate requires.
-	relativePrefix  = "./"
+	relativePrefix = "./"
+	// readOnlyMount ends a mount the container may only read.
+	readOnlyMount   = ":ro"
 	stripMiddleware = "-stripprefix"
 )
 
@@ -295,6 +297,11 @@ func (options Options) mounts(plan *ir.IR, service *ir.Service, volumes *yaml.No
 		items = append(items, quoted(volume.Name+":"+volume.ContainerPath))
 		if !hasKey(volumes, volume.Name) {
 			volumes.Content = append(volumes.Content, key(volume.Name), emptyMapping())
+		}
+	}
+	for _, file := range plan.ConfigFiles {
+		if file.Service == service.Name {
+			items = append(items, quoted(relativePrefix+file.Path+":"+file.ContainerPath+readOnlyMount))
 		}
 	}
 	for _, need := range plan.Needs {

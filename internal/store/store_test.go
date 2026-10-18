@@ -601,3 +601,53 @@ func TestPublishedPortsReadTheLatestVersion(t *testing.T) {
 		t.Errorf("PublishedPorts = %+v, want %+v", published, want)
 	}
 }
+
+// TestGenerationFilesAreSealed: the files a version bundles are stored
+// sealed, read back as written, moved to a new key with every other value
+// and counted with them, and a backup record carries them into a restore.
+func TestGenerationFilesAreSealed(t *testing.T) {
+	ctx := context.Background()
+	store, _, oldKey := openTestStore(t)
+	const content = "listen 8080; # a config file\n"
+	files := map[string][]byte{"config/nginx.conf": []byte(content)}
+	project := Project{Name: "web", Slug: "web", SourceKind: "github", Status: StatusGenerated}
+	noEvents := func(Project, Generation) []Event { return nil }
+	_, added, err := store.RecordGeneration(ctx, project, Generation{Engine: "rules", IRJSON: "{}", Files: files}, nil, nil, "cli:test", noEvents)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stored []byte
+	if err := store.database.QueryRowContext(ctx, `SELECT content_ct FROM generation_files WHERE generation_id=?`, added.ID).Scan(&stored); err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Contains(stored, []byte("listen 8080")) {
+		t.Fatal("a bundled file is stored in plain text")
+	}
+	newKey, _ := secrets.NewKey()
+	if count, err := store.ResealAll(ctx, newKey); err != nil || count != 1 {
+		t.Fatalf("resealed %d, %v", count, err)
+	}
+	if usage, err := store.KeyUsage(ctx); err != nil || usage[newKey.ID] != 1 || usage[oldKey.ID] != 0 {
+		t.Fatalf("usage after rotation: %v %v", usage, err)
+	}
+	store.sealer.Store(secrets.NewSealer(newKey))
+	if read, err := store.Files(ctx, added.ID); err != nil || string(read["config/nginx.conf"]) != content {
+		t.Fatalf("read back %q: %v", read, err)
+	}
+	records, err := store.ProjectRecords(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	target, _, _ := openTestStore(t)
+	if restored, err := target.RestoreProject(ctx, records[0], false); err != nil || !restored {
+		t.Fatalf("restore: %v %v", restored, err)
+	}
+	restoredProject, _ := target.FindProject(ctx, "web")
+	latest, err := target.LatestGeneration(ctx, restoredProject.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if read, err := target.Files(ctx, latest.ID); err != nil || string(read["config/nginx.conf"]) != content {
+		t.Fatalf("restored %q: %v", read, err)
+	}
+}

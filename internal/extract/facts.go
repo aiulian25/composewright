@@ -143,6 +143,9 @@ type ComposeVolume struct {
 	Source   string `json:"source"`
 	Target   string `json:"target"`
 	ReadOnly bool   `json:"read_only"`
+	// RepositoryFile is the repository's file a bind mount of a file needs:
+	// the one it mounts, else the example the repository ships for it.
+	RepositoryFile string `json:"repository_file,omitempty"`
 	// TmpfsSize, in bytes, and TmpfsMode are a tmpfs volume's options.
 	TmpfsSize int64    `json:"tmpfs_size,omitempty"`
 	TmpfsMode uint32   `json:"tmpfs_mode,omitempty"`

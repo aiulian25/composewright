@@ -43,6 +43,7 @@ func Deploy(plan *ir.IR, options Options, status string) []byte {
 	write("")
 	options.reachSection(plan, write)
 	options.storageSection(plan, write)
+	configSection(plan, write)
 	needsSection(plan, options, write)
 	optionalSection(plan, write)
 	notesSection(plan, write)
@@ -165,6 +166,23 @@ func (options Options) storageSection(plan *ir.IR, write func(string, ...any)) {
 			}
 		}
 	}
+	write("")
+}
+
+// configSection lists the repository's files that travel with the stack.
+func configSection(plan *ir.IR, write func(string, ...any)) {
+	if len(plan.ConfigFiles) == 0 {
+		return
+	}
+	write("## Config files")
+	write("")
+	write("These files of the repository travel with compose.yaml, mounted read-only; edit them before the first start:")
+	write("")
+	for _, file := range plan.ConfigFiles {
+		write("- %s, from %s, at %s in %s", file.Path, file.Source, file.ContainerPath, file.Service)
+	}
+	write("")
+	write("An app that writes to its file needs the %s taken off that line of compose.yaml.", readOnlyMount)
 	write("")
 }
 

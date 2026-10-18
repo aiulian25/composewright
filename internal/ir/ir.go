@@ -6,6 +6,7 @@ package ir
 
 import (
 	"path"
+	"regexp"
 	"slices"
 	"strings"
 )
@@ -17,6 +18,7 @@ type IR struct {
 	EnvFile                []EnvFileEntry    `json:"env_file"`
 	OptionalEnv            []OptionalSetting `json:"optional_env"`
 	OptionalServices       []OptionalService `json:"optional_services"`
+	ConfigFiles            []ConfigFile      `json:"config_files"`
 	Needs                  []Need            `json:"needs"`
 	Probe                  Probe             `json:"probe"`
 	PostInstallNotes       []string          `json:"post_install_notes"`
@@ -132,6 +134,37 @@ type EnvFileEntry struct {
 	Description string     `json:"description"`
 	FileEnvKey  string     `json:"file_env_key"`
 	Provenance  Provenance `json:"provenance"`
+}
+
+// ConfigFile is a file of the repository a service mounts, such as an
+// nginx.conf: it travels with compose.yaml under config/ and is mounted
+// read-only.
+type ConfigFile struct {
+	Service string `json:"service"`
+	// Path is where the file is kept beside compose.yaml, such as
+	// config/nginx.conf.
+	Path string `json:"path"`
+	// Source is the repository file it is copied from: the one upstream
+	// mounts, or the example the repository ships for it.
+	Source        string     `json:"source"`
+	ContainerPath string     `json:"container_path"`
+	Provenance    Provenance `json:"provenance"`
+}
+
+// configFileName is the name a bundled file may have under ConfigDirectory.
+var configFileName = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$`)
+
+// ConfigPath is where a file named name is kept beside compose.yaml, and
+// whether composewright bundles a file of that name.
+func ConfigPath(name string) (string, bool) {
+	return path.Join(ConfigDirectory, name), configFileName.MatchString(name)
+}
+
+// IsConfigPath reports whether a path beside compose.yaml is one a bundled
+// file is kept at.
+func IsConfigPath(kept string) bool {
+	directory, name := path.Split(kept)
+	return directory == ConfigDirectory+"/" && configFileName.MatchString(name)
 }
 
 // OptionalSetting is a variable the upstream documents and the plan leaves

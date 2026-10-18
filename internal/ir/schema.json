@@ -51,6 +51,11 @@
       "items": { "$ref": "#/$defs/optional_service" },
       "description": "Services the upstream starts only with a Compose profile; one a person switched on is also in services. composewright fills this from the repository itself; a model returns an empty array."
     },
+    "config_files": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/config_file" },
+      "description": "Files of the repository a service mounts, bundled beside compose.yaml under config/ and mounted read-only. composewright fills this from the repository itself; a model returns an empty array."
+    },
     "needs": {
       "type": "array",
       "items": { "$ref": "#/$defs/need" },
@@ -84,7 +89,7 @@
     }
   },
   "required": [
-    "ir_version", "app", "services", "env_file", "optional_env", "optional_services", "needs", "probe",
+    "ir_version", "app", "services", "env_file", "optional_env", "optional_services", "config_files", "needs", "probe",
     "post_install_notes", "confidence", "evidence", "suspicious_instructions", "unfilled"
   ],
   "additionalProperties": false,
@@ -216,6 +221,18 @@
         "provenance": { "$ref": "#/$defs/provenance" }
       },
       "required": ["name", "container_path", "description", "provenance"],
+      "additionalProperties": false
+    },
+    "config_file": {
+      "type": "object",
+      "properties": {
+        "service": { "type": "string", "description": "The service that mounts the file." },
+        "path": { "type": "string", "description": "Where the file is kept beside compose.yaml: config/ and a file name (policy P8)." },
+        "source": { "type": "string", "description": "The repository file it is copied from, relative to the repository root." },
+        "container_path": { "type": "string", "description": "Absolute path inside the container the file is mounted at, read-only." },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      },
+      "required": ["service", "path", "source", "container_path", "provenance"],
       "additionalProperties": false
     },
     "dependency": {

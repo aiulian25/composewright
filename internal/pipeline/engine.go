@@ -163,8 +163,13 @@ func modelDraft(ctx context.Context, dependencies Dependencies, enabled []string
 	}
 	drafted := ir.FromModel(proposal)
 	drafted.App.Name, drafted.App.UpstreamURL = rulePlan.App.Name, rulePlan.App.UpstreamURL
-	// The rules list what the upstream documents; a model never does.
+	// The rules list what the upstream documents and ships; a model never
+	// does. A file goes with the service it is mounted in, when planned.
 	drafted.OptionalEnv, drafted.OptionalServices = rulePlan.OptionalEnv, rulePlan.OptionalServices
+	drafted.ConfigFiles = slices.DeleteFunc(slices.Clone(rulePlan.ConfigFiles), func(file ir.ConfigFile) bool {
+		_, planned := drafted.Service(file.Service)
+		return !planned
+	})
 	rules.DropOffDependencies(drafted)
 	for _, name := range enabled {
 		if _, planned := drafted.Service(name); !planned {

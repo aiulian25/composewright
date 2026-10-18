@@ -196,6 +196,7 @@
   <a class="tab" role="tab" href="?pane=compose" aria-selected="{{eq .Pane "compose"}}" data-tab="compose">{{template "icon-file"}}compose.yaml</a>
   <a class="tab" role="tab" href="?pane=env" aria-selected="{{eq .Pane "env"}}" data-tab="env">.env</a>
   <a class="tab" role="tab" href="?pane=deploy" aria-selected="{{eq .Pane "deploy"}}" data-tab="deploy">DEPLOY.md</a>
+  {{$pane := .Pane}}{{range .ConfigFiles}}<a class="tab" role="tab" href="?pane={{.Pane}}" aria-selected="{{eq $pane .Pane}}" data-tab="{{.Pane}}" title="From {{.Source}} in the repository, mounted read-only">{{.Path}}</a>{{end}}
   <span class="tabs-actions"><a class="button button-small button-dark" href="?pane=compose&amp;edit" data-edit-compose>{{template "icon-pencil"}}Edit</a></span>
 </div>
 <div class="tab-panel" data-panel="compose"{{if ne .Pane "compose"}} hidden{{end}}>
@@ -213,5 +214,6 @@
 </div>
 <div class="tab-panel" data-panel="env"{{if ne .Pane "env"}} hidden{{end}}><div class="code">{{template "code-lines" .EnvLines}}</div></div>
 <div class="tab-panel" data-panel="deploy"{{if ne .Pane "deploy"}} hidden{{end}}><div class="code">{{template "code-lines" .DeployLines}}</div></div>
+{{$pane := .Pane}}{{range .ConfigFiles}}<div class="tab-panel" data-panel="{{.Pane}}"{{if ne $pane .Pane}} hidden{{end}}><p class="muted small">Copied from {{.Source}} in the repository and mounted read-only; DEPLOY.md says how to change that.</p><div class="code">{{template "code-lines" .Lines}}</div></div>{{end}}
 {{end}}
 {{end}}

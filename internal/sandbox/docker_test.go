@@ -32,6 +32,19 @@ secrets:
     file: ./secrets/postgres_password
 `
 
+// nginxWithBundledFile serves /ready only from a config file bundled beside
+// compose.yaml, so its healthcheck passes only when the run mounts it.
+const nginxWithBundledFile = `services:
+  web:
+    image: docker.io/library/nginx:1.27-alpine
+    volumes:
+      - ./config/default.conf:/etc/nginx/conf.d/default.conf:ro
+    healthcheck: {test: ["CMD", "wget", "-qO-", "http://127.0.0.1/ready"], interval: 2s, timeout: 2s, retries: 5}
+`
+
+// bundledNginxConfig is that config file.
+const bundledNginxConfig = "server {\n  listen 80;\n  location = /ready { return 200 'ready'; }\n}\n"
+
 // TestDocker runs real stacks against the local daemon; it pulls small
 // public images. Run with COMPOSEWRIGHT_DOCKER_TESTS=1 (make test-docker).
 func TestDocker(t *testing.T) {
@@ -79,12 +92,14 @@ func TestDocker(t *testing.T) {
 			"    tmpfs: [/tmp]\n    shm_size: 1g\n    healthcheck: {test: [\"CMD\", \"touch\", \"/tmp/ready\"], interval: 1s, timeout: 1s, retries: 5}\n", ir.Probe{}, ResultPass, ""},
 		{"fatal log line", "services:\n  app:\n    image: " + alpine + "\n    command: [\"sh\", \"-c\", \"echo 'panic: test failure'; sleep 300\"]\n", ir.Probe{}, ResultFail, ReasonLogs},
 		{"secret file", postgresWithSecretFile, ir.Probe{}, ResultPass, ""},
+		{"bundled file", nginxWithBundledFile, ir.Probe{Service: "web", Port: 80, Path: "/ready", Expect: accepted}, ResultPass, ""},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {
 			verdict, err := sandbox.Validate(context.Background(), Input{Project: "dockertest-" + testCase.name, Compose: []byte(testCase.compose),
 				Env: []byte(""), SecretFiles: map[string][]byte{"secrets/postgres_password": []byte("s3cret-from-a-file")},
-				Published: map[string][]string{"web": {"80/tcp"}}, Probe: testCase.probe})
+				ConfigFiles: map[string][]byte{"config/default.conf": []byte(bundledNginxConfig)},
+				Published:   map[string][]string{"web": {"80/tcp"}}, Probe: testCase.probe})
 			if err != nil {
 				t.Fatal(err)
 			}

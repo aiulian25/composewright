@@ -96,6 +96,9 @@ type Files struct {
 	Compose []byte
 	Env     []byte
 	Deploy  []byte
+	// Config are the repository's files the plan bundles, by their path
+	// beside compose.yaml.
+	Config map[string][]byte
 }
 
 type Result struct {
@@ -207,6 +210,9 @@ func Generate(ctx context.Context, dependencies Dependencies, options Options) (
 	}
 	own := rules.OwnSecrets(result.Facts, result.Source)
 	if err := renderAndGate(ctx, dependencies, options, result, input, own); err != nil {
+		return nil, observer.failed(StepRender, err)
+	}
+	if result.Files.Config, err = configContents(source, result.Plan); err != nil {
 		return nil, observer.failed(StepRender, err)
 	}
 	if err := persist(ctx, dependencies, options, result, 1, store.ActionGenerate); err != nil {
@@ -620,7 +626,32 @@ func generationRecord(options Options, result *Result, iteration int) store.Gene
 	return store.Generation{Iteration: iteration, Engine: result.Engine, Provider: result.Call.Provider,
 		Model: result.Call.Model, PromptHash: result.Call.PromptHash, IRJSON: string(plan),
 		ComposeYAML: string(result.Files.Compose), DeployMD: string(result.Files.Deploy), OptionsJSON: string(settings), PolicyJSON: string(report),
-		FactsJSON: factsJSON(result.Facts)}
+		FactsJSON: factsJSON(result.Facts), Files: result.Files.Config}
+}
+
+// configContents reads the repository's files the plan bundles, which
+// extraction found within the size it keeps of such a file.
+func configContents(source *fetch.Source, plan *ir.IR) (map[string][]byte, error) {
+	if len(plan.ConfigFiles) == 0 {
+		return nil, nil
+	}
+	root, err := os.OpenRoot(source.Directory)
+	if err != nil {
+		return nil, err
+	}
+	defer root.Close()
+	contents := map[string][]byte{}
+	for _, file := range plan.ConfigFiles {
+		content, err := root.ReadFile(filepath.FromSlash(file.Source))
+		if err == nil && int64(len(content)) > fetch.Limit(fetch.Config) {
+			err = fetch.ErrTooLarge
+		}
+		if err != nil {
+			return nil, fmt.Errorf("bundle %s: %w", file.Source, err)
+		}
+		contents[file.Path] = content
+	}
+	return contents, nil
 }
 
 // factsJSON keeps the redacted facts with the generation, so the Analyse
