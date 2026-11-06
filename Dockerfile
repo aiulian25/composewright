@@ -22,7 +22,7 @@ RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath -buildvcs
 FROM docker.io/library/docker:29.9.2-cli@sha256:5e6baf67325a79f64ed3bed6863954d5e05d0f3d4e57cbdb14809346814bbfdb AS docker
 
 # Upstream Compose 5.7.0 still bundles vulnerable x/net/html. Rebuild its
-# checksum-pinned source with x/net 0.62.0; do not hide the finding with a waiver.
+# checksum-pinned source with patched x/net and compression dependencies.
 FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.26.10-alpine@sha256:87c65a688975c0b1d4585d204874c45ca78354670e3a5f11368c5a492303d696 AS compose
 WORKDIR /fetch-compose
 RUN go mod download -json github.com/docker/compose/v5@v5.7.0 > source.json \
@@ -30,8 +30,8 @@ RUN go mod download -json github.com/docker/compose/v5@v5.7.0 > source.json \
  && cp -a /go/pkg/mod/github.com/docker/compose/v5@v5.7.0 /compose \
  && chmod u+w /compose/go.mod /compose/go.sum
 WORKDIR /compose
-RUN go mod edit -require=golang.org/x/net@v0.62.0 \
- && go mod download golang.org/x/net
+RUN go mod edit -require=golang.org/x/net@v0.62.0 -require=github.com/klauspost/compress@v1.20.2 \
+ && go mod download golang.org/x/net github.com/klauspost/compress
 ARG TARGETOS TARGETARCH
 RUN mkdir -p /out \
  && CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -mod=mod -trimpath -buildvcs=false \

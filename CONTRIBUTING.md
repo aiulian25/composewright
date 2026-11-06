@@ -14,7 +14,8 @@ Thank you for helping. composewright turns repositories into deployment files th
 `make build` writes the static binary to `bin/composewright` (`CGO_ENABLED=0`, `-trimpath -buildvcs=false`). `make image` builds the container image for this machine (`IMAGE=` names it, `composewright:dev` by default), and `make dev` runs the development container on port 8484 from a fresh build. The image is the only way composewright is distributed; a maintainer manually dispatches `.github/workflows/release.yml` on an existing `vMAJOR.MINOR.PATCH` tag. Pushing a tag alone publishes nothing. The workflow builds native amd64 and arm64 OCI candidates with SBOM/provenance, tests and scans both, then copies those archives with digest preservation and signs the combined index. It never rebuilds after approval by the gates.
 
 The bundled Compose helper is built from checksum-pinned upstream 5.7.0 source
-with `golang.org/x/net` 0.62.0 for CVE-2026-78661. It reports
+with `golang.org/x/net` 0.62.0 for CVE-2026-78661 and the patched
+`github.com/klauspost/compress` 1.20.2. It reports
 `5.7.0-composewright.1` to distinguish the patched build; the exact image scans
 must still pass. Docker CLI remains the digest-pinned upstream 29.9.2 binary.
 
