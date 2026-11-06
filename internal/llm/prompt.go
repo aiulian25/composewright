@@ -229,22 +229,26 @@ func fillFactsOf(facts *extract.Facts, fields []string) fillFacts {
 // optional settings, which only the rules list and no fill answer changes,
 // and with each variable's description once, in env_file, rather than again
 // on every service that reads it.
-func fillPlan(plan *ir.IR) *ir.IR {
-	view := secretFree(plan)
+func fillPlan(plan *ir.IR) (*ir.IR, error) {
+	view, err := secretFree(plan)
+	if err != nil {
+		return nil, err
+	}
 	view.OptionalEnv = []ir.OptionalSetting{}
 	for service := range view.Services {
 		for index := range view.Services[service].Env {
 			view.Services[service].Env[index].Description = ""
 		}
 	}
-	return view
+	return view, nil
 }
 
 // secretFree is the plan as a model may see it: no secret value, and
-// credentials removed from every other value. Optional services and the
-// bundled files are left out: no model answer changes them, and those
-// switched off are not the model's to see.
-func secretFree(plan *ir.IR) *ir.IR {
+// credentials removed from every other string, commands, healthchecks and
+// notes included. Optional services and the bundled files are left out: no
+// model answer changes them, and those switched off are not the model's to
+// see.
+func secretFree(plan *ir.IR) (*ir.IR, error) {
 	copied := plan.Clone()
 	copied.OptionalServices, copied.ConfigFiles = []ir.OptionalService{}, []ir.ConfigFile{}
 	for index := range copied.EnvFile {
@@ -257,13 +261,12 @@ func secretFree(plan *ir.IR) *ir.IR {
 			variable.Literal = hiddenValue(variable.Key, variable.Literal, variable.Secret)
 		}
 	}
-	return copied
+	return redact.Strings(copied)
 }
 
 func hiddenValue(name, value string, secret bool) string {
-	reference := strings.HasPrefix(value, "$")
-	if secret && value != "" && !reference {
-		return redact.Mask
+	if secret {
+		return redact.Secret(value)
 	}
 	return redact.Value(name, value)
 }

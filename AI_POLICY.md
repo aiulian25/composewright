@@ -2,7 +2,7 @@
 
 ## In the product
 
-composewright can ask a language model to fill gaps in a deployment plan. The model is optional (`llm.provider: none` or `--no-llm` turns it off), never sees secrets, has no tools and no network access of its own, returns only a plan in a fixed schema, cannot change images, needs or policy results from the deterministic rules, and its answer passes the same policy gates as any other plan. Every value it writes is marked as model-written. Nothing it proposes runs without your approval.
+composewright can ask a language model to fill gaps in a deployment plan. The model is optional (`llm.provider: none` or `--no-llm` turns it off), never sees secrets, has no tools and no network access of its own, returns only a plan in a fixed schema, cannot change images, needs or policy results from the deterministic rules, and its answer passes the same policy gates as any other plan. When it drafts the whole plan (the model engine), every service still runs an image the rules found, digest included, and only the needs upstream asks for are requested; any other image or need it proposes is listed as a suggestion and does not run. Every value it writes is marked as model-written. Nothing it proposes runs without your approval.
 
 ## In contributions
 

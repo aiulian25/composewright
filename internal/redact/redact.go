@@ -3,6 +3,7 @@
 package redact
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"slices"
@@ -16,6 +17,13 @@ const (
 	maskPattern      = `<redacted(?:-\d+)?>`
 	privateKeyMask   = "<redacted private key>"
 	minimumKnownSize = 4
+	// escapedDollar is how Compose and a shell write a literal $, and
+	// literalMarker what stands for it while references are taken out.
+	escapedDollar = "$$"
+	literalMarker = "\x00"
+	errorOperator = "?"
+	// referenceJoiners join references, as in ${HOST}:${PORT}/${PATH}.
+	referenceJoiners = ":/@.,-_"
 )
 
 // secretWords are matched as whole tokens of a variable name split on _ . -
@@ -34,10 +42,14 @@ var (
 	userInfo   = regexp.MustCompile(`([a-zA-Z][a-zA-Z0-9+.-]*://[^/\s:@]+):([^/\s@]+)@`)
 	bearer     = regexp.MustCompile(`(?i)(bearer\s+)[a-z0-9._~+/=-]{8,}`)
 	privateKey = regexp.MustCompile(`-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----`)
-	// fallbackReference is ${NAME:-fallback}: the fallback is a value too.
-	fallbackReference = regexp.MustCompile(`^(\$\{([A-Za-z_][A-Za-z0-9_]*):?-)(.+)\}$`)
-	masked            = regexp.MustCompile(maskPattern)
-	wholeMask         = regexp.MustCompile(`^` + maskPattern + `$`)
+	// expansion is one innermost $NAME or ${NAME}, or ${NAME} with an
+	// operator such as :- and what follows it: a default or an alternative
+	// value is a value too, and an inner expansion is matched first.
+	expansion = regexp.MustCompile(`\$\{([A-Za-z_][A-Za-z0-9_]*)(?:(:?[-=?+])([^{}$]*))?\}|\$[A-Za-z_][A-Za-z0-9_]*`)
+	// referencedName names each variable a value expands.
+	referencedName = regexp.MustCompile(`\$\{?([A-Za-z_][A-Za-z0-9_]*)`)
+	masked         = regexp.MustCompile(maskPattern)
+	wholeMask      = regexp.MustCompile(`^` + maskPattern + `$`)
 	// filePath is a path to a file, such as key="/path/to/key.pem": an
 	// example, never secret material, which has no dot in base64.
 	filePath = regexp.MustCompile(`^\.{0,2}/[\w./-]*\.\w+$`)
@@ -125,22 +137,77 @@ func Value(name, value string) string {
 
 // Value redacts as the function Value does, numbering the secrets.
 func (masker *Masker) Value(name, value string) string {
-	if parts := fallbackReference.FindStringSubmatch(value); parts != nil && (IsSecretName(name) || IsSecretName(parts[2])) {
-		// The fallback is masked as the secret it stands in for, whichever
-		// of the two names sounds secret.
-		secretName := name
-		if !IsSecretName(name) {
-			secretName = parts[2]
-		}
-		return parts[1] + masker.Value(secretName, parts[3]) + "}"
-	}
-	if value == "" || strings.HasPrefix(value, "$") || IsMask(value) {
+	if value == "" || IsMask(value) {
 		return value
 	}
 	if IsSecretName(name) {
-		return masker.mask(value)
+		return masker.secret(value)
+	}
+	value = masker.maskDefaults(value, namesSecret(value))
+	if OnlyReferences(value) {
+		return value
 	}
 	return masker.Text(value)
+}
+
+// Secret redacts the value of a secret, whatever its name: one that only
+// refers to other variables keeps the references, with every default and
+// alternative value masked, and any other is masked whole.
+func Secret(value string) string {
+	return (*Masker)(nil).secret(value)
+}
+
+func (masker *Masker) secret(value string) string {
+	if value == "" || IsMask(value) {
+		return value
+	}
+	value = masker.maskDefaults(value, true)
+	if OnlyReferences(value) {
+		return value
+	}
+	return masker.mask(value)
+}
+
+// OnlyReferences reports whether value is nothing but variable expansions,
+// such as ${DB_HOST}:${DB_PORT:-5432}, with no text between them; an
+// escaped $$ is literal text.
+func OnlyReferences(value string) bool {
+	rest := strings.ReplaceAll(value, escapedDollar, literalMarker)
+	for {
+		reduced := expansion.ReplaceAllString(rest, "")
+		if reduced == rest {
+			return strings.TrimFunc(reduced, isReferenceJoiner) == ""
+		}
+		rest = reduced
+	}
+}
+
+// isReferenceJoiner is punctuation that joins references without carrying
+// a value of its own, as in ${HOST}:${PORT} or ${USER}@${HOST}.
+func isReferenceJoiner(character rune) bool {
+	return strings.ContainsRune(referenceJoiners, character)
+}
+
+// namesSecret reports whether any variable value expands sounds secret, so
+// every default in it, however nested, stands in for that secret.
+func namesSecret(value string) bool {
+	return slices.ContainsFunc(referencedName.FindAllStringSubmatch(value, -1), func(match []string) bool { return IsSecretName(match[1]) })
+}
+
+// maskDefaults masks the default and alternative values in value's
+// expansions that stand in for a secret: every one when secret, else those
+// of a variable whose name sounds secret. A ${NAME:?message} keeps its
+// message, which Compose shows instead of a value.
+func (masker *Masker) maskDefaults(value string, secret bool) string {
+	return expansion.ReplaceAllStringFunc(value, func(match string) string {
+		parts := expansion.FindStringSubmatch(match)
+		name, operator, fallback := parts[1], parts[2], parts[3]
+		standsIn := secret || IsSecretName(name)
+		if !standsIn || fallback == "" || IsMask(fallback) || strings.HasSuffix(operator, errorOperator) {
+			return match
+		}
+		return "${" + name + operator + masker.mask(fallback) + "}"
+	})
 }
 
 func redactAssignment(match string) string {
@@ -150,8 +217,11 @@ func redactAssignment(match string) string {
 		return match
 	}
 	unquoted := strings.Trim(value, `"'`)
-	if unquoted == "" || strings.HasPrefix(unquoted, "$") || hasMask(unquoted) || filePath.MatchString(unquoted) {
+	if unquoted == "" || hasMask(unquoted) || filePath.MatchString(unquoted) {
 		return match
+	}
+	if OnlyReferences(unquoted) {
+		return name + separator + (*Masker)(nil).maskDefaults(value, true)
 	}
 	return name + separator + Mask
 }
@@ -166,4 +236,39 @@ func hasToken(name string, words []string) bool {
 		}
 	}
 	return false
+}
+
+// Strings runs Text over every string of value, a JSON-encodable struct,
+// whichever field holds it, and returns the redacted copy.
+func Strings[T any](value *T) (*T, error) {
+	encoded, err := json.Marshal(value)
+	if err != nil {
+		return nil, err
+	}
+	var tree any
+	if err := json.Unmarshal(encoded, &tree); err != nil {
+		return nil, err
+	}
+	encoded, err = json.Marshal(textTree(tree))
+	if err != nil {
+		return nil, err
+	}
+	var redacted T
+	return &redacted, json.Unmarshal(encoded, &redacted)
+}
+
+func textTree(node any) any {
+	switch value := node.(type) {
+	case string:
+		return Text(value)
+	case []any:
+		for index := range value {
+			value[index] = textTree(value[index])
+		}
+	case map[string]any:
+		for key := range value {
+			value[key] = textTree(value[key])
+		}
+	}
+	return node
 }

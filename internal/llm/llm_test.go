@@ -440,3 +440,57 @@ func TestPromptsLeaveOutOptionalServices(t *testing.T) {
 		t.Fatal("a prompt shows the switched-off optional service")
 	}
 }
+
+// TestEveryRequestHidesLiteralCredentials: a credential in a README
+// interpolation default, a compose default, a command, an entrypoint, a
+// healthcheck, a note or a verdict line never reaches the model through
+// Draft, Fill or Repair, while the references around it still do.
+func TestEveryRequestHidesLiteralCredentials(t *testing.T) {
+	repository := t.TempDir()
+	compose := "services:\n  app:\n    image: demo/app:1.0\n    command: [\"--db-password=CmdPassw0rd77\"]\n" +
+		"    environment:\n      POSTGRES_PASSWORD: ${PG:-ComposeDefault55}\n      DB_HOST: ${DB_HOST:-db}\n"
+	readme := "# Demo\n\nRun with `POSTGRES_PASSWORD=${PG_PASSWORD:-ReadmeFallback66}`.\n"
+	for name, content := range map[string]string{"compose.yaml": compose, "README.md": readme} {
+		if err := os.WriteFile(filepath.Join(repository, name), []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	extracted, err := extract.Extract(context.Background(), repository)
+	if err != nil {
+		t.Fatal(err)
+	}
+	plan := &ir.IR{IRVersion: ir.Version, App: ir.App{Name: "demo"}, PostInstallNotes: []string{"log in with ADMIN_PASSWORD=NotePassw0rd88"},
+		Services: []ir.Service{{Name: "app", Role: ir.RoleApp, Command: []string{"--db-password=CmdPassw0rd77"},
+			Entrypoint:  []string{"sh", "-c", "export API_TOKEN=EntryToken99 && exec app"},
+			Healthcheck: ir.Healthcheck{Test: []string{ir.HealthcheckShell, "curl -f http://admin:HealthPass11@localhost/health"}}}},
+		EnvFile: []ir.EnvFileEntry{{Key: "PG", Value: "${UNSET:-HiddenDefault22}", Secret: true}, {Key: "DB_HOST", Value: "${DB_HOST:-db}"}}}
+	markers := []string{"CmdPassw0rd77", "ComposeDefault55", "ReadmeFallback66", "NotePassw0rd88", "EntryToken99", "HealthPass11", "HiddenDefault22", "LogPassw0rd33"}
+	provider := &recording{answer: planText(t)}
+	assistant := NewAssistant(provider, "model", 60000)
+	documents := []Document{{Path: "README.md", Text: readme}}
+	var sent []string
+	if _, _, err := assistant.Draft(context.Background(), extracted, documents); err != nil {
+		t.Fatal(err)
+	}
+	sent = append(sent, provider.request.Prompt)
+	if _, _, err := assistant.Fill(context.Background(), plan, []string{ir.SummaryField}, extracted, documents); err != nil {
+		t.Fatal(err)
+	}
+	sent = append(sent, provider.request.Prompt)
+	verdict := sandbox.Verdict{Result: sandbox.ResultFail, Reason: sandbox.ReasonLogs, Detail: "app-1 | SECRET_KEY=LogPassw0rd33",
+		LogMatches: []string{"app-1 | SECRET_KEY=LogPassw0rd33"}}
+	if _, _, err := assistant.Repair(context.Background(), plan, verdict); err != nil {
+		t.Fatal(err)
+	}
+	sent = append(sent, provider.request.Prompt)
+	for index, prompt := range sent {
+		for _, marker := range markers {
+			if strings.Contains(prompt, marker) {
+				t.Errorf("request %d carries %q", index, marker)
+			}
+		}
+	}
+	if !strings.Contains(sent[2], "${DB_HOST:-db}") || !strings.Contains(sent[2], "--db-password=") {
+		t.Errorf("the repair prompt lost a harmless reference or the command around a secret")
+	}
+}

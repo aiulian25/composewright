@@ -110,3 +110,35 @@ func TestMaskerMasksAFallbackSecret(t *testing.T) {
 		}
 	}
 }
+
+// TestReferencesKeepNoSecretDefault: a value that only refers to other
+// variables stays useful, but a default or alternative it gives a secret is
+// a value and is masked, nested or not; literal text, an escaped $$
+// included, makes it a value, and a ${VAR:?message} keeps its message.
+func TestReferencesKeepNoSecretDefault(t *testing.T) {
+	cases := []struct{ name, value, want string }{
+		{"DB_PASSWORD", "${POSTGRES_PASSWORD}", "${POSTGRES_PASSWORD}"},
+		{"DB_PASSWORD", "${PG:-hunter2}", "${PG:-" + Mask + "}"},
+		{"DB_PASSWORD", "${PG:+hunter2}", "${PG:+" + Mask + "}"},
+		{"DB_PASSWORD", "${A:-${B:-hunter2}}", "${A:-${B:-" + Mask + "}}"},
+		{"DB_PASSWORD", "$hunter2x", "$hunter2x"},
+		{"DB_PASSWORD", "$$hunter2", Mask},
+		{"DB_PASSWORD", "${PG}hunter2", Mask},
+		{"DB_PASSWORD", "${PG:?set the password}", "${PG:?set the password}"},
+		{"PG", "${DB_PASSWORD:-hunter2}", "${DB_PASSWORD:-" + Mask + "}"},
+		{"PG", "${DB_PASSWORD:-${B:-hunter2}}", "${DB_PASSWORD:-${B:-" + Mask + "}}"},
+		{"DATABASE_HOST", "${HOST}:${PORT:-5432}", "${HOST}:${PORT:-5432}"},
+	}
+	for _, test := range cases {
+		if got := Value(test.name, test.value); got != test.want {
+			t.Errorf("Value(%s, %q) = %q, want %q", test.name, test.value, got, test.want)
+		}
+	}
+	if got := Secret("${HOST:-hunter2}"); got != "${HOST:-"+Mask+"}" {
+		t.Errorf("Secret kept a default: %q", got)
+	}
+	text := Text("export POSTGRES_PASSWORD=${PG:-hunter2} TOKEN=$$s3cret DATABASE_HOST=${HOST}")
+	if strings.Contains(text, "hunter2") || strings.Contains(text, "s3cret") || !strings.Contains(text, "DATABASE_HOST=${HOST}") {
+		t.Errorf("Text: %q", text)
+	}
+}

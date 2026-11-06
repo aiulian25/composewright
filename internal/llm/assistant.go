@@ -2,6 +2,7 @@ package llm
 
 import (
 	"context"
+	"slices"
 	"sort"
 	"strings"
 
@@ -60,7 +61,11 @@ func (assistant *Assistant) Fill(ctx context.Context, plan *ir.IR, fields []stri
 	if err != nil {
 		return nil, Call{}, err
 	}
-	blocks := []block{{"FILL", fields}, {"RULE_PLAN", fillPlan(plan)}, {"FACTS", fillFactsOf(redacted, fields)}}
+	view, err := fillPlan(plan)
+	if err != nil {
+		return nil, Call{}, err
+	}
+	blocks := []block{{"FILL", fields}, {"RULE_PLAN", view}, {"FACTS", fillFactsOf(redacted, fields)}}
 	text, call, err := assistant.ask(ctx, fillTask, blocks, documents, schema)
 	if err != nil {
 		return nil, call, err
@@ -76,9 +81,21 @@ func (assistant *Assistant) Fill(ctx context.Context, plan *ir.IR, fields []stri
 // sandbox run, and returns it laid over the plan as a proposal for
 // ir.MergeRepair.
 func (assistant *Assistant) Repair(ctx context.Context, plan *ir.IR, verdict sandbox.Verdict) (*ir.IR, Call, error) {
-	summary := map[string]any{"result": verdict.Result, "reason": verdict.Reason, "detail": verdict.Detail,
-		"services": verdict.Services, "log_matches": verdict.LogMatches}
-	blocks := []block{{"VERDICT", summary}, {"LOGS", repairLogs(verdict)}, {"CURRENT_PLAN", secretFree(plan)}}
+	view, err := secretFree(plan)
+	if err != nil {
+		return nil, Call{}, err
+	}
+	matches := make([]string, len(verdict.LogMatches))
+	for index, match := range verdict.LogMatches {
+		matches[index] = redact.Text(match)
+	}
+	services := slices.Clone(verdict.Services)
+	for index := range services {
+		services[index].HealthOutput = redact.Text(services[index].HealthOutput)
+	}
+	summary := map[string]any{"result": verdict.Result, "reason": verdict.Reason, "detail": redact.Text(verdict.Detail),
+		"services": services, "log_matches": matches}
+	blocks := []block{{"VERDICT", summary}, {"LOGS", repairLogs(verdict)}, {"CURRENT_PLAN", view}}
 	schema, err := ir.RepairSchemaJSON()
 	if err != nil {
 		return nil, Call{}, err
