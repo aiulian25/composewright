@@ -5,13 +5,13 @@ Thank you for helping. composewright turns repositories into deployment files th
 ## Set up
 
 - Go 1.26 or later, `make`, GNU grep, and Docker Engine with the Compose plugin 2.24.4 or later for the sandbox tests. `go.mod` names the
-  patched toolchain to build with (`toolchain go1.26.9`); with the default `GOTOOLCHAIN=auto`, an older `go` fetches it once, verified
+  patched toolchain to build with (`toolchain go1.26.10`); with the default `GOTOOLCHAIN=auto`, an older `go` fetches it once, verified
   against the checksum database. A machine that sets `GOTOOLCHAIN=local` needs that release installed.
 - `make tools` installs the pinned linters into `bin/tools`.
 
 ## Build and run
 
-`make build` writes the static binary to `bin/composewright` (`CGO_ENABLED=0`, `-trimpath -buildvcs=false`). `make image` builds the container image for this machine (`IMAGE=` names it, `composewright:dev` by default), and `make dev` runs the development container on port 8484 from a fresh build. The image is the only way composewright is distributed; a version tag builds, signs and publishes it (`.github/workflows/release.yml`).
+`make build` writes the static binary to `bin/composewright` (`CGO_ENABLED=0`, `-trimpath -buildvcs=false`). `make image` builds the container image for this machine (`IMAGE=` names it, `composewright:dev` by default), and `make dev` runs the development container on port 8484 from a fresh build. The image is the only way composewright is distributed; a maintainer manually dispatches `.github/workflows/release.yml` on an existing `vMAJOR.MINOR.PATCH` tag. Pushing a tag alone publishes nothing. The workflow builds native amd64 and arm64 OCI candidates with SBOM/provenance, tests and scans both, then copies those archives with digest preservation and signs the combined index. It never rebuilds after approval by the gates.
 
 ## Before every commit
 
@@ -29,7 +29,13 @@ Slower suites:
 | `make egress` | Network | Every host contacted is on the allowlist, through a recording proxy |
 | `make offline` | `unshare` | init, gen and show work with no network at all |
 | `make eval` | Optional Docker, network and a model | Policy and validation pass rates per engine on the corpus |
-| `make container-smoke` | Docker | The image starts the UI on an empty volume and runs init, doctor, gen, show and export as uid 65532 |
+| `make container-smoke` | Docker, Go, jq, privileged disposable test runner | Packaged ordinary-daemon startup, ownership, persisted intake/export, actual CLI validation, file/secret transfer, cancellation and cleanup |
+
+`make container-smoke` builds this machine's image, then creates a dedicated Docker-in-Docker daemon. `scripts/container-smoke.sh IMAGE ordinary` tests an already built image; repeat with `rootless` and `proxy` for the other supported connections. This requires a disposable Linux VM permitting privileged Docker-in-Docker (including rootless user namespaces/cgroups). Do not run privileged test infrastructure on production hosts. The outer host socket is used only to create/remove the uniquely named test daemon and load the image into it; the candidate receives only the inner socket or the shipped proxy. No host data folders or production daemon socket enter the test daemon. No host-wide prune runs.
+
+The native test binary uses the candidate's Docker/Compose executables in a separate client filesystem. All connections check exact dummy file/secret bytes (including literal dollar signs and a custom secret target), cancellation and cleanup. Ordinary/proxy runs also execute the full PostgreSQL/nginx, readiness/failure and resource-metrics suite. Isolated rootless Docker-in-Docker lacks delegated cgroups, so it makes no resource-enforcement or metrics claim. Sentinel containers, volumes and networks inside the disposable daemon must survive validation unchanged; owned sandbox resources must be absent. The entire daemon, its tmpfs data, and any anonymous volumes are removed by the exit trap even on failure. Logs and final inventories remain outside it in `COMPOSEWRIGHT_TEST_LOGS` (otherwise a printed `/tmp` directory).
+
+CI runs both architectures and all three connections through `.github/workflows/candidate.yml`. `scripts/scan-candidate.sh OCI_ARCHIVE EVIDENCE_DIRECTORY` requires Trivy and jq. It retains the full vulnerability report and CycloneDX SBOM; HIGH/CRITICAL findings, including unfixed findings, block publication. There are no active waivers: the old Compose-specific exceptions lack evidence for the current bundled version and were removed. Any future exception must identify the exact installed version/path, primary applicability evidence and expiry. Candidate archives (including build provenance) and all logs are retained as workflow artifacts for 14 days; release scan reports/SBOMs are also release assets. An unavailable topology or scanner is a failed gate, never a skipped pass.
 
 ## Conventions
 
