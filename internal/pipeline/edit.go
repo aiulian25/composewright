@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/compose-spec/compose-go/v2/dotenv"
+	"github.com/compose-spec/compose-go/v2/types"
 
 	"github.com/aiulian25/composewright/internal/composefile"
 	"github.com/aiulian25/composewright/internal/config"
@@ -22,6 +23,10 @@ import (
 
 const (
 	composeFileName = "compose.yaml"
+	// healthcheckNone is the test that switches a healthcheck off, and
+	// healthcheckRemovedByHand why a hand-edited service has none.
+	healthcheckNone          = "NONE"
+	healthcheckRemovedByHand = "removed from compose.yaml by hand"
 	// FileCompose and FileEnv name the file an EditProblem is in.
 	FileCompose = "compose"
 	FileEnv     = "env"
@@ -157,6 +162,7 @@ func applyEdit(ctx context.Context, dependencies Dependencies, stored *Stored, e
 		return result, check, nil
 	}
 	check.Parses = true
+	followEditedCompose(plan, project)
 	profile, err := loadProfile(dependencies.Config.Profile, stored.Options.ProfileFile)
 	if err != nil {
 		return nil, check, err
@@ -410,6 +416,7 @@ func EditCompose(ctx context.Context, dependencies Dependencies, name string, co
 	}
 	options := stored.Options
 	options.Edited = true
+	followEditedCompose(result.Plan, project)
 	profile, err := loadProfile(dependencies.Config.Profile, options.ProfileFile)
 	if err != nil {
 		return nil, err
@@ -434,4 +441,43 @@ func PlanCompose(configuration config.Config, version string, stored *Stored) ([
 		return nil, err
 	}
 	return render.Compose(stored.Plan, options)
+}
+
+// followEditedCompose takes into the plan what a person wrote by hand in
+// compose.yaml for each planned service and the plan gate judges, not the
+// YAML gate: its command, entrypoint and healthcheck. A healthcheck they
+// removed or changed then stops being judged as the one generated, and one
+// they added is judged as written.
+func followEditedCompose(plan *ir.IR, project *types.Project) {
+	written := ir.Provenance{Source: ir.SourceUser, SourceRef: composeFileName, Confidence: ir.ConfidenceHigh}
+	for index := range plan.Services {
+		service := &plan.Services[index]
+		edited, found := project.Services[service.Name]
+		if !found {
+			continue
+		}
+		service.Command, service.Entrypoint = slices.Clone(edited.Command), slices.Clone(edited.Entrypoint)
+		service.Healthcheck = editedHealthcheck(edited.HealthCheck, written)
+	}
+}
+
+// editedHealthcheck is the plan's form of a healthcheck as compose.yaml
+// writes it; none, or one switched off, is a healthcheck omitted by hand.
+func editedHealthcheck(healthcheck *types.HealthCheckConfig, written ir.Provenance) ir.Healthcheck {
+	if healthcheck == nil || healthcheck.Disable || len(healthcheck.Test) == 0 || healthcheck.Test[0] == healthcheckNone {
+		return ir.Healthcheck{Test: []string{}, OmittedReason: healthcheckRemovedByHand, Provenance: written}
+	}
+	edited := ir.Healthcheck{Test: slices.Clone(healthcheck.Test), Interval: durationText(healthcheck.Interval),
+		Timeout: durationText(healthcheck.Timeout), StartPeriod: durationText(healthcheck.StartPeriod), Provenance: written}
+	if healthcheck.Retries != nil {
+		edited.Retries = int(*healthcheck.Retries) //nolint:gosec // G115: Compose's retries are a small count
+	}
+	return edited
+}
+
+func durationText(duration *types.Duration) string {
+	if duration == nil {
+		return ""
+	}
+	return duration.String()
 }
