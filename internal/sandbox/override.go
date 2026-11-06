@@ -30,23 +30,27 @@ const (
 	relativePrefix = "./"
 	// secretsMount is where Compose mounts secrets in a container, and
 	// injectedPrefix names the configs a run hands its services.
-	secretsMount    = "/run/secrets"
-	injectedPrefix  = "cw-file-"
-	emptyFile       = "/dev/null"
-	noNewPrivileges = "no-new-privileges:true"
-	logDriver       = "json-file"
-	logMaxSize      = "10m"
-	logMaxFile      = "3"
-	restartNever    = "no"
-	defaultNetwork  = "default"
-	loopbackAddress = "127.0.0.1"
-	volumeTypeBind  = "bind"
-	readOnlySuffix  = ":ro"
-	allCapabilities = "ALL"
-	yamlTrue        = "true"
-	yamlFalse       = "false"
-	yamlNull        = "null"
-	singleCopy      = "1"
+	secretsMount   = "/run/secrets"
+	injectedPrefix = "cw-file-"
+	// filesVolume is the run's volume that holds what a read-only service
+	// is handed, which Compose cannot copy into it as a config.
+	filesVolume      = "cw-run-files"
+	emptyFile        = "/dev/null"
+	noNewPrivileges  = "no-new-privileges:true"
+	logDriver        = "json-file"
+	logMaxSize       = "10m"
+	logMaxFile       = "3"
+	restartNever     = "no"
+	defaultNetwork   = "default"
+	loopbackAddress  = "127.0.0.1"
+	volumeTypeBind   = "bind"
+	volumeTypeVolume = "volume"
+	readOnlySuffix   = ":ro"
+	allCapabilities  = "ALL"
+	yamlTrue         = "true"
+	yamlFalse        = "false"
+	yamlNull         = "null"
+	singleCopy       = "1"
 	// resourceSeparator joins a run's project and a resource key, as
 	// Compose names the resources it scopes to a project.
 	resourceSeparator = "_"
@@ -81,6 +85,9 @@ func (run owner) resource(owned *yaml.Node, key string) {
 // reservedNames refuses a file that uses a name the run gives its own
 // helpers, which the override would otherwise merge into the user's.
 func reservedNames(project *types.Project) error {
+	if _, taken := project.Volumes[filesVolume]; taken {
+		return fmt.Errorf("volume name %s is reserved for the files the sandbox hands a read-only service", filesVolume)
+	}
 	if _, taken := project.Services[probeService]; taken {
 		return fmt.Errorf("service name %s is reserved for the sandbox's reachability probe", probeService)
 	}
@@ -120,9 +127,9 @@ type Limits struct {
 // proxy network instead. files are the secrets and bundled config files
 // beside compose.yaml, by path, which the run hands the services as configs.
 func Override(project *types.Project, published map[string][]string, limits Limits, sandboxName string, started int64, earlyProbes bool, runtime string,
-	files map[string][]byte) ([]byte, error) {
+	files map[string][]byte) ([]byte, map[string][]byte, error) {
 	if err := reservedNames(project); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	run := owner{name: sandboxName, started: started}
 	services := mapping()
@@ -133,10 +140,11 @@ func Override(project *types.Project, published map[string][]string, limits Limi
 		}
 	}
 	configs := mapping()
+	staged := map[string][]byte{}
 	for _, name := range sortedServices(project) {
 		service := project.Services[name]
 		node := serviceOverride(service, published[name], limits, run, volumes)
-		injectFiles(project, service, files, node, configs)
+		injectFiles(project, service, files, node, configs, staged)
 		if probes := startProbes(service.HealthCheck); earlyProbes && probes != nil {
 			node.Content = append(node.Content, scalar("healthcheck"), probes)
 		}
@@ -153,6 +161,9 @@ func Override(project *types.Project, published map[string][]string, limits Limi
 	if networks := sandboxNetworks(project, run); len(networks.Content) > 0 {
 		root.Content = append(root.Content, scalar("networks"), networks)
 	}
+	if len(staged) > 0 {
+		run.resource(volumes, filesVolume)
+	}
 	if len(volumes.Content) > 0 {
 		root.Content = append(root.Content, scalar("volumes"), volumes)
 	}
@@ -163,9 +174,9 @@ func Override(project *types.Project, published map[string][]string, limits Limi
 	encoder := yaml.NewEncoder(&buffer)
 	encoder.SetIndent(yamlIndent)
 	if err := encoder.Encode(&yaml.Node{Kind: yaml.DocumentNode, Content: []*yaml.Node{root}}); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return buffer.Bytes(), encoder.Close()
+	return buffer.Bytes(), staged, encoder.Close()
 }
 
 // withholdPrivileges are the keys that take from a test run the host
@@ -350,16 +361,22 @@ func bundledPath(volume types.ServiceVolumeConfig) (string, bool) {
 	return strings.TrimPrefix(volume.Source, relativePrefix), true
 }
 
-// injectFiles hands a service the bundled config files and the secret files
-// it mounts from beside compose.yaml as configs whose content the override
-// carries, at the same paths. Compose copies a config into the container,
-// while a bind makes the Docker daemon look for the file on its own host,
-// where the run folder of a composewright in a container does not exist.
-func injectFiles(project *types.Project, service types.ServiceConfig, files map[string][]byte, node, configs *yaml.Node) {
+// injectFiles hands a service the secrets and bundled files beside
+// compose.yaml without a bind mount, which a containerized composewright
+// could not make: as configs Compose copies in, or, for a read-only service,
+// which Compose cannot copy into, from the run's files volume, each file by
+// its subpath. staged collects what that volume must hold.
+func injectFiles(project *types.Project, service types.ServiceConfig, files map[string][]byte, node, configs *yaml.Node, staged map[string][]byte) {
+	hand := func(content []byte, target string) *yaml.Node {
+		if service.ReadOnly {
+			return stagedMount(staged, content, target)
+		}
+		return injected(configs, content, target)
+	}
 	mounts := sequence()
 	for _, volume := range service.Volumes {
 		if path, bundled := bundledPath(volume); bundled {
-			mounts.Content = append(mounts.Content, injected(configs, files[path], volume.Target))
+			mounts.Content = append(mounts.Content, hand(files[path], volume.Target))
 		}
 	}
 	secrets := sequence()
@@ -369,15 +386,41 @@ func injectFiles(project *types.Project, service types.ServiceConfig, files map[
 			secrets = nil
 			break
 		}
-		secrets.Content = append(secrets.Content, injected(configs, content, secretTarget(secret)))
+		secrets.Content = append(secrets.Content, hand(content, secretTarget(secret)))
 	}
 	if secrets != nil && len(secrets.Content) > 0 {
 		node.Content = append(node.Content, scalar("secrets"), tagged(tagReset, sequence()))
 		mounts.Content = append(mounts.Content, secrets.Content...)
 	}
-	if len(mounts.Content) > 0 {
-		node.Content = append(node.Content, scalar("configs"), mounts)
+	if len(mounts.Content) == 0 {
+		return
 	}
+	if service.ReadOnly {
+		appendVolumes(node, mounts)
+		return
+	}
+	node.Content = append(node.Content, scalar("configs"), mounts)
+}
+
+// stagedMount mounts one file of the run's files volume read-only at
+// target, and stages content for it.
+func stagedMount(staged map[string][]byte, content []byte, target string) *yaml.Node {
+	name := injectedPrefix + strconv.Itoa(len(staged))
+	staged[name] = content
+	return mapping(scalar("type"), scalar(volumeTypeVolume), scalar("source"), scalar(filesVolume), scalar("target"), quoted(target),
+		scalar("read_only"), scalar(yamlTrue), scalar("volume"), mapping(scalar("subpath"), quoted(name)))
+}
+
+// appendVolumes adds mounts to the service's volumes in its override, or
+// as its volumes, which Compose merges with the file's by target.
+func appendVolumes(node, mounts *yaml.Node) {
+	for index := 0; index+1 < len(node.Content); index += 2 {
+		if node.Content[index].Value == "volumes" {
+			node.Content[index+1].Content = append(node.Content[index+1].Content, mounts.Content...)
+			return
+		}
+	}
+	node.Content = append(node.Content, scalar("volumes"), mounts)
 }
 
 // secretTarget is where Compose mounts a secret in the container.

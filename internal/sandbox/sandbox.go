@@ -45,6 +45,16 @@ const (
 	commandTimeout = 2 * time.Minute
 	stopTimeout    = "10"
 	janitorFactor  = 2
+	// filesHelper names the stopped container that fills the files volume,
+	// mounted at filesMountPoint; stagedFileMode lets any container user
+	// read a staged file, as a config's default mode does.
+	filesHelper     = "cw-files-helper"
+	filesMountPoint = "/files"
+	stagedFileMode  = 0o444
+	// composeProjectLabel and composeVolumeLabel are how Compose knows a
+	// volume as its project's own.
+	composeProjectLabel = "com.docker.compose.project"
+	composeVolumeLabel  = "com.docker.compose.volume"
 	// runFolder holds a project's run folders, one per sandbox run.
 	runFolder = "run"
 	// unknownStart marks a run whose start no label records.
@@ -135,7 +145,7 @@ func (sandbox *Sandbox) Validate(ctx context.Context, input Input) (verdict Verd
 	}
 	released := false
 	defer func() { err = errors.Join(err, endLease(lease, released)) }()
-	project, err := sandbox.prepare(ctx, directory, name, input, started, environment.probesEarly())
+	project, staged, err := sandbox.prepare(ctx, directory, name, input, started, environment.probesEarly())
 	if err != nil {
 		released = true
 		return Verdict{}, errors.Join(err, os.RemoveAll(directory))
@@ -157,6 +167,11 @@ func (sandbox *Sandbox) Validate(ctx context.Context, input Input) (verdict Verd
 		err, released = errors.Join(err, teardownErr), teardownErr == nil
 		output.removed(name, teardownErr)
 	}()
+	if staged {
+		if err := sandbox.fillFiles(ctx, directory, name, started); err != nil {
+			return Verdict{}, err
+		}
+	}
 	upCtx, cancel := context.WithTimeout(ctx, sandbox.timeout+pullAllowance)
 	defer cancel()
 	waitTimeout := strconv.Itoa(int(sandbox.timeout.Seconds()))
@@ -256,27 +271,58 @@ func (sandbox *Sandbox) healthOutputs(ctx context.Context, states []ServiceState
 }
 
 // prepare writes the run's files and returns the compose project they hold.
-func (sandbox *Sandbox) prepare(ctx context.Context, directory, name string, input Input, started time.Time, earlyProbes bool) (*types.Project, error) {
+func (sandbox *Sandbox) prepare(ctx context.Context, directory, name string, input Input, started time.Time, earlyProbes bool) (*types.Project, bool, error) {
 	project, err := composefile.Load(ctx, composeFile, input.Compose, nil, false)
 	if err != nil {
-		return nil, fmt.Errorf("compose.yaml does not load: %w", err)
+		return nil, false, fmt.Errorf("compose.yaml does not load: %w", err)
 	}
 	injected := map[string][]byte{}
 	maps.Copy(injected, input.SecretFiles)
 	maps.Copy(injected, input.ConfigFiles)
-	override, err := Override(project, input.Published, sandbox.limits, name, started.Unix(), earlyProbes, Runtime(sandbox.tier), injected)
+	override, staged, err := Override(project, input.Published, sandbox.limits, name, started.Unix(), earlyProbes, Runtime(sandbox.tier), injected)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	if err := os.MkdirAll(directory, runDirMode); err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	files := map[string][]byte{composeFile: input.Compose, overrideFile: override, envFile: input.Env}
 	maps.Copy(files, input.SecretFiles)
 	if err := writeRunFiles(directory, files, runFileMode); err != nil {
-		return nil, err
+		return nil, false, err
 	}
-	return project, writeRunFiles(directory, input.ConfigFiles, ir.ConfigFileMode)
+	if err := writeRunFiles(filepath.Join(directory, filesVolume), staged, stagedFileMode); err != nil {
+		return nil, false, err
+	}
+	return project, len(staged) > 0, writeRunFiles(directory, input.ConfigFiles, ir.ConfigFileMode)
+}
+
+// fillFiles creates the run's files volume, labelled as the run's Compose
+// project's own so down -v removes it with the rest, and copies the staged
+// files into it through a stopped helper container: docker cp reads them
+// where composewright runs and hands them to the daemon, which a bind
+// mount from inside a container could not.
+func (sandbox *Sandbox) fillFiles(ctx context.Context, directory, name string, started time.Time) error {
+	ctx, cancel := context.WithTimeout(ctx, commandTimeout)
+	defer cancel()
+	volume, helper := name+resourceSeparator+filesVolume, name+resourceSeparator+filesHelper
+	owned := []string{"--label", composeProjectLabel + "=" + name, "--label", LabelProject + "=" + name,
+		"--label", LabelStarted + "=" + strconv.FormatInt(started.Unix(), 10)}
+	steps := [][]string{
+		append(append([]string{"volume", "create"}, owned...), "--label", composeVolumeLabel+"="+filesVolume, volume),
+		append(append([]string{"create", "--name", helper}, owned...), "--volume", volume+":"+filesMountPoint, probeImage, "true"),
+		{"cp", filepath.Join(directory, filesVolume) + "/.", helper + ":" + filesMountPoint},
+	}
+	var err error
+	for _, step := range steps {
+		_, stderr, stepErr := sandbox.run(ctx, "", nil, step...)
+		if stepErr != nil {
+			err = fmt.Errorf("handing the read-only services their files: %w: %s", stepErr, strings.TrimSpace(string(stderr)))
+			break
+		}
+	}
+	_, _, removeErr := sandbox.run(ctx, "", nil, "rm", "--force", helper)
+	return errors.Join(err, removeErr)
 }
 
 // writeRunFiles writes files, by their path in the run's folder, with mode.

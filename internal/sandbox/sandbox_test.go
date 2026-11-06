@@ -309,7 +309,7 @@ func TestStartProbesKeepTheCheckAndItsTolerance(t *testing.T) {
 		t.Fatal(err)
 	}
 	limits, _ := ParseLimits("256m", 1, 128)
-	override, err := Override(project, nil, limits, "cw-app-1234", 0, true, "", nil)
+	override, _, err := Override(project, nil, limits, "cw-app-1234", 0, true, "", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -351,7 +351,7 @@ volumes:
 		t.Fatal(err)
 	}
 	limits, _ := ParseLimits("256m", 1, 128)
-	override, err := Override(project, nil, limits, "cw-app-1234", 0, true, "", nil)
+	override, _, err := Override(project, nil, limits, "cw-app-1234", 0, true, "", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -382,7 +382,7 @@ func TestOverrideNeverPassesTheDockerSocket(t *testing.T) {
 		t.Fatal(err)
 	}
 	limits, _ := ParseLimits("256m", 1, 128)
-	override, err := Override(project, nil, limits, "cw-app-1234", 0, true, "", nil)
+	override, _, err := Override(project, nil, limits, "cw-app-1234", 0, true, "", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -612,7 +612,7 @@ func TestOverrideRunsEveryContainerUnderTheRuntime(t *testing.T) {
 	}
 	limits, _ := ParseLimits("256m", 1, 128)
 	for runtime, want := range map[string]string{runscRuntime: runscRuntime, "": ""} {
-		override, err := Override(project, nil, limits, "cw-app-1234", 0, true, runtime, nil)
+		override, _, err := Override(project, nil, limits, "cw-app-1234", 0, true, runtime, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -739,7 +739,7 @@ func TestOverrideCapsSharedMemory(t *testing.T) {
 		t.Fatal(err)
 	}
 	limits, _ := ParseLimits("256m", 1, 128)
-	override, err := Override(project, nil, limits, "cw-app-1234", 0, false, "", nil)
+	override, _, err := Override(project, nil, limits, "cw-app-1234", 0, false, "", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -814,7 +814,7 @@ secrets:
 	}
 	limits, _ := ParseLimits("256m", 1, 128)
 	files := map[string][]byte{"secrets/db_password": []byte("pa$word"), "config/app.conf": []byte("listen 80\n"), "secrets/smtp_password": nil}
-	override, err := Override(project, nil, limits, "cw-app-1234", 0, false, "", files)
+	override, _, err := Override(project, nil, limits, "cw-app-1234", 0, false, "", files)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -862,7 +862,7 @@ func TestOverrideWithholdsGrantedPrivileges(t *testing.T) {
 		t.Fatal(err)
 	}
 	limits, _ := ParseLimits("256m", 1, 128)
-	override, err := Override(project, map[string][]string{"app": {"8080/tcp"}}, limits, "cw-app-1234", 0, true, "", nil)
+	override, _, err := Override(project, map[string][]string{"app": {"8080/tcp"}}, limits, "cw-app-1234", 0, true, "", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -913,7 +913,7 @@ networks:
 	}
 	limits, _ := ParseLimits("256m", 1, 128)
 	for _, sandboxName := range []string{"cw-app-1234", "cw-app-5678"} {
-		override, err := Override(project, nil, limits, sandboxName, 0, true, "", nil)
+		override, _, err := Override(project, nil, limits, sandboxName, 0, true, "", nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -945,7 +945,7 @@ networks:
 		if err != nil {
 			t.Fatal(err)
 		}
-		if _, err := Override(project, nil, limits, "cw-app-1234", 0, true, "", nil); err == nil {
+		if _, _, err := Override(project, nil, limits, "cw-app-1234", 0, true, "", nil); err == nil {
 			t.Fatalf("a reserved name was accepted:\n%s", reserved)
 		}
 	}
@@ -961,7 +961,7 @@ func TestOverrideRunsOneCopyOfEachService(t *testing.T) {
 		t.Fatal(err)
 	}
 	limits, _ := ParseLimits("256m", 1, 128)
-	override, err := Override(project, nil, limits, "cw-app-1234", 0, true, "", nil)
+	override, _, err := Override(project, nil, limits, "cw-app-1234", 0, true, "", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1164,5 +1164,76 @@ func TestValidateLooksAgainAfterTheChecks(t *testing.T) {
 	}
 	if verdict.Passed() || verdict.Reason != ReasonCrash || !strings.Contains(verdict.Detail, "after the checks") {
 		t.Fatalf("a crash during the probe passed: %s/%s %s", verdict.Result, verdict.Reason, verdict.Detail)
+	}
+}
+
+// TestReadOnlyServiceGetsItsFilesFromTheRunVolume: Compose cannot copy a
+// config into a read-only service, so such a service, as bookorbit's app
+// is, mounts each secret and bundled file read-only from the run's files
+// volume by subpath, which Validate fills before up; a writable service
+// keeps its configs, and the volume goes with the run's project.
+func TestReadOnlyServiceGetsItsFilesFromTheRunVolume(t *testing.T) {
+	compose := []byte(`services:
+  app:
+    image: example/app:1
+    read_only: true
+    volumes: ["./config/app.conf:/etc/app/app.conf:ro", "/srv/books:/books"]
+    secrets: [db_password]
+  worker:
+    image: example/worker:1
+    secrets: [db_password]
+secrets:
+  db_password:
+    file: ./secrets/db_password
+`)
+	project, err := composefile.Load(context.Background(), composeFile, compose, nil, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	limits, _ := ParseLimits("256m", 1, 128)
+	files := map[string][]byte{"secrets/db_password": []byte("pa$word"), "config/app.conf": []byte("listen 80\n")}
+	override, staged, err := Override(project, nil, limits, "cw-app-1234", 0, false, "", files)
+	if err != nil {
+		t.Fatal(err)
+	}
+	details := types.ConfigDetails{WorkingDir: t.TempDir(), Environment: types.Mapping{},
+		ConfigFiles: []types.ConfigFile{{Filename: composeFile, Content: compose}, {Filename: overrideFile, Content: override}}}
+	merged, err := loader.LoadWithContext(context.Background(), details, func(options *loader.Options) { options.SetProjectName("cw-app-1234", true) })
+	if err != nil {
+		t.Fatalf("Compose refuses the override: %v\n%s", err, override)
+	}
+	app, worker := merged.Services["app"], merged.Services["worker"]
+	mounted := map[string]string{}
+	for _, volume := range app.Volumes {
+		if volume.Source == filesVolume && volume.ReadOnly && volume.Volume != nil {
+			mounted[volume.Target] = string(staged[volume.Volume.Subpath])
+		}
+	}
+	if len(app.Configs) != 0 || len(app.Secrets) != 0 || mounted["/etc/app/app.conf"] != "listen 80\n" || mounted["/run/secrets/db_password"] != "pa$word" {
+		t.Fatalf("the read-only app: configs %v, secrets %v, mounted %v\n%s", app.Configs, app.Secrets, mounted, override)
+	}
+	if len(worker.Configs) != 1 || merged.Volumes[filesVolume].Name != "cw-app-1234_"+filesVolume {
+		t.Fatalf("worker configs %v, files volume %+v", worker.Configs, merged.Volumes[filesVolume])
+	}
+
+	fake := &fakeDocker{ps: healthyApp + "\n" + healthyDB}
+	sandbox := newTestSandbox(t, fake)
+	readOnly := strings.Replace(testCompose, "  db:\n", "    read_only: true\n    secrets: [db_password]\n  db:\n", 1) +
+		"secrets:\n  db_password:\n    file: ./secrets/db_password\n"
+	if _, err := sandbox.Validate(context.Background(), Input{Project: "app", Compose: []byte(readOnly), Env: []byte(""),
+		SecretFiles: map[string][]byte{"secrets/db_password": []byte("s3cret")}}); err != nil {
+		t.Fatal(err)
+	}
+	var order []string
+	for _, call := range fake.calls {
+		command := strings.Join(call, " ")
+		for _, step := range []string{"volume create", "create --name", "cp ", "rm --force", " up "} {
+			if strings.HasPrefix(command, step) || (step == " up " && strings.Contains(command, step)) {
+				order = append(order, strings.TrimSpace(step))
+			}
+		}
+	}
+	if !slices.Equal(order, []string{"volume create", "create --name", "cp", "rm --force", "up"}) {
+		t.Fatalf("the files volume was not filled before up: %v", order)
 	}
 }
