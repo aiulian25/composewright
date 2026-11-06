@@ -21,18 +21,33 @@ RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath -buildvcs
 
 FROM docker.io/library/docker:29.9.2-cli@sha256:5e6baf67325a79f64ed3bed6863954d5e05d0f3d4e57cbdb14809346814bbfdb AS docker
 
-# Compose is patched independently of the Docker CLI image.
-FROM docker.io/docker/compose-bin:v5.7.0@sha256:a4de4851b16f18634f74de66f126d5de65f7c5cb5a9502d67ab83e9a96041a70 AS compose
+# Upstream Compose 5.7.0 still bundles vulnerable x/net/html. Rebuild its
+# checksum-pinned source with x/net 0.62.0; do not hide the finding with a waiver.
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.26.10-alpine@sha256:87c65a688975c0b1d4585d204874c45ca78354670e3a5f11368c5a492303d696 AS compose
+WORKDIR /fetch-compose
+RUN go mod download -json github.com/docker/compose/v5@v5.7.0 > source.json \
+ && grep -F '"Sum": "h1:nRBxm4HkCFo8Bgb49o6xdhnJ0nl1eGb1H0FAb/ExldE="' source.json \
+ && cp -a /go/pkg/mod/github.com/docker/compose/v5@v5.7.0 /compose \
+ && chmod u+w /compose/go.mod /compose/go.sum
+WORKDIR /compose
+RUN go mod edit -require=golang.org/x/net@v0.62.0 \
+ && go mod download golang.org/x/net
+ARG TARGETOS TARGETARCH
+RUN mkdir -p /out \
+ && CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -mod=mod -trimpath -buildvcs=false \
+      -tags e2e -ldflags "-s -w -X github.com/docker/compose/v5/internal.Version=v5.7.0-composewright.1" \
+      -o /out/docker-compose ./cmd
 
 FROM gcr.io/distroless/static:nonroot@sha256:e2e927ec666bae08560abb3c55d0659eceabb657f56b6782ab500a9fc7f555e3
 ARG VERSION=dev
 LABEL org.opencontainers.image.title="composewright" \
       org.opencontainers.image.version="$VERSION" \
       org.opencontainers.image.licenses="MIT" \
+      io.composewright.compose.version="5.7.0-composewright.1" \
       org.opencontainers.image.source="https://github.com/aiulian25/composewright"
 COPY --from=build /out/composewright /usr/bin/composewright
 COPY --from=docker /usr/local/bin/docker /usr/local/bin/docker
-COPY --from=compose /docker-compose /usr/local/libexec/docker/cli-plugins/docker-compose
+COPY --from=compose /out/docker-compose /usr/local/libexec/docker/cli-plugins/docker-compose
 # composewright refuses a data directory that is not 0700 and its own, so the
 # volume starts out that way.
 COPY --from=build --chown=65532:65532 --chmod=0700 /out/data /data
