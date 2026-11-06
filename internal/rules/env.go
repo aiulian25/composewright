@@ -61,20 +61,19 @@ func (builder *builder) composeEnvironment(file *extract.ComposeFile, service *i
 		match := singleReference.FindStringSubmatch(variable.Raw)
 		switch {
 		case !variable.HasValue:
-			builder.reference(service, variable.Key, variable.Key, builder.knownDefault(variable.Key), false, at)
+			value, source := builder.composeValue(file, variable.Key, "", "", at)
+			builder.reference(service, variable.Key, variable.Key, value, false, source)
 		case match != nil:
 			name, operator, fallback := match[1], match[2], match[3]
 			required := strings.Contains(operator, requiredOperator)
-			value := builder.knownDefault(name)
-			if strings.Contains(operator, defaultOperator) {
-				value = builder.composeDefault(file, name, fallback)
-			}
+			value, at := builder.composeValue(file, name, operator, fallback, at)
 			builder.reference(service, variable.Key, name, value, required, at)
 		default:
 			for _, name := range extract.References(variable.Raw) {
-				builder.ensureEntry(name, builder.knownDefault(name), false, at)
+				value, source := builder.composeValue(file, name, "", "", at)
+				builder.ensureEntry(name, value, false, source)
 			}
-			builder.reference(service, variable.Key, variable.Key, variable.Raw, true, at)
+			builder.localReference(service, variable.Key, variable.Raw, true, at)
 		}
 	}
 	for _, sample := range builder.loadedSamples(file, upstream) {
@@ -82,27 +81,41 @@ func (builder *builder) composeEnvironment(file *extract.ComposeFile, service *i
 	}
 }
 
-// composeDefault is the value of ${name:-fallback}: the fallback upstream's
-// stack runs with, which also outranks a sample beside the compose file,
-// since such a sample is often written for running without Docker. Only an
-// empty fallback takes what that sample sets; a value from anywhere else, such
-// as a subproject's development sample, a docs page or a commented-out
-// example, would point the stack at the wrong place.
-func (builder *builder) composeDefault(file *extract.ComposeFile, name, fallback string) string {
-	if fallback != "" {
-		return fallback
-	}
-	interpolated := path.Join(path.Dir(file.Path), ownEnvFile)
-	for _, sample := range builder.facts.EnvSamples {
-		if !documents(sample.Path, interpolated) {
-			continue
-		}
-		set := slices.IndexFunc(sample.Entries, func(entry extract.EnvSampleEntry) bool { return entry.Key == name && !entry.Commented })
-		if set >= 0 {
-			return sample.Entries[set].Value
+// composeValue uses a real .env before Compose defaults. In the absence of
+// that file, matching examples are inference only; explicit nonempty Compose
+// fallbacks remain stronger evidence than example values.
+func (builder *builder) composeValue(file *extract.ComposeFile, name, operator, fallback string, at ir.Provenance) (string, ir.Provenance) {
+	if operator == "" && fallback == "" {
+		for _, mention := range file.Variables {
+			if mention.Name == name && mention.Default != "" {
+				fallback = mention.Default
+				break
+			}
 		}
 	}
-	return fallback
+	wanted := path.Join(path.Dir(file.Path), ownEnvFile)
+	sample, found := extract.MatchingEnvSample(builder.facts.EnvSamples, wanted)
+	if found {
+		for i := len(sample.Entries) - 1; i >= 0; i-- {
+			entry := sample.Entries[i]
+			if entry.Commented || entry.Key != name {
+				continue
+			}
+			actual := sample.Path == wanted
+			if !actual && strings.Contains(operator, defaultOperator) && fallback != "" {
+				return fallback, at
+			}
+			if actual && entry.Value == "" && strings.HasPrefix(operator, ":") && strings.Contains(operator, defaultOperator) {
+				return fallback, at
+			}
+			confidence := ir.ConfidenceMedium
+			if actual {
+				confidence = ir.ConfidenceHigh
+			}
+			return entry.Value, provenance(ir.SourceEnvSample, entry.Location, confidence)
+		}
+	}
+	return fallback, at
 }
 
 // sampleEnvironment gives a service the variables of an env_file it loads,
@@ -115,7 +128,7 @@ func (builder *builder) sampleEnvironment(file *extract.ComposeFile, service *ir
 			continue
 		}
 		at := provenance(ir.SourceEnvSample, entry.Location, ir.ConfidenceMedium)
-		builder.reference(service, entry.Key, entry.Key, entry.Value, false, at)
+		builder.localReference(service, entry.Key, entry.Value, false, at)
 	}
 }
 
@@ -141,37 +154,35 @@ func composeOnlyVariables(file *extract.ComposeFile) map[string]bool {
 	return only
 }
 
-// loadedSamples finds the repository's sample for each env_file a service
-// loads.
+// loadedSamples selects exact files before examples and keeps only winning
+// assignments: later files and later assignments override earlier values.
 func (builder *builder) loadedSamples(file *extract.ComposeFile, service extract.ComposeService) []extract.EnvSample {
 	var samples []extract.EnvSample
-	directory := path.Dir(file.Path)
 	for _, envFile := range service.EnvFiles {
-		wanted := path.Clean(path.Join(directory, envFile))
-		found := slices.IndexFunc(builder.facts.EnvSamples, func(sample extract.EnvSample) bool { return documents(sample.Path, wanted) })
-		if found >= 0 {
-			samples = append(samples, builder.facts.EnvSamples[found])
+		sample, found := extract.MatchingEnvSample(builder.facts.EnvSamples, path.Clean(path.Join(path.Dir(file.Path), envFile)))
+		if found {
+			samples = append(samples, sample)
 		}
+	}
+	seen := map[string]bool{}
+	for i := len(samples) - 1; i >= 0; i-- {
+		original := samples[i].Entries
+		var kept []extract.EnvSampleEntry
+		for j := len(original) - 1; j >= 0; j-- {
+			entry := original[j]
+			if entry.Commented || seen[entry.Key] {
+				continue
+			}
+			seen[entry.Key] = true
+			kept = append(kept, entry)
+		}
+		slices.Reverse(kept)
+		samples[i].Entries = kept
 	}
 	return samples
 }
 
-// sampleWords mark a committed example of an env file in its name.
-var sampleWords = []string{"example", "sample", "template", "dist"}
-
-// documents is true when sample is the committed example of the env file a
-// service loads, in the same folder: .env is documented by .env.example,
-// .env.sample, example.env, sample.env, env.example and the like.
-func documents(sample, wanted string) bool {
-	if path.Dir(sample) != path.Dir(wanted) {
-		return false
-	}
-	name, base := path.Base(sample), path.Base(wanted)
-	bare := strings.TrimPrefix(base, ".")
-	return name == base || strings.HasPrefix(name, base+".") || slices.ContainsFunc(sampleWords, func(word string) bool {
-		return name == word+base || name == word+"."+bare || name == bare+"."+word
-	})
-}
+func documents(sample, wanted string) bool { return extract.DocumentsEnv(sample, wanted) }
 
 // reference adds name to the .env file (once) and makes the service read key
 // from it.
@@ -218,7 +229,7 @@ func OwnSecrets(facts *extract.Facts, source *fetch.Source) map[string]string {
 			continue
 		}
 		for _, entry := range sample.Entries {
-			written := !entry.Commented && !strings.Contains(entry.Value, "$")
+			written := !entry.Commented
 			if written && ir.IsSecretSetting(entry.Key, entry.Value) && !ir.IsPlaceholderSecret(entry.Value) {
 				own[entry.Key] = entry.Value
 			}
@@ -233,11 +244,13 @@ func OwnSecrets(facts *extract.Facts, source *fetch.Source) map[string]string {
 // value goes to the encrypted store, never into the plan.
 func (builder *builder) secretValue(entry *ir.EnvFileEntry) {
 	literal := entry.Value
-	if !entry.Secret || strings.Contains(literal, "$") || hasURLPassword(literal) {
-		return
+	if entry.Secret {
+		if _, mine := builder.own[entry.Key]; mine {
+			entry.Value = ""
+			return
+		}
 	}
-	if _, mine := builder.own[entry.Key]; mine {
-		entry.Value = ""
+	if !entry.Secret || strings.Contains(literal, "$") || hasURLPassword(literal) {
 		return
 	}
 	owner, found := builder.secretOwners[literal]
@@ -359,16 +372,6 @@ func (builder *builder) passwordEntry(key string, at ir.Provenance) string {
 	return name
 }
 
-// knownDefault is the value upstream suggests for a variable: an env sample
-// value, a compose default or a documented default.
-func (builder *builder) knownDefault(name string) string {
-	variable, found := builder.facts.Variable(name)
-	if !found {
-		return ""
-	}
-	return variable.Default
-}
-
 // HoldsSecret reports whether a .env entry's value must be sealed: secret
 // material under its name, or a URL that carries a password.
 func HoldsSecret(name, value string) bool {
@@ -412,13 +415,15 @@ func (builder *builder) secretFiles() {
 	}
 }
 
-// passableAsFile: the secret's value is the stack's own, generated or typed
-// in, and every service reads it under its own name, the one the twin
-// belongs to. Nothing else may interpolate it, as a connection string, a
+// passableAsFile: the stack generates the secret, so its file is never
+// empty: an app reads an empty *_FILE as an error, as OpenTodo does, where an
+// empty variable is a setting left off, so a credential a person supplies
+// stays in .env. Every service reads it under its own name, the one the twin
+// belongs to, and nothing else may interpolate it, as a connection string, a
 // command or a healthcheck reading $${PASSWORD} in the container, since
 // neither .env nor the environment would hold it any more.
 func passableAsFile(plan *ir.IR, entry ir.EnvFileEntry) bool {
-	if !entry.Secret || entry.Value != "" {
+	if !entry.Secret || entry.Value != "" || entry.Generate == "" {
 		return false
 	}
 	read := false

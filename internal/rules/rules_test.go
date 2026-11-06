@@ -1016,3 +1016,16 @@ func TestRepositoryFilesAreBundled(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+// TestSuppliedSecretStaysInEnv: a credential a person supplies, such as an
+// outside mailbox password, stays in .env even with a documented *_FILE
+// twin: left empty, a variable turns the feature off, while an empty file
+// stops apps such as OpenTodo from starting.
+func TestSuppliedSecretStaysInEnv(t *testing.T) {
+	compose := "services:\n  app:\n    image: example/app:1.0\n    environment:\n      APP_IMAP_PASSWORD: ${APP_IMAP_PASSWORD}\n"
+	plan := Build(context.Background(), Input{Facts: testFacts(t, map[string]string{"docker-compose.yml": compose,
+		".env.example": "APP_IMAP_PASSWORD=\nAPP_IMAP_PASSWORD_FILE=\n"}), Source: &fetch.Source{Owner: "example", Repository: "app"}})
+	if entry, _ := plan.EnvEntry("APP_IMAP_PASSWORD"); entry == nil || entry.AsFile() || entry.Generate != "" {
+		t.Fatalf("the supplied password is %+v, want it in .env", entry)
+	}
+}

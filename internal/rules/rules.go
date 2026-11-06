@@ -57,6 +57,7 @@ type builder struct {
 	// secretOwners maps a literal secret value written upstream to the
 	// variable that now generates it, so other values can refer to it.
 	secretOwners map[string]string
+	localNames   map[string]map[string]string
 	// namedVolumes are the volume names upstream declares; bindVolumes maps
 	// each bind-mounted folder to the volume that replaces it.
 	namedVolumes map[string]bool
@@ -82,6 +83,7 @@ func Build(ctx context.Context, input Input) *ir.IR {
 		builder.plan.OptionalServices = optionalServices(compose)
 		// A name the plan does not offer is left out; Enabled reports it.
 		enabled, _ := Enabled(builder.plan.OptionalServices, input.EnabledOptional)
+		builder.allocateLocalNames(compose)
 		builder.fromCompose(compose, enabled)
 	} else {
 		builder.fromDocumentation()
