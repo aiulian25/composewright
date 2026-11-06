@@ -101,7 +101,10 @@
     <dt>ports</dt><dd>127.0.0.1 only</dd>
     <dt>restart</dt><dd>"no"</dd>
     <dt>security_opt</dt><dd>no-new-privileges</dd>
-    <dt>teardown</dt><dd>down -v --remove-orphans</dd>
+    <dt>host privileges</dt><dd>none: privileged mode, host networking, devices, extra capabilities and the Docker socket are withheld</dd>
+{{range .Withheld}}    <dt>untested</dt><dd>{{.}}</dd>
+{{end}}{{range .Unproven}}    <dt>not proven ready</dt><dd>{{.}}</dd>
+{{end}}    <dt>teardown</dt><dd>down -v --remove-orphans</dd>
   </dl>
 </section>
 {{end}}

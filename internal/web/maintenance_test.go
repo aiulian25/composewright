@@ -16,12 +16,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aiulian25/composewright/internal/backup"
 	"github.com/aiulian25/composewright/internal/config"
 	"github.com/aiulian25/composewright/internal/ir"
 	"github.com/aiulian25/composewright/internal/netguard"
 	"github.com/aiulian25/composewright/internal/pipeline"
 	"github.com/aiulian25/composewright/internal/release"
 	"github.com/aiulian25/composewright/internal/store"
+	"github.com/aiulian25/composewright/internal/workspace"
 )
 
 // TestSettingsKeyRotation: Maintenance shows the master key; rotating it
@@ -213,8 +215,8 @@ func TestSettingsAdvanced(t *testing.T) {
 }
 
 // TestSettingsCatalogueOverrides: a backup carries the catalogue.d files,
-// and restoring it on another install writes them back readable only by
-// composewright. Its Advanced page then lists each file with what it adds,
+// invalid overrides are refused before restoration. Valid overrides restore
+// readable only by composewright. Its Advanced page lists each file with what it adds,
 // the one left out with its problem, and the folder, and its next
 // generation takes the override's healthcheck, cited as the catalogue's.
 func TestSettingsCatalogueOverrides(t *testing.T) {
@@ -244,15 +246,41 @@ func TestSettingsCatalogueOverrides(t *testing.T) {
 	target := newHarness(t)
 	target.signUp()
 	response, page = target.restoreFrom(content, passphrase, testPassword, false)
-	status(t, response, http.StatusSeeOther, page)
+	status(t, response, http.StatusBadRequest, page)
+	if !strings.Contains(page, "Backup catalogue cannot be loaded") {
+		t.Fatal("invalid catalogue was not refused before restore")
+	}
 	directory := target.server.paths().CatalogueDir()
+	if entries, err := os.ReadDir(directory); !os.IsNotExist(err) && (err != nil || len(entries) != 0) {
+		t.Fatalf("rejected restore changed the catalogue: %v", err)
+	}
+	// A valid archive still restores its override and affects generation.
+	archive, err := backup.Open([]byte(content), passphrase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	delete(archive.Catalogue, "broken.yaml")
+	sealed, err := backup.Seal(archive, passphrase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	response, page = target.restoreFrom(string(sealed), passphrase, testPassword, false)
+	status(t, response, http.StatusSeeOther, page)
 	for name, want := range files {
+		if name == "broken.yaml" {
+			continue
+		}
 		written, err := os.ReadFile(filepath.Join(directory, name))
 		info, statErr := os.Stat(filepath.Join(directory, name))
 		if err != nil || statErr != nil || string(written) != want || info.Mode().Perm() != config.FileMode {
 			t.Fatalf("%s was not written back as it was, readable only by composewright: %v %v", name, err, statErr)
 		}
 	}
+	// Locally introduced broken overrides are still listed after catalogue reload.
+	if err := os.WriteFile(filepath.Join(directory, "broken.yaml"), []byte(files["broken.yaml"]), config.FileMode); err != nil {
+		t.Fatal(err)
+	}
+	target.server.catalogue.Store(workspace.LoadCatalogue(target.server.paths()))
 	response, page = target.get(settingsURL(sectionAdvanced))
 	status(t, response, http.StatusOK, page)
 	for _, want := range []string{`<th scope="row" class="mono">miniflux.yaml</th><td>0</td><td>1</td>`, "broken.yaml: app ghcr.io/x/broken: memory_limit",

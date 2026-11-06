@@ -2,18 +2,19 @@
 {{with .Data}}
 <div class="page-head">
   <h1 class="page-title">New project</h1>
-  <p class="lead">Start from a repository, files you drop, or files you paste. Any mix works.</p>
+  <p class="lead">Choose a repository link or folder, or give files below. Repository sources cannot be combined with uploaded or pasted files.</p>
 </div>
 <form id="source-form" class="stack" method="post" action="/new" enctype="multipart/form-data" data-dropzone-form>
   <input type="hidden" name="csrf" value="{{$.CSRF}}">
   <section class="card" aria-labelledby="repository-title">
-    <div class="card-head"><h2 id="repository-title">{{template "icon-branch"}}Repository</h2></div>
+    <div class="card-head"><h2 id="repository-title">{{template "icon-branch"}}Repository link or folder</h2></div>
     <div class="card-body">
       <div class="repository-row">
         <label class="input-icon" for="source">{{template "icon-link"}}<input id="source" name="source" type="text" placeholder="github.com/miniflux/v2, a GitLab or Codeberg link, or a folder on this machine" value="{{.Source}}" autocomplete="off" spellcheck="false"></label>
-        <input id="ref" name="ref" type="text" placeholder="default branch" value="{{.Ref}}" aria-label="Branch, tag or commit" autocomplete="off" spellcheck="false">
+        <input id="ref" name="ref" type="text" placeholder="branch, tag or commit" value="{{.Ref}}" aria-label="Branch, tag or commit" autocomplete="off" spellcheck="false">
         <button class="button button-primary" type="submit">{{template "icon-download"}}Fetch <span class="kbd">Enter</span></button>
       </div>
+      <p class="muted small">GitHub tree and blob links select an app directory. Shared env/config files explicitly referenced by its Compose files are listed with the analysis. For a slash-containing or ambiguous ref, enter the ref from the link above; use heads/BRANCH or tags/TAG to choose its kind. Repository-root links work as before.</p>
       <div class="row">
         <span class="chip chip-neutral">GitHub</span>
         <span class="chip chip-neutral">GitLab</span>
@@ -25,19 +26,22 @@
   </section>
 
   <section class="card" id="paste" aria-labelledby="paste-title">
-    <div class="card-head"><h2 id="paste-title">{{template "icon-paste"}}Paste existing files</h2><span class="note">Paste either or both. Your own values are kept; empty secrets and placeholders are generated.</span></div>
+    <div class="card-head"><h2 id="paste-title">{{template "icon-paste"}}Paste existing files</h2><span class="note">Paste Compose, with an optional .env. An .env on its own needs an uploaded Compose file, README or Dockerfile. Give each filename once.</span></div>
     <div class="editor-pair">
       <div class="editor-pane">
         <label class="editor-name" for="compose">compose.yaml</label>
-        <div class="editor" data-editor><pre class="editor-lines" aria-hidden="true">1</pre><textarea id="compose" name="compose" rows="14" placeholder="Paste a compose file here…" spellcheck="false" autocomplete="off"></textarea></div>
+        <div class="editor" data-editor><pre class="editor-lines" aria-hidden="true">1</pre><textarea id="compose" name="compose" rows="14" placeholder="Paste a compose file here…" spellcheck="false" autocomplete="off">
+{{.Compose}}</textarea></div>
       </div>
       <div class="editor-pane">
         <label class="editor-name" for="env">.env</label>
-        <div class="editor" data-editor><pre class="editor-lines" aria-hidden="true">1</pre><textarea id="env" name="env" rows="14" placeholder="KEY=value, one per line…" spellcheck="false" autocomplete="off"></textarea></div>
+        <div class="editor" data-editor><pre class="editor-lines" aria-hidden="true">1</pre><textarea id="env" name="env" rows="14" placeholder="KEY=value, one per line…" spellcheck="false" autocomplete="off">
+{{.Env}}</textarea></div>
       </div>
     </div>
   </section>
 
+  {{if .Reselect}}<p class="banner banner-info" role="status">Your pasted text is kept. Choose your files again before retrying; browsers cannot refill file selections.</p>{{end}}
   <div class="dropzone" data-dropzone>
     {{template "icon-upload"}}
     <span class="grow"><strong>Drop files anywhere in this window.</strong> README, compose.yaml, .env, Dockerfile, up to 50 files, or one .zip/.tar.gz of the repository.</span>

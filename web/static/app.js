@@ -93,6 +93,7 @@
   var minimumPane = 320;
   var splitterStep = 2;
   var refusedStatus = 422;
+  var staleStatus = 409;
   var indentText = "  ";
   var editedMark = { badge: "U", tone: "you" };
 
@@ -367,19 +368,158 @@
     });
   }
 
-  // The sidebar filter hides projects whose name does not match.
-  function setUpProjectFilter() {
-    var filter = document.querySelector("[data-project-filter]");
-    var list = document.querySelector("[data-project-list]");
-    if (!filter || !list) {
-      return;
+  // Environment filters only change visibility. Inputs stay enabled and in
+  // the form, and search never reads their values (including revealed ones).
+  function setUpEnvFilters() {
+    var section = document.querySelector("[data-env-review]");
+    if (!section) { return; }
+    var tools = section.querySelector("[data-env-tools]");
+    var search = section.querySelector("[data-env-search-input]");
+    var filters = Array.from(section.querySelectorAll('input[name="env-filter"]'));
+    var groups = Array.from(section.querySelectorAll("[data-env-group]"));
+    var optional = section.querySelector("[data-env-optional]");
+    var rows = Array.from(section.querySelectorAll("[data-env-row]")).map(function (row) {
+      var input = row.querySelector('input[name^="value:"], input[name^="secret:"]');
+      return { element: row, input: input, initial: input ? input.value : "",
+        search: row.getAttribute("data-env-search").toLowerCase(),
+        optional: row.hasAttribute("data-env-optional-row"),
+        secret: row.getAttribute("data-env-secret") === "true",
+        required: row.getAttribute("data-env-required") === "true",
+        stored: row.getAttribute("data-env-stored") === "true",
+        supplied: row.getAttribute("data-env-kind") === "supplied",
+        question: row.getAttribute("data-env-question") === "true" };
+    });
+    function edited(row) { return !!row.input && row.input.value !== row.initial; }
+    function needs(row) {
+      if (row.optional) { return false; }
+      var empty = row.input ? row.input.value === "" && !(row.supplied && row.stored) : !row.stored;
+      return ((row.required || row.supplied) && empty) || (row.question && !edited(row));
     }
-    filter.addEventListener("input", function () {
-      var wanted = filter.value.trim().toLowerCase();
-      list.querySelectorAll("li").forEach(function (item) {
-        item.hidden = wanted !== "" && item.textContent.toLowerCase().indexOf(wanted) < 0;
+    function update() {
+      var query = search.value.trim().toLowerCase();
+      var selected = filters.find(function (filter) { return filter.checked; }).value;
+      var counts = { all: 0, needs: 0, optional: 0, secret: 0, changed: 0 };
+      var visible = 0;
+      var visibleOptional = 0;
+      var editing = false;
+      rows.forEach(function (row) {
+        var flags = { all: true, needs: needs(row), optional: row.optional, secret: row.secret, changed: edited(row) };
+        var matches = row.search.indexOf(query) !== -1;
+        Object.keys(counts).forEach(function (key) { if (matches && flags[key]) { counts[key]++; } });
+        var match = matches && flags[selected];
+        var focused = row.element.contains(document.activeElement);
+        row.element.hidden = !match && !focused;
+        editing = editing || (!match && focused);
+        if (match) { visible++; if (row.optional) { visibleOptional++; } }
+      });
+      groups.forEach(function (group) {
+        group.hidden = !Array.from(group.querySelectorAll("[data-env-row]")).some(function (row) { return !row.hidden; });
+      });
+      tools.querySelectorAll("[data-env-count]").forEach(function (count) {
+        count.textContent = "(" + counts[count.getAttribute("data-env-count")] + ")";
+      });
+      section.querySelector("[data-env-status]").textContent = visible + " of " + rows.length + " settings match." +
+        (visible === 0 ? " Clear filters to see every setting." : visibleOptional ? " Optional settings are below." : "") +
+        (editing ? " The setting you are editing stays visible until you leave it." : "");
+      if (optional) {
+        optional.hidden = visibleOptional === 0;
+        if (visibleOptional && (query || selected === "optional")) { optional.open = true; }
+      }
+    }
+    function clear() {
+      search.value = "";
+      filters.forEach(function (filter) { filter.checked = filter.value === "all"; });
+      update();
+    }
+    function revealError(target) {
+      var row = target.closest("[data-env-row]");
+      if (!row) { return; }
+      clear();
+      var details = row.closest("details");
+      if (details) { details.open = true; }
+    }
+    search.addEventListener("input", update);
+    search.addEventListener("keydown", function (event) { if (event.key === "Enter") { event.preventDefault(); } });
+    filters.forEach(function (filter) { filter.addEventListener("change", update); });
+    section.addEventListener("input", function (event) { if (event.target.closest("[data-env-row]")) { update(); } });
+    section.addEventListener("focusout", function () { window.setTimeout(update, 0); });
+    section.querySelector("[data-env-clear]").addEventListener("click", clear);
+    section.closest("form").addEventListener("invalid", function (event) { revealError(event.target); }, true);
+    // Inline errors added by another enhancement must also escape filters.
+    new MutationObserver(function (changes) {
+      changes.forEach(function (change) {
+        if (change.target.getAttribute("aria-invalid") === "true") { revealError(change.target); }
+      });
+    }).observe(section, { subtree: true, attributes: true, attributeFilter: ["aria-invalid"] });
+    update();
+    section.querySelectorAll('[aria-invalid="true"], [data-env-error]').forEach(revealError);
+    tools.hidden = false;
+    // Following a relationship must reveal its destination even when a
+    // search/filter or native disclosure currently hides it.
+    function followReference(target) {
+      if (!target) { return; }
+      var row = target.closest("[data-env-row]");
+      if (row) { clear(); }
+      for (var ancestor = target; ancestor; ancestor = ancestor.parentElement) {
+        if (ancestor.tagName === "DETAILS") { ancestor.open = true; }
+      }
+      var control = target.querySelector('input:not([type="hidden"])') || target.querySelector("summary");
+      if (control) { control.focus(); }
+      else { target.tabIndex = -1; target.focus(); }
+      target.scrollIntoView({ block: "center" });
+    }
+    document.querySelectorAll("[data-env-reference]").forEach(function (link) {
+      link.addEventListener("click", function () {
+        var target = document.getElementById(link.getAttribute("href").slice(1));
+        // Reveal before the browser follows the native fragment link.
+        followReference(target);
       });
     });
+    function followFragment() {
+      var id = window.location.hash.slice(1);
+      if (id.indexOf("reference-") === 0) { followReference(document.getElementById(id)); }
+    }
+    window.addEventListener("hashchange", followFragment);
+    followFragment();
+  }
+
+  // The sidebar filter combines name, status and labels, keeping current navigation.
+  function setUpProjectFilter() {
+    var collection = document.querySelector("[data-project-collection]");
+    if (!collection) { return; }
+    var name = collection.querySelector("[data-project-filter]");
+    var status = collection.querySelector("select[data-project-status]");
+    var label = collection.querySelector("select[data-project-label]");
+    var items = Array.from(collection.querySelectorAll("[data-project-item]"));
+    var groups = Array.from(collection.querySelectorAll("[data-project-group]"));
+    var result = collection.querySelector("[data-project-filter-status]");
+    function update() {
+      var wanted = name.value.trim().toLowerCase();
+      var matches = 0;
+      var kept = false;
+      items.forEach(function (item) {
+        var match = item.getAttribute("data-project-name").toLowerCase().indexOf(wanted) !== -1 &&
+          (!status.value || item.getAttribute("data-project-status") === status.value) &&
+          (!label.value || item.getAttribute("data-project-labels").split(",").indexOf(label.value) !== -1);
+        var current = item.getAttribute("data-project-current") === "true";
+        item.hidden = !match && !current;
+        if (match) { matches++; }
+        kept = kept || (current && !match);
+      });
+      groups.forEach(function (group) {
+        group.hidden = !Array.from(group.querySelectorAll("[data-project-item]")).some(function (item) { return !item.hidden; });
+      });
+      result.hidden = false;
+      result.textContent = matches + " of " + items.length + " projects match." + (kept ? " Your current project stays visible." : "");
+    }
+    name.addEventListener("input", update);
+    status.addEventListener("change", update);
+    label.addEventListener("change", update);
+    collection.querySelector("[data-project-filter-form]").addEventListener("submit", function (event) { event.preventDefault(); update(); });
+    collection.querySelector("[data-project-clear]").addEventListener("click", function (event) {
+      event.preventDefault(); name.value = ""; status.value = ""; label.value = ""; update();
+    });
+    update();
   }
 
   // Menus close when the person clicks elsewhere.
@@ -799,6 +939,10 @@
       },
       changes: changes,
       render: render,
+      acceptSaved: function (value) {
+        setBaseline(value);
+        render();
+      },
       reset: function () {
         textarea.value = saved;
         render();
@@ -938,6 +1082,7 @@
       var body = new URLSearchParams();
       body.set("compose", editors.compose.value());
       body.set("env", editors.env.value());
+      body.set("base", editor.getAttribute("data-base"));
       if (retest) {
         body.set("retest", "1");
       }
@@ -989,11 +1134,18 @@
     // test run, or the Result page at a section the rail asked for.
     function save(retest, section) {
       setBusy(true, "Saving…");
-      post(editor.getAttribute("data-save"), form(retest)).then(function (response) {
+      var submitted = form(retest);
+      var savedNumber = 0;
+      post(editor.getAttribute("data-save"), submitted).then(function (response) {
         if (response.status === refusedStatus) {
           return response.json().then(function (result) {
             showCheck(result);
             throw new Error("the checks above refuse it");
+          });
+        }
+        if (response.status === staleStatus) {
+          return response.json().then(function (answer) {
+            throw new Error(answer.message);
           });
         }
         if (!response.ok) {
@@ -1001,13 +1153,21 @@
         }
         return response.json();
       }).then(function (answer) {
+        if (answer.saved) {
+          savedNumber = answer.saved.number;
+          editor.setAttribute("data-base", answer.saved.id);
+          editors.compose.acceptSaved(submitted.get("compose"));
+          editors.env.acceptSaved(submitted.get("env"));
+          setBusy(false, "Saved as v" + savedNumber + (answer.validation.requested && !answer.validation.started ? "; the test could not start." : "."));
+        }
         leaving = true;
         if (section) {
           store(layoutKey, resultPanel);
         }
         window.location.assign(answer.next + (section ? "#" + section : ""));
       }).catch(function (error) {
-        setBusy(false, "Not saved: " + error.message);
+        leaving = false;
+        setBusy(false, savedNumber ? "Saved as v" + savedNumber + "; open the Files page to continue." : "Save not confirmed: " + error.message);
         saveOnly.disabled = !dirty();
       });
     }
@@ -1138,6 +1298,7 @@
     setUpEditors();
     setUpShortcuts();
     setUpProjectFilter();
+    setUpEnvFilters();
     revealCurrentProject();
     setUpMenus();
     setUpErrorFilter();

@@ -232,6 +232,10 @@ func protocol(value string) string {
 }
 
 type envRow struct {
+	Anchor      string
+	Usage       []referenceUse
+	Consumers   []ir.ReferenceNode
+	Group       string
 	Key         string
 	Value       string
 	Stored      bool
@@ -257,9 +261,17 @@ type envRow struct {
 // editable text, generated secrets masked unless revealed, and secrets a
 // person must supply as empty password fields.
 func envRows(plan *ir.IR, values map[string]string, revealed bool) []envRow {
+	graph := plan.References()
 	rows := make([]envRow, 0, len(plan.EnvFile))
 	for _, entry := range plan.EnvFile {
-		row := envRow{Key: entry.Key, Value: values[entry.Key], Stored: values[entry.Key] != "", Generator: entry.Generate,
+		consumers := graph.Consumers(entry.Key)
+		names := make([]string, 0, len(consumers))
+		for _, consumer := range consumers {
+			names = append(names, consumer.Name)
+		}
+		row := envRow{Anchor: ir.ReferenceID(ir.ReferenceEnv, entry.Key), Key: entry.Key, Value: values[entry.Key], Stored: values[entry.Key] != "", Generator: entry.Generate,
+			Usage: referenceUses(graph, ir.ReferenceID(ir.ReferenceEnv, entry.Key)), Consumers: consumers,
+			Group:       envServiceGroup(names),
 			Description: entry.Description, Required: entry.Required, Secret: entry.Secret, Source: entry.Provenance.SourceRef}
 		if row.Source == "" {
 			row.Source = entry.Provenance.Source
@@ -289,18 +301,66 @@ func envRows(plan *ir.IR, values map[string]string, revealed bool) []envRow {
 	return rows
 }
 
-type needView struct {
-	Capability string
-	Label      string
-	Requests   []needRequest
-	Granted    bool
+func envServiceGroup(services []string) string {
+	services = slices.Sorted(slices.Values(services))
+	switch len(services) {
+	case 0:
+		return "Project settings"
+	case 1:
+		return "Service: " + services[0]
+	default:
+		return "Shared: " + strings.Join(services, ", ")
+	}
 }
 
-// needRequest is one service's request for a capability.
+type envGroup struct {
+	Label string
+	Rows  []envRow
+}
+
+func groupEnvRows(rows []envRow) []envGroup {
+	var groups []envGroup
+	indices := map[string]int{}
+	for _, row := range rows {
+		index, found := indices[row.Group]
+		if !found {
+			index = len(groups)
+			indices[row.Group] = index
+			groups = append(groups, envGroup{Label: row.Group})
+		}
+		groups[index].Rows = append(groups[index].Rows, row)
+	}
+	return groups
+}
+
+func optionalEnvGroups(plan *ir.IR, settings []ir.OptionalSetting) []envGroup {
+	graph := plan.References()
+	var rows []envRow
+	for _, setting := range settings {
+		var services []string
+		if setting.Service != "" {
+			services = []string{setting.Service}
+		}
+		rows = append(rows, envRow{Anchor: ir.ReferenceID(ir.ReferenceEnv, setting.Key), Key: setting.Key, Value: setting.Default, Description: setting.Description,
+			Usage: referenceUses(graph, ir.ReferenceID(ir.ReferenceEnv, setting.Key)), Consumers: graph.Consumers(setting.Key),
+			Source: setting.Provenance.SourceRef, Secret: redact.IsSecretName(setting.Key), Group: envServiceGroup(services)})
+	}
+	return groupEnvRows(rows)
+}
+
+type needView struct {
+	Label    string
+	Requests []needRequest
+}
+
+// needRequest is one service's request for a capability; Grant is the
+// key that grants exactly it.
 type needRequest struct {
 	Service string
 	Detail  string
 	Reason  string
+	Grant   string
+	Granted bool
 }
 
 var capabilityLabels = map[string]string{ir.NeedHostNetwork: "Host network", ir.NeedDevices: "Devices", ir.NeedPrivileged: "Privileged",
@@ -339,12 +399,12 @@ func variantOptions(stored *pipeline.Stored) []option {
 func needViews(plan *ir.IR, granted []string) []needView {
 	requested := map[string][]needRequest{}
 	for _, need := range plan.Needs {
-		requested[need.Capability] = append(requested[need.Capability], needRequest{Service: need.Service, Detail: need.Detail, Reason: need.Reason})
+		requested[need.Capability] = append(requested[need.Capability], needRequest{Service: need.Service, Detail: need.Detail, Reason: need.Reason,
+			Grant: need.Grant(), Granted: slices.Contains(granted, need.Grant())})
 	}
 	views := make([]needView, 0, len(ir.Capabilities))
 	for _, capability := range ir.Capabilities {
-		views = append(views, needView{Capability: capability, Label: capabilityLabels[capability], Requests: requested[capability],
-			Granted: slices.Contains(granted, capability)})
+		views = append(views, needView{Label: capabilityLabels[capability], Requests: requested[capability]})
 	}
 	return views
 }

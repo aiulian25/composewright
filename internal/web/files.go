@@ -10,6 +10,7 @@ import (
 	"io/fs"
 	"maps"
 	"net/http"
+	"net/url"
 	"path"
 	"path/filepath"
 	"slices"
@@ -87,10 +88,13 @@ type filesView struct {
 	// the folder chooser, Replace asks before replacing files from an
 	// earlier save, and Saved names the folder just written.
 	TargetPath string
-	Arcane     bool
-	Choosing   bool
-	Replace    bool
-	Saved      string
+	// DeployCommand starts the stack saved in TargetPath, its folder quoted.
+	DeployCommand  string
+	Arcane         bool
+	Choosing       bool
+	Replace        bool
+	Saved          string
+	TestNotStarted bool
 	// SecretFiles are the secrets passed as files a folder save writes;
 	// Saving counts every file a save writes, bundled config files too.
 	SecretFiles []string
@@ -133,17 +137,18 @@ type versionRow struct {
 }
 
 type filesState struct {
-	revealed bool
-	tab      string
-	notice   string
-	problem  string
-	status   int
-	folder   string
-	location string
-	custom   string
-	choosing bool
-	replace  bool
-	saved    string
+	testNotStarted bool
+	revealed       bool
+	tab            string
+	notice         string
+	problem        string
+	status         int
+	folder         string
+	location       string
+	custom         string
+	choosing       bool
+	replace        bool
+	saved          string
 }
 
 // filesPage shows the Result page; the folder chooser's choice arrives in
@@ -161,6 +166,10 @@ func (server *Server) filesPage(writer http.ResponseWriter, request *http.Reques
 	}
 	if _, err := server.target(state.folder, state.location, state.custom); err != nil {
 		state.problem, state.status, state.choosing = capitalised(err.Error())+".", http.StatusBadRequest, true
+	}
+	if query.Get("saved") == stored.Generation.ID && query.Get("validation") == "not-started" && stored.Generation.ValidationJSON == "" {
+		state.testNotStarted = true
+		state.notice = fmt.Sprintf("Saved as v%d; the test could not start. Retry the test when a slot is free, or review the policy findings.", stored.Generation.Number)
 	}
 	return server.renderFiles(writer, request, current, stored, state)
 }
@@ -186,7 +195,7 @@ func (server *Server) filesView(ctx context.Context, stored *pipeline.Stored, st
 		tab = fileCompose
 	}
 	project := stored.Project
-	view := filesView{Project: project, Generation: stored.Generation, Tab: tab, Revealed: state.revealed, Folder: state.folder,
+	view := filesView{Project: project, Generation: stored.Generation, TestNotStarted: state.testNotStarted, Tab: tab, Revealed: state.revealed, Folder: state.folder,
 		Location: state.location, Custom: state.custom, Passed: project.Status == store.StatusPassed, ComposeText: stored.Generation.ComposeYAML,
 		Failed: project.Status == store.StatusFailed || project.Status == store.StatusNeedsHuman, Choosing: state.choosing,
 		Replace: state.replace, Saved: state.saved}
@@ -208,6 +217,7 @@ func (server *Server) filesView(ctx context.Context, stored *pipeline.Stored, st
 	if target, err := server.target(view.Folder, view.Location, view.Custom); err == nil {
 		view.Target = target
 		view.TargetPath, view.Arcane = shownTarget(target, view.Folder)
+		view.DeployCommand = export.DeployCommand(view.TargetPath)
 	}
 	view.SecretFiles = slices.Sorted(maps.Keys(stored.Plan.SecretFiles(nil)))
 	view.Saving = folderFiles + len(view.SecretFiles) + len(stored.Generation.Files)
@@ -297,6 +307,21 @@ func (server *Server) checkFiles(writer http.ResponseWriter, request *http.Reque
 	return writeJSON(writer, http.StatusOK, check)
 }
 
+// saveFilesResult distinguishes a committed edit from a rejected test launch.
+type saveFilesResult struct {
+	Next  string `json:"next"`
+	Saved struct {
+		ID     string `json:"id"`
+		Number int    `json:"number"`
+	} `json:"saved"`
+	Validation struct {
+		Requested bool   `json:"requested"`
+		Started   bool   `json:"started"`
+		Message   string `json:"message,omitempty"`
+		Retry     string `json:"retry,omitempty"`
+	} `json:"validation"`
+}
+
 // saveFiles stores a side-by-side edit as a new version, and with retest
 // starts its test run. A refused edit answers 422 with the reasons, checked
 // again here rather than trusted from the page.
@@ -310,25 +335,36 @@ func (server *Server) saveFiles(writer http.ResponseWriter, request *http.Reques
 	if err != nil {
 		return err
 	}
-	_, check, err := pipeline.SaveEdit(ctx, connection.Dependencies, name, editOf(request))
+	saved, check, err := pipeline.SaveEdit(ctx, connection.Dependencies, name, editOf(request))
 	if errors.Is(err, pipeline.ErrEditRefused) {
 		return writeJSON(writer, http.StatusUnprocessableEntity, check)
 	}
-	if err != nil {
-		return err
-	}
-	next := projectURL(name, pageFiles)
-	if request.PostFormValue(retestField) != "" {
-		next, err = server.launchValidation(ctx, current, name)
+	if errors.Is(err, pipeline.ErrStale) {
+		return writeJSON(writer, http.StatusConflict, map[string]string{"message": problemText(err)})
 	}
 	if err != nil {
 		return err
 	}
-	return writeJSON(writer, http.StatusOK, map[string]string{"next": next})
+	answer := saveFilesResult{Next: projectURL(name, pageFiles)}
+	answer.Saved.ID, answer.Saved.Number = saved.Generation.ID, saved.Generation.Number
+	answer.Validation.Requested = request.PostFormValue(retestField) != ""
+	if answer.Validation.Requested {
+		next, launchErr := server.launchValidation(ctx, current, name)
+		if launchErr == nil {
+			answer.Next = next
+			answer.Validation.Started = true
+		} else {
+			answer.Validation.Message = "Saved, but the test could not start. Retry when a slot is free, or review the policy findings."
+			answer.Validation.Retry = projectURL(name, "validate")
+			answer.Next += "?saved=" + url.QueryEscape(saved.Generation.ID) + "&validation=not-started"
+		}
+	}
+	return writeJSON(writer, http.StatusOK, answer)
 }
 
 func editOf(request *http.Request) pipeline.Edit {
-	return pipeline.Edit{Compose: []byte(request.PostFormValue(fileCompose)), Env: request.PostFormValue(fileEnv), Mask: webMask}
+	return pipeline.Edit{Compose: []byte(request.PostFormValue(fileCompose)), Env: request.PostFormValue(fileEnv), Mask: webMask,
+		Base: request.PostFormValue(baseField)}
 }
 
 func writeJSON(writer http.ResponseWriter, status int, value any) error {

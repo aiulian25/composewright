@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -53,22 +54,24 @@ var stepPages = []string{"", pageAnalyse, pageReview, pageValidate, pageFiles}
 
 // Page is what the layout needs; Data is the page's own view.
 type Page struct {
-	Title   string
-	Theme   string
-	Nav     string
-	Steps   []StepLink
-	CSRF    string
-	User    string
-	Notice  string
-	Error   string
-	Version string
+	Title          string
+	Theme          string
+	Nav            string
+	Steps          []StepLink
+	CSRF           string
+	User           string
+	Notice         string
+	RestorePending bool
+	Error          string
+	Version        string
 	// Address is the page's own address with its query, for forms that
 	// come back to it.
-	Address  string
-	Crumbs   []Crumb
-	Projects []ProjectLink
-	Engine   EngineMenu
-	Status   StatusBar
+	Address       string
+	Crumbs        []Crumb
+	Projects      []ProjectLink
+	ProjectFilter projectFilter
+	Engine        EngineMenu
+	Status        StatusBar
 	// Context pages have the pane on the right; CLI is the command its
 	// footer shows for the same thing. Draft marks the New project page.
 	Context bool
@@ -95,9 +98,13 @@ func (server *Server) page(request *http.Request, current *visit, title string) 
 		return page
 	}
 	page.User, page.CSRF = current.user.Username, current.session.CSRF
+	page.RestorePending = server.jobs.restorePending()
 	page.Crumbs = []Crumb{{Text: "Projects", Href: "/projects"}, {Text: title}}
 	page.summaries, page.listingError = server.workspace().Store.ListProjects(request.Context())
 	page.Projects = server.projectLinks(page.summaries, page.listingError)
+	if request.URL.Path == "/projects" {
+		page.ProjectFilter = readProjectFilter(request)
+	}
 	page.Engine, page.Status = server.engineMenu(), server.statusBar(request.Context())
 	return page
 }
@@ -182,4 +189,44 @@ func functions() template.FuncMap {
 func redirect(writer http.ResponseWriter, request *http.Request, target string) error {
 	http.Redirect(writer, request, target, http.StatusSeeOther) //nolint:gosec // G710: targets are built here or filtered by localPath
 	return nil
+}
+
+// These projections leave the shared Projects slice (and Home's recent list)
+// in its existing order, while the sidebar gets a separately ordered section.
+func (page Page) PinnedProjects() []ProjectLink {
+	var links []ProjectLink
+	for _, link := range page.Projects {
+		if link.PinOrder > 0 {
+			links = append(links, link)
+		}
+	}
+	slices.SortFunc(links, func(a, b ProjectLink) int {
+		if a.PinOrder < b.PinOrder {
+			return -1
+		}
+		if a.PinOrder > b.PinOrder {
+			return 1
+		}
+		return strings.Compare(a.Name, b.Name)
+	})
+	return links
+}
+func (page Page) OtherProjects() []ProjectLink {
+	var links []ProjectLink
+	for _, link := range page.Projects {
+		if link.PinOrder == 0 {
+			links = append(links, link)
+		}
+	}
+	return links
+}
+func (page Page) ProjectLabelOptions() []option {
+	var labels [][]string
+	for _, link := range page.Projects {
+		labels = append(labels, link.Labels)
+	}
+	return labelOptions(labels, page.ProjectFilter.Label)
+}
+func (page Page) ProjectStatusOptions() []option {
+	return projectStatusOptions(page.ProjectFilter.Status)
 }

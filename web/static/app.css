@@ -321,6 +321,17 @@ pre,
 
 /* The project list is the part of the sidebar that scrolls; the links
    above it and Settings below stay where they are. */
+.sidebar [data-project-collection] {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.sidebar [data-project-collection] .project-list {
+  overflow: visible;
+}
+
 .project-list {
   flex: 1;
   min-height: 0;
@@ -3183,4 +3194,47 @@ details summary {
     padding-left: 0;
     border-left: 0;
   }
+}
+
+
+/* Review environment tools wrap into one column on small screens. */
+.env-tools {
+  display: grid;
+  gap: 12px;
+}
+
+.env-tools input[type="search"] {
+  width: 100%;
+  min-width: 0;
+}
+
+.env-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  min-width: 0;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.env-filters legend {
+  margin-bottom: 8px;
+}
+
+.env-filters label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+[data-env-heading] th {
+  font-family: inherit;
+}
+
+.env-usage {
+  margin-top: 8px;
+  font-family: var(--font-sans);
+  font-weight: normal;
 }

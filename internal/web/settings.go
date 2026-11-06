@@ -416,20 +416,9 @@ func adopt(networks []config.ProfileNetwork, chosen []string) []config.ProfileNe
 // profileValues are the keys the Environment profile page writes, each set
 // on its own so config.yaml keeps its comments.
 func profileValues(profile config.Profile) map[string]string {
-	type yamlNetwork struct {
-		Name     string `json:"name"`
-		Kind     string `json:"kind"`
-		Provider string `json:"provider"`
-		Default  bool   `json:"default"`
-		Domain   string `json:"domain,omitempty"`
-	}
-	networks := make([]yamlNetwork, 0, len(profile.Networks))
-	for _, network := range profile.Networks {
-		networks = append(networks, yamlNetwork(network))
-	}
 	storage, defaults := profile.Storage, profile.Defaults
 	return map[string]string{
-		"profile.networks":               jsonText(networks),
+		"profile.networks":               networksJSON(profile.Networks),
 		"profile.storage.style":          quote(storage.Style),
 		"profile.storage.base_path":      quote(storage.BasePath),
 		"profile.storage.layout":         quote(storage.Layout),
@@ -448,6 +437,22 @@ func profileValues(profile config.Profile) map[string]string {
 		"profile.registry_mirror":        quote(profile.RegistryMirror),
 		"profile.platform":               quote(profile.Platform),
 	}
+}
+
+// networksJSON is profile.networks as config.yaml takes it.
+func networksJSON(profileNetworks []config.ProfileNetwork) string {
+	type yamlNetwork struct {
+		Name     string `json:"name"`
+		Kind     string `json:"kind"`
+		Provider string `json:"provider"`
+		Default  bool   `json:"default"`
+		Domain   string `json:"domain,omitempty"`
+	}
+	networks := make([]yamlNetwork, 0, len(profileNetworks))
+	for _, network := range profileNetworks {
+		networks = append(networks, yamlNetwork(network))
+	}
+	return jsonText(networks)
 }
 
 // engineForm reads the Engine page: who writes plans, and what the network

@@ -18,6 +18,11 @@
 </div>
 <p class="muted">v{{.Generation.Number}} · {{.Summary}}{{if .Failed}} · <a href="/projects/{{.Project.Name}}/validate">See why the test failed</a>{{end}}</p>
 
+{{if .TestNotStarted}}<form method="post" action="/projects/{{.Project.Name}}/validate" class="row">
+  <input type="hidden" name="csrf" value="{{$csrf}}">
+  <button class="button button-primary" type="submit">Retry test of saved v{{.Generation.Number}}</button>
+  <a href="/projects/{{.Project.Name}}/review">Review findings</a>
+</form>{{end}}
 <section class="card" aria-labelledby="deploy-title">
   <div class="card-head"><h2 id="deploy-title">{{template "icon-deploy"}}Deploy</h2><span class="note">{{.Carried}}</span></div>
   <div class="card-body deploy-steps">
@@ -68,8 +73,8 @@
     {{if .Arcane}}
     <p>In Arcane, create the stack from the {{.Folder}} template.</p>
     {{else}}
-    <div class="command"><code class="grow"><span class="comment">$ </span>cd {{.TargetPath}} &amp;&amp; docker compose up -d</code><button class="button button-small{{if .Saved}} button-primary{{end}}" type="button" data-copy-target="deploy-command">{{template "icon-copy"}}Copy</button></div>
-    <textarea id="deploy-command" hidden readonly>cd {{.TargetPath}} &amp;&amp; docker compose up -d</textarea>
+    <div class="command"><code class="grow"><span class="comment">$ </span>{{.DeployCommand}}</code><button class="button button-small{{if .Saved}} button-primary{{end}}" type="button" data-copy-target="deploy-command">{{template "icon-copy"}}Copy</button></div>
+    <textarea id="deploy-command" hidden readonly>{{.DeployCommand}}</textarea>
     {{end}}
     <p class="muted small">DEPLOY.md lists what is left to do: exposure, secrets you supply, notes.</p>
   </div>
@@ -129,7 +134,7 @@
 <div class="tab-panel" data-panel="env"{{if ne .Tab "env"}} hidden{{end}}><div class="code">{{template "code-lines" .EnvLines}}</div></div>
 <div class="tab-panel" data-panel="deploy"{{if ne .Tab "deploy"}} hidden{{end}}><div class="code">{{template "code-lines" .DeployLines}}</div></div>
 <section class="side-editor" id="side-editor" aria-label="compose.yaml and .env side by side" data-side-editor
-  data-check="/projects/{{.Project.Name}}/files/check" data-save="/projects/{{.Project.Name}}/files/save" data-review="/projects/{{.Project.Name}}/review" data-csrf="{{$csrf}}"
+  data-check="/projects/{{.Project.Name}}/files/check" data-save="/projects/{{.Project.Name}}/files/save" data-review="/projects/{{.Project.Name}}/review" data-csrf="{{$csrf}}" data-base="{{.Generation.ID}}"
   data-chip="{{.Headline}}" data-tone="{{.Tone}}"{{if .EditedUntested}} data-untested{{end}}>
   <header class="side-head">
     <span class="side-title">{{.Project.Name}}</span>

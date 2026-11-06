@@ -39,6 +39,8 @@ var picks = []pick{
 var pastedEnvLine = regexp.MustCompile(`^(\s*|#.*|(export\s+)?[A-Za-z_][A-Za-z0-9_]*=.*)$`)
 
 type homeView struct {
+	// Learned says what the Docker host's habits set, until dismissed.
+	Learned string
 	Ask     string
 	Engines []option
 	Picks   []pick
@@ -52,13 +54,19 @@ func (server *Server) home(writer http.ResponseWriter, request *http.Request, cu
 }
 
 func (server *Server) renderHome(writer http.ResponseWriter, request *http.Request, current *visit, ask, problem string, status int) error {
+	writer.Header().Set("Cache-Control", pageCache)
 	page := server.page(request, current, "Home")
 	page.Nav, page.Crumbs, page.Error = navHome, []Crumb{{Text: "Home"}}, problem
-	options := server.engineOptions(server.config().LLM.Engine)
+	engine := request.PostFormValue("engine")
+	if engine == "" {
+		engine = server.config().LLM.Engine
+	}
+	options := server.engineOptions(engine)
 	for index := range options {
 		options[index].Label = engineLabels[options[index].Value]
 	}
-	page.Data = homeView{Ask: ask, Engines: options, Picks: picks, Recent: page.Projects[:min(len(page.Projects), recentShown)]}
+	page.Data = homeView{Learned: server.learned(request.Context()), Ask: ask, Engines: options, Picks: picks,
+		Recent: page.Projects[:min(len(page.Projects), recentShown)]}
 	return server.render(writer, status, "home", page)
 }
 
@@ -69,7 +77,11 @@ func (server *Server) start(writer http.ResponseWriter, request *http.Request, c
 	if problem := ask.problem(); problem != "" {
 		return server.renderHome(writer, request, current, request.PostFormValue("ask"), problem, http.StatusBadRequest)
 	}
-	return server.launch(writer, request, current, ask)
+	if err := server.launch(writer, request, current, ask); err != nil {
+		status, message := intakeFailure(err)
+		return server.renderHome(writer, request, current, request.PostFormValue("ask"), message, status)
+	}
+	return nil
 }
 
 // askFrom reads the Home page's box. One line is a link or a folder;
@@ -80,6 +92,10 @@ func askFrom(request *http.Request) generationRequest {
 	text := field(request, "ask")
 	if chosen := field(request, "pick"); chosen != "" {
 		text = chosen
+	}
+	if !strings.Contains(text, lineBreak) && strings.Contains(text, "=") && pastedEnvLine.MatchString(text) {
+		ask.env = text
+		return ask
 	}
 	if !strings.Contains(text, lineBreak) {
 		ask.source = text

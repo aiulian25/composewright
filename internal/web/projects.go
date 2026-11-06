@@ -1,7 +1,11 @@
 package web
 
 import (
+	"errors"
 	"net/http"
+	"net/url"
+	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/aiulian25/composewright/internal/fetch"
@@ -33,14 +37,92 @@ func (server *Server) as(username string) *workspace.Workspace {
 }
 
 type projectRow struct {
-	Name    string
-	Status  string
-	Tone    string
-	Source  string
-	Updated string
-	Engine  string
-	Images  []string
-	Running string
+	ID       string
+	Labels   string
+	PinOrder int
+	Revision int64
+	Name     string
+	Status   string
+	Tone     string
+	Source   string
+	Updated  string
+	Engine   string
+	Images   []string
+	Running  string
+}
+
+type projectFilter struct{ Query, Status, Label string }
+type projectGroup struct {
+	Label string
+	Rows  []projectRow
+}
+type projectsView struct {
+	Groups   []projectGroup
+	Pinned   []projectRow
+	Other    []projectRow
+	Total    int
+	Matches  int
+	Filter   projectFilter
+	Labels   []option
+	Statuses []option
+	Next     string
+}
+
+func readProjectFilter(request *http.Request) projectFilter {
+	query := request.URL.Query()
+	return projectFilter{Query: strings.TrimSpace(query.Get("q")), Status: query.Get("status"), Label: strings.ToLower(query.Get("label"))}
+}
+
+func labelTokens(labels []string) string {
+	tokens := make([]string, 0, len(labels))
+	for _, label := range labels {
+		tokens = append(tokens, strings.ToLower(label))
+	}
+	return strings.Join(tokens, ",")
+}
+
+func labelOptions(labels [][]string, selected string) []option {
+	names := map[string]string{}
+	for _, group := range labels {
+		for _, label := range group {
+			key := strings.ToLower(label)
+			if _, found := names[key]; !found {
+				names[key] = label
+			}
+		}
+	}
+	if selected != "" {
+		if _, found := names[selected]; !found {
+			names[selected] = selected
+		}
+	}
+	var keys []string
+	for key := range names {
+		keys = append(keys, key)
+	}
+	slices.Sort(keys)
+	var options []option
+	for _, key := range keys {
+		options = append(options, option{Value: key, Label: names[key], Selected: key == selected})
+	}
+	return options
+}
+func projectStatusOptions(selected string) []option {
+	var options []option
+	for _, status := range []string{store.StatusGenerated, store.StatusPassed, store.StatusBlocked, store.StatusFailed, store.StatusNeedsHuman} {
+		options = append(options, option{Value: status, Label: strings.ReplaceAll(status, "_", " "), Selected: status == selected})
+	}
+	if selected != "" && !slices.ContainsFunc(options, func(item option) bool { return item.Value == selected }) {
+		options = append(options, option{Value: selected, Label: selected, Selected: true})
+	}
+	return options
+}
+
+func projectMatches(summary store.ProjectSummary, filter projectFilter) bool {
+	if !strings.Contains(strings.ToLower(summary.Name), strings.ToLower(filter.Query)) || filter.Status != "" && summary.Status != filter.Status {
+		return false
+	}
+	return filter.Label == "" || slices.Contains(strings.Split(labelTokens(summary.Labels), ","), filter.Label)
 }
 
 func (server *Server) projects(writer http.ResponseWriter, request *http.Request, current *visit) error {
@@ -48,18 +130,97 @@ func (server *Server) projects(writer http.ResponseWriter, request *http.Request
 	if page.listingError != nil {
 		return page.listingError
 	}
-	rows := make([]projectRow, 0, len(page.summaries))
-	for _, summary := range page.summaries {
-		row := projectRow{Name: summary.Name, Status: summary.Status, Tone: statusTones[summary.Status], Engine: summary.Engine,
-			Source: sourceText(&fetch.Source{URL: summary.SourceURL, Commit: summary.SourceCommit}), Updated: summary.UpdatedAt.Local().Format(timeLayout),
-			Images: strings.Fields(summary.Images)}
-		if running, busy := server.jobs.running(summary.Name); busy {
-			row.Running = "/jobs/" + running.ID
-		}
-		rows = append(rows, row)
+	view := projectsViewFor(page.summaries, readProjectFilter(request))
+	view.Next = "/projects"
+	if query := request.URL.RawQuery; query != "" {
+		view.Next += "?" + query
 	}
-	page.Nav, page.Data, page.Crumbs = navProjects, rows, []Crumb{{Text: "Projects"}}
+	for _, group := range [][]projectRow{view.Pinned, view.Other} {
+		for index := range group {
+			if running, busy := server.jobs.running(group[index].Name); busy {
+				group[index].Running = "/jobs/" + running.ID
+			}
+		}
+	}
+	page.Nav, page.Data, page.Crumbs = navProjects, view, []Crumb{{Text: "Projects"}}
 	return server.render(writer, http.StatusOK, "projects", page)
+}
+
+func projectsViewFor(summaries []store.ProjectSummary, filter projectFilter) projectsView {
+	view := projectsView{Total: len(summaries), Filter: filter, Statuses: projectStatusOptions(filter.Status)}
+	var labels [][]string
+	for _, summary := range summaries {
+		labels = append(labels, summary.Labels)
+		if !projectMatches(summary, filter) {
+			continue
+		}
+		row := projectRow{ID: summary.ID, Name: summary.Name, Labels: strings.Join(summary.Labels, ", "), PinOrder: summary.PinOrder, Revision: summary.OrganizationRevision, Status: summary.Status, Tone: statusTones[summary.Status], Engine: summary.Engine,
+			Source: sourceText(&fetch.Source{URL: summary.SourceURL, Commit: summary.SourceCommit}), Updated: summary.UpdatedAt.Local().Format(timeLayout), Images: strings.Fields(summary.Images)}
+		view.Matches++
+		if row.PinOrder > 0 {
+			view.Pinned = append(view.Pinned, row)
+		} else {
+			view.Other = append(view.Other, row)
+		}
+	}
+	slices.SortFunc(view.Pinned, func(a, b projectRow) int {
+		if a.PinOrder < b.PinOrder {
+			return -1
+		}
+		if a.PinOrder > b.PinOrder {
+			return 1
+		}
+		return strings.Compare(a.Name, b.Name)
+	})
+	if len(view.Pinned) > 0 {
+		view.Groups = append(view.Groups, projectGroup{Label: "Pinned", Rows: view.Pinned})
+	}
+	if len(view.Other) > 0 {
+		label := ""
+		if len(view.Pinned) > 0 {
+			label = "Other projects"
+		}
+		view.Groups = append(view.Groups, projectGroup{Label: label, Rows: view.Other})
+	}
+	view.Labels = labelOptions(labels, filter.Label)
+	return view
+}
+
+// Organization is independent of deployments, but cannot race a restore's
+// captured recovery snapshot. Authentication and CSRF come from authed.
+func (server *Server) organizeProject(writer http.ResponseWriter, request *http.Request, current *visit) error {
+	server.settingsMutex.Lock()
+	defer server.settingsMutex.Unlock()
+	if server.jobs.restorePending() {
+		return conflict("Finish the pending restore before organizing projects.")
+	}
+	project, err := server.workspace().Store.FindProject(request.Context(), request.PathValue("name"))
+	if err != nil {
+		return err
+	}
+	if request.PostFormValue("project_id") != project.ID {
+		return conflict("This project was replaced. Reload Projects before changing its organization.")
+	}
+	revision, err := strconv.ParseInt(request.PostFormValue("revision"), 10, 64)
+	if err != nil || revision < 0 {
+		return badRequest("Reload Projects before changing its organization.")
+	}
+	err = server.workspace().Store.OrganizeProject(request.Context(), project.ID, revision, strings.Split(request.PostFormValue("labels"), ","), request.PostFormValue("action"))
+	if errors.Is(err, store.ErrOrganizationStale) {
+		return conflict("%s", err)
+	}
+	if errors.Is(err, store.ErrOrganizationInvalid) {
+		return badRequest("Organization was not changed: %s", err)
+	}
+	if err != nil {
+		return err
+	}
+	next := request.PostFormValue("next")
+	parsed, parseErr := url.Parse(next)
+	if parseErr != nil || parsed.Scheme != "" || parsed.Host != "" || parsed.User != nil || strings.HasPrefix(next, "//") || parsed.Path != "/projects" || parsed.Fragment != "" {
+		next = "/projects"
+	}
+	return redirect(writer, request, next)
 }
 
 type generationRow struct {

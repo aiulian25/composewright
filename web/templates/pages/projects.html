@@ -3,27 +3,47 @@
   <h1 class="page-title">Projects</h1>
   <a class="button button-primary push-right" href="/new">{{template "icon-plus"}}New project</a>
 </div>
-{{if .Data}}
+{{if .Data.Total}}
+<form class="card card-body row" method="get" action="/projects" aria-label="Filter project list">
+  <label class="field">Name<input type="search" name="q" value="{{.Data.Filter.Query}}" placeholder="Project name"></label>
+  <label class="field">Status<select name="status"><option value="">All statuses</option>{{range .Data.Statuses}}<option value="{{.Value}}"{{if .Selected}} selected{{end}}>{{.Label}}</option>{{end}}</select></label>
+  <label class="field">Label<select name="label"><option value="">All labels</option>{{range .Data.Labels}}<option value="{{.Value}}"{{if .Selected}} selected{{end}}>{{.Label}}</option>{{end}}</select></label>
+  <button class="button button-small" type="submit">Filter</button><a href="/projects">Clear filters</a>
+  <p class="muted small" role="status">{{.Data.Matches}} of {{.Data.Total}} projects</p>
+</form>
+{{if .Data.Matches}}
 <section class="card" aria-label="Projects">
   <div class="table-scroll">
     <table class="table">
-      <thead><tr><th scope="col">Project</th><th scope="col">Status</th><th scope="col">Source</th><th scope="col">Engine</th><th scope="col">Images</th><th scope="col">Updated</th><th scope="col"><span class="visually-hidden">Delete</span></th></tr></thead>
-      <tbody>
-        {{range .Data}}
+      <thead><tr><th scope="col">Project</th><th scope="col">Status</th><th scope="col">Source</th><th scope="col">Engine</th><th scope="col">Images</th><th scope="col">Updated</th><th scope="col">Organization</th><th scope="col"><span class="visually-hidden">Delete</span></th></tr></thead>
+      {{range .Data.Groups}}<tbody>
+        {{if .Label}}<tr><th scope="rowgroup" colspan="8">{{.Label}}</th></tr>{{end}}
+        {{range .Rows}}
         <tr>
-          <th scope="row"><a class="mono" href="/projects/{{.Name}}">{{.Name}}</a></th>
+          <th scope="row"><a class="mono" href="/projects/{{.Name}}">{{.Name}}</a>{{if .Labels}}<span class="block muted small">{{.Labels}}</span>{{end}}</th>
           <td><span class="chip chip-{{.Tone}}">{{.Status}}</span>{{if .Running}} <a class="chip chip-accent" href="{{.Running}}">running</a>{{end}}</td>
           <td class="mono muted">{{.Source}}</td>
           <td class="muted">{{.Engine}}</td>
           <td class="mono">{{range .Images}}<span class="block">{{.}}</span>{{end}}</td>
           <td class="muted nowrap">{{.Updated}}</td>
+          <td><details><summary aria-label="Organize {{.Name}}">Labels and pin{{if .PinOrder}} · pinned{{end}}</summary>
+            <form class="stack" method="post" action="/projects/{{.Name}}/organization">
+              <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="project_id" value="{{.ID}}"><input type="hidden" name="revision" value="{{.Revision}}"><input type="hidden" name="next" value="{{$.Data.Next}}">
+              <label class="field" for="labels-{{.ID}}">Labels for {{.Name}}<input id="labels-{{.ID}}" name="labels" value="{{.Labels}}" placeholder="Media, Home" maxlength="526" autocomplete="off"></label>
+              <p class="muted small">Comma-separated; up to 8 labels of 32 characters. Use labels for organization, never passwords or tokens.</p>
+              <div class="row"><button class="button button-small" type="submit" name="action" value="save">Save labels</button>
+              {{if .PinOrder}}<button class="button button-small" type="submit" name="action" value="unpin">Unpin</button><button class="button button-small" type="submit" name="action" value="up" aria-label="Move {{.Name}} up in pinned projects">Move up</button><button class="button button-small" type="submit" name="action" value="down" aria-label="Move {{.Name}} down in pinned projects">Move down</button>
+              {{else}}<button class="button button-small" type="submit" name="action" value="pin">Pin project</button>{{end}}</div>
+            </form>
+          </details></td>
           <td><a class="button button-small button-ghost" href="/projects/{{.Name}}/delete" aria-label="Delete {{.Name}}">{{template "icon-trash"}}Delete…</a></td>
         </tr>
         {{end}}
-      </tbody>
+      </tbody>{{end}}
     </table>
   </div>
 </section>
+{{else}}<p class="banner banner-info" role="status">No projects match these filters. <a href="/projects">Show every project</a>.</p>{{end}}
 {{else}}
 <section class="card" aria-labelledby="empty-title">
   <div class="card-body">

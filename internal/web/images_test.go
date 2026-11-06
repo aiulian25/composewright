@@ -149,7 +149,7 @@ func TestCheckImagesAndUseANewerTag(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := pipeline.EditCompose(context.Background(), connection.Dependencies, "miniflux", []byte(stored.Generation.ComposeYAML+"# kept by hand\n")); err != nil {
+	if _, err := pipeline.EditCompose(context.Background(), connection.Dependencies, "miniflux", []byte(stored.Generation.ComposeYAML+"# kept by hand\n"), ""); err != nil {
 		t.Fatal(err)
 	}
 	response, page = harness.post("/projects/miniflux/images", nil)

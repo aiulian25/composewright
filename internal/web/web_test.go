@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html"
 	"html/template"
 	"io"
 	"io/fs"
@@ -34,6 +35,7 @@ import (
 	"github.com/aiulian25/composewright/internal/composefile"
 	"github.com/aiulian25/composewright/internal/config"
 	"github.com/aiulian25/composewright/internal/doctor"
+	"github.com/aiulian25/composewright/internal/export"
 	"github.com/aiulian25/composewright/internal/ir"
 	"github.com/aiulian25/composewright/internal/llm"
 	"github.com/aiulian25/composewright/internal/pipeline"
@@ -741,12 +743,15 @@ func (harness *harness) checkFiles() {
 	if !strings.Contains(page, "Give an absolute folder path.") || !strings.Contains(page, "Use this folder") {
 		t.Fatal("a relative folder is not refused with the chooser open")
 	}
-	target := filepath.Join(harness.root, "saved")
+	target := filepath.Join(harness.root, "saved apps $HOME")
 	saveForm := url.Values{"folder": {"feeds"}, "location": {locationCustom}, "custom": {target}}
 	response, page = harness.post("/projects/miniflux/save", saveForm)
 	status(t, response, http.StatusOK, page)
 	if !strings.Contains(page, filepath.Join(target, "feeds")) || !strings.Contains(page, `role="status"`) {
 		t.Fatal("the page does not say where the files were saved")
+	}
+	if command := html.EscapeString(export.DeployCommand(filepath.Join(target, "feeds"))); strings.Count(page, command) != 2 {
+		t.Fatalf("the page does not show and copy the quoted %q", command)
 	}
 	info, err := os.Stat(filepath.Join(target, "feeds", ".env"))
 	if err != nil || info.Mode().Perm() != 0o600 {
@@ -1249,16 +1254,18 @@ func TestUpstreamDevicesAreNeedsOnReview(t *testing.T) {
 	}
 	response, page = harness.get(projectURL("zigbee", pageReview))
 	status(t, response, http.StatusOK, page)
-	for _, want := range []string{`name="need" value="devices">`, "/dev/ttyUSB0:/dev/ttyUSB0</span>: upstream compose asks for it (",
+	usb := ir.Need{Capability: ir.NeedDevices, Service: "app", Detail: "/dev/ttyUSB0:/dev/ttyUSB0"}.Grant()
+	for _, want := range []string{`name="need" value="` + usb + `">`, "/dev/ttyUSB0:/dev/ttyUSB0</span>: upstream compose asks for it (",
 		"/dev/ttyACM0:/dev/ttyACM0</span>: upstream compose asks for it ("} {
 		if !strings.Contains(page, want) {
 			t.Fatalf("the Review lacks %q", want)
 		}
 	}
-	stored := harness.reviewWith("zigbee", nil, url.Values{"need": {ir.NeedDevices}})
-	if !strings.Contains(stored.Generation.ComposeYAML, "# NEED GRANTED BY USER: devices") ||
-		strings.Count(stored.Generation.ComposeYAML, "devices:") != 1 || !strings.Contains(stored.Generation.ComposeYAML, "/dev/ttyACM0:/dev/ttyACM0") {
-		t.Fatalf("granted devices not rendered:\n%s", stored.Generation.ComposeYAML)
+	stored := harness.reviewWith("zigbee", nil, url.Values{"need": {usb}})
+	compose = stored.Generation.ComposeYAML
+	if !strings.Contains(compose, "# NEED GRANTED BY USER: devices") || strings.Count(compose, "devices:") != 1 ||
+		!strings.Contains(compose, "/dev/ttyUSB0:/dev/ttyUSB0") || strings.Contains(compose, "/dev/ttyACM0") {
+		t.Fatalf("only the granted device should be rendered:\n%s", compose)
 	}
 }
 
@@ -2815,7 +2822,8 @@ func TestSecretPassedAsAFileTravelsWithTheFiles(t *testing.T) {
 	}
 	response, script := harness.do(http.MethodPost, "/projects/notes/shell", url.Values{}, map[string]string{csrfHeader: harness.token})
 	status(t, response, http.StatusOK, script)
-	if !strings.Contains(script, "mkdir -p -m 700 secrets\nprintf '%s' '") || !strings.Contains(script, "# POSTGRES_PASSWORD is in secrets/postgres_password") {
+	if !strings.HasPrefix(script, "umask 077\n") || !strings.Contains(script, "mkdir -p -m 700 'secrets'\n") || !strings.Contains(script, "> 'secrets/postgres_password'\n") ||
+		!strings.Contains(script, "> 'DEPLOY.md'\n") || !strings.Contains(script, "# POSTGRES_PASSWORD is in secrets/postgres_password") {
 		t.Fatalf("the shell commands do not write the secret file:\n%s", script)
 	}
 }
@@ -2856,5 +2864,92 @@ func TestBundledFileIsShownAndSaved(t *testing.T) {
 	}
 	if modes["site/config/nginx.conf"].Perm() != 0o644 || modes["site/config/"] != fs.ModeDir|0o700 {
 		t.Fatalf("zip entries %v", modes)
+	}
+}
+
+// TestLearnsTheHostsHabitsOnce: a fresh install takes the time zone and
+// the proxy network its Docker host's apps share, says so on Home until
+// dismissed, and never asks again or overrides what a person set.
+func TestLearnsTheHostsHabitsOnce(t *testing.T) {
+	harness := newHarness(t)
+	harness.signUp()
+	lookups := 0
+	harness.server.options.Habits = func(context.Context, config.Config, string) (doctor.Habits, error) {
+		lookups++
+		return doctor.Habits{TimeZone: doctor.Habit{Value: "Europe/London", Apps: 31},
+			Network: doctor.FoundNetwork{Network: "npm", Kind: "proxy", Provider: "npm", Proxy: "Nginx Proxy Manager"}, NetworkApps: 18}, nil
+	}
+	harness.server.learnHabits()
+	profile := harness.server.config().Profile
+	if profile.Defaults.TZ != "Europe/London" || len(profile.Networks) != 1 || profile.Networks[0].Name != "npm" || !profile.Networks[0].Default {
+		t.Fatalf("profile after learning: %+v %+v", profile.Defaults, profile.Networks)
+	}
+	response, page := harness.get("/")
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, "Set up like your other apps: time zone Europe/London, as 31 of your apps have it · new apps join npm, where Nginx Proxy Manager reaches 18 of your apps.") {
+		t.Fatal("Home does not say what was set up")
+	}
+	response, page = harness.post("/learned/dismiss", url.Values{})
+	status(t, response, http.StatusSeeOther, page)
+	if _, page = harness.get("/"); strings.Contains(page, "Set up like your other apps") {
+		t.Fatal("the note stayed after Got it")
+	}
+	harness.server.learnHabits()
+	if lookups != 2 || len(harness.server.config().Profile.Networks) != 1 {
+		t.Fatalf("learned again: %d lookups, networks %+v", lookups, harness.server.config().Profile.Networks)
+	}
+}
+
+// TestHabitsNeverOverrideAChoice: a time zone or network a person set
+// stays as it is.
+func TestHabitsNeverOverrideAChoice(t *testing.T) {
+	profile := config.Default().Profile
+	profile.Defaults.TZ = "Asia/Tokyo"
+	profile.Networks = []config.ProfileNetwork{{Name: "traefik", Kind: "proxy", Provider: "traefik", Default: true}}
+	values, learned := followHabits(profile, doctor.Habits{TimeZone: doctor.Habit{Value: "Europe/London", Apps: 5},
+		Network: doctor.FoundNetwork{Network: "npm", Kind: "proxy", Provider: "npm"}, NetworkApps: 4})
+	if len(values) != 0 || len(learned) != 0 {
+		t.Fatalf("set %v (%v) over the person's choices", values, learned)
+	}
+}
+
+// TestPagesOpenedOnAnOlderVersionCannotSave: the Review page and the
+// editor send back the version they show; once another tab saved a newer
+// one, their saves answer 409 saying why, and the newer version stays.
+func TestPagesOpenedOnAnOlderVersionCannotSave(t *testing.T) {
+	harness := newHarness(t)
+	harness.signUp()
+	response, _ := harness.post("/new", url.Values{"source": {minifluxPath}, "engine": {pipeline.EngineRules}, "test": {skipTest}})
+	if job := harness.waitForJob(response.Header.Get("Location")); job.Failure != "" {
+		t.Fatal(job.Failure)
+	}
+	opened, err := pipeline.Load(context.Background(), harness.server.workspace(), "miniflux")
+	if err != nil {
+		t.Fatal(err)
+	}
+	response, page := harness.get(projectURL("miniflux", pageReview))
+	status(t, response, http.StatusOK, page)
+	if strings.Count(page, `name="base" value="`+opened.Generation.ID+`"`) != 2 {
+		t.Fatal("the Review forms do not send back the version they show")
+	}
+	newer := harness.reviewWith("miniflux", nil, url.Values{baseField: {opened.Generation.ID}, valuePrefix + "DEBUG": {"0"}})
+	form := url.Values{baseField: {opened.Generation.ID}, valuePrefix + "DEBUG": {"2"}, "action": {actionApply}}
+	response, page = harness.post(projectURL("miniflux", pageReview), form)
+	status(t, response, http.StatusConflict, page)
+	if !strings.Contains(page, "another tab") {
+		t.Fatal("the stale Review form is not told why")
+	}
+	env, err := newer.EnvFile(pipeline.Revealed)
+	if err != nil {
+		t.Fatal(err)
+	}
+	response, answer := harness.post("/projects/miniflux/files/save", url.Values{fileCompose: {newer.Generation.ComposeYAML + "# mine\n"}, fileEnv: {string(env)},
+		baseField: {opened.Generation.ID}})
+	status(t, response, http.StatusConflict, answer)
+	if !strings.Contains(answer, "another tab") {
+		t.Fatalf("the stale editor save is not told why: %s", answer)
+	}
+	if latest, err := pipeline.Load(context.Background(), harness.server.workspace(), "miniflux"); err != nil || latest.Generation.ID != newer.Generation.ID {
+		t.Fatalf("a stale save replaced the newer version: %v", err)
 	}
 }

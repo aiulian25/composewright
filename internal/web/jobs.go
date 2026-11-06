@@ -205,15 +205,17 @@ func (current *job) since(index int) ([]event, <-chan struct{}, bool) {
 
 // jobs runs at most two at a time, one per project.
 type jobs struct {
-	mutex  sync.Mutex
-	byID   map[string]*job
-	now    func() time.Time
-	wait   sync.WaitGroup
-	logger *slog.Logger
+	timeout   time.Duration
+	restoring bool
+	mutex     sync.Mutex
+	byID      map[string]*job
+	now       func() time.Time
+	wait      sync.WaitGroup
+	logger    *slog.Logger
 }
 
 func newJobs(now func() time.Time, logger *slog.Logger) *jobs {
-	return &jobs{byID: map[string]*job{}, now: now, logger: logger}
+	return &jobs{timeout: 2 * time.Hour, byID: map[string]*job{}, now: now, logger: logger}
 }
 
 // work is what a job does; it returns where the browser goes next.
@@ -222,6 +224,9 @@ type work func(ctx context.Context, current *job) (next string, result *pipeline
 func (registry *jobs) start(kind, title, project string, run work) (*job, error) {
 	registry.mutex.Lock()
 	defer registry.mutex.Unlock()
+	if registry.restoring {
+		return nil, conflict("A restore is unfinished. Resume it from Backups before starting a run.")
+	}
 	registry.forget()
 	running := 0
 	for _, existing := range registry.byID {
@@ -240,7 +245,7 @@ func (registry *jobs) start(kind, title, project string, run work) (*job, error)
 	if _, err := rand.Read(identifier); err != nil {
 		return nil, err
 	}
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), registry.timeout)
 	current := &job{ID: hex.EncodeToString(identifier), Kind: kind, Title: title, Started: registry.now(), project: project, registry: registry,
 		changed: make(chan struct{}), steps: map[string]pipeline.Step{}, timings: map[string]timing{}, cancel: cancel, now: registry.now}
 	registry.byID[current.ID] = current
@@ -249,6 +254,9 @@ func (registry *jobs) start(kind, title, project string, run work) (*job, error)
 		defer registry.wait.Done()
 		defer cancel()
 		next, result, err := run(ctx, current)
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			err = fmt.Errorf("run exceeded its %s time budget; completed saved work is kept", registry.timeout)
+		}
 		if errors.Is(ctx.Err(), context.Canceled) && err != nil {
 			err = errStopped
 		}

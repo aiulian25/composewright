@@ -47,11 +47,21 @@
     <a href="/projects"{{if eq .Nav "projects"}} aria-current="page"{{end}}>{{template "icon-table"}}<span>All projects</span></a>
   </nav>
   <div class="sidebar-head"><h2>Projects</h2><a class="icon-button" href="/new" aria-label="New project" title="New project">{{template "icon-plus"}}</a></div>
-  <label class="filter">{{template "icon-search"}}<input type="search" placeholder="Filter {{plural (len .Projects) "project" "projects"}}" aria-label="Filter projects" data-project-filter></label>
-  <ul class="project-list" data-project-list>
-    {{if .Draft}}<li><span class="project-link is-current"><span class="project-icon project-icon-new">{{template "status-icon" "new"}}</span><span class="project-text"><span class="project-name">untitled</span><span class="project-sub">New project</span></span></span></li>{{end}}
-    {{range .Projects}}<li class="project-item"><a class="project-link{{if .Current}} is-current{{end}}" href="{{.Href}}"{{if .Current}} aria-current="page"{{end}}><span class="project-icon project-icon-{{.Icon}}">{{template "status-icon" .Icon}}</span><span class="project-text"><span class="project-name">{{.Name}}</span><span class="project-sub">{{.Subtitle}}</span></span></a><a class="project-delete" href="/projects/{{.Name}}/delete" aria-label="Delete {{.Name}}" title="Delete {{.Name}}">{{template "icon-trash"}}</a></li>{{end}}
-  </ul>
+  <div data-project-collection>
+  <form action="/projects" method="get" class="stack" aria-label="Filter sidebar projects" data-project-filter-form>
+    <label class="filter">{{template "icon-search"}}<input type="search" name="q" value="{{.ProjectFilter.Query}}" placeholder="Filter {{plural (len .Projects) "project" "projects"}}" aria-label="Filter projects by name" data-project-filter></label>
+    <details{{if or .ProjectFilter.Status .ProjectFilter.Label}} open{{end}}><summary>More filters</summary>
+    <label class="visually-hidden" for="sidebar-status">Project status</label><select id="sidebar-status" name="status" data-project-status><option value="">All statuses</option>{{range .ProjectStatusOptions}}<option value="{{.Value}}"{{if .Selected}} selected{{end}}>{{.Label}}</option>{{end}}</select>
+    <label class="visually-hidden" for="sidebar-label">Project label</label><select id="sidebar-label" name="label" data-project-label><option value="">All labels</option>{{range .ProjectLabelOptions}}<option value="{{.Value}}"{{if .Selected}} selected{{end}}>{{.Label}}</option>{{end}}</select>
+    <button class="button button-small" type="submit">Filter projects</button>
+    <a href="/projects" data-project-clear>Clear filters</a>
+    </details>
+    <p class="muted small" role="status" aria-live="polite" data-project-filter-status hidden></p>
+  </form>
+  {{if .Draft}}<ul class="project-list"><li><span class="project-link is-current"><span class="project-icon project-icon-new">{{template "status-icon" "new"}}</span><span class="project-text"><span class="project-name">untitled</span><span class="project-sub">New project</span></span></span></li></ul>{{end}}
+  {{with .PinnedProjects}}<div data-project-group><h3 class="option-group">Pinned</h3><ul class="project-list" data-project-list>{{range .}}{{template "sidebar-project" .}}{{end}}</ul></div>{{end}}
+  {{with .OtherProjects}}<div data-project-group>{{if $.PinnedProjects}}<h3 class="option-group">Other projects</h3>{{end}}<ul class="project-list" data-project-list>{{range .}}{{template "sidebar-project" .}}{{end}}</ul></div>{{end}}
+  </div>
   <nav class="sidebar-foot" aria-label="More">
     <a href="/settings"{{if eq .Nav "settings"}} aria-current="page"{{end}}>{{template "icon-gear"}}<span>Settings</span></a>
   </nav>
@@ -67,6 +77,7 @@
   </div>
   {{end}}
   <div class="workspace-body">
+    {{if .RestorePending}}<p class="banner banner-info" role="status">Restore unfinished. <a href="/settings?section=backup">Resume in Backups</a>. New runs and project edits are paused.</p>{{end}}
     {{if .Notice}}<p class="banner banner-ok" role="status">{{.Notice}}</p>{{end}}
     {{if .Error}}<p class="banner banner-danger" role="alert">{{.Error}}</p>{{end}}
     {{block "content" .}}{{end}}
@@ -106,3 +117,7 @@
 {{end}}
 </body>
 </html>
+
+{{define "sidebar-project"}}
+<li class="project-item" data-project-item data-project-name="{{.Name}}" data-project-status="{{.Status}}" data-project-labels="{{.LabelTokens}}" data-project-current="{{.Current}}"><a class="project-link{{if .Current}} is-current{{end}}" href="{{.Href}}"{{if .Current}} aria-current="page"{{end}}><span class="project-icon project-icon-{{.Icon}}">{{template "status-icon" .Icon}}</span><span class="project-text"><span class="project-name">{{.Name}}</span><span class="project-sub">{{.Subtitle}}{{range .Labels}} · {{.}}{{end}}</span></span></a><a class="project-delete" href="/projects/{{.Name}}/delete" aria-label="Delete {{.Name}}" title="Delete {{.Name}}">{{template "icon-trash"}}</a></li>
+{{end}}

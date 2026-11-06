@@ -30,10 +30,14 @@ type Crumb struct {
 // ProjectLink is a project in the sidebar, with an icon for its state. It
 // opens the step the project is at.
 type ProjectLink struct {
-	Name     string
-	Subtitle string
-	Icon     string
-	Href     string
+	Labels      []string
+	LabelTokens string
+	Status      string
+	PinOrder    int
+	Name        string
+	Subtitle    string
+	Icon        string
+	Href        string
 	// Badge is what a project still needs, for the Home page's recent list.
 	Badge   projectBadge
 	Current bool
@@ -74,7 +78,8 @@ var (
 		store.StatusFailed: {"test failed", toneDanger}, store.StatusNeedsHuman: {"test failed", toneDanger}}
 )
 
-// projectLinks lists every project for the sidebar, most recent first.
+// projectLinks preserves the project order shared with Home. The sidebar
+// projects its pinned section separately.
 func (server *Server) projectLinks(summaries []store.ProjectSummary, listingError error) []ProjectLink {
 	if listingError != nil {
 		server.options.Logger.Warn("listing projects for the sidebar", "error", listingError)
@@ -82,7 +87,7 @@ func (server *Server) projectLinks(summaries []store.ProjectSummary, listingErro
 	}
 	links := make([]ProjectLink, 0, len(summaries))
 	for _, summary := range summaries {
-		links = append(links, ProjectLink{Name: summary.Name, Subtitle: projectSubtitle(summary), Icon: projectIcons[summary.Status],
+		links = append(links, ProjectLink{Labels: summary.Labels, LabelTokens: labelTokens(summary.Labels), Status: summary.Status, PinOrder: summary.PinOrder, Name: summary.Name, Subtitle: projectSubtitle(summary), Icon: projectIcons[summary.Status],
 			Href: projectURL(summary.Name, projectSteps[summary.Status]), Badge: projectBadges[summary.Status]})
 	}
 	return links

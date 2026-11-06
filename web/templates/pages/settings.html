@@ -249,6 +249,28 @@
 {{define "backup-page"}}
 {{$csrf := .CSRF}}
 {{with .Data}}
+{{if .Backups.RestorePending}}
+<section class="card" role="status" aria-labelledby="restore-pending-title">
+ <div class="card-head"><h2 id="restore-pending-title">Restore unfinished</h2></div>
+ <div class="card-body stack"><p>{{.Backups.RestoreProgress}}</p><p>New runs and project edits are paused. Your original data is preserved in an encrypted recovery backup.</p>
+ <form method="post" action="/settings/backup/resume"><input type="hidden" name="csrf" value="{{$csrf}}">
+ <label class="field" for="resume-current">Your account password<input id="resume-current" name="current" type="password" autocomplete="current-password" required></label>
+ <button class="button button-primary" type="submit">Resume restore</button>
+ {{if .Backups.CanCancelRestore}}<button class="button" type="submit" formaction="/settings/backup/cancel">Cancel before changes commit</button>{{end}}
+ </form></div>
+</section>
+{{end}}
+{{if .Backups.RecoveryAvailable}}
+<form class="card" method="post" action="/settings/backup/recovery">
+ <input type="hidden" name="csrf" value="{{$csrf}}"><div class="card-head"><h2>State before the last restore</h2></div>
+ <div class="card-body stack"><p>Download the original projects, credentials, settings and catalogue before the last restore. Keep this file before starting another restore, which replaces this recovery snapshot.</p>
+ <label class="field" for="recovery-current">Your account password<input id="recovery-current" name="current" type="password" autocomplete="current-password" required></label>
+ <label class="field" for="recovery-passphrase">Encrypt the download with a passphrase<input id="recovery-passphrase" name="passphrase" type="password" autocomplete="new-password" minlength="{{.Minimum}}" required></label>
+ <label class="field" for="recovery-confirm">Passphrase again<input id="recovery-confirm" name="confirm" type="password" autocomplete="new-password" required></label>
+ <button class="button" type="submit">Download recovery backup</button></div>
+</form>
+{{end}}
+
 <form class="card" id="passphrase" method="post" action="/settings/backup/passphrase" aria-labelledby="passphrase-title">
   <input type="hidden" name="csrf" value="{{$csrf}}">
   <div class="card-head"><h2 id="passphrase-title">{{template "icon-key"}}Backup passphrase</h2>{{if .Backups.PassphraseSet}}<span class="chip chip-ok">{{template "icon-check"}}set</span>{{else}}<span class="chip chip-warn">not set</span>{{end}}</div>
@@ -281,6 +303,7 @@
   </div>
   {{if .Backups.Stored}}
   <form method="post" action="/settings/backup/restore">
+    <label class="choice"><input type="checkbox" name="legacy" value="1"><span>Restore an older backup anyway; its project version and values may not match.</span></label>
     <input type="hidden" name="csrf" value="{{$csrf}}">
     <div class="card-body stack">
       <div class="field-grid">
@@ -315,6 +338,7 @@
 <form class="card" id="restore" method="post" action="/settings/backup/restore" enctype="multipart/form-data" aria-labelledby="restore-title">
   <input type="hidden" name="csrf" value="{{$csrf}}">
   <div class="card-head"><h2 id="restore-title">{{template "icon-upload"}}Restore from a file</h2></div>
+  <label class="choice"><input type="checkbox" name="legacy" value="1"><span>Restore an older backup anyway; its project version and values may not match.</span></label>
   <div class="card-body stack">
     <p>A backup downloaded earlier, from here or another install. It brings back its Settings, in place of yours, and its projects; everything is checked again before any of it runs.</p>
     <div class="field-grid">

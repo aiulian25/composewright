@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -19,7 +20,6 @@ import (
 	"github.com/aiulian25/composewright/internal/backup"
 	"github.com/aiulian25/composewright/internal/config"
 	"github.com/aiulian25/composewright/internal/store"
-	"github.com/aiulian25/composewright/internal/workspace"
 )
 
 const (
@@ -59,14 +59,18 @@ var (
 // backupView is the Backups page: whether a passphrase is set, the schedule
 // with when the next automatic backup comes, and the backups kept here.
 type backupView struct {
-	PassphraseSet bool
-	Schedule      config.Backup
-	Schedules     []string
-	MaxDays       int
-	MaxKept       int
-	Next          string
-	Folder        string
-	Stored        []storedRow
+	RestorePending    bool
+	RecoveryAvailable bool
+	CanCancelRestore  bool
+	RestoreProgress   string
+	PassphraseSet     bool
+	Schedule          config.Backup
+	Schedules         []string
+	MaxDays           int
+	MaxKept           int
+	Next              string
+	Folder            string
+	Stored            []storedRow
 }
 
 type storedRow struct {
@@ -89,6 +93,36 @@ func (server *Server) backupView(ctx context.Context, schedule config.Backup) (b
 	for _, item := range stored {
 		view.Stored = append(view.Stored, storedRow{Name: item.Name, Kind: kindLabels[item.Kind], When: item.Created.Local().Format(timeLayout),
 			Size: units.HumanSize(float64(item.Size))})
+	}
+	if err != nil {
+		return view, err
+	}
+	journal, found, err := server.restoreJournal(ctx)
+	if err != nil {
+		return view, err
+	}
+	view.RecoveryAvailable = found
+	view.RestorePending = found && !journal.Completed
+	if view.RestorePending {
+		checkpoint, committed, failure := server.workspace().Store.Secret(ctx, backup.RestoreCheckpointName)
+		if failure != nil {
+			return view, failure
+		}
+		view.CanCancelRestore = !committed
+		view.RestoreProgress = "Ready to restore; no projects or credentials have been replaced."
+		if committed {
+			var progress store.RestoreProgress
+			if err = json.Unmarshal([]byte(checkpoint), &progress); err != nil {
+				return view, err
+			}
+			view.RestoreProgress = fmt.Sprintf("Projects and credentials applied: %d projects restored, %d kept. Settings may be partial; resume to finish.", len(progress.Restored), len(progress.Kept))
+			if journal.SettingsDone {
+				view.RestoreProgress += " Settings saved."
+			}
+			if journal.CatalogueDone {
+				view.RestoreProgress += " Image overrides saved."
+			}
+		}
 	}
 	return view, err
 }
@@ -151,6 +185,11 @@ func (server *Server) storeBackup(ctx context.Context, kind, actor string) (back
 	server.settingsMutex.Lock()
 	defer server.settingsMutex.Unlock()
 	database := server.workspace().Store
+	if journal, found, err := server.restoreJournal(ctx); err != nil {
+		return backup.Stored{}, err
+	} else if found && !journal.Completed {
+		return backup.Stored{}, errors.New("restore unfinished; resume it from Backups before creating another backup")
+	}
 	passphrase, found, err := database.Secret(ctx, backup.PassphraseName)
 	if err != nil {
 		return backup.Stored{}, err
@@ -342,49 +381,16 @@ func (server *Server) restore(request *http.Request, current *visit) (restored, 
 	if err != nil {
 		return nil, nil, err
 	}
+	if archive.Snapshot == "" && request.PostFormValue("legacy") != "1" {
+		return nil, nil, badRequest("This older backup may mix a project version with different values. Check Restore an older backup anyway to proceed, or make a fresh backup with the updated app.")
+	}
 	replace := request.PostFormValue(replaceField) != ""
 	server.settingsMutex.Lock()
 	defer server.settingsMutex.Unlock()
-	if err := server.busyProjects(archive, replace); err != nil {
+	if err := server.prepareRestore(request.Context(), archive, source, replace); err != nil {
 		return nil, nil, err
 	}
-	configuration := archive.Settings.Apply(server.config())
-	if err := configuration.Validate(); err != nil {
-		return nil, nil, fmt.Errorf("the backup's settings do not fit this install: %w", err)
-	}
-	ctx, database := request.Context(), server.workspace().Store
-	for name, value := range archive.Keys {
-		if err := database.SetSecret(ctx, name, value); err != nil {
-			return nil, nil, err
-		}
-	}
-	if err := server.update(request, current, settingsValues(configuration)); err != nil {
-		return nil, nil, err
-	}
-	paths := server.paths()
-	if err := workspace.WriteCatalogueFiles(paths.CatalogueDir(), archive.Catalogue); err != nil {
-		return nil, nil, err
-	}
-	server.catalogue.Store(workspace.LoadCatalogue(paths))
-	details := map[string]any{"from": source, "replace": replace, "keys": sortedKeys(archive.Keys), "catalogue": sortedKeys(archive.Catalogue),
-		"backup_created": archive.Created, "backup_version": archive.Version}
-	var failure error
-	for _, record := range archive.Projects {
-		written, err := database.RestoreProject(ctx, record, replace)
-		if err != nil {
-			failure, details["failed"] = fmt.Errorf("project %s: %w", record.Project.Name, err), record.Project.Name
-			break
-		}
-		if written {
-			restored = append(restored, record.Project.Name)
-			continue
-		}
-		kept = append(kept, record.Project.Name)
-	}
-	// What was written is audited even when a project failed part way.
-	details["restored"], details["kept"] = restored, kept
-	audited := database.Audit(ctx, webActorPrefix+current.user.Username, store.ActionRestore, "", details)
-	return restored, kept, errors.Join(failure, audited)
+	return server.resumeRestore(request, current)
 }
 
 // restoreSource opens the backup a restore names: a stored one, with the
@@ -413,19 +419,6 @@ func (server *Server) restoreSource(request *http.Request) (backup.Archive, stri
 	}
 	archive, err := backup.Open(content, passphrase)
 	return archive, name, err
-}
-
-// busyProjects refuses to replace a project while a run of it is going on.
-func (server *Server) busyProjects(archive backup.Archive, replace bool) error {
-	if !replace {
-		return nil
-	}
-	for _, record := range archive.Projects {
-		if _, busy := server.jobs.running(record.Project.Name); busy {
-			return errors.New(strings.TrimSuffix(fmt.Sprintf(runningConflict, record.Project.Name), "."))
-		}
-	}
-	return nil
 }
 
 func uploadedBackup(request *http.Request) ([]byte, error) {

@@ -264,3 +264,37 @@ func (server *Server) replaceProfile(request *http.Request, current *visit) erro
 func doneURL(section, done string) string {
 	return settingsURL(section) + "&" + doneQuery + "=" + url.QueryEscape(done)
 }
+
+// sandboxSweepInterval is how often the server looks for what interrupted
+// sandbox runs left.
+const sandboxSweepInterval = 15 * time.Minute
+
+// SandboxSweep removes what interrupted sandbox runs left and names them.
+type SandboxSweep func(ctx context.Context, configuration config.Config, projectsDir string) ([]string, error)
+
+// sweepSandboxes runs the sandbox janitor when the server starts and every
+// sandboxSweepInterval after, until ctx ends, so what a crash or a stopped
+// run left is removed without waiting for the next test; a live run, in
+// this process or another, keeps its lease and is left alone.
+func (server *Server) sweepSandboxes(ctx context.Context) {
+	sweep := server.options.Sweep
+	if sweep == nil {
+		return
+	}
+	ticker := time.NewTicker(sandboxSweepInterval)
+	defer ticker.Stop()
+	for {
+		removed, err := sweep(ctx, server.config(), server.paths().ProjectsDir())
+		if err != nil {
+			server.options.Logger.Warn("sweeping stale sandboxes; trying again later", "error", err)
+		}
+		if len(removed) > 0 {
+			server.options.Logger.Info("removed stale sandboxes", "projects", removed)
+		}
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+		}
+	}
+}

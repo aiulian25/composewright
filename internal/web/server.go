@@ -5,6 +5,7 @@ package web
 
 import (
 	"context"
+	"fmt"
 	"html/template"
 	"log/slog"
 	"net/http"
@@ -71,8 +72,14 @@ type Options struct {
 	SetupToken     string
 	Connect        Connector
 	Latest         ReleaseLookup
-	Logger         *slog.Logger
-	Now            func() time.Time
+	// Habits reads how the Docker host's apps are set up, for a new
+	// install to follow; nil leaves the profile as it is.
+	Habits HabitsLookup
+	// Sweep removes what interrupted sandbox runs left on the Docker host;
+	// nil never sweeps.
+	Sweep  SandboxSweep
+	Logger *slog.Logger
+	Now    func() time.Time
 }
 
 type Server struct {
@@ -130,6 +137,14 @@ func New(options Options) (*Server, error) {
 	server := &Server{options: options, assets: assets, pages: pages, mux: http.NewServeMux(), jobs: newJobs(options.Now, options.Logger), throttle: auth.NewThrottle(),
 		dummy: dummy, loaded: options.Loaded, setupToken: options.SetupToken,
 		hashing: make(chan struct{}, maxConcurrentHashes)}
+	journal, found, err := server.restoreJournal(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("read restore journal: %w", err)
+	}
+	server.jobs.restoring = found && !journal.Completed
+	if options.Loaded.Config.Network.JobTimeout > 0 {
+		server.jobs.timeout = options.Loaded.Config.Network.JobTimeout
+	}
 	server.status = newStatusCache(server)
 	server.catalogue.Store(options.Workspace.Catalogue)
 	server.routes()
@@ -137,6 +152,8 @@ func New(options Options) (*Server, error) {
 	scheduling, stop := context.WithCancel(context.Background())
 	server.stopBackups, server.backupsDone = stop, make(chan struct{})
 	go server.scheduleBackups(scheduling)
+	go server.learnHabits()
+	go server.sweepSandboxes(scheduling)
 	return server, nil
 }
 
@@ -176,6 +193,7 @@ func (server *Server) routes() {
 	mux.HandleFunc("GET /jobs/{id}/events", server.authed(server.jobEvents))
 	mux.HandleFunc("POST /jobs/{id}/cancel", server.authed(server.cancelJob))
 	mux.HandleFunc("GET /projects/{name}", server.authed(server.projectPage))
+	mux.HandleFunc("POST /projects/{name}/organization", server.authed(server.organizeProject))
 	mux.HandleFunc("GET /projects/{name}/analyse", server.authed(server.analysePage))
 	mux.HandleFunc("GET /projects/{name}/review", server.authed(server.reviewPage))
 	mux.HandleFunc("POST /projects/{name}/review", server.authed(server.review))
@@ -184,6 +202,7 @@ func (server *Server) routes() {
 	mux.HandleFunc("POST /projects/{name}/reveal", server.authed(server.reveal))
 	mux.HandleFunc("GET /projects/{name}/files", server.authed(server.filesPage))
 	mux.HandleFunc("POST /projects/{name}/env", server.authed(server.copyEnv))
+	mux.HandleFunc("POST /learned/dismiss", server.authed(server.dismissLearned))
 	mux.HandleFunc("POST /projects/{name}/shell", server.authed(server.copyShell))
 	mux.HandleFunc("POST /projects/{name}/download", server.authed(server.download))
 	mux.HandleFunc("POST /projects/{name}/save", server.authed(server.save))
@@ -205,6 +224,9 @@ func (server *Server) routes() {
 	mux.HandleFunc("POST /settings/backup/now", server.authed(server.backUpNow))
 	mux.HandleFunc("POST /settings/backup/download", server.authed(server.downloadBackup))
 	mux.HandleFunc("POST /settings/backup/restore", server.authed(server.restoreBackup))
+	mux.HandleFunc("POST /settings/backup/resume", server.authed(server.resumeBackup))
+	mux.HandleFunc("POST /settings/backup/cancel", server.authed(server.cancelBackupRestore))
+	mux.HandleFunc("POST /settings/backup/recovery", server.authed(server.downloadRestoreRecovery))
 	mux.HandleFunc("POST /settings/backup/delete", server.authed(server.deleteBackup))
 	mux.HandleFunc("POST /settings/audit/verify", server.authed(server.verifyAudit))
 	mux.HandleFunc("POST /settings/audit/export", server.authed(server.exportAudit))

@@ -61,6 +61,9 @@ const (
 	// optionalField holds the optional services ticked on the Review page.
 	optionalField   = "optional"
 	publicHostField = "public_host"
+	// baseField carries the version a page was opened on back with its form.
+	baseField   = "base"
+	staleAdvice = ": it was saved in another tab or from the command line since. Nothing of your change was saved; check this version and make it again."
 	// portField chooses a host port on the Review page, as app:8080=8081.
 	portField = "port"
 	// publishedPortHint and noAddressHint say what a blank public address
@@ -126,6 +129,9 @@ type option struct {
 }
 
 type newView struct {
+	Compose      string
+	Env          string
+	Reselect     bool
 	Source       string
 	Ref          string
 	Name         string
@@ -183,7 +189,7 @@ type generationRequest struct {
 }
 
 func (ask generationRequest) given() bool {
-	return len(ask.files) > 0 || strings.TrimSpace(ask.compose) != ""
+	return len(ask.files) > 0 || strings.TrimSpace(ask.compose) != "" || strings.TrimSpace(ask.env) != ""
 }
 
 // problem says why a request cannot start, if it cannot.
@@ -197,6 +203,19 @@ func (ask generationRequest) problem() string {
 		return "A project name uses lowercase letters, digits, - and _ and starts with a letter or digit."
 	case len(ask.files) > maxUploadFiles:
 		return fmt.Sprintf("At most %d files at a time.", maxUploadFiles)
+	}
+	if problem := duplicateIntakeFiles(ask.files, ask.compose, ask.env); problem != "" {
+		return problem
+	}
+	if ask.source == "" && strings.TrimSpace(ask.compose) == "" {
+		onlyEnv := true
+		for _, file := range ask.files {
+			name := strings.ToLower(uploadName(file))
+			onlyEnv = onlyEnv && (name == ".env" || strings.HasPrefix(name, ".env.") || strings.HasSuffix(name, ".env"))
+		}
+		if onlyEnv {
+			return "Add a Compose file, README or Dockerfile alongside .env; .env alone does not describe the application."
+		}
 	}
 	return ask.archiveProblem()
 }
@@ -251,13 +270,13 @@ func (server *Server) startGeneration(writer http.ResponseWriter, request *http.
 		engine: request.PostFormValue("engine"), compose: request.PostFormValue("compose"), env: request.PostFormValue("env"),
 		files: uploadedFiles(request), filesOnly: request.PostFormValue("test") == skipTest}
 	if problem := ask.problem(); problem != "" {
-		page := server.page(request, current, "New project").flow(stepSource)
-		view := server.newView(ask.source, ask.ref, ask.name, ask.engine)
-		view.FilesOnly = ask.filesOnly
-		page.Error, page.Data = problem, view
-		return server.render(writer, http.StatusBadRequest, "new", page)
+		return server.renderIntakeDraft(writer, request, current, ask, problem, http.StatusBadRequest)
 	}
-	return server.launch(writer, request, current, ask)
+	if err := server.launch(writer, request, current, ask); err != nil {
+		status, message := intakeFailure(err)
+		return server.renderIntakeDraft(writer, request, current, ask, message, status)
+	}
+	return nil
 }
 
 // launch keeps what was given for the run and starts the generation.
@@ -352,6 +371,9 @@ func (server *Server) shownSource(snapshot snapshot) *fetch.Source {
 // directory: base names only, no overwriting one another. An archive is
 // kept as it is; the analysis unpacks it.
 func (server *Server) saveUploads(files []*multipart.FileHeader, compose, env string) (string, error) {
+	if problem := duplicateIntakeFiles(files, compose, env); problem != "" {
+		return "", badRequest("%s", problem)
+	}
 	root := server.uploadsRoot()
 	if err := os.MkdirAll(root, uploadDirMode); err != nil {
 		return "", err
@@ -371,7 +393,12 @@ func (server *Server) saveUploads(files []*multipart.FileHeader, compose, env st
 			if strings.TrimSpace(content) == "" {
 				continue
 			}
-			if err := os.WriteFile(filepath.Join(directory, name), []byte(content), uploadFileMode); err != nil {
+			target, err := os.OpenFile(filepath.Join(directory, name), os.O_WRONLY|os.O_CREATE|os.O_EXCL, uploadFileMode)
+			if err != nil {
+				return err
+			}
+			_, writeErr := io.WriteString(target, content)
+			if err = errors.Join(writeErr, target.Close()); err != nil {
 				return err
 			}
 		}
@@ -492,14 +519,16 @@ func (server *Server) renderValidate(writer http.ResponseWriter, request *http.R
 }
 
 type analyseView struct {
-	Job       snapshot
-	Heading   string
-	Ref       string
-	Elapsed   string
-	Seconds   int
-	Steps     []stepView
-	Facts     []factRow
-	FactChips []string
+	SourceRoot  string
+	SharedFiles []string
+	Job         snapshot
+	Heading     string
+	Ref         string
+	Elapsed     string
+	Seconds     int
+	Steps       []stepView
+	Facts       []factRow
+	FactChips   []string
 	// Suspicious are repository lines addressed to a language model.
 	Suspicious []extract.Note
 	Events     string
@@ -539,6 +568,7 @@ func (server *Server) analyseView(snapshot snapshot) analyseView {
 	}
 	if snapshot.Facts != nil {
 		view.Files, view.Suspicious = filesRead(snapshot.Facts.Files, nil), snapshot.Facts.Suspicious
+		view.SourceRoot, view.SharedFiles = snapshot.Facts.SourceRoot, snapshot.Facts.SharedFiles
 	}
 	return view
 }
@@ -557,6 +587,7 @@ func (server *Server) analysePage(writer http.ResponseWriter, request *http.Requ
 	view.Rules, view.Filled, view.Fields = ruleRows(stored.Plan)
 	if stored.Facts != nil {
 		view.Files, view.Suspicious = filesRead(stored.Facts.Files, stored.Plan), stored.Facts.Suspicious
+		view.SourceRoot, view.SharedFiles = stored.Facts.SourceRoot, stored.Facts.SharedFiles
 	}
 	page := server.page(request, current, "Analysis of "+stored.Project.Name).flow(stepAnalyse).of(stored.Project.Name)
 	page.Data, page.CLI = view, "composewright show "+stored.Project.Name
@@ -590,9 +621,13 @@ type validateView struct {
 	Tail       []lineView
 	Limits     config.Validate
 	Runtime    string
-	Services   []stateView
-	Lines      []lineView
-	Events     string
+	// Withheld are the host privileges the run went without, by service,
+	// and Unproven the readiness checks it could not make.
+	Withheld []string
+	Unproven []string
+	Services []stateView
+	Lines    []lineView
+	Events   string
 }
 
 func (server *Server) validateView(snapshot snapshot) validateView {
@@ -601,7 +636,7 @@ func (server *Server) validateView(snapshot snapshot) validateView {
 	verdict, found := lastVerdict(snapshot.Result)
 	if found {
 		view.Sandbox, view.Services, view.Matches = verdict.Project, stateViews(verdict), verdict.LogMatches
-		view.Runtime = sandbox.Runtime(verdict.Sandbox.Tier)
+		view.Runtime, view.Withheld, view.Unproven = sandbox.Runtime(verdict.Sandbox.Tier), verdict.Withheld, verdict.Unproven
 	}
 	switch {
 	case view.Running:
@@ -613,6 +648,12 @@ func (server *Server) validateView(snapshot snapshot) validateView {
 	case found && verdict.Passed():
 		view.Passed, view.Tone, view.Attempt, view.Steps = true, toneOk, attemptText(verdict), runSteps(verdict)
 		view.Title = fmt.Sprintf("Every service is up in %s", verdict.Duration.Round(time.Second))
+		if !verdict.Ready() {
+			view.Tone, view.Title = toneWarn, fmt.Sprintf("Every service started in %s; not every one is proven ready", verdict.Duration.Round(time.Second))
+		}
+		if !verdict.Ready() {
+			view.Tone, view.Title = toneWarn, fmt.Sprintf("Every service started in %s; not every one is proven ready", verdict.Duration.Round(time.Second))
+		}
 		view.Detail = "The sandbox has been removed. Your files are ready."
 	case found:
 		view.Failed, view.Tone, view.Attempt, view.Steps = true, toneDanger, attemptText(verdict), runSteps(verdict)
@@ -667,6 +708,9 @@ func lastVerdict(result *pipeline.Result) (sandbox.Verdict, bool) {
 }
 
 type reviewView struct {
+	// Base is the version the page shows; its forms send it back, so a
+	// change made from an older one is refused.
+	Base        string
 	Compose     []badgedLine
 	ComposeText string
 	EnvLines    []badgedLine
@@ -700,6 +744,9 @@ type reviewView struct {
 	BlankHint   string
 	Storage     []option
 	Env         []envRow
+	References  referenceView
+	EnvGroups   []envGroup
+	OptionalEnv []envGroup
 	Optional    []ir.OptionalSetting
 	Generated   int
 	Needs       []needView
@@ -743,7 +790,7 @@ func (server *Server) reviewView(ctx context.Context, stored *pipeline.Stored, r
 	profile := configuration.Profile
 	mode, networks := render.Exposure(profile, stored.Options.ExposeVia, stored.Options.Networks)
 	derivedHost := render.Options{Profile: profile, Networks: networks}.PublicAddress(plan.App.Name)
-	view := reviewView{Project: stored.Project, Source: sourceText(storedSource(stored)), Confidence: plan.Confidence,
+	view := reviewView{Project: stored.Project, Base: stored.Generation.ID, Source: sourceText(storedSource(stored)), Confidence: plan.Confidence,
 		Engine: engineText(stored.Generation), Blocked: report.Blocked(), Denied: report.Count(policy.Deny), Needed: report.Count(policy.Need),
 		Warnings: report.Count(policy.Warn), Expose: portOptions(mode), Networks: networkOptions(profile, networks),
 		PublicHost: stored.Options.PublicHost, DerivedHost: derivedHost, BlankHint: blankHostHint(derivedHost, mode),
@@ -771,6 +818,9 @@ func (server *Server) reviewView(ctx context.Context, stored *pipeline.Stored, r
 		}
 	}
 	view.Questions = questionCount(view.Env)
+	view.EnvGroups = groupEnvRows(view.Env)
+	view.References = referenceViewFor(stored)
+	view.OptionalEnv = optionalEnvGroups(plan, view.Optional)
 	view.Compose, view.Pane = server.composeView(stored), paneCompose
 	view.EnvLines = plainLines(server.envText(stored, revealed), languageEnv)
 	view.DeployLines = plainLines(stored.Generation.DeployMD, languageMarkdown)
@@ -958,6 +1008,9 @@ func (server *Server) reviewPageFor(request *http.Request, current *visit, store
 // busy refuses a change to a project while one of its runs goes on, which
 // would write a version beside it.
 func (server *Server) busy(name string) error {
+	if server.jobs.restorePending() {
+		return conflict("A restore is unfinished. Resume it from Backups before editing projects.")
+	}
 	if _, running := server.jobs.running(name); running {
 		return conflict(runningConflict, name)
 	}
@@ -980,8 +1033,8 @@ func (server *Server) editCompose(writer http.ResponseWriter, request *http.Requ
 	if err != nil {
 		return err
 	}
-	_, err = pipeline.EditCompose(ctx, connection.Dependencies, name, []byte(compose))
-	if errors.Is(err, pipeline.ErrComposeInvalid) {
+	_, err = pipeline.EditCompose(ctx, connection.Dependencies, name, []byte(compose), request.PostFormValue(baseField))
+	if errors.Is(err, pipeline.ErrComposeInvalid) || errors.Is(err, pipeline.ErrStale) {
 		return server.composeProblem(writer, request, current, name, compose, err)
 	}
 	if err != nil {
@@ -1003,8 +1056,8 @@ func (server *Server) composeProblem(writer http.ResponseWriter, request *http.R
 	}
 	view.Draft = compose
 	page := server.reviewPageFor(request, current, stored)
-	page.Error, page.Data = capitalised(problem.Error())+".", view
-	return server.render(writer, http.StatusBadRequest, "review", page)
+	page.Error, page.Data = problemText(problem), view
+	return server.render(writer, problemStatus(problem), "review", page)
 }
 
 // planJSON shows the stored plan, the IR that rules and models write; it
@@ -1119,7 +1172,24 @@ func (server *Server) reviewProblem(writer http.ResponseWriter, request *http.Re
 	if loadErr != nil {
 		return errors.Join(err, loadErr)
 	}
-	return server.renderReview(writer, request, current, stored, false, "", capitalised(err.Error())+".", http.StatusBadRequest)
+	return server.renderReview(writer, request, current, stored, false, "", problemText(err), problemStatus(err))
+}
+
+// problemStatus is 409 for a change made from an older version, else 400:
+// either way the change is the person's to make again.
+func problemStatus(problem error) int {
+	if errors.Is(problem, pipeline.ErrStale) {
+		return http.StatusConflict
+	}
+	return http.StatusBadRequest
+}
+
+// problemText says what went wrong; a stale change also says what to do.
+func problemText(problem error) string {
+	if errors.Is(problem, pipeline.ErrStale) {
+		return capitalised(problem.Error()) + staleAdvice
+	}
+	return capitalised(problem.Error()) + "."
 }
 
 // regenerate generates the project again from its source, as its latest
@@ -1174,7 +1244,7 @@ func blankHostHint(derivedHost, mode string) string {
 }
 
 func revisionFrom(form url.Values, stored *pipeline.Stored) pipeline.Revision {
-	revision := pipeline.Revision{ExposeVia: form.Get("expose"), Networks: form["network"], PublicHost: pipeline.TidyPublicHost(form.Get(publicHostField)),
+	revision := pipeline.Revision{Base: form.Get(baseField), ExposeVia: form.Get("expose"), Networks: form["network"], PublicHost: pipeline.TidyPublicHost(form.Get(publicHostField)),
 		Storage: form.Get("storage"), AllowNeeds: form["need"], AllowRegistries: form["registry"], Values: map[string]string{}, Secrets: map[string]string{}}
 	for _, entry := range stored.Plan.EnvFile {
 		value, present := form[valuePrefix+entry.Key]

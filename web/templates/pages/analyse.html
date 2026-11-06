@@ -16,6 +16,8 @@
   {{if .Fields}}<span class="chip chip-accent">{{.Filled}} of {{.Fields}} fields filled by rules</span>{{end}}
   {{if .Questions}}<span class="chip">{{plural .Questions "open question" "open questions"}}</span>{{end}}
 </div>
+{{if .SourceRoot}}<p class="banner banner-info">Selected app directory: <span class="mono">{{.SourceRoot}}</span>. File evidence keeps its path from the repository root.</p>{{end}}
+{{if .SharedFiles}}<details class="card card-body"><summary>Included {{plural (len .SharedFiles) "shared deployment file" "shared deployment files"}}</summary><p class="muted small">The selected Compose files refer to these files outside the app directory.</p><ul class="notes">{{range .SharedFiles}}<li class="mono">{{.}}</li>{{end}}</ul></details>{{end}}
 {{range .Job.Notices}}<p class="banner banner-warn" role="status">{{.}}</p>{{end}}
 {{if .Job.Failure}}<p class="banner banner-danger" role="alert">The analysis stopped: {{.Job.Failure}}</p>{{end}}
 
