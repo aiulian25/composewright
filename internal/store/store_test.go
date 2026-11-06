@@ -651,3 +651,44 @@ func TestGenerationFilesAreSealed(t *testing.T) {
 		t.Fatalf("restored %q: %v", read, err)
 	}
 }
+
+// TestStaleChangesAndLateVerdictsLeaveTheLatestVersion: a generation made
+// from a version that is no longer the latest is refused inside the
+// transaction, and a test of an older version finishing late leaves the
+// project's status to the latest one.
+func TestStaleChangesAndLateVerdictsLeaveTheLatestVersion(t *testing.T) {
+	ctx := context.Background()
+	store, _, _ := openTestStore(t)
+	project := Project{Name: "app", Slug: "app", SourceKind: "github", Status: StatusGenerated}
+	noEvents := func(Project, Generation) []Event { return nil }
+	record := func(base string) (Generation, error) {
+		_, added, err := store.RecordGeneration(ctx, project, Generation{Engine: "rules", IRJSON: "{}", Base: base}, nil, nil, "cli:test", noEvents)
+		return added, err
+	}
+	first, err := record("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := record(first.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := record(first.ID); !errors.Is(err, ErrStale) {
+		t.Fatalf("a change from the older version: %v", err)
+	}
+	if generations, err := store.Generations(ctx, second.ProjectID); err != nil || len(generations) != 2 {
+		t.Fatalf("generations %d: %v", len(generations), err)
+	}
+	if err := store.SetProjectStatus(ctx, first.ProjectID, first.ID, StatusPassed); err != nil {
+		t.Fatal(err)
+	}
+	if found, err := store.FindProject(ctx, "app"); err != nil || found.Status != StatusGenerated {
+		t.Fatalf("an older version's pass set the status: %s %v", found.Status, err)
+	}
+	if err := store.SetProjectStatus(ctx, second.ProjectID, second.ID, StatusPassed); err != nil {
+		t.Fatal(err)
+	}
+	if found, err := store.FindProject(ctx, "app"); err != nil || found.Status != StatusPassed {
+		t.Fatalf("the latest version's pass: %s %v", found.Status, err)
+	}
+}

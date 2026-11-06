@@ -36,7 +36,15 @@ type Generation struct {
 	// path, kept sealed. Reading generations leaves them out; Files reads
 	// them.
 	Files map[string][]byte `json:"files,omitempty"`
+	// Base, when set, is the version a change was made from:
+	// RecordGeneration refuses the change with ErrStale once another
+	// version is the latest. It is never stored.
+	Base string `json:"-"`
 }
+
+// ErrStale is a change made from a version that is no longer the latest,
+// as another tab or the command line saved one since.
+var ErrStale = errors.New("this project has a newer version than the one you changed")
 
 type Image struct {
 	Service    string    `json:"service"`
@@ -121,7 +129,7 @@ func (store *Store) insertFiles(ctx context.Context, transaction *sql.Tx, genera
 
 // Files reads the files a generation bundles, by path.
 func (store *Store) Files(ctx context.Context, generationID string) (map[string][]byte, error) {
-	rows, err := store.database.QueryContext(ctx, `SELECT path, content_ct, nonce, key_id FROM generation_files WHERE generation_id=?`, generationID)
+	rows, err := store.reader().QueryContext(ctx, `SELECT path, content_ct, nonce, key_id FROM generation_files WHERE generation_id=?`, generationID)
 	if err != nil {
 		return nil, err
 	}
@@ -156,6 +164,9 @@ func (store *Store) RecordGeneration(ctx context.Context, project Project, gener
 			return err
 		}
 		generation.ProjectID = saved.ID
+		if err := latestIs(ctx, transaction, saved.ID, generation.Base); err != nil {
+			return err
+		}
 		if added, err = store.addGeneration(ctx, transaction, generation, images); err != nil {
 			return err
 		}
@@ -176,6 +187,23 @@ func (store *Store) RecordGeneration(ctx context.Context, project Project, gener
 		return Project{}, Generation{}, err
 	}
 	return saved, added, nil
+}
+
+// latestIs refuses with ErrStale when base is set and the project's latest
+// version is another.
+func latestIs(ctx context.Context, transaction *sql.Tx, projectID, base string) error {
+	if base == "" {
+		return nil
+	}
+	var latest string
+	err := transaction.QueryRowContext(ctx, `SELECT id FROM generations WHERE project_id=? ORDER BY created_at DESC, rowid DESC LIMIT 1`, projectID).Scan(&latest)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return err
+	}
+	if latest != base {
+		return ErrStale
+	}
+	return nil
 }
 
 // pruneGenerations deletes a project's untested generations beyond the
@@ -209,7 +237,7 @@ func (store *Store) RecordValidation(ctx context.Context, generationID, verdictJ
 }
 
 func (store *Store) LatestGeneration(ctx context.Context, projectID string) (Generation, error) {
-	row := store.database.QueryRowContext(ctx, `SELECT `+generationColumns+` FROM generations WHERE project_id=?
+	row := store.reader().QueryRowContext(ctx, `SELECT `+generationColumns+` FROM generations WHERE project_id=?
 		ORDER BY created_at DESC, rowid DESC LIMIT 1`, projectID)
 	generation, err := scanGeneration(row)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -220,7 +248,7 @@ func (store *Store) LatestGeneration(ctx context.Context, projectID string) (Gen
 
 // Generations lists a project's generations, newest first.
 func (store *Store) Generations(ctx context.Context, projectID string) ([]Generation, error) {
-	rows, err := store.database.QueryContext(ctx, `SELECT `+generationColumns+` FROM generations WHERE project_id=?
+	rows, err := store.reader().QueryContext(ctx, `SELECT `+generationColumns+` FROM generations WHERE project_id=?
 		ORDER BY created_at DESC, rowid DESC`, projectID)
 	if err != nil {
 		return nil, err
@@ -238,7 +266,7 @@ func (store *Store) Generations(ctx context.Context, projectID string) ([]Genera
 }
 
 func (store *Store) Images(ctx context.Context, generationID string) ([]Image, error) {
-	rows, err := store.database.QueryContext(ctx, `SELECT service, reference, digest, registry, oci_source, verified_at, labels_json, created
+	rows, err := store.reader().QueryContext(ctx, `SELECT service, reference, digest, registry, oci_source, verified_at, labels_json, created
 		FROM images WHERE generation_id=? ORDER BY service`, generationID)
 	if err != nil {
 		return nil, err

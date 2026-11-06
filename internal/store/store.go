@@ -40,6 +40,7 @@ var ErrNotFound = errors.New("not found")
 
 type Store struct {
 	database *sql.DB
+	snapshot *sql.Tx
 	// sealer changes when the master key is rotated while the store is
 	// open, so readers load it each time.
 	sealer atomic.Pointer[secrets.Sealer]
@@ -64,6 +65,25 @@ func Open(ctx context.Context, path, backupsDir string, sealer *secrets.Sealer) 
 	return store, nil
 }
 
+// queryReader lets backup readers share one SQLite snapshot without changing
+// ordinary mutation transactions or leaking a transaction to callers.
+type queryReader interface {
+	QueryContext(context.Context, string, ...any) (*sql.Rows, error)
+	QueryRowContext(context.Context, string, ...any) *sql.Row
+}
+
+func (store *Store) reader() queryReader {
+	if store.snapshot != nil {
+		return store.snapshot
+	}
+	return store.database
+}
+func (store *Store) view(transaction *sql.Tx) *Store {
+	view := &Store{database: store.database, snapshot: transaction}
+	view.sealer.Store(store.sealer.Load())
+	return view
+}
+
 func (store *Store) Close() error {
 	return store.database.Close()
 }
@@ -72,6 +92,8 @@ func dataSourceName(path string) string {
 	query := url.Values{}
 	query.Add("_pragma", "foreign_keys(1)")
 	query.Add("_pragma", "journal_mode(WAL)")
+	// Recovery intents/checkpoints must be durable before filesystem changes.
+	query.Add("_pragma", "synchronous(FULL)")
 	query.Add("_pragma", "busy_timeout("+strconv.Itoa(busyTimeout)+")")
 	return (&url.URL{Scheme: "file", Path: path, RawQuery: query.Encode()}).String()
 }

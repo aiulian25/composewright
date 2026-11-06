@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"regexp"
@@ -20,17 +21,20 @@ const (
 )
 
 type Project struct {
-	ID           string    `json:"id"`
-	Name         string    `json:"name"`
-	Slug         string    `json:"slug"`
-	SourceKind   string    `json:"source_kind"`
-	SourceURL    string    `json:"source_url"`
-	SourceRef    string    `json:"source_ref"`
-	SourceCommit string    `json:"source_commit"`
-	SourceOwner  string    `json:"source_owner"`
-	Status       string    `json:"status"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	Labels               []string  `json:"labels,omitempty"`
+	PinOrder             int       `json:"pin_order,omitempty"`
+	OrganizationRevision int64     `json:"-"`
+	ID                   string    `json:"id"`
+	Name                 string    `json:"name"`
+	Slug                 string    `json:"slug"`
+	SourceKind           string    `json:"source_kind"`
+	SourceURL            string    `json:"source_url"`
+	SourceRef            string    `json:"source_ref"`
+	SourceCommit         string    `json:"source_commit"`
+	SourceOwner          string    `json:"source_owner"`
+	Status               string    `json:"status"`
+	CreatedAt            time.Time `json:"created_at"`
+	UpdatedAt            time.Time `json:"updated_at"`
 }
 
 // ProjectSummary is a project with the facts `list` shows about its latest
@@ -68,6 +72,7 @@ const (
 
 // SaveProject creates the project, or updates the source and status of the
 // project with the same name so regenerating keeps history in one place.
+// Organization is managed separately by OrganizeProject and is kept intact.
 func (store *Store) SaveProject(ctx context.Context, project Project) (Project, error) {
 	var saved Project
 	err := store.transaction(ctx, func(transaction *sql.Tx) error {
@@ -82,6 +87,7 @@ func upsertProject(ctx context.Context, transaction *sql.Tx, project Project) (P
 	existing, err := findProject(ctx, transaction, project.Name)
 	now := time.Now()
 	if errors.Is(err, ErrNotFound) {
+		project.Labels, project.PinOrder, project.OrganizationRevision = nil, 0, 0
 		project.ID, project.CreatedAt, project.UpdatedAt = newID(), now, now
 		_, err = transaction.ExecContext(ctx, `INSERT INTO projects (`+projectColumns+`) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
 			project.ID, project.Name, project.Slug, project.SourceKind, project.SourceURL, project.SourceRef,
@@ -92,20 +98,25 @@ func upsertProject(ctx context.Context, transaction *sql.Tx, project Project) (P
 		return Project{}, err
 	}
 	project.ID, project.Slug, project.CreatedAt, project.UpdatedAt = existing.ID, existing.Slug, existing.CreatedAt, now
+	project.Labels, project.PinOrder, project.OrganizationRevision = existing.Labels, existing.PinOrder, existing.OrganizationRevision
 	_, err = transaction.ExecContext(ctx, `UPDATE projects SET source_kind=?, source_url=?, source_ref=?, source_commit=?,
 		source_owner=?, status=?, updated_at=? WHERE id=?`,
 		project.SourceKind, project.SourceURL, project.SourceRef, project.SourceCommit, project.SourceOwner, project.Status, unix(now), project.ID)
 	return project, err
 }
 
-func (store *Store) SetProjectStatus(ctx context.Context, projectID, status string) error {
-	_, err := store.database.ExecContext(ctx, `UPDATE projects SET status=?, updated_at=? WHERE id=?`, status, unix(time.Now()), projectID)
+// SetProjectStatus sets the status a test of generationID earned, only
+// while it is the project's latest version: a run of an older version
+// finishing late never speaks for a newer one.
+func (store *Store) SetProjectStatus(ctx context.Context, projectID, generationID, status string) error {
+	_, err := store.database.ExecContext(ctx, `UPDATE projects SET status=?, updated_at=? WHERE id=? AND ? = (SELECT id FROM generations
+		WHERE project_id=? ORDER BY created_at DESC, rowid DESC LIMIT 1)`, status, unix(time.Now()), projectID, generationID, projectID)
 	return err
 }
 
 // FindProject looks a project up by name, slug or full id.
 func (store *Store) FindProject(ctx context.Context, reference string) (Project, error) {
-	return findProject(ctx, store.database, reference)
+	return findProject(ctx, store.reader(), reference)
 }
 
 // rowQuerier is the database, or a transaction a lookup takes part in.
@@ -120,16 +131,20 @@ func findProject(ctx context.Context, querier rowQuerier, reference string) (Pro
 	if errors.Is(err, sql.ErrNoRows) {
 		return Project{}, fmt.Errorf("project %q: %w", reference, ErrNotFound)
 	}
+	if err == nil {
+		err = readOrganization(ctx, querier, &project)
+	}
 	return project, err
 }
 
 func (store *Store) ListProjects(ctx context.Context) ([]ProjectSummary, error) {
-	rows, err := store.database.QueryContext(ctx, `SELECT `+projectColumnsAliased+`,
+	rows, err := store.reader().QueryContext(ctx, `SELECT `+projectColumnsAliased+`,
 		(SELECT COUNT(*) FROM generations g WHERE g.project_id = p.id),
 		COALESCE((SELECT engine FROM generations g WHERE g.project_id = p.id ORDER BY created_at DESC, rowid DESC LIMIT 1), ''),
 		COALESCE((SELECT GROUP_CONCAT(i.reference, ' ') FROM images i WHERE i.generation_id =
 			(SELECT id FROM generations g WHERE g.project_id = p.id ORDER BY created_at DESC, rowid DESC LIMIT 1)), '')
-		FROM projects p ORDER BY p.name`)
+		,COALESCE(o.labels_json,'[]'),COALESCE(o.pin_order,0),COALESCE(o.revision,0)
+		FROM projects p LEFT JOIN project_organization o ON o.project_id=p.id ORDER BY p.name`)
 	if err != nil {
 		return nil, err
 	}
@@ -138,10 +153,14 @@ func (store *Store) ListProjects(ctx context.Context) ([]ProjectSummary, error) 
 	for rows.Next() {
 		var summary ProjectSummary
 		var created, updated int64
+		var labels string
 		project := &summary.Project
 		if err := rows.Scan(&project.ID, &project.Name, &project.Slug, &project.SourceKind, &project.SourceURL, &project.SourceRef,
 			&project.SourceCommit, &project.SourceOwner, &project.Status, &created, &updated,
-			&summary.Generations, &summary.Engine, &summary.Images); err != nil {
+			&summary.Generations, &summary.Engine, &summary.Images, &labels, &project.PinOrder, &project.OrganizationRevision); err != nil {
+			return nil, err
+		}
+		if err := json.Unmarshal([]byte(labels), &project.Labels); err != nil {
 			return nil, err
 		}
 		project.CreatedAt, project.UpdatedAt = fromUnix(created), fromUnix(updated)
@@ -154,7 +173,7 @@ func (store *Store) ListProjects(ctx context.Context) ([]ProjectSummary, error) 
 // publishes, read from the file as docker compose up reads it. A file that
 // no longer loads publishes nothing here.
 func (store *Store) PublishedPorts(ctx context.Context) ([]PublishedPort, error) {
-	rows, err := store.database.QueryContext(ctx, `SELECT p.name, g.number, g.compose_yaml FROM projects p
+	rows, err := store.reader().QueryContext(ctx, `SELECT p.name, g.number, g.compose_yaml FROM projects p
 		JOIN generations g ON g.id = (SELECT id FROM generations latest WHERE latest.project_id = p.id ORDER BY created_at DESC, rowid DESC LIMIT 1)
 		ORDER BY p.name`)
 	if err != nil {

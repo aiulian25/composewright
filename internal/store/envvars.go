@@ -62,7 +62,7 @@ func (store *Store) insertEnvVar(ctx context.Context, transaction *sql.Tx, proje
 // fails authentication (edited, swapped between projects or variables) is an
 // error, never an empty value.
 func (store *Store) EnvVars(ctx context.Context, projectID string) ([]EnvVar, error) {
-	rows, err := store.database.QueryContext(ctx, `SELECT key, is_secret, value_plain, value_ct, nonce, key_id, source, source_ref,
+	rows, err := store.reader().QueryContext(ctx, `SELECT key, is_secret, value_plain, value_ct, nonce, key_id, source, source_ref,
 		description, required FROM env_vars WHERE project_id=? ORDER BY rowid`, projectID)
 	if err != nil {
 		return nil, err

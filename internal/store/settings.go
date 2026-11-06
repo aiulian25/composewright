@@ -10,11 +10,17 @@ import (
 
 // SetSecret stores a sealed setting such as an API key.
 func (store *Store) SetSecret(ctx context.Context, name, value string) error {
+	return store.setSecret(ctx, store.database, name, value)
+}
+
+func (store *Store) setSecret(ctx context.Context, target interface {
+	ExecContext(context.Context, string, ...any) (sql.Result, error)
+}, name, value string) error {
 	sealed, err := store.sealer.Load().Seal([]byte(value), secrets.SettingsAAD(name))
 	if err != nil {
 		return err
 	}
-	_, err = store.database.ExecContext(ctx, `INSERT INTO settings (key, value_plain, value_ct, nonce, key_id) VALUES (?, NULL, ?, ?, ?)
+	_, err = target.ExecContext(ctx, `INSERT INTO settings (key, value_plain, value_ct, nonce, key_id) VALUES (?, NULL, ?, ?, ?)
 		ON CONFLICT(key) DO UPDATE SET value_plain=NULL, value_ct=excluded.value_ct, nonce=excluded.nonce, key_id=excluded.key_id`,
 		name, sealed.Ciphertext, sealed.Nonce, sealed.KeyID)
 	return err
@@ -24,7 +30,7 @@ func (store *Store) SetSecret(ctx context.Context, name, value string) error {
 func (store *Store) Secret(ctx context.Context, name string) (value string, found bool, err error) {
 	var sealed secrets.Sealed
 	var keyID sql.NullString
-	err = store.database.QueryRowContext(ctx, `SELECT value_ct, nonce, key_id FROM settings WHERE key=? AND value_ct IS NOT NULL`, name).
+	err = store.reader().QueryRowContext(ctx, `SELECT value_ct, nonce, key_id FROM settings WHERE key=? AND value_ct IS NOT NULL`, name).
 		Scan(&sealed.Ciphertext, &sealed.Nonce, &keyID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return "", false, nil
@@ -40,7 +46,7 @@ func (store *Store) Secret(ctx context.Context, name string) (value string, foun
 // HasSecret reports whether a sealed setting is stored, without opening it.
 func (store *Store) HasSecret(ctx context.Context, name string) (bool, error) {
 	var stored int
-	err := store.database.QueryRowContext(ctx, `SELECT 1 FROM settings WHERE key=? AND value_ct IS NOT NULL`, name).Scan(&stored)
+	err := store.reader().QueryRowContext(ctx, `SELECT 1 FROM settings WHERE key=? AND value_ct IS NOT NULL`, name).Scan(&stored)
 	if errors.Is(err, sql.ErrNoRows) {
 		return false, nil
 	}
@@ -54,4 +60,20 @@ func (store *Store) DeleteSecret(ctx context.Context, name string) (bool, error)
 	}
 	count, err := result.RowsAffected()
 	return count > 0, err
+}
+
+// SetSetting stores a plain setting, one that holds nothing secret.
+func (store *Store) SetSetting(ctx context.Context, name, value string) error {
+	_, err := store.database.ExecContext(ctx, `INSERT INTO settings (key, value_plain, value_ct, nonce, key_id) VALUES (?, ?, NULL, NULL, NULL)
+		ON CONFLICT(key) DO UPDATE SET value_plain=excluded.value_plain, value_ct=NULL, nonce=NULL, key_id=NULL`, name, value)
+	return err
+}
+
+// Setting returns a plain setting; found is false when it was never set.
+func (store *Store) Setting(ctx context.Context, name string) (value string, found bool, err error) {
+	err = store.reader().QueryRowContext(ctx, `SELECT value_plain FROM settings WHERE key=? AND value_ct IS NULL`, name).Scan(&value)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", false, nil
+	}
+	return value, err == nil, err
 }

@@ -30,12 +30,13 @@ import (
 )
 
 const (
-	formatVersion = 1
-	magic         = "composewright backup 1"
-	lineBreak     = "\n"
-	headerLines   = 3
-	saltBytes     = 16
-	keyBytes      = 32
+	formatVersion  = 1
+	snapshotFormat = "sqlite-transaction-v1"
+	magic          = "composewright backup 1"
+	lineBreak      = "\n"
+	headerLines    = 3
+	saltBytes      = 16
+	keyBytes       = 32
 	// The key derivation is fixed for format 1, so a crafted file cannot ask
 	// for more memory or time than these.
 	kdfPasses    = 3
@@ -47,7 +48,9 @@ const (
 	FileExtension = ".cwbackup"
 	// PassphraseName is the stored secret every backup is encrypted with. No
 	// backup may carry it as a model key, so a restore cannot replace it.
-	PassphraseName = "backup-passphrase"
+	PassphraseName        = "backup-passphrase"
+	RestoreJournalName    = "composewright-internal/restore-journal"
+	RestoreCheckpointName = "composewright-internal/restore-checkpoint"
 )
 
 var (
@@ -61,6 +64,7 @@ var (
 // override files by theirs; a backup made where there were none, or before
 // they existed, has none.
 type Archive struct {
+	Snapshot  string                `json:"snapshot,omitempty"`
 	Format    int                   `json:"format"`
 	Created   time.Time             `json:"created"`
 	Version   string                `json:"version"`
@@ -89,24 +93,31 @@ func (settings Settings) Apply(configuration config.Config) config.Config {
 }
 
 // Collect gathers an archive from the configuration, the store and the
-// override files in catalogueDirectory. A file the rules could not read is
-// left out, as they leave it out.
+// override files in catalogueDirectory. Unreadable catalogue files fail the
+// collection rather than silently omitting material from a recovery snapshot.
 func Collect(ctx context.Context, database *store.Store, configuration config.Config, catalogueDirectory, version string, now time.Time) (Archive, error) {
-	catalogue, _ := workspace.CatalogueFiles(catalogueDirectory)
-	archive := Archive{Format: formatVersion, Created: now.UTC(), Version: version, Keys: map[string]string{}, Catalogue: catalogue,
-		Settings: Settings{Profile: configuration.Profile, LLM: configuration.LLM, Registries: configuration.Registries.Allow,
-			PrivateTargets: configuration.Network.AllowPrivateTargets, Theme: configuration.UI.Theme}}
-	for _, name := range keyNames(configuration.LLM) {
-		value, found, err := database.Secret(ctx, name)
-		if err != nil {
-			return Archive{}, err
+	pending, found, pendingErr := database.Secret(ctx, RestoreJournalName)
+	if pendingErr != nil {
+		return Archive{}, pendingErr
+	}
+	if found {
+		var status struct{ Completed bool }
+		if err := json.Unmarshal([]byte(pending), &status); err != nil {
+			return Archive{}, errors.New("restore journal cannot be read")
 		}
-		if found {
-			archive.Keys[name] = value
+		if !status.Completed {
+			return Archive{}, errors.New("restore unfinished; resume it before collecting a backup")
 		}
 	}
+	catalogue, problems := workspace.CatalogueFiles(catalogueDirectory)
+	if len(problems) > 0 {
+		return Archive{}, errors.New("catalogue files could not all be read for backup")
+	}
+	archive := Archive{Snapshot: snapshotFormat, Format: formatVersion, Created: now.UTC(), Version: version, Keys: map[string]string{}, Catalogue: catalogue,
+		Settings: Settings{Profile: configuration.Profile, LLM: configuration.LLM, Registries: configuration.Registries.Allow,
+			PrivateTargets: configuration.Network.AllowPrivateTargets, Theme: configuration.UI.Theme}}
 	var err error
-	archive.Projects, err = database.ProjectRecords(ctx)
+	archive.Projects, archive.Keys, err = database.BackupRecords(ctx, keyNames(configuration.LLM))
 	return archive, err
 }
 
@@ -222,8 +233,13 @@ func (archive Archive) problem() error {
 		}
 	}
 	named := keyNames(archive.Settings.LLM)
+	for _, name := range named {
+		if name == RestoreJournalName || name == RestoreCheckpointName || name == PassphraseName {
+			return errors.New("backup model settings reference a reserved recovery secret")
+		}
+	}
 	for name := range archive.Keys {
-		if name == PassphraseName || !slices.Contains(named, name) {
+		if name == PassphraseName || name == RestoreJournalName || name == RestoreCheckpointName || !slices.Contains(named, name) {
 			return fmt.Errorf("the backup holds a key %q that its settings do not use", name)
 		}
 	}

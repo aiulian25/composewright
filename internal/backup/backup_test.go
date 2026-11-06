@@ -153,3 +153,35 @@ func TestCatalogueOverridesRoundTrip(t *testing.T) {
 		t.Fatalf("a backup without overrides: %q, %v", opened.Catalogue, err)
 	}
 }
+
+func TestSnapshotEvidenceAndReservedRecoveryNames(t *testing.T) {
+	archive, err := Collect(context.Background(), openStore(t), config.Default(), filepath.Join(t.TempDir(), "missing"), "test", time.Now())
+	if err != nil || archive.Snapshot != snapshotFormat {
+		t.Fatalf("snapshot evidence missing: %v", err)
+	}
+	sealed, err := Seal(archive, testPassphrase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	opened, err := Open(sealed, testPassphrase)
+	if err != nil || opened.Snapshot != snapshotFormat {
+		t.Fatal("snapshot evidence lost")
+	}
+	legacy := sampleArchive()
+	legacy.Snapshot = ""
+	sealed, err = Seal(legacy, testPassphrase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = Open(sealed, testPassphrase); err != nil {
+		t.Fatal("legacy format-one archive unreadable")
+	}
+	for _, name := range []string{RestoreJournalName, RestoreCheckpointName} {
+		bad := sampleArchive()
+		bad.Settings.LLM.APIKeyRef = config.SecretRefKeyring + name
+		bad.Keys = nil
+		if bad.problem() == nil {
+			t.Fatal("model reference to recovery data accepted")
+		}
+	}
+}
