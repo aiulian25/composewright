@@ -37,6 +37,15 @@ The native test binary uses the candidate's Docker/Compose executables in a sepa
 
 CI runs both architectures and all three connections through `.github/workflows/candidate.yml`. `scripts/scan-candidate.sh OCI_ARCHIVE EVIDENCE_DIRECTORY` requires Trivy, skopeo and jq. It retains the full vulnerability report and CycloneDX SBOM; HIGH/CRITICAL findings, including unfixed findings, block publication. There are no active waivers: the old Compose-specific exceptions lack evidence for the current bundled version and were removed. Any future exception must identify the exact installed version/path, primary applicability evidence and expiry. Candidate archives (including build provenance) and all logs are retained as workflow artifacts for 14 days; release scan reports/SBOMs are also release assets. An unavailable topology or scanner is a failed gate, never a skipped pass.
 
+A maintainer can dispatch `release.yml` on a temporary candidate branch with
+`candidate_only=true` and `candidate_version=X.Y.Z`. The publishing job is skipped
+and candidate jobs retain read-only repository permissions. Native amd64/arm64
+runners produce the tested archives for local, digest-preserving publication.
+Rootless user namespaces are enabled only on those disposable runners; local
+host security settings are not changed. A failed or unavailable topology still
+blocks a release. The publishing mode accepts no version override and still
+requires an existing version tag.
+
 ## Conventions
 
 - **Commits** follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, `test:`, `refactor:`), one logical change each. Update `CHANGELOG.md` under Unreleased in the same commit.

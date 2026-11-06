@@ -5,6 +5,15 @@ name: release
 # scanned OCI archives, preserving digests, SBOM and provenance; no rebuild.
 on:
   workflow_dispatch:
+    inputs:
+      candidate_only:
+        description: Build and test candidates without publishing
+        type: boolean
+        default: false
+      candidate_version:
+        description: Version for candidate-only builds (empty uses tag or dev)
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -14,6 +23,15 @@ jobs:
     name: lint, test, build and source vulnerabilities
     runs-on: ubuntu-latest
     steps:
+      - name: Validate candidate-only version override
+        env:
+          CANDIDATE_ONLY: ${{ inputs.candidate_only }}
+          CANDIDATE_VERSION: ${{ inputs.candidate_version }}
+        run: |
+          if [ -n "$CANDIDATE_VERSION" ]; then
+            [ "$CANDIDATE_ONLY" = true ]
+            [[ "$CANDIDATE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
@@ -23,8 +41,11 @@ jobs:
 
   candidate:
     uses: ./.github/workflows/candidate.yml
+    with:
+      version: ${{ inputs.candidate_version }}
 
   image:
+    if: ${{ !inputs.candidate_only }}
     needs: [test, candidate]
     runs-on: ubuntu-latest
     # Only this job writes: the release, the image on GHCR and its signature.

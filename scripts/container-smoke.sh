@@ -58,13 +58,19 @@ if [ "$topology" = rootless ]; then
 	daemon=docker.io/library/docker:29.9.2-dind-rootless
 	host=unix:///run/user/1000/docker.sock
 fi
-docker run --rm -d --privileged --name "$name" --label "io.composewright.test=$name" \
+# Retain an exited daemon only until the trap saves its startup logs; --rm
+# would discard those logs before a fast startup failure can be diagnosed.
+docker run -d --privileged --name "$name" --label "io.composewright.test=$name" \
 	--tmpfs /var/lib/docker:rw,exec,mode=0711 \
 	--tmpfs /home/rootless/.local/share/docker:rw,exec,mode=1777 \
 	-e DOCKER_HOST="$host" -e DOCKER_TLS_CERTDIR= "$daemon" --storage-driver=vfs >"$logs/daemon.id"
 ready=false
 for _ in $(seq 120); do
 	if inner info >"$logs/info.log" 2>&1; then ready=true; break; fi
+	if [ "$(docker inspect --format '{{.State.Running}}' "$name" 2>/dev/null)" != true ]; then
+		echo 'disposable daemon exited before startup; see daemon.log' >&2
+		exit 1
+	fi
 	sleep 1
 done
 [ "$ready" = true ] || { echo 'disposable daemon did not start' >&2; exit 1; }
@@ -72,10 +78,15 @@ docker image save "$image" | docker exec -i "$name" docker load >"$logs/load.log
 # Compile native, static tests, then run them with the candidate's exact
 # Docker CLI and Compose plugin. /tmp in this client is NOT the daemon's /tmp.
 CGO_ENABLED=0 go test -c -o "$work/sandbox.test" ./internal/sandbox
-docker cp "$work/sandbox.test" "$name:/tmp/cw-sandbox.test"
 cp -r testdata/corpus/miniflux/files "$work/source"
 chmod -R a+rX "$work/source"
-docker cp "$work/source" "$name:/tmp/cw-source"
+# Stream into the running daemon's filesystem. Verify the inputs rather than
+# accepting a successful copy API response with an absent daemon-side path.
+tar -C "$work" -cf - sandbox.test source | docker exec -i "$name" tar -xf - -C /tmp
+docker exec "$name" mv /tmp/sandbox.test /tmp/cw-sandbox.test
+docker exec "$name" mv /tmp/source /tmp/cw-source
+docker exec "$name" test -x /tmp/cw-sandbox.test
+docker exec "$name" test -s /tmp/cw-source/README.md
 socket="${host#unix://}"
 gid="$(docker exec "$name" stat -c %g "$socket")"
 connection=(-v "$socket:/var/run/docker.sock" -e DOCKER_HOST=unix:///var/run/docker.sock)

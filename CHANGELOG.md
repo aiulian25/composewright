@@ -31,7 +31,8 @@ All notable changes to this project are documented here. The format follows
 
 - Release candidates now have native amd64/arm64 packaged validation gates
   against disposable ordinary, rootless and proxy Docker daemons, plus an
-  exact-archive vulnerability scan. Publication copies the tested OCI
+  exact-archive vulnerability scan. A candidate-only dispatch builds and tests
+  without registry writes. Publication copies the tested OCI
   archives with their SBOM and provenance instead of rebuilding them.
 
 - A new install sets itself up like the apps already running on its Docker
@@ -48,7 +49,10 @@ All notable changes to this project are documented here. The format follows
   1.20.2, addressing certificate verification and malformed-frame vulnerabilities.
   Bundled tools use Docker 29.9.2 and Compose 5.7.0 to include their security fixes.
 - Packaged gates use executable storage for disposable Docker daemons and scan
-  OCI layouts copied from candidate archives with digest preservation.
+  OCI layouts copied from candidate archives with digest preservation. Test
+  inputs are streamed into the daemon and checked before use. The hardened
+  proxy permits the exact archive-upload route Compose needs for config and
+  secret files.
 
 - A test run of a stack with a secret passed as a file, or a config file
   bundled with it, no longer fails with "bind source path does not exist"

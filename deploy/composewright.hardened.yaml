@@ -13,6 +13,8 @@ services:
       - -allowfrom=composewright
       - -allowGET=/(v[0-9.]+/)?(_ping|version|events|info|containers/.*|networks(/.*)?|volumes(/.*)?|images/.*|distribution/.*)
       - -allowHEAD=/(v[0-9.]+/)?_ping
+      # Compose copies config/secret files into the containers it creates.
+      - -allowPUT=/(v[0-9.]+/)?containers/[a-f0-9]{64}/archive
       - -allowPOST=/(v[0-9.]+/)?(containers/.*|networks(/.*)?|volumes(/.*)?|images/create)
       - -allowDELETE=/(v[0-9.]+/)?(containers/.*|networks/.*|volumes/.*)
       - -allowbindmountfrom=/srv/composewright/data
