@@ -3,6 +3,7 @@
 package export
 
 import (
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -12,6 +13,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"syscall"
 
 	"github.com/aiulian25/composewright/internal/atomicfile"
 	"github.com/aiulian25/composewright/internal/config"
@@ -28,11 +30,20 @@ const (
 	EnvExampleName = ".env.example"
 	DeployName     = "DEPLOY.md"
 
-	// shellDelimiter ends each heredoc of Shell.
-	shellDelimiter = "COMPOSEWRIGHT_EOF"
+	// privateUmask makes every file Shell creates readable by its owner
+	// alone until its chmod; currentFolder is where a top-level file sits.
+	privateUmask  = 0o077
+	currentFolder = "."
+	// backupMarker names the link that keeps a replaced file until the
+	// whole bundle is in.
+	backupMarker = ".replaced-"
 )
 
 var ErrExists = errors.New("file exists; pass --overwrite to replace it")
+
+// ErrPartial is a save that failed and could not put every earlier file
+// back: the folder holds part of it, as the error says.
+var ErrPartial = errors.New("the folder holds part of this save")
 
 // Bundle is what an export writes. Env carries secrets in plain text;
 // EnvExample carries none. Secrets are the secrets passed as files and
@@ -90,34 +101,35 @@ func withMode(files map[string]file, contents map[string][]byte, mode fs.FileMod
 	}
 }
 
-// Shell is the bundle as commands that write compose.yaml, .env, each
-// secret file and each config file with the modes Write gives them. Those
-// are written with printf, so each holds its content exactly: no newline
-// ends up in a password.
+// Shell is the bundle as commands that write compose.yaml, .env, DEPLOY.md,
+// each secret file and each config file with the modes Write gives them.
+// Every content and path is one single-quoted printf argument, so the shell
+// reads it as data whatever it holds, and each file holds its content
+// exactly: no newline ends up in a password. The umask keeps every file
+// private from the moment it is created.
 func Shell(bundle Bundle) []byte {
 	var script strings.Builder
-	heredoc(&script, ComposeName, bundle.Compose)
-	heredoc(&script, EnvName, bundle.Env)
-	fmt.Fprintf(&script, "chmod %o %s\n", fileMode, EnvName)
-	files := map[string]file{}
+	fmt.Fprintf(&script, "umask %03o\n", privateUmask)
+	files := map[string]file{ComposeName: {bundle.Compose, fileMode}, EnvName: {bundle.Env, fileMode}, DeployName: {bundle.Deploy, fileMode}}
 	withMode(files, bundle.Secrets, fileMode)
 	withMode(files, bundle.Config, ir.ConfigFileMode)
 	paths := slices.Sorted(maps.Keys(files))
 	for _, folder := range slices.Compact(directoriesOf(paths)) {
-		fmt.Fprintf(&script, "mkdir -p -m %o %s\n", dirMode, folder)
+		if folder != currentFolder {
+			fmt.Fprintf(&script, "mkdir -p -m %o %s\n", dirMode, shellQuoted(folder))
+		}
 	}
 	for _, name := range paths {
-		fmt.Fprintf(&script, "printf '%%s' %s > %s\nchmod %o %s\n", shellQuoted(string(files[name].content)), name, files[name].mode, name)
+		quotedName := shellQuoted(name)
+		fmt.Fprintf(&script, "printf '%%s' %s > %s\nchmod %o %s\n", shellQuoted(string(files[name].content)), quotedName, files[name].mode, quotedName)
 	}
 	return []byte(script.String())
 }
 
-func heredoc(script *strings.Builder, name string, content []byte) {
-	body := string(content)
-	if !strings.HasSuffix(body, "\n") {
-		body += "\n"
-	}
-	fmt.Fprintf(script, "cat > %s <<'%s'\n%s%s\n", name, shellDelimiter, body, shellDelimiter)
+// DeployCommand is the command that starts the stack saved in directory,
+// the folder quoted so the shell reads it literally.
+func DeployCommand(directory string) string {
+	return "cd " + shellQuoted(directory) + " && docker compose up -d"
 }
 
 func directoriesOf(paths []string) []string {
@@ -145,50 +157,206 @@ func folder(target string, profile config.Profile, project string) (string, erro
 	return strings.NewReplacer(config.LayoutBase, profile.Storage.BasePath, config.LayoutProject, project).Replace(saveDir), nil
 }
 
+// write writes files inside directory, the folder the person chose, opened
+// once as a root: every folder and file below it resolves inside it, so a
+// symbolic link there can never lead a file elsewhere. The chosen folder may
+// itself be a link or a mount.
 func write(directory string, files map[string]file, overwrite, secrets bool) (Written, error) {
 	if err := os.MkdirAll(directory, dirMode); err != nil {
 		return Written{}, err
 	}
+	root, err := os.OpenRoot(directory)
+	if err != nil {
+		return Written{}, err
+	}
+	defer root.Close()
 	names := []string{ComposeName, EnvName, EnvExampleName, DeployName}
 	for _, name := range slices.Sorted(maps.Keys(files)) {
 		if !slices.Contains(names, name) {
 			names = append(names, name)
 		}
 	}
+	names = slices.DeleteFunc(names, func(name string) bool {
+		_, present := files[name]
+		return !present
+	})
 	written := Written{Directory: directory, ContainsSecret: secrets}
+	if err := refuseEscapes(root, names); err != nil {
+		return written, err
+	}
 	if !overwrite {
-		if err := refuseExisting(directory, names, files); err != nil {
+		if err := refuseExisting(root, names); err != nil {
 			return written, err
 		}
 	}
+	unlock, err := lockFolder(root)
+	if err != nil {
+		return written, err
+	}
+	defer unlock()
+	staged, err := stage(root, names, files)
+	if err == nil {
+		err = commit(root, names, staged, overwrite)
+	}
+	if cleanupErr := removeStaged(root, staged); err != nil || cleanupErr != nil {
+		return written, errors.Join(err, cleanupErr)
+	}
 	for _, name := range names {
-		entry, present := files[name]
-		if !present {
-			continue
-		}
-		target := filepath.Join(directory, filepath.FromSlash(name))
-		if err := os.MkdirAll(filepath.Dir(target), dirMode); err != nil {
-			return written, err
-		}
-		if err := atomicfile.Write(target, entry.content, entry.mode); err != nil {
-			return written, err
-		}
-		written.Files = append(written.Files, target)
+		written.Files = append(written.Files, filepath.Join(directory, filepath.FromSlash(name)))
 	}
 	return written, nil
 }
 
-// refuseExisting checks every file an export would write before it writes
-// any, so a refused export leaves the folder as it was.
-func refuseExisting(directory string, names []string, files map[string]file) error {
+// placed is a file a commit put in place, with the hard link that keeps
+// the one it replaced, if any, until the whole bundle is in.
+type placed struct {
+	name   string
+	backup string
+}
+
+// lockFolder holds the destination for one save at a time, so two saves
+// to one folder never interleave their files.
+func lockFolder(root *os.Root) (func(), error) {
+	folder, err := root.Open(currentFolder)
+	if err != nil {
+		return nil, err
+	}
+	if err := syscall.Flock(int(folder.Fd()), syscall.LOCK_EX); err != nil { //nolint:gosec // G115: a file descriptor fits an int
+		return nil, errors.Join(err, folder.Close())
+	}
+	return func() { _ = folder.Close() }, nil
+}
+
+// stage writes every file of the bundle in full beside where it goes,
+// before any is put in place, so a full disk or a folder that cannot be
+// made fails the save with the destination unchanged.
+func stage(root *os.Root, names []string, files map[string]file) (map[string]string, error) {
+	staged := map[string]string{}
 	for _, name := range names {
-		if _, present := files[name]; !present {
+		if err := root.MkdirAll(path.Dir(name), dirMode); err != nil {
+			return staged, err
+		}
+		temporaryName, err := atomicfile.StageIn(root, name, files[name].content, files[name].mode)
+		if err != nil {
+			return staged, err
+		}
+		staged[name] = temporaryName
+	}
+	return staged, nil
+}
+
+// commit puts every staged file in place, or none: a file that appeared
+// since the check is never replaced without overwrite, and when one cannot
+// be placed every file put in before it is put back as it was.
+func commit(root *os.Root, names []string, staged map[string]string, overwrite bool) error {
+	done := make([]placed, 0, len(names))
+	for _, name := range names {
+		backup, err := place(root, name, staged[name], overwrite)
+		if err != nil {
+			if rollbackErr := rollback(root, done); rollbackErr != nil {
+				return fmt.Errorf("%w: %w; putting the earlier files back: %w", ErrPartial, err, rollbackErr)
+			}
+			return fmt.Errorf("nothing in the folder was changed: %w", err)
+		}
+		done = append(done, placed{name: name, backup: backup})
+	}
+	var cleanupErr error
+	for _, file := range done {
+		if file.backup != "" {
+			cleanupErr = errors.Join(cleanupErr, root.Remove(file.backup))
+		}
+		cleanupErr = errors.Join(cleanupErr, atomicfile.SyncIn(root, file.name))
+	}
+	return cleanupErr
+}
+
+// place puts one staged file at name. Without overwrite it is linked
+// there, which fails rather than replace a file; with overwrite a file
+// already there is first kept under a backup name, returned.
+func place(root *os.Root, name, temporaryName string, overwrite bool) (string, error) {
+	if !overwrite {
+		err := root.Link(temporaryName, name)
+		if errors.Is(err, fs.ErrExist) {
+			return "", fmt.Errorf("%s: %w", name, ErrExists)
+		}
+		return "", err
+	}
+	backup := ""
+	if info, err := root.Lstat(name); err == nil && info.Mode().IsRegular() {
+		backup = name + backupMarker + rand.Text()
+		if err := root.Link(name, backup); err != nil {
+			return "", err
+		}
+	}
+	if err := root.Rename(temporaryName, name); err != nil {
+		if backup != "" {
+			err = errors.Join(err, root.Remove(backup))
+		}
+		return "", err
+	}
+	return backup, nil
+}
+
+// rollback puts back, newest first, what a failed commit replaced, and
+// removes what it added.
+func rollback(root *os.Root, done []placed) error {
+	var err error
+	for _, file := range slices.Backward(done) {
+		if file.backup != "" {
+			err = errors.Join(err, root.Rename(file.backup, file.name))
 			continue
 		}
-		target := filepath.Join(directory, filepath.FromSlash(name))
-		_, err := os.Lstat(target)
+		err = errors.Join(err, root.Remove(file.name))
+	}
+	return err
+}
+
+// removeStaged removes the temporary files a save leaves: a link put them
+// in place, or the save failed before they were.
+func removeStaged(root *os.Root, staged map[string]string) error {
+	var err error
+	for _, temporaryName := range staged {
+		if removeErr := root.Remove(temporaryName); !errors.Is(removeErr, fs.ErrNotExist) {
+			err = errors.Join(err, removeErr)
+		}
+	}
+	return err
+}
+
+// refuseEscapes checks, before anything is written, that every folder on
+// the way to each file either does not exist yet or resolves inside root: a
+// symbolic link there, dangling or leading out, refuses the export, which
+// leaves the folder as it was.
+func refuseEscapes(root *os.Root, names []string) error {
+	for _, name := range names {
+		folder := ""
+		for part := range strings.SplitSeq(path.Dir(name), "/") {
+			folder = path.Join(folder, part)
+			info, err := root.Lstat(folder)
+			if errors.Is(err, fs.ErrNotExist) {
+				break
+			}
+			if err != nil {
+				return fmt.Errorf("%s: %w", folder, err)
+			}
+			if info.Mode()&fs.ModeSymlink == 0 {
+				continue
+			}
+			if _, err := root.Stat(folder); err != nil {
+				return fmt.Errorf("%s is a link that leads outside %s: %w", folder, root.Name(), err)
+			}
+		}
+	}
+	return nil
+}
+
+// refuseExisting checks every file an export would write before it writes
+// any, so a refused export leaves the folder as it was.
+func refuseExisting(root *os.Root, names []string) error {
+	for _, name := range names {
+		_, err := root.Lstat(name)
 		if err == nil {
-			return fmt.Errorf("%s: %w", target, ErrExists)
+			return fmt.Errorf("%s: %w", name, ErrExists)
 		}
 		if !errors.Is(err, fs.ErrNotExist) {
 			return err
