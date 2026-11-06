@@ -878,14 +878,15 @@ func TestBundledFilesStayInTheirFolder(t *testing.T) {
 	}
 }
 
-// TestGrantCoversOnlyTheExactRequest: consent to NET_BIND_SERVICE and
+// TestGrantCoversOnlyTheExactRequest: consent to NET_ADMIN and
 // /dev/ttyUSB0 for one service allows exactly those; a stronger capability
 // or device, the same one in another service, or a grant kept as a bare
-// capability, as grants once were, needs consent again.
+// capability, as grants once were, needs consent again. A capability Docker
+// gives every container, added back after cap_drop, needs no consent.
 func TestGrantCoversOnlyTheExactRequest(t *testing.T) {
 	plan := goodPlan()
 	plan.Needs = []ir.Need{
-		{Capability: ir.NeedCapAdd, Service: "app", Detail: "NET_BIND_SERVICE", Reason: "binds port 80"},
+		{Capability: ir.NeedCapAdd, Service: "app", Detail: "NET_ADMIN", Reason: "sets up routes"},
 		{Capability: ir.NeedDevices, Service: "app", Detail: "/dev/ttyUSB0", Reason: "zigbee adapter"},
 	}
 	granted := []string{plan.Needs[0].Grant(), plan.Needs[1].Grant()}
@@ -897,12 +898,13 @@ func TestGrantCoversOnlyTheExactRequest(t *testing.T) {
 		granted    []string
 		want       policy.Severity
 	}{
-		{"unchanged request", service("app", "    cap_add: [CAP_NET_BIND_SERVICE]\n    devices: [/dev/ttyUSB0]\n"), granted, policy.OK},
-		{"stronger capability", service("app", "    cap_add: [NET_BIND_SERVICE, SYS_ADMIN]\n"), granted, policy.Deny},
+		{"unchanged request", service("app", "    cap_add: [CAP_NET_ADMIN, CHOWN]\n    devices: [/dev/ttyUSB0]\n"), granted, policy.OK},
+		{"stronger capability", service("app", "    cap_add: [NET_ADMIN, SYS_ADMIN]\n"), granted, policy.Deny},
 		{"other device", service("app", "    devices: [/dev/sda:/dev/sda]\n"), granted, policy.Deny},
 		{"device renamed inside", service("app", "    devices: [/dev/ttyUSB0:/dev/mem]\n"), granted, policy.Deny},
-		{"other service", service("web", "    cap_add: [NET_BIND_SERVICE]\n"), granted, policy.Deny},
-		{"bare capability grant", service("app", "    cap_add: [NET_BIND_SERVICE]\n"), []string{ir.NeedCapAdd, ir.NeedDevices}, policy.Deny},
+		{"other service", service("web", "    cap_add: [NET_ADMIN]\n"), granted, policy.Deny},
+		{"defaults Docker gives every container", service("web", "    cap_drop: [ALL]\n    cap_add: [CHOWN, CAP_SETUID, DAC_OVERRIDE]\n"), nil, policy.OK},
+		{"bare capability grant", service("app", "    cap_add: [NET_ADMIN]\n"), []string{ir.NeedCapAdd, ir.NeedDevices}, policy.Deny},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {

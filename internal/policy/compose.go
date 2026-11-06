@@ -159,6 +159,9 @@ func (check *checker) composeGrants(name string, service types.ServiceConfig) {
 		check.grantedOrDeny(ir.NeedPrivileged, name, "privileged: true", anyDetail)
 	}
 	for _, capability := range service.CapAdd {
+		if ir.DefaultCapability(capability) {
+			continue
+		}
 		check.grantedOrDeny(ir.NeedCapAdd, name, "cap_add "+capability, func(detail string) bool { return ir.SameCapability(detail, capability) })
 	}
 	for _, device := range service.Devices {

@@ -384,6 +384,9 @@ func (options Options) needs(plan *ir.IR, service *ir.Service, node *yaml.Node) 
 	for _, capability := range ir.Capabilities {
 		needs := granted[capability]
 		value := needValue(capability, needs)
+		if capability == ir.NeedCapAdd {
+			value = withRestored(service.Hardening.Restored, value)
+		}
 		if value == nil {
 			continue
 		}
@@ -401,6 +404,21 @@ func (options Options) needs(plan *ir.IR, service *ir.Service, node *yaml.Node) 
 // mounts are rendered with the volumes.
 var capabilityKeys = map[string]string{ir.NeedHostNetwork: composefile.KeyNetworkMode, ir.NeedPrivileged: composefile.KeyPrivileged,
 	ir.NeedDevices: composefile.KeyDevices, ir.NeedCapAdd: composefile.KeyCapAdd}
+
+// withRestored is cap_add with the default capabilities the hardening adds
+// back first, each once, or granted alone when it restores none.
+func withRestored(restored []string, granted *yaml.Node) *yaml.Node {
+	if len(restored) == 0 {
+		return granted
+	}
+	names := slices.Clone(restored)
+	if granted != nil {
+		for _, item := range granted.Content {
+			names = append(names, item.Value)
+		}
+	}
+	return flowSequence(distinct(names)...)
+}
 
 // needValue is what the granted needs of one capability set, or nil when
 // they set nothing here.

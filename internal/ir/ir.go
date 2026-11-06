@@ -101,7 +101,12 @@ type Resources struct {
 // Hardening is what upstream takes away from a service: capabilities it
 // drops, a read-only root filesystem and the tmpfs mounts it writes to.
 type Hardening struct {
-	CapDrop    []string   `json:"cap_drop"`
+	CapDrop []string `json:"cap_drop"`
+	// Restored are capabilities Docker gives every container that upstream
+	// adds back after dropping them, such as CHOWN for an image that sets
+	// its files' owner: they grant nothing a plain container lacks, so they
+	// come with the hardening instead of as a need.
+	Restored   []string   `json:"restored_capabilities"`
 	ReadOnly   bool       `json:"read_only"`
 	Tmpfs      []string   `json:"tmpfs"`
 	Provenance Provenance `json:"provenance"`
@@ -223,7 +228,13 @@ func GrantCapability(grant string) string {
 // SameCapability reports whether two cap_add entries name one capability,
 // however each is spelled.
 func SameCapability(first, second string) bool {
-	return strings.TrimPrefix(strings.ToUpper(first), capabilityPrefix) == strings.TrimPrefix(strings.ToUpper(second), capabilityPrefix)
+	return CapabilityName(first) == CapabilityName(second)
+}
+
+// CapabilityName is a capability as Docker's defaults spell it: upper
+// case, without the CAP_ prefix.
+func CapabilityName(name string) string {
+	return strings.TrimPrefix(strings.ToUpper(name), capabilityPrefix)
 }
 
 // capabilityPrefix is how a Linux capability may be spelled in cap_add.
@@ -236,7 +247,7 @@ var defaultCapabilities = []string{"AUDIT_WRITE", "CHOWN", "DAC_OVERRIDE", "FOWN
 
 // DefaultCapability reports whether Docker gives every container this one.
 func DefaultCapability(name string) bool {
-	return slices.Contains(defaultCapabilities, strings.TrimPrefix(strings.ToUpper(name), capabilityPrefix))
+	return slices.Contains(defaultCapabilities, CapabilityName(name))
 }
 
 // SandboxWithholds reports whether a test run goes without this need: the

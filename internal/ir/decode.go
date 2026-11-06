@@ -185,6 +185,7 @@ func (service *Service) normalize() {
 	service.Notes = nonNil(service.Notes)
 	service.Healthcheck.Test = nonNil(service.Healthcheck.Test)
 	service.Hardening.CapDrop = nonNil(service.Hardening.CapDrop)
+	service.Hardening.Restored = nonNil(service.Hardening.Restored)
 	service.Hardening.Tmpfs = nonNil(service.Hardening.Tmpfs)
 	service.Resources.Provenance.normalize()
 	service.Hardening.Provenance.normalize()

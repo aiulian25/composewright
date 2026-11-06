@@ -317,6 +317,11 @@
           "items": { "type": "string" },
           "description": "Linux capabilities the service drops, e.g. [\"ALL\"]."
         },
+        "restored_capabilities": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["AUDIT_WRITE", "CHOWN", "DAC_OVERRIDE", "FOWNER", "FSETID", "KILL", "MKNOD", "NET_BIND_SERVICE", "NET_RAW", "SETFCAP", "SETGID", "SETPCAP", "SETUID", "SYS_CHROOT"] },
+          "description": "Capabilities Docker gives every container that the service adds back after cap_drop, e.g. [\"CHOWN\", \"SETUID\"]. Only these defaults; any other capability is a need."
+        },
         "read_only": {
           "type": "boolean",
           "description": "True when the container's root filesystem is read-only."
@@ -328,7 +333,7 @@
         },
         "provenance": { "$ref": "#/$defs/provenance" }
       },
-      "required": ["cap_drop", "read_only", "tmpfs", "provenance"],
+      "required": ["cap_drop", "restored_capabilities", "read_only", "tmpfs", "provenance"],
       "additionalProperties": false
     },
     "service": {

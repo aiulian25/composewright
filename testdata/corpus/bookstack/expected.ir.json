@@ -227,6 +227,7 @@
       },
       "hardening": {
         "cap_drop": [],
+        "restored_capabilities": [],
         "read_only": false,
         "tmpfs": [],
         "provenance": {
@@ -361,6 +362,7 @@
       },
       "hardening": {
         "cap_drop": [],
+        "restored_capabilities": [],
         "read_only": false,
         "tmpfs": [],
         "provenance": {

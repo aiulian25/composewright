@@ -460,12 +460,19 @@ func composeLimits(result *ir.Service, service extract.ComposeService) {
 		ShmSize: service.ShmSize, Provenance: provenance(ir.SourceCompose, service.LimitsAt, ir.ConfidenceHigh)}
 }
 
-// composeHardening copies what upstream takes away from the service.
+// composeHardening copies what upstream takes away from the service, with
+// the default capabilities it adds back after dropping them.
 func composeHardening(result *ir.Service, service extract.ComposeService) {
 	if service.HardeningAt == (extract.Location{}) {
 		return
 	}
-	result.Hardening = ir.Hardening{CapDrop: slices.Clone(service.CapDrop), ReadOnly: service.ReadOnly,
+	var restored []string
+	for _, capability := range service.CapAdd {
+		if ir.DefaultCapability(capability.Value) && !slices.Contains(restored, ir.CapabilityName(capability.Value)) {
+			restored = append(restored, ir.CapabilityName(capability.Value))
+		}
+	}
+	result.Hardening = ir.Hardening{CapDrop: slices.Clone(service.CapDrop), Restored: restored, ReadOnly: service.ReadOnly,
 		Tmpfs: slices.Clone(service.Tmpfs), Provenance: provenance(ir.SourceCompose, service.HardeningAt, ir.ConfidenceHigh)}
 }
 
@@ -510,7 +517,9 @@ func (builder *builder) needsFromCompose(service *ir.Service, upstream extract.C
 		builder.upstreamNeed(service, ir.NeedDevices, device.Value, device.Location)
 	}
 	for _, capability := range upstream.CapAdd {
-		builder.upstreamNeed(service, ir.NeedCapAdd, capability.Value, capability.Location)
+		if !ir.DefaultCapability(capability.Value) {
+			builder.upstreamNeed(service, ir.NeedCapAdd, capability.Value, capability.Location)
+		}
 	}
 	if upstream.Privileged {
 		builder.upstreamNeed(service, ir.NeedPrivileged, "", upstream.PrivilegedAt)

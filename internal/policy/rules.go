@@ -614,7 +614,7 @@ func (check *checker) needs(plan *ir.IR) {
 			check.add("P9", Deny, need.Service, field, "%s is requested for %q, which is not a service", need.Capability, need.Service)
 			continue
 		}
-		check.need("P9", need, field, "%s requests %s: %s", need.Service, need.Capability, need.Reason)
+		check.need("P9", need, field, "%s requests %s: %s", need.Service, strings.TrimSpace(need.Capability+" "+need.Detail), need.Reason)
 	}
 }
 

@@ -949,3 +949,42 @@ func TestAllowNeedGrantsOnlyThisPlansRequests(t *testing.T) {
 		t.Fatalf("a later request was granted: %q", options.AllowNeeds)
 	}
 }
+
+// TestHardenedImageNeedsNoGrantForDefaultCapabilities: an image that drops
+// every capability and adds back ones Docker gives every container, as
+// bookorbit does to own its files, gets them back with no grant and no
+// request; a capability beyond those stays a request, and once granted
+// comes in the same cap_add.
+func TestHardenedImageNeedsNoGrantForDefaultCapabilities(t *testing.T) {
+	ctx := context.Background()
+	directory := t.TempDir()
+	compose := "services:\n  app:\n    image: docker.io/library/nginx:1.27\n    ports: [\"8080:80\"]\n    cap_drop:\n      - ALL\n" +
+		"    cap_add:\n      - CHOWN\n      - DAC_OVERRIDE\n      - FOWNER\n      - SETGID\n      - CAP_SETUID\n      - NET_ADMIN\n"
+	if err := os.WriteFile(filepath.Join(directory, "compose.yaml"), []byte(compose), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	dependencies := testDependencies(t, &scriptedDocker{})
+	result, err := Generate(ctx, dependencies, Options{Source: directory, Name: "hardened"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(result.Plan.Needs) != 1 || result.Plan.Needs[0].Detail != "NET_ADMIN" {
+		t.Fatalf("requests %+v", result.Plan.Needs)
+	}
+	rendered := string(result.Files.Compose)
+	if !strings.Contains(rendered, `cap_add: ["CHOWN", "DAC_OVERRIDE", "FOWNER", "SETGID", "SETUID"]`) || !strings.Contains(rendered, `cap_drop: ["ALL"]`) {
+		t.Fatalf("the defaults are not added back:\n%s", rendered)
+	}
+	if findings := result.Report.Findings; slices.ContainsFunc(findings, func(finding policy.Finding) bool {
+		return finding.Severity == policy.Deny || (finding.Severity == policy.Need && finding.Capability == ir.NeedCapAdd && !strings.Contains(finding.Message, "cap_add NET_ADMIN"))
+	}) {
+		t.Fatalf("a default capability asks for a grant: %+v", findings)
+	}
+	granted, err := Generate(ctx, dependencies, Options{Source: directory, Name: "hardened", GrantRequested: []string{ir.NeedCapAdd}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rendered := string(granted.Files.Compose); strings.Count(rendered, "cap_add:") != 1 || !strings.Contains(rendered, `"SETUID", "NET_ADMIN"]`) || granted.Report.Blocked() {
+		t.Fatalf("the granted capability did not join the defaults:\n%s\n%+v", rendered, granted.Report.Findings)
+	}
+}
