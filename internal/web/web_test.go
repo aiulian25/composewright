@@ -2953,3 +2953,39 @@ func TestPagesOpenedOnAnOlderVersionCannotSave(t *testing.T) {
 		t.Fatalf("a stale save replaced the newer version: %v", err)
 	}
 }
+
+// TestDefaultsAreDropdowns: the per-service defaults are dropdowns with the
+// profile's values selected; a value set outside them, in profile.yaml or
+// from the command line, is offered first and kept by a save, and a
+// chosen one is saved.
+func TestDefaultsAreDropdowns(t *testing.T) {
+	harness := newHarness(t)
+	harness.signUp()
+	profile := sentProfile()
+	profile.Set("memory_limit", "768m")
+	response, page := harness.post("/settings/profile", profile)
+	status(t, response, http.StatusSeeOther, page)
+	response, page = harness.get(response.Header.Get("Location"))
+	status(t, response, http.StatusOK, page)
+	for _, want := range []string{
+		`<select id="memory_limit" name="memory_limit"><option value="768m" selected>768m (set in profile.yaml)</option><option value="256m">256 MB</option>`,
+		`<option value="10m" selected>10 MB</option>`, `<option value="3" selected>3</option>`,
+		`<option value="1" selected>1 CPU</option>`, `<option value="256" selected>256</option>`,
+	} {
+		if !strings.Contains(page, want) {
+			t.Fatalf("the Defaults lack %q", want)
+		}
+	}
+	profile.Set("memory_limit", "1g")
+	profile.Set("cpus", "0.5")
+	response, page = harness.post("/settings/profile", profile)
+	status(t, response, http.StatusSeeOther, page)
+	if defaults := harness.server.config().Profile.Defaults; defaults.MemoryLimit != "1g" || defaults.CPUs != 0.5 {
+		t.Fatalf("chosen defaults were not saved: %+v", defaults)
+	}
+	response, page = harness.get(response.Header.Get("Location"))
+	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, `<option value="1g" selected>1 GB</option>`) || strings.Contains(page, "set in profile.yaml") {
+		t.Fatal("the saved choice is not selected, or the custom value lingers")
+	}
+}

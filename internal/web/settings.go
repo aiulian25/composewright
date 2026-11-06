@@ -73,6 +73,8 @@ type settingsView struct {
 	HostProblem string
 	Models      modelsView
 	Restarts    []string
+	// Choices are the dropdowns of the profile's per-service defaults.
+	Choices defaultChoices
 	// Platforms are the platforms the profile may target; HostPlatform is
 	// the one an empty choice means.
 	Platforms    []string
@@ -183,7 +185,7 @@ func (server *Server) renderSettings(writer http.ResponseWriter, request *http.R
 		return err
 	}
 	view := settingsView{Page: state.shown, Title: settingsTitles[state.shown], Engines: server.engineOptions(configuration.LLM.Engine), File: file,
-		Config: configuration, MaxNetworks: maxNetworkRows, Models: models, Restarts: config.RestartModes(), Themes: config.Themes(),
+		Config: configuration, MaxNetworks: maxNetworkRows, Models: models, Restarts: config.RestartModes(), Choices: choicesFor(configuration.Profile.Defaults), Themes: config.Themes(),
 		Platforms: platformChoices(configuration.Profile.Platform), HostPlatform: config.HostPlatform(),
 		ConfigFile: server.paths().ConfigFile, Private: strings.Join(configuration.Network.AllowPrivateTargets, "\n"),
 		Registries: strings.Join(configuration.Registries.Allow, "\n"), Minimum: auth.MinimumPasswordLength}
@@ -607,4 +609,58 @@ func (server *Server) switchEngine(writer http.ResponseWriter, request *http.Req
 		target = "/"
 	}
 	return redirect(writer, request, target)
+}
+
+// preset is one choice a defaults dropdown offers.
+type preset struct {
+	value string
+	label string
+}
+
+// defaultChoices are the dropdowns of the per-service defaults, each with
+// the profile's value selected.
+type defaultChoices struct {
+	LogSizes []option
+	LogFiles []option
+	Memories []option
+	CPUs     []option
+	PIDs     []option
+}
+
+var (
+	logSizePresets = []preset{{"1m", "1 MB"}, {"5m", "5 MB"}, {"10m", "10 MB"}, {"20m", "20 MB"}, {"50m", "50 MB"}, {"100m", "100 MB"}}
+	logFilePresets = []preset{{"1", "1"}, {"2", "2"}, {"3", "3"}, {"5", "5"}, {"10", "10"}}
+	memoryPresets  = []preset{{"256m", "256 MB"}, {"512m", "512 MB"}, {"1g", "1 GB"}, {"2g", "2 GB"}, {"4g", "4 GB"}, {"8g", "8 GB"}}
+	cpuPresets     = []preset{{"0.5", "half a CPU"}, {"1", "1 CPU"}, {"2", "2 CPUs"}, {"4", "4 CPUs"}}
+	pidPresets     = []preset{{"128", "128"}, {"256", "256"}, {"512", "512"}, {"1024", "1024"}, {"2048", "2048"}}
+)
+
+// customChoice marks a value set outside the dropdown, kept as it is.
+const customChoice = "%s (set in profile.yaml)"
+
+func choicesFor(defaults config.Defaults) defaultChoices {
+	return defaultChoices{
+		LogSizes: presetOptions(logSizePresets, defaults.LogMaxSize),
+		LogFiles: presetOptions(logFilePresets, strconv.Itoa(defaults.LogMaxFile)),
+		Memories: presetOptions(memoryPresets, defaults.MemoryLimit),
+		CPUs:     presetOptions(cpuPresets, strconv.FormatFloat(defaults.CPUs, 'f', -1, 64)),
+		PIDs:     presetOptions(pidPresets, strconv.Itoa(defaults.PIDsLimit)),
+	}
+}
+
+// presetOptions offers presets with current selected; a current value that
+// is none of them, written in profile.yaml or by the command line, comes
+// first, so saving the page never changes it.
+func presetOptions(presets []preset, current string) []option {
+	options := make([]option, 0, len(presets)+1)
+	known := false
+	for _, choice := range presets {
+		selected := strings.EqualFold(choice.value, current)
+		known = known || selected
+		options = append(options, option{Value: choice.value, Label: choice.label, Selected: selected})
+	}
+	if known || current == "" {
+		return options
+	}
+	return append([]option{{Value: current, Label: fmt.Sprintf(customChoice, current), Selected: true}}, options...)
 }
