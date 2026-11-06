@@ -4,13 +4,18 @@ set -euo pipefail
 archive="${1:?usage: scan-candidate.sh OCI_ARCHIVE EVIDENCE_DIRECTORY}"
 evidence="${2:?evidence directory required}"
 mkdir -p "$evidence"
+# Trivy reads OCI layouts as directories. Copy the immutable archive through
+# skopeo without re-encoding manifests/layers; never scan a mutable Docker tag.
+layout="$(mktemp -d)"
+trap 'rm -rf "$layout"' EXIT
+skopeo copy --all --preserve-digests "oci-archive:$archive" "oci:$layout:candidate"
 trivy --version >"$evidence/scanner-version.log"
 # No inherited config/waivers: all findings remain visible in the retained
 # report; HIGH/CRITICAL (including unfixed) stop publication.
 export TRIVY_CONFIG=/dev/null
-trivy image --input "$archive" --scanners vuln --ignorefile .trivyignore.yaml \
+trivy image --input "$layout" --scanners vuln --ignorefile .trivyignore.yaml \
 	--list-all-pkgs --format json --output "$evidence/vulnerabilities.json" --exit-code 0
-trivy image --input "$archive" --scanners vuln --ignorefile .trivyignore.yaml \
+trivy image --input "$layout" --scanners vuln --ignorefile .trivyignore.yaml \
 	--format cyclonedx --output "$evidence/sbom.cdx.json" --exit-code 0
 # A successful scanner invocation that missed a shipped executable is not
 # sufficient evidence. Keep installed package versions for applicability review.

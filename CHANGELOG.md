@@ -46,6 +46,9 @@ All notable changes to this project are documented here. The format follows
 
 - Release builds use the patched Go 1.26.10 toolchain and compression library
   1.20.2, addressing certificate verification and malformed-frame vulnerabilities.
+  Bundled tools use Docker 29.9.2 and Compose 5.7.0 to include their security fixes.
+- Packaged gates use executable storage for disposable Docker daemons and scan
+  OCI layouts copied from candidate archives with digest preservation.
 
 - A test run of a stack with a secret passed as a file, or a config file
   bundled with it, no longer fails with "bind source path does not exist"

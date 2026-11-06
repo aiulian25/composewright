@@ -13,7 +13,7 @@ name: composewright-dev
 
 services:
   composewright:
-    image: docker.io/library/docker:29.9.0-cli
+    image: docker.io/library/docker:29.9.2-cli
     user: "${DEV_UID:-1000}:${DEV_GID:-1000}"
     group_add: ["${DOCKER_GID:?set DOCKER_GID in .env (stat -c %g /var/run/docker.sock)}"]
     command:

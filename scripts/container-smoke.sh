@@ -52,15 +52,15 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 # A rootless daemon has its own user namespace; no host socket, bind-mounted
 # data, ports, networks or production daemon resources enter this environment.
-daemon=docker.io/library/docker:29.9.0-dind
+daemon=docker.io/library/docker:29.9.2-dind
 host=unix:///var/run/docker.sock
 if [ "$topology" = rootless ]; then
-	daemon=docker.io/library/docker:29.9.0-dind-rootless
+	daemon=docker.io/library/docker:29.9.2-dind-rootless
 	host=unix:///run/user/1000/docker.sock
 fi
 docker run --rm -d --privileged --name "$name" --label "io.composewright.test=$name" \
-	--mount type=tmpfs,destination=/var/lib/docker \
-	--mount type=tmpfs,destination=/home/rootless/.local/share/docker,tmpfs-mode=1777 \
+	--tmpfs /var/lib/docker:rw,exec,mode=0711 \
+	--tmpfs /home/rootless/.local/share/docker:rw,exec,mode=1777 \
 	-e DOCKER_HOST="$host" -e DOCKER_TLS_CERTDIR= "$daemon" --storage-driver=vfs >"$logs/daemon.id"
 ready=false
 for _ in $(seq 120); do

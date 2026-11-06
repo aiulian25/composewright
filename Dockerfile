@@ -19,7 +19,10 @@ RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath -buildvcs
       -o /out/composewright ./cmd/composewright \
  && mkdir -m 0700 /out/data
 
-FROM docker.io/library/docker:29.9.0-cli@sha256:1a4c7cb63513f349bdad01fcc6e0f3f2f67d37b9da86f14dc0d4a0942eecda00 AS docker
+FROM docker.io/library/docker:29.9.2-cli@sha256:5e6baf67325a79f64ed3bed6863954d5e05d0f3d4e57cbdb14809346814bbfdb AS docker
+
+# Compose is patched independently of the Docker CLI image.
+FROM docker.io/docker/compose-bin:v5.7.0@sha256:a4de4851b16f18634f74de66f126d5de65f7c5cb5a9502d67ab83e9a96041a70 AS compose
 
 FROM gcr.io/distroless/static:nonroot@sha256:e2e927ec666bae08560abb3c55d0659eceabb657f56b6782ab500a9fc7f555e3
 ARG VERSION=dev
@@ -29,7 +32,7 @@ LABEL org.opencontainers.image.title="composewright" \
       org.opencontainers.image.source="https://github.com/aiulian25/composewright"
 COPY --from=build /out/composewright /usr/bin/composewright
 COPY --from=docker /usr/local/bin/docker /usr/local/bin/docker
-COPY --from=docker /usr/local/libexec/docker/cli-plugins/docker-compose /usr/local/libexec/docker/cli-plugins/docker-compose
+COPY --from=compose /docker-compose /usr/local/libexec/docker/cli-plugins/docker-compose
 # composewright refuses a data directory that is not 0700 and its own, so the
 # volume starts out that way.
 COPY --from=build --chown=65532:65532 --chmod=0700 /out/data /data

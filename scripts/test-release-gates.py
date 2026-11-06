@@ -36,6 +36,11 @@ if os.environ.get('FAIL_SCAN'): sys.exit(3)
 out=sys.argv[sys.argv.index('--output')+1]
 shutil.copyfile(os.environ['FIXTURE'],out)
 """)
+        self.executable("skopeo", """#!/usr/bin/env python3
+import os,sys
+if os.environ.get('FAIL_COPY'): sys.exit(3)
+assert sys.argv[1:4] == ['copy', '--all', '--preserve-digests']
+""")
         return subprocess.run(["bash", "scripts/scan-candidate.sh", "candidate.tar",
                                str(self.folder / "evidence")], cwd=ROOT,
                               env=self.env, capture_output=True)
@@ -71,6 +76,10 @@ shutil.copyfile(os.environ['FIXTURE'],out)
 
     def test_scanner_failure_is_not_a_pass(self):
         self.env["FAIL_SCAN"] = "1"
+        self.assertNotEqual(self.scan(self.report()).returncode, 0)
+
+    def test_archive_copy_failure_is_not_a_pass(self):
+        self.env["FAIL_COPY"] = "1"
         self.assertNotEqual(self.scan(self.report()).returncode, 0)
 
     def test_failed_daemon_creation_cleans_up_and_retains_logs(self):

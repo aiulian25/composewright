@@ -21,7 +21,8 @@ jobs:
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: ${{ matrix.go }}
-      - run: make lint test build
+      - run: GOTOOLCHAIN=go1.26.10 make lint
+      - run: make test build
       - run: make vuln
 
   egress:
