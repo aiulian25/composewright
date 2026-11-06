@@ -1,0 +1,90 @@
+name: candidate
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  candidate:
+    name: packaged ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {arch: amd64, runner: ubuntu-24.04}
+          - {arch: arm64, runner: ubuntu-24.04-arm}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: "1.27.x"
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - run: |
+          sudo apt-get update
+          sudo apt-get install --yes skopeo
+          mkdir -p evidence
+      - run: python3 scripts/test-release-gates.py
+      - id: info
+        run: |
+          echo "commit=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          echo "date=$(git log -1 --format=%cI)" >> "$GITHUB_OUTPUT"
+      - id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=raw,value=dev,enable=${{ !startsWith(github.ref, 'refs/tags/') }}
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          platforms: linux/${{ matrix.arch }}
+          outputs: type=oci,dest=evidence/candidate.tar
+          sbom: true
+          provenance: mode=max
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION=${{ steps.meta.outputs.version }}
+            COMMIT=${{ steps.info.outputs.commit }}
+            DATE=${{ steps.info.outputs.date }}
+      - name: Load the candidate without rebuilding
+        run: |
+          skopeo copy --override-arch '${{ matrix.arch }}' oci-archive:evidence/candidate.tar docker-daemon:composewright:candidate
+          sha256sum evidence/candidate.tar > evidence/candidate.tar.sha256
+          skopeo inspect --raw oci-archive:evidence/candidate.tar > evidence/index.json
+      - name: Packaged topology matrix
+        run: |
+          status=0
+          for topology in ordinary rootless proxy; do
+            COMPOSEWRIGHT_TEST_LOGS="$PWD/evidence/$topology" scripts/container-smoke.sh composewright:candidate "$topology" 2>&1 | tee "evidence/$topology.log" || status=1
+          done
+          exit "$status"
+      - name: Install a versioned scanner with release checksum verification
+        if: ${{ !cancelled() && steps.info.outcome == 'success' }}
+        env:
+          TRIVY_VERSION: 0.76.1
+          ARCH: ${{ matrix.arch }}
+        run: |
+          case "$ARCH" in amd64) platform=64bit;; arm64) platform=ARM64;; esac
+          file="trivy_${TRIVY_VERSION}_Linux-${platform}.tar.gz"
+          base="https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}"
+          curl --fail --location --retry 3 "$base/$file" -o "$RUNNER_TEMP/$file"
+          curl --fail --location --retry 3 "$base/trivy_${TRIVY_VERSION}_checksums.txt" -o "$RUNNER_TEMP/checksums.txt"
+          (cd "$RUNNER_TEMP"; grep -F "  $file" checksums.txt | sha256sum --check --strict)
+          tar -xzf "$RUNNER_TEMP/$file" -C "$RUNNER_TEMP" trivy
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+      - name: Scan the exact archive, including bundled Docker and Compose
+        if: ${{ !cancelled() && steps.info.outcome == 'success' }}
+        run: scripts/scan-candidate.sh evidence/candidate.tar evidence
+      - name: Retain candidate, logs, scan, SBOM and embedded provenance
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: candidate-${{ matrix.arch }}
+          path: evidence/
+          if-no-files-found: error
+          retention-days: 14
