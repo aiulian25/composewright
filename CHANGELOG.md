@@ -6,6 +6,28 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-11-06
+
+Hardened images run without asking you to grant what every container
+already has, and the profile's per-service defaults are dropdowns.
+
+### Fixed
+
+- An image that drops every capability and adds back a few that Docker
+  gives every container, such as CHOWN, SETUID and SETGID for an app that
+  owns its files under PUID and PGID, no longer asks you to grant each
+  one. They come with the image's hardening, and the app starts with
+  them. A capability beyond Docker's defaults, such as NET_ADMIN, still
+  needs your grant, and Review now names the capability each request is
+  for.
+
+### Changed
+
+- Settings › Environment profile › Defaults offers log file size, log
+  files kept, memory, CPUs and processes per service as dropdowns. A value
+  set in profile.yaml or from the command line that is not in the list
+  shows first and is kept when you save.
+
 ## [0.3.0] - 2026-11-06
 
 ### Added
