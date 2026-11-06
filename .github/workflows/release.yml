@@ -102,13 +102,13 @@ jobs:
           TAGS: ${{ steps.meta.outputs.tags }}
         run: |
           sources=()
-          for arch in amd64 arm64; do
+          for arch in amd64; do
             folder="candidates/candidate-$arch"
             # The checksum file uses the original candidate job's relative path.
             (cd "$folder"; sed 's|evidence/||' candidate.tar.sha256 | sha256sum --check --strict)
           done
           printf '%s' "$GH_TOKEN" | skopeo login --username "$REGISTRY_USER" --password-stdin ghcr.io
-          for arch in amd64 arm64; do
+          for arch in amd64; do
             folder="candidates/candidate-$arch"
             skopeo copy --all --preserve-digests "oci-archive:$folder/candidate.tar" "docker://$IMAGE:$VERSION-$arch"
             skopeo inspect --raw "docker://$IMAGE:$VERSION-$arch" > "$folder/published-index.json"
@@ -123,7 +123,7 @@ jobs:
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
       - run: cosign sign --yes "ghcr.io/${{ github.repository }}@${{ steps.publish.outputs.digest }}"
       - run: |
-          for arch in amd64 arm64; do
+          for arch in amd64; do
             cp "candidates/candidate-$arch/vulnerabilities.json" "vulnerabilities-$arch.json"
             cp "candidates/candidate-$arch/sbom.cdx.json" "sbom-$arch.cdx.json"
           done

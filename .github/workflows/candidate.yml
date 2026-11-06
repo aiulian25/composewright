@@ -21,7 +21,6 @@ jobs:
       matrix:
         include:
           - {arch: amd64, runner: ubuntu-24.04}
-          - {arch: arm64, runner: ubuntu-24.04-arm}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
@@ -83,10 +82,8 @@ jobs:
         if: ${{ !cancelled() && steps.info.outcome == 'success' }}
         env:
           TRIVY_VERSION: 0.76.1
-          ARCH: ${{ matrix.arch }}
         run: |
-          case "$ARCH" in amd64) platform=64bit;; arm64) platform=ARM64;; esac
-          file="trivy_${TRIVY_VERSION}_Linux-${platform}.tar.gz"
+          file="trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
           base="https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}"
           curl --fail --location --retry 3 "$base/$file" -o "$RUNNER_TEMP/$file"
           curl --fail --location --retry 3 "$base/trivy_${TRIVY_VERSION}_checksums.txt" -o "$RUNNER_TEMP/checksums.txt"

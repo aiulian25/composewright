@@ -23,6 +23,8 @@ already has, and the profile's per-service defaults are dropdowns.
 
 ### Changed
 
+- The composewright image is built and published for linux/amd64 only;
+  arm64 images are no longer made.
 - Settings › Environment profile › Defaults offers log file size, log
   files kept, memory, CPUs and processes per service as dropdowns. A value
   set in profile.yaml or from the command line that is not in the list

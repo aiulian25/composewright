@@ -17,7 +17,7 @@ composewright reads a repository (or a README, or a compose file you already hav
 
 ## Install
 
-You need a Linux machine (amd64 or arm64) with Docker Engine and its compose plugin. composewright is one container: there is no other service to install and no `.env` to write.
+You need a Linux machine (amd64) with Docker Engine and its compose plugin. composewright is one container: there is no other service to install and no `.env` to write.
 
 ### 1. Save the compose file
 
