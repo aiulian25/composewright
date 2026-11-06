@@ -6,6 +6,36 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-11-06
+
+Read-only services get their files in a test, healthchecks may probe their
+own port through bash's /dev/tcp, and the gate judges a hand-edited
+compose.yaml as written.
+
+### Fixed
+
+- A test run of a service with a read-only root filesystem and secret or
+  bundled config files, such as bookorbit's app, no longer fails with
+  "cannot create config … in read-only service". Such a service now gets
+  its files read-only from a volume the run fills before it starts and
+  removes with the rest; other services still get them as before.
+- A healthcheck that checks the app's own port with bash's /dev/tcp, such
+  as `bash -c ':> /dev/tcp/127.0.0.1/8080'` for an image without curl or
+  wget, no longer blocks the plan. Like curl and wget, it may open a
+  connection to the container itself (127.0.0.1, localhost or the
+  service's name) and to nothing else.
+- A compose.yaml you edit by hand is what the policy gate judges. A
+  healthcheck, command or entrypoint you change, remove or add is checked
+  as you wrote it, so removing a healthcheck that blocked the plan clears
+  the block, and one you add that contacts another host is refused. The
+  saved plan follows your edit, so a later change on Review keeps it.
+
+### Changed
+
+- Settings › Environment profile › Target platform offers this machine or
+  linux/amd64 only; the arm platforms are no longer listed. A platform
+  already set in config.yaml is still shown and kept when you save.
+
 ## [0.3.1] - 2026-11-06
 
 Hardened images run without asking you to grant what every container
