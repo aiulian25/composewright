@@ -45,6 +45,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- Archive extraction rejects an exceeded byte budget even when the tar
+  parser reaches its end marker before a buffered reader error is surfaced.
+
 - Release builds use the patched Go 1.26.10 toolchain and compression library
   1.20.2, addressing certificate verification and malformed-frame vulnerabilities.
   Bundled tools use Docker 29.9.2 and Compose 5.7.0 rebuilt with x/net 0.62.0

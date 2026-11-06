@@ -153,8 +153,21 @@ func TestUntarSaysTooLargePastTheDownloadCap(t *testing.T) {
 		t.Fatal(err)
 	}
 	compressed := archive(t, entry{name: "repo/assets/sample.wav", body: string(noise)}, entry{name: "repo/README.md", body: "# app"})
-	if _, err := untar(bytes.NewReader(compressed), t.TempDir(), int64(len(compressed)/2)); !errors.Is(err, ErrTooLarge) {
-		t.Fatalf("an archive past the download cap: got %v, want ErrTooLarge", err)
+	for _, test := range []struct {
+		name  string
+		limit int64
+		want  error
+	}{
+		{"past download cap", int64(len(compressed) / 2), ErrTooLarge},
+		{"one byte over", int64(len(compressed) - 1), ErrTooLarge},
+		{"exact cap", int64(len(compressed)), nil},
+		{"below cap", int64(len(compressed) + 1), nil},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			if _, err := untar(bytes.NewReader(compressed), t.TempDir(), test.limit); !errors.Is(err, test.want) {
+				t.Fatalf("archive byte budget: got %v, want %v", err, test.want)
+			}
+		})
 	}
 }
 
@@ -207,4 +220,12 @@ func FuzzUntar(f *testing.F) {
 			t.Fatalf("archive wrote outside the destination: %v", entries)
 		}
 	})
+}
+
+func TestUntarVerifiesTheGzipTrailer(t *testing.T) {
+	compressed := archive(t, entry{name: "repo/README.md", body: "# app"})
+	compressed[len(compressed)-8] ^= 1 // Corrupt the checksum after the tar end marker.
+	if _, err := Untar(bytes.NewReader(compressed), t.TempDir()); !errors.Is(err, gzip.ErrChecksum) {
+		t.Fatalf("corrupt gzip trailer: got %v, want %v", err, gzip.ErrChecksum)
+	}
 }

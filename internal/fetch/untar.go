@@ -64,7 +64,8 @@ func Untar(reader io.Reader, destination string) (Extracted, error) {
 // were read; a reader that merely stopped there would surface as a truncated
 // archive ("unexpected EOF").
 func untar(reader io.Reader, destination string, maxDownload int64) (Extracted, error) {
-	compressed, err := gzip.NewReader(&countingReader{reader: reader, limit: maxDownload})
+	compressedInput := &countingReader{reader: reader, limit: maxDownload}
+	compressed, err := gzip.NewReader(compressedInput)
 	if err != nil {
 		return Extracted{}, fmt.Errorf("not a gzip archive: %w", err)
 	}
@@ -79,6 +80,15 @@ func untar(reader io.Reader, destination string, maxDownload int64) (Extracted, 
 	for entries := 0; ; entries++ {
 		header, err := archive.Next()
 		if errors.Is(err, io.EOF) {
+			// tar may finish from buffered data before observing a deferred
+			// reader error. Finish the bounded gzip stream to verify its trailer.
+			_, finishErr := io.Copy(io.Discard, io.LimitReader(expanded, expanded.limit-expanded.read+1))
+			if compressedInput.read > compressedInput.limit || expanded.read > expanded.limit {
+				return unpacking.result, ErrTooLarge
+			}
+			if finishErr != nil {
+				return unpacking.result, fmt.Errorf("read archive trailer: %w", finishErr)
+			}
 			return unpacking.result, nil
 		}
 		if err != nil {
