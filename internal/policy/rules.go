@@ -336,7 +336,8 @@ func (check *checker) ports(service *ir.Service, field string) {
 			check.add("P4", Deny, service.Name, portField, "protocol %q must be tcp or udp", port.Protocol)
 		}
 		if port.Publish && port.HostPort > 0 && port.HostPort < lowPortLimit {
-			check.need("P4", ir.NeedLowPort, service.Name, portField, "%s publishes host port %d, below %d", service.Name, port.HostPort, lowPortLimit)
+			request := ir.Need{Capability: ir.NeedLowPort, Service: service.Name, Detail: strconv.Itoa(port.HostPort)}
+			check.need("P4", request, portField, "%s publishes host port %d, below %d", service.Name, port.HostPort, lowPortLimit)
 		}
 	}
 }
@@ -356,7 +357,7 @@ func (check *checker) user(service *ir.Service, field string) {
 
 func (check *checker) commands(service *ir.Service, field string) {
 	// A service granted the socket may name it, as in -H unix:///var/run/docker.sock.
-	socketGranted := check.granted(ir.NeedDockerSocket) && check.requested(ir.NeedDockerSocket, service.Name, "")
+	socketGranted := check.grantedRequest(ir.NeedDockerSocket, service.Name, anyDetail)
 	for name, argv := range map[string][]string{"command": service.Command, "entrypoint": service.Entrypoint} {
 		joined := strings.Join(argv, " ")
 		if socketGranted {
@@ -613,20 +614,21 @@ func (check *checker) needs(plan *ir.IR) {
 			check.add("P9", Deny, need.Service, field, "%s is requested for %q, which is not a service", need.Capability, need.Service)
 			continue
 		}
-		check.need("P9", need.Capability, need.Service, field, "%s requests %s: %s", need.Service, need.Capability, need.Reason)
+		check.need("P9", need, field, "%s requests %s: %s", need.Service, need.Capability, need.Reason)
 	}
 }
 
-// need records a request that blocks the run until a human grants the
-// capability; once granted it stays in the report as an OK finding.
-func (check *checker) need(rule, capability, service, field, format string, arguments ...any) {
+// need records a request that blocks the run until a human grants it;
+// once granted it stays in the report as an OK finding. Grant is the key
+// that grants exactly this request.
+func (check *checker) need(rule string, request ir.Need, field, format string, arguments ...any) {
 	severity := Need
-	suffix := fmt.Sprintf(" (grant with --allow-need %s)", capability)
-	if check.granted(capability) {
+	suffix := fmt.Sprintf(" (grant with --allow-need %s)", request.Capability)
+	if check.grants(request) {
 		severity, suffix = OK, " (granted by the user)"
 	}
 	check.findings = append(check.findings, Finding{
-		Rule: rule, Severity: severity, Service: service, Path: field, Capability: capability,
+		Rule: rule, Severity: severity, Service: request.Service, Path: field, Capability: request.Capability, Grant: request.Grant(),
 		Message: fmt.Sprintf(format, arguments...) + suffix,
 	})
 }

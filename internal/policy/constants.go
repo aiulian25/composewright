@@ -3,7 +3,10 @@ package policy
 import "github.com/docker/go-units"
 
 const (
-	maxServices       = 8
+	maxServices = 8
+	// maxReplicas is how many copies of one service a stack may run; a
+	// sandbox run tests one.
+	maxReplicas       = 8
 	lowPortLimit      = 1024
 	defaultRegistry   = "docker.io"
 	officialNamespace = "docker.io/library/"
@@ -22,7 +25,10 @@ const (
 	volumeTypeVolume  = "volume"
 	volumeTypeTmpfs   = "tmpfs"
 	localVolumeDriver = "local"
-	noNewPrivileges   = "no-new-privileges"
+	// defaultDevicePermissions are what Docker gives a device mapping that
+	// names none: read, write and mknod.
+	defaultDevicePermissions = "rwm"
+	noNewPrivileges          = "no-new-privileges"
 	// tightFactor and generousFactor bound a mem_limit against a service's
 	// observed peak; limitStep is what a suggested limit rounds up to.
 	tightFactor    = 1.5

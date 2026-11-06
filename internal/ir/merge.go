@@ -284,13 +284,85 @@ func rejections(plan, proposal *IR) []string {
 			notices = append(notices, fmt.Sprintf("the model proposed a service %q; services come from the rules", modelText(offered.Name)))
 			continue
 		}
-		changed := offered.Image.Repository != "" && offered.Image.Reference()+":"+offered.Image.Tag != service.Image.Reference()+":"+service.Image.Tag
-		if changed {
-			notices = append(notices, fmt.Sprintf("the model proposed %s for %s; the rules' %s is kept",
-				modelText(offered.Image.Reference()+":"+offered.Image.Tag), service.Name, service.Image.Reference()+":"+service.Image.Tag))
+		if notice, changed := keptImage(&offered, service); changed {
+			notices = append(notices, notice)
 		}
 	}
 	return notices
+}
+
+// keptImage says, when a model offered another image for a service than
+// the rules chose, that the rules' one is kept.
+func keptImage(offered, service *Service) (string, bool) {
+	changed := offered.Image.Repository != "" && offered.Image.TaggedReference() != service.Image.TaggedReference()
+	return fmt.Sprintf("the model proposed %s for %s; the rules' %s is kept",
+		modelText(offered.Image.TaggedReference()), service.Name, service.Image.TaggedReference()), changed
+}
+
+// Protect holds a plan the model drafted to the decisions the rules made
+// from what upstream ships, as Merge and MergeRepair do: a service the
+// rules plan keeps their image, digest included; one they do not may run
+// only an image they found; and the needs are the rules' own. A service
+// with any other image is dropped, so it never runs, and the notices name
+// each suggestion that was not taken.
+func Protect(baseline, drafted *IR) (*IR, []string) {
+	protected := drafted.Clone()
+	approved := map[string]Image{}
+	for _, service := range baseline.Services {
+		if service.Image.Repository != "" {
+			approved[service.Image.TaggedReference()] = service.Image
+		}
+	}
+	var notices []string
+	dropped := map[string]bool{}
+	kept := protected.Services[:0]
+	for _, service := range protected.Services {
+		image, allowed := protectedImage(baseline, approved, service)
+		if !allowed {
+			dropped[service.Name] = true
+			notices = append(notices, fmt.Sprintf("the model proposed %s running %s, an image the rules did not find; it is a suggestion and does not run",
+				modelText(service.Name), modelText(service.Image.TaggedReference())))
+			continue
+		}
+		if ruled, planned := baseline.Service(service.Name); planned {
+			if notice, changed := keptImage(&service, ruled); changed {
+				notices = append(notices, notice)
+			}
+		}
+		service.Image = image
+		kept = append(kept, service)
+	}
+	protected.Services = kept
+	for index := range protected.Services {
+		service := &protected.Services[index]
+		service.DependsOn = slices.DeleteFunc(service.DependsOn, func(dependency Dependency) bool { return dropped[dependency.Service] })
+	}
+	ruledNeeds := map[string]bool{}
+	protected.Needs = nil
+	for _, need := range baseline.Needs {
+		ruledNeeds[need.Grant()] = true
+		if _, planned := protected.Service(need.Service); planned {
+			protected.Needs = append(protected.Needs, need)
+		}
+	}
+	for _, need := range drafted.Needs {
+		if !ruledNeeds[need.Grant()] {
+			notices = append(notices, fmt.Sprintf("the model asked for %s on %s (%s); only the needs upstream asks for are requested",
+				need.Capability, modelText(need.Service), modelText(need.Reason)))
+		}
+	}
+	return protected, notices
+}
+
+// protectedImage is the image a drafted service runs: the rules' for a
+// service they plan, else the rules' copy of the same image; none when the
+// rules found no such image.
+func protectedImage(baseline *IR, approved map[string]Image, service Service) (Image, bool) {
+	if ruled, planned := baseline.Service(service.Name); planned {
+		return ruled.Image, ruled.Image.Repository != ""
+	}
+	image, found := approved[service.Image.TaggedReference()]
+	return image, found
 }
 
 func fromModel(provenance Provenance) Provenance {

@@ -123,6 +123,18 @@ func TestRenderIsDeterministic(t *testing.T) {
 	}
 }
 
+// grantsOf grants, by exact key, every request of these capabilities the
+// plan makes.
+func grantsOf(plan *ir.IR, capabilities ...string) []string {
+	var grants []string
+	for _, need := range plan.Needs {
+		if slices.Contains(capabilities, need.Capability) {
+			grants = append(grants, need.Grant())
+		}
+	}
+	return grants
+}
+
 func TestGrantedNeedsAreRenderedWithAComment(t *testing.T) {
 	plan := loadPlan(t, "../../testdata/corpus/uptime-kuma/expected.ir.json")
 	plan.Needs = []ir.Need{{Capability: ir.NeedHostNetwork, Service: "uptime-kuma", Reason: "ping hosts on the LAN"}}
@@ -131,7 +143,7 @@ func TestGrantedNeedsAreRenderedWithAComment(t *testing.T) {
 	if strings.Contains(string(ungranted), "network_mode") {
 		t.Fatal("an ungranted need was rendered")
 	}
-	options.GrantedNeeds = []string{ir.NeedHostNetwork}
+	options.GrantedNeeds = grantsOf(plan, ir.NeedHostNetwork)
 	granted, err := Compose(plan, options)
 	if err != nil {
 		t.Fatal(err)
@@ -303,7 +315,7 @@ func TestGrantedDockerSocketIsMountedWithAComment(t *testing.T) {
 	if strings.Contains(string(ungranted), "docker.sock") {
 		t.Fatal("an ungranted socket was rendered")
 	}
-	options.GrantedNeeds = []string{ir.NeedDockerSocket}
+	options.GrantedNeeds = grantsOf(plan, ir.NeedDockerSocket)
 	granted, err := Compose(plan, options)
 	if err != nil {
 		t.Fatal(err)
@@ -412,7 +424,7 @@ func TestGrantedNeedsOfOneCapabilityMerge(t *testing.T) {
 			t.Fatalf("an ungranted %s was rendered:\n%s", key, ungranted)
 		}
 	}
-	options.GrantedNeeds = []string{ir.NeedDevices, ir.NeedCapAdd, ir.NeedPrivileged}
+	options.GrantedNeeds = grantsOf(plan, ir.NeedDevices, ir.NeedCapAdd, ir.NeedPrivileged)
 	granted, err := Compose(plan, options)
 	if err != nil {
 		t.Fatal(err)
@@ -429,6 +441,9 @@ func TestGrantedNeedsOfOneCapabilityMerge(t *testing.T) {
 	deploy := string(Deploy(plan, options, "not validated yet"))
 	if !strings.Contains(deploy, "- cap_add `NET_RAW` for uptime-kuma (granted by you)") {
 		t.Fatalf("DEPLOY.md does not name the granted capability:\n%s", deploy)
+	}
+	if !strings.Contains(deploy, "- privileged for uptime-kuma (granted by you; the test run went without it, so it is untested)") {
+		t.Fatalf("DEPLOY.md does not say the privileged mode is untested:\n%s", deploy)
 	}
 	for _, comment := range []string{"# NEED GRANTED BY USER: devices (zigbee adapter)\n    # NEED GRANTED BY USER: devices (second adapter)\n    devices:",
 		"# NEED GRANTED BY USER: cap_add (upstream compose asks for it (compose.yaml:7))"} {

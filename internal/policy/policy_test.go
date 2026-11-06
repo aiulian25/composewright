@@ -385,13 +385,34 @@ func TestUpstreamMemoryLimitIsNotAFix(t *testing.T) {
 	}
 }
 
+// manyServices are count services running one official image.
+func manyServices(count int) string {
+	var services strings.Builder
+	for index := range count {
+		fmt.Fprintf(&services, "  s%d:\n    image: docker.io/library/nginx:1.27\n", index)
+	}
+	return services.String()
+}
+
+// requestsOf grants, by exact key, every request of these capabilities the
+// plan gate asks a person for, as a person ticking them on Review does.
+func requestsOf(input policy.Input, capabilities []string) []string {
+	var grants []string
+	for _, finding := range policy.Evaluate(input).Findings {
+		if finding.Severity == policy.Need && slices.Contains(capabilities, finding.Capability) {
+			grants = append(grants, finding.Grant)
+		}
+	}
+	return grants
+}
+
 func TestEvaluate(t *testing.T) {
 	for _, testCase := range planCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			plan := goodPlan()
 			testCase.mutate(plan)
 			input := baseInput(plan)
-			input.GrantedNeeds = testCase.granted
+			input.GrantedNeeds = requestsOf(input, testCase.granted)
 			input.ExtraRegistries = testCase.extra
 			if testCase.owner == "-" {
 				input.RepositoryOwner = ""
@@ -593,6 +614,10 @@ func TestEvaluateYAML(t *testing.T) {
 		{"include only inside an extension", "x-notes:\n  include: other.yaml\n" + service(""), policy.OK, nil, nil},
 		{"tmpfs on a host path", service("    tmpfs: [/sys/fs:size=65536]\n"), policy.Deny, nil, nil},
 		{"upstream shm_size and hardening", service("    shm_size: 128mb\n    read_only: true\n    tmpfs: [/tmp]\n    cap_drop: [ALL]\n"), policy.OK, nil, nil},
+		{"a thousand replicas", service("    deploy:\n      replicas: 1000\n"), policy.Deny, nil, nil},
+		{"a few replicas", service("    deploy:\n      replicas: 8\n"), policy.OK, nil, nil},
+		{"scaled beyond the limit", service("    scale: 9\n"), policy.Deny, nil, nil},
+		{"more services than a plan may have", "services:\n" + manyServices(9), policy.Deny, nil, nil},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -600,7 +625,11 @@ func TestEvaluateYAML(t *testing.T) {
 			plan.Needs = testCase.needs
 			input := baseInput(plan)
 			input.Profile.Storage.BasePath = base
-			input.GrantedNeeds = testCase.granted
+			for _, need := range plan.Needs {
+				if slices.Contains(testCase.granted, need.Capability) {
+					input.GrantedNeeds = append(input.GrantedNeeds, need.Grant())
+				}
+			}
 			report := policy.EvaluateYAML(context.Background(), loadCompose(t, testCase.yaml), []byte(testCase.yaml), input)
 			if report.Worst() != testCase.want {
 				t.Fatalf("worst = %s, want %s: %+v", report.Worst(), testCase.want, report.Findings)
@@ -845,6 +874,54 @@ func TestBundledFilesStayInTheirFolder(t *testing.T) {
 		change(&changed.ConfigFiles[0])
 		if report := policy.Evaluate(baseInput(changed)); !report.Has("P8", policy.Deny) {
 			t.Errorf("%s: not refused: %+v", name, report.Findings)
+		}
+	}
+}
+
+// TestGrantCoversOnlyTheExactRequest: consent to NET_BIND_SERVICE and
+// /dev/ttyUSB0 for one service allows exactly those; a stronger capability
+// or device, the same one in another service, or a grant kept as a bare
+// capability, as grants once were, needs consent again.
+func TestGrantCoversOnlyTheExactRequest(t *testing.T) {
+	plan := goodPlan()
+	plan.Needs = []ir.Need{
+		{Capability: ir.NeedCapAdd, Service: "app", Detail: "NET_BIND_SERVICE", Reason: "binds port 80"},
+		{Capability: ir.NeedDevices, Service: "app", Detail: "/dev/ttyUSB0", Reason: "zigbee adapter"},
+	}
+	granted := []string{plan.Needs[0].Grant(), plan.Needs[1].Grant()}
+	service := func(name, body string) string {
+		return "services:\n  " + name + ":\n    image: docker.io/library/nginx:1.27\n" + body
+	}
+	cases := []struct {
+		name, yaml string
+		granted    []string
+		want       policy.Severity
+	}{
+		{"unchanged request", service("app", "    cap_add: [CAP_NET_BIND_SERVICE]\n    devices: [/dev/ttyUSB0]\n"), granted, policy.OK},
+		{"stronger capability", service("app", "    cap_add: [NET_BIND_SERVICE, SYS_ADMIN]\n"), granted, policy.Deny},
+		{"other device", service("app", "    devices: [/dev/sda:/dev/sda]\n"), granted, policy.Deny},
+		{"device renamed inside", service("app", "    devices: [/dev/ttyUSB0:/dev/mem]\n"), granted, policy.Deny},
+		{"other service", service("web", "    cap_add: [NET_BIND_SERVICE]\n"), granted, policy.Deny},
+		{"bare capability grant", service("app", "    cap_add: [NET_BIND_SERVICE]\n"), []string{ir.NeedCapAdd, ir.NeedDevices}, policy.Deny},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			input := baseInput(plan)
+			input.GrantedNeeds = testCase.granted
+			report := policy.EvaluateYAML(context.Background(), loadCompose(t, testCase.yaml), []byte(testCase.yaml), input)
+			if report.Worst() != testCase.want {
+				t.Fatalf("worst = %s, want %s: %+v", report.Worst(), testCase.want, report.Findings)
+			}
+		})
+	}
+	served := goodPlan()
+	served.Needs = []ir.Need{{Capability: ir.NeedCapAdd, Service: "miniflux", Detail: "NET_ADMIN", Reason: "routing"}}
+	for grant, want := range map[string]policy.Severity{served.Needs[0].Grant(): policy.OK, ir.NeedCapAdd: policy.Need,
+		ir.Need{Capability: ir.NeedCapAdd, Service: "miniflux", Detail: "NET_RAW"}.Grant(): policy.Need} {
+		input := baseInput(served)
+		input.GrantedNeeds = []string{grant}
+		if !policy.Evaluate(input).Has("P9", want) {
+			t.Fatalf("grant %q: want the request at %s", grant, want)
 		}
 	}
 }

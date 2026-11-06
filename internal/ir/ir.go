@@ -202,6 +202,55 @@ type Need struct {
 	Provenance Provenance `json:"provenance"`
 }
 
+// grantSeparator joins the parts of a grant key; no capability or Compose
+// service name holds it, and the detail comes last.
+const grantSeparator = "|"
+
+// Grant is the key a person's consent to this exact request is kept under:
+// its capability, service and detail. Consent never stretches to another
+// service, or to a stronger device, capability, path or port of one kind.
+func (need Need) Grant() string {
+	return strings.Join([]string{need.Capability, need.Service, need.Detail}, grantSeparator)
+}
+
+// GrantCapability is the capability a grant key is for; a bare capability,
+// as grants were once kept, names only itself and grants nothing.
+func GrantCapability(grant string) string {
+	capability, _, _ := strings.Cut(grant, grantSeparator)
+	return capability
+}
+
+// SameCapability reports whether two cap_add entries name one capability,
+// however each is spelled.
+func SameCapability(first, second string) bool {
+	return strings.TrimPrefix(strings.ToUpper(first), capabilityPrefix) == strings.TrimPrefix(strings.ToUpper(second), capabilityPrefix)
+}
+
+// capabilityPrefix is how a Linux capability may be spelled in cap_add.
+const capabilityPrefix = "CAP_"
+
+// defaultCapabilities are the ones Docker gives every container, so adding
+// one back after a cap_drop grants nothing beyond a plain container.
+var defaultCapabilities = []string{"AUDIT_WRITE", "CHOWN", "DAC_OVERRIDE", "FOWNER", "FSETID", "KILL", "MKNOD", "NET_BIND_SERVICE",
+	"NET_RAW", "SETFCAP", "SETGID", "SETPCAP", "SETUID", "SYS_CHROOT"}
+
+// DefaultCapability reports whether Docker gives every container this one.
+func DefaultCapability(name string) bool {
+	return slices.Contains(defaultCapabilities, strings.TrimPrefix(strings.ToUpper(name), capabilityPrefix))
+}
+
+// SandboxWithholds reports whether a test run goes without this need: the
+// sandbox never grants a host privilege, so what relies on one is untested.
+func (need Need) SandboxWithholds() bool {
+	switch need.Capability {
+	case NeedPrivileged, NeedHostNetwork, NeedDevices, NeedDockerSocket:
+		return true
+	case NeedCapAdd:
+		return !DefaultCapability(need.Detail)
+	}
+	return false
+}
+
 type Probe struct {
 	Service string `json:"service"`
 	Port    int    `json:"port"`

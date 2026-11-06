@@ -203,8 +203,12 @@ func needsSection(plan *ir.IR, options Options, write func(string, ...any)) {
 	write("")
 	for _, need := range plan.Needs {
 		state := "requested, not granted"
-		if options.isGranted(need.Capability) {
+		granted := options.grants(need)
+		if granted {
 			state = "granted by you"
+		}
+		if granted && need.SandboxWithholds() {
+			state += "; the test run went without it, so it is untested"
 		}
 		capability := need.Capability
 		if need.Detail != "" {

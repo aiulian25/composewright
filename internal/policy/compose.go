@@ -1,6 +1,7 @@
 package policy
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -35,7 +36,23 @@ func EvaluateYAML(ctx context.Context, project *types.Project, content []byte, i
 		check.composeService(name, project.Services[name])
 	}
 	check.composeResources(project)
+	check.composeSize(project)
 	return Report{Findings: check.findings}
+}
+
+// composeSize is P12 for the compose file as it runs: as many services as a
+// plan may have, and few copies of each, so per-container limits add up to
+// a bounded whole even when the file was written by hand.
+func (check *checker) composeSize(project *types.Project) {
+	if count := len(project.Services); count > maxServices {
+		check.add("P12", Deny, "", "services", "a stack has 1 to %d services, this file has %d", maxServices, count)
+	}
+	for _, name := range sortedKeys(project.Services) {
+		service := project.Services[name]
+		if replicas := service.GetScale(); replicas > maxReplicas {
+			check.add("P12", Deny, name, "services."+name+".deploy.replicas", "%s runs %d copies; at most %d are allowed", name, replicas, maxReplicas)
+		}
+	}
 }
 
 // composeInclude denies a top-level include. Loading skips it, so the project
@@ -139,18 +156,19 @@ func SuggestedLimit(peak int64) string {
 
 func (check *checker) composeGrants(name string, service types.ServiceConfig) {
 	if service.Privileged {
-		check.grantedOrDeny(ir.NeedPrivileged, name, "privileged: true")
+		check.grantedOrDeny(ir.NeedPrivileged, name, "privileged: true", anyDetail)
 	}
-	if len(service.CapAdd) > 0 {
-		check.grantedOrDeny(ir.NeedCapAdd, name, "cap_add "+strings.Join(service.CapAdd, ","))
+	for _, capability := range service.CapAdd {
+		check.grantedOrDeny(ir.NeedCapAdd, name, "cap_add "+capability, func(detail string) bool { return ir.SameCapability(detail, capability) })
 	}
-	if len(service.Devices) > 0 {
-		check.grantedOrDeny(ir.NeedDevices, name, "devices")
+	for _, device := range service.Devices {
+		check.grantedOrDeny(ir.NeedDevices, name, "device "+device.Source+composefile.DeviceSeparator+device.Target,
+			func(detail string) bool { return sameDevice(detail, device) })
 	}
 	switch service.NetworkMode {
 	case "":
 	case composefile.NetworkModeHost:
-		check.grantedOrDeny(ir.NeedHostNetwork, name, "network_mode: host")
+		check.grantedOrDeny(ir.NeedHostNetwork, name, "network_mode: host", anyDetail)
 	default:
 		check.add("P13", Deny, name, "services."+name, "network_mode %q is not allowed", service.NetworkMode)
 	}
@@ -205,7 +223,7 @@ func (check *checker) composeVolumes(name string, service types.ServiceConfig) {
 // bind-mounted where the service asked for it.
 func (check *checker) grantedSocket(service string, volume types.ServiceVolumeConfig) bool {
 	socket := volume.Type == volumeTypeBind && ir.IsDockerSocket(volume.Source)
-	return socket && check.granted(ir.NeedDockerSocket) && check.requested(ir.NeedDockerSocket, service, volume.Target)
+	return socket && check.grantedRequest(ir.NeedDockerSocket, service, exactly(volume.Target))
 }
 
 // bindSource is P9a: bind mounts come only from the profile base path (after
@@ -223,7 +241,7 @@ func (check *checker) bindSource(service, field, source string) {
 	if base != "" && within(resolveExisting(source), resolveExisting(base)) {
 		return
 	}
-	if check.granted(ir.NeedBindMount) && check.requested(ir.NeedBindMount, service, source) {
+	if check.grantedRequest(ir.NeedBindMount, service, exactly(source)) {
 		check.add("P9a", OK, service, field, "bind mount %s granted by the user", source)
 		return
 	}
@@ -245,7 +263,8 @@ func (check *checker) composePorts(name string, service types.ServiceConfig) {
 		if len(hostPorts) == 0 || hostPorts[0] >= lowPortLimit {
 			continue
 		}
-		check.need("P4", ir.NeedLowPort, name, "services."+name+".ports", "%s publishes host port %s, below %d", name, port.Published, lowPortLimit)
+		request := ir.Need{Capability: ir.NeedLowPort, Service: name, Detail: strconv.Itoa(hostPorts[0])}
+		check.need("P4", request, "services."+name+".ports", "%s publishes host port %s, below %d", name, port.Published, lowPortLimit)
 	}
 }
 
@@ -335,21 +354,42 @@ func (check *checker) composeResources(project *types.Project) {
 	}
 }
 
-func (check *checker) grantedOrDeny(capability, service, what string) {
-	if check.granted(capability) && check.requested(capability, service, "") {
+// grantedOrDeny allows a privilege only where the plan requests it for this
+// service with a detail matches accepts, and the user granted that request.
+func (check *checker) grantedOrDeny(capability, service, what string, matches func(detail string) bool) {
+	if check.grantedRequest(capability, service, matches) {
 		check.add("P13", OK, service, "services."+service, "%s granted by the user", what)
 		return
 	}
-	check.add("P13", Deny, service, "services."+service, "%s requires the %s need to be requested and granted", what, capability)
+	check.add("P13", Deny, service, "services."+service, "%s requires the %s need to be requested for %s and granted", what, capability, service)
 }
 
-func (check *checker) requested(capability, service, detail string) bool {
-	if check.input.Plan == nil {
-		return true
-	}
-	return slices.ContainsFunc(check.input.Plan.Needs, func(need ir.Need) bool {
-		return need.Capability == capability && need.Service == service && (detail == "" || need.Detail == detail)
+// grantedRequest reports whether the plan requests capability for service
+// with a detail matches accepts, and the user granted that exact request.
+func (check *checker) grantedRequest(capability, service string, matches func(detail string) bool) bool {
+	return check.input.Plan != nil && slices.ContainsFunc(check.input.Plan.Needs, func(need ir.Need) bool {
+		return need.Capability == capability && need.Service == service && matches(need.Detail) && check.grants(need)
 	})
+}
+
+func anyDetail(string) bool { return true }
+
+func exactly(wanted string) func(string) bool {
+	return func(detail string) bool { return detail == wanted }
+}
+
+// sameDevice reports whether a devices need, written as upstream wrote it
+// (a path, host:container, or with permissions), is this device mapping.
+func sameDevice(detail string, device types.DeviceMapping) bool {
+	parts := strings.Split(detail, composefile.DeviceSeparator)
+	source, target, permissions := parts[0], parts[0], defaultDevicePermissions
+	if len(parts) > 1 {
+		target = parts[1]
+	}
+	if len(parts) > 2 {
+		permissions = parts[2]
+	}
+	return source == device.Source && target == device.Target && permissions == cmp.Or(device.Permissions, defaultDevicePermissions)
 }
 
 // resolveExisting resolves symlinks in the longest existing prefix of path,

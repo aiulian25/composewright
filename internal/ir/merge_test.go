@@ -169,3 +169,24 @@ func entry(plan *IR, key string) EnvFileEntry {
 	}
 	return *found
 }
+
+// TestProtectRunsOnlyImagesTheRulesFound: a service the rules found no
+// image for does not run the model's, a draft of only such services keeps
+// none, and a depends_on on a dropped service goes with it.
+func TestProtectRunsOnlyImagesTheRulesFound(t *testing.T) {
+	baseline := &IR{Services: []Service{{Name: "app"}}}
+	drafted := &IR{Services: []Service{
+		{Name: "app", Image: Image{Registry: "docker.io", Repository: "acme/app", Tag: "1"}},
+		{Name: "web", Image: Image{Registry: "docker.io", Repository: "acme/web", Tag: "1"}, DependsOn: []Dependency{{Service: "app"}}},
+	}}
+	protected, notices := Protect(baseline, drafted)
+	if len(protected.Services) != 0 || len(notices) != 2 || !strings.Contains(notices[0], "does not run") {
+		t.Fatalf("services %+v, notices %q", protected.Services, notices)
+	}
+	baseline.Services = append(baseline.Services, Service{Name: "web", Image: drafted.Services[1].Image})
+	protected, _ = Protect(baseline, drafted)
+	web, planned := protected.Service("web")
+	if len(protected.Services) != 1 || !planned || len(web.DependsOn) != 0 {
+		t.Fatalf("services %+v", protected.Services)
+	}
+}

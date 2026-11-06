@@ -305,7 +305,7 @@ func (options Options) mounts(plan *ir.IR, service *ir.Service, volumes *yaml.No
 		}
 	}
 	for _, need := range plan.Needs {
-		if need.Service != service.Name || !options.isGranted(need.Capability) {
+		if need.Service != service.Name || !options.grants(need) {
 			continue
 		}
 		switch need.Capability {
@@ -377,7 +377,7 @@ func largerMemory(planned, profile string) string {
 func (options Options) needs(plan *ir.IR, service *ir.Service, node *yaml.Node) {
 	granted := map[string][]ir.Need{}
 	for _, need := range plan.Needs {
-		if need.Service == service.Name && options.isGranted(need.Capability) {
+		if need.Service == service.Name && options.grants(need) {
 			granted[need.Capability] = append(granted[need.Capability], need)
 		}
 	}
@@ -457,13 +457,14 @@ func grantedComment(need ir.Need) string {
 }
 
 func (options Options) granted(plan *ir.IR, service *ir.Service, capability string) bool {
-	return options.isGranted(capability) && slices.ContainsFunc(plan.Needs, func(need ir.Need) bool {
-		return need.Capability == capability && need.Service == service.Name
+	return slices.ContainsFunc(plan.Needs, func(need ir.Need) bool {
+		return need.Capability == capability && need.Service == service.Name && options.grants(need)
 	})
 }
 
-func (options Options) isGranted(capability string) bool {
-	return slices.Contains(options.GrantedNeeds, capability)
+// grants reports whether the user granted this exact request.
+func (options Options) grants(need ir.Need) bool {
+	return slices.Contains(options.GrantedNeeds, need.Grant())
 }
 
 func dependsOn(service *ir.Service) *yaml.Node {

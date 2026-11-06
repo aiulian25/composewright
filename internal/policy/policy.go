@@ -45,7 +45,9 @@ type Finding struct {
 	Service    string   `json:"service,omitempty"`
 	Path       string   `json:"path,omitempty"`
 	Capability string   `json:"capability,omitempty"`
-	Message    string   `json:"message"`
+	// Grant is the key that grants a need finding's exact request.
+	Grant   string `json:"grant,omitempty"`
+	Message string `json:"message"`
 	// MemoryLimit is a mem_limit, such as 1024m, that fits what the
 	// service was seen to use.
 	MemoryLimit string `json:"memory_limit,omitempty"`
@@ -146,8 +148,9 @@ func (check *checker) add(rule string, severity Severity, service, path, format 
 	})
 }
 
-func (check *checker) granted(capability string) bool {
-	return slices.Contains(check.input.GrantedNeeds, capability)
+// grants reports whether the user granted this exact request.
+func (check *checker) grants(need ir.Need) bool {
+	return slices.Contains(check.input.GrantedNeeds, need.Grant())
 }
 
 // Evaluate runs P1..P12 and the consistency rules on the plan.
