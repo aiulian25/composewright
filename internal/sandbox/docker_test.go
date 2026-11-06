@@ -94,6 +94,9 @@ func TestDocker(t *testing.T) {
 		{"secret file", postgresWithSecretFile, ir.Probe{}, ResultPass, ""},
 		{"bundled file", nginxWithBundledFile, ir.Probe{Service: "web", Port: 80, Path: "/ready", Expect: accepted}, ResultPass, ""},
 	}
+	if os.Getenv("COMPOSEWRIGHT_PACKAGED_TESTS") == "1" {
+		t.Cleanup(func() { assertNoDockerSandboxes(t, sandbox.run) })
+	}
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {
 			verdict, err := sandbox.Validate(context.Background(), Input{Project: "dockertest-" + testCase.name, Compose: []byte(testCase.compose),

@@ -45,7 +45,7 @@ func (docker *growingLogs) run(ctx context.Context, _ string, live io.Writer, ar
 		}
 		return []byte(batch), nil, nil
 	case strings.Contains(command, " ps "):
-		return []byte(healthyApp), nil, nil
+		return []byte(healthyApp + "\n" + healthyDB), nil, nil
 	case strings.HasPrefix(command, "info"):
 		return []byte(`{"CgroupVersion":"2","CgroupDriver":"systemd"}`), nil, nil
 	}

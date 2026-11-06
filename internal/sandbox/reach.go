@@ -35,6 +35,8 @@ const (
 	timedOutAnswer   = "download timed out"
 	unresolvedAnswer = "bad address"
 	notRun           = "skipped"
+	// serverErrorStatus starts the HTTP statuses that report a server error.
+	serverErrorStatus = 500
 )
 
 // probeScript asks the URL in $1 with busybox wget every $3 seconds while
@@ -91,6 +93,7 @@ func (sandbox *Sandbox) reach(ctx context.Context, directory, name string, input
 	if err != nil {
 		verdict.Reach.Said = "not checked: the probe did not run: " + lastLine(scrub(err.Error()+"\n"+string(stderr), input.Secrets))
 		output.say("%s", verdict.Reach.Said)
+		verdict.Unproven = append(verdict.Unproven, probe.Service+": "+verdict.Reach.Said)
 		return verdict, nil
 	}
 	reach, failed := readReach(probe, url, scrub(string(said), input.Secrets))
@@ -98,6 +101,9 @@ func (sandbox *Sandbox) reach(ctx context.Context, directory, name string, input
 	output.say("%s", reach.Said)
 	if failed {
 		return fail(verdict, ReasonUnreachable, reach.Said), nil
+	}
+	if !reach.Checked {
+		verdict.Unproven = append(verdict.Unproven, probe.Service+": "+reach.Said)
 	}
 	return verdict, nil
 }
@@ -112,11 +118,13 @@ func (sandbox *Sandbox) probeWindow(states []ServiceState, service string) time.
 	return sandbox.timeout
 }
 
-// readReach reads what wget said the last time. Any HTTP status is an
-// answer unless the probe expects particular ones. A refused or timed-out
-// connection means nothing listens there. A name that does not resolve
-// means the service has no address of its own (it shares another
-// container's network), so there is nothing to check.
+// readReach reads what wget said the last time. Any HTTP status below 500
+// is an answer unless the probe expects particular ones; a server error
+// fails unless the plan expects it. A refused or timed-out connection means
+// nothing listens there. A name that does not resolve means the service has
+// no address of its own (it shares another container's network), and a
+// connection with no HTTP answer proves nothing either: both leave the run
+// unproven rather than passed or failed.
 func readReach(probe ir.Probe, url, said string) (Reach, bool) {
 	address := probe.Service + ":" + strconv.Itoa(probe.Port)
 	reach := Reach{Service: probe.Service, Checked: true}
@@ -135,7 +143,13 @@ func readReach(probe ir.Probe, url, said string) (Reach, bool) {
 		reach.Checked, reach.Said = false, fmt.Sprintf("not checked: %s has no address of its own on the sandbox network", probe.Service)
 		return reach, false
 	default:
-		reach.Said = fmt.Sprintf("%s took the connection but sent no HTTP answer (%s)", address, lastLine(said))
+		reach.Checked, reach.Said = false, fmt.Sprintf("not checked: %s took the connection but sent no HTTP answer (%s)", address, lastLine(said))
+		return reach, false
+	}
+	serverError := len(probe.Expect) == 0 && status >= serverErrorStatus
+	if serverError {
+		reach.Said += "; a server error is not an app that is ready, unless the plan expects it"
+		return reach, true
 	}
 	unexpected := len(probe.Expect) > 0 && !slices.Contains(probe.Expect, status)
 	if unexpected {

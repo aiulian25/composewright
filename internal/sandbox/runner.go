@@ -7,10 +7,13 @@ import (
 	"context"
 	"errors"
 	"io"
+	"maps"
 	"os"
 	"os/exec"
 	"syscall"
 	"time"
+
+	"github.com/compose-spec/compose-go/v2/dotenv"
 )
 
 const (
@@ -35,6 +38,30 @@ var passedEnvironment = []string{
 // Runner runs one docker CLI invocation in directory and returns its output.
 // When live is not nil, it also receives the output as it is written.
 type Runner func(ctx context.Context, directory string, live io.Writer, arguments ...string) (stdout, stderr []byte, err error)
+
+// ComposeEnvironment is what Docker Compose interpolates compose.yaml with
+// when a run passes it env as --env-file: env, read as Compose reads it,
+// under the variables of ours the docker CLI sees, which win over .env as a
+// shell's variables do. The policy gate checks compose.yaml resolved with
+// exactly this, so what it passes is what runs.
+func ComposeEnvironment(env []byte) (map[string]string, error) {
+	passed := map[string]string{}
+	for _, name := range passedEnvironment {
+		if value, found := os.LookupEnv(name); found {
+			passed[name] = value
+		}
+	}
+	lookup := func(name string) (string, bool) {
+		value, found := passed[name]
+		return value, found
+	}
+	environment, err := dotenv.ParseWithLookup(bytes.NewReader(env), lookup)
+	if err != nil {
+		return nil, err
+	}
+	maps.Copy(environment, passed)
+	return environment, nil
+}
 
 // ExecRunner runs the docker CLI found at path with a minimal environment,
 // in its own process group so a cancelled run never leaves children behind.

@@ -30,6 +30,7 @@ const (
 	ReasonUnreachable = "unreachable"
 
 	stateExited      = "exited"
+	stateRunning     = "running"
 	stateDead        = "dead"
 	healthUnhealthy  = "unhealthy"
 	healthHealthy    = "healthy"
@@ -145,16 +146,24 @@ func (environment Environment) probesEarly() bool {
 }
 
 type Verdict struct {
-	Result      string            `json:"result"`
-	Reason      string            `json:"reason,omitempty"`
-	Detail      string            `json:"detail,omitempty"`
-	Project     string            `json:"compose_project"`
-	Iteration   int               `json:"iteration"`
-	Duration    time.Duration     `json:"duration_ns"`
-	Services    []ServiceState    `json:"services"`
-	LogMatches  []string          `json:"log_matches,omitempty"`
-	Sandbox     Environment       `json:"sandbox"`
-	Reach       *Reach            `json:"reach,omitempty"`
+	Result     string         `json:"result"`
+	Reason     string         `json:"reason,omitempty"`
+	Detail     string         `json:"detail,omitempty"`
+	Project    string         `json:"compose_project"`
+	Iteration  int            `json:"iteration"`
+	Duration   time.Duration  `json:"duration_ns"`
+	Services   []ServiceState `json:"services"`
+	LogMatches []string       `json:"log_matches,omitempty"`
+	Sandbox    Environment    `json:"sandbox"`
+	Reach      *Reach         `json:"reach,omitempty"`
+	// Withheld are the host privileges the run went without, and the
+	// scaled services it ran one copy of, by service: whatever relies on
+	// one is untested, even when the run passes.
+	Withheld []string `json:"withheld,omitempty"`
+	// Unproven are the checks a passing run could not make, by service:
+	// one running without a healthcheck, a reachability probe that did not
+	// run or got no answer. A pass with any is started, not proven ready.
+	Unproven    []string          `json:"unproven,omitempty"`
 	LogTails    map[string]string `json:"-"`
 	Logs        string            `json:"-"`
 	StartOutput string            `json:"-"`
@@ -162,6 +171,42 @@ type Verdict struct {
 
 func (verdict Verdict) Passed() bool {
 	return verdict.Result == ResultPass
+}
+
+// Ready reports whether the run passed with evidence that every service is
+// ready, not only started.
+func (verdict Verdict) Ready() bool {
+	return verdict.Passed() && len(verdict.Unproven) == 0
+}
+
+// reconcile holds a passing verdict to the services the file starts: each
+// needs a container that runs, or, for a one-shot one, that finished well,
+// so a run where nothing or not everything started never passes. A running
+// service no healthcheck vouches for is noted as unproven.
+func reconcile(verdict Verdict, expected []string, completedOK map[string]bool) Verdict {
+	if !verdict.Passed() {
+		return verdict
+	}
+	if len(verdict.Services) == 0 {
+		return fail(verdict, ReasonStart, "no container started")
+	}
+	for _, name := range expected {
+		index := slices.IndexFunc(verdict.Services, func(state ServiceState) bool { return state.Service == name })
+		if index < 0 {
+			return fail(verdict, ReasonStart, name+" never started")
+		}
+		state := verdict.Services[index]
+		if state.State == stateExited && state.ExitCode == 0 && completedOK[name] {
+			continue
+		}
+		if state.State != stateRunning {
+			return fail(verdict, ReasonStart, fmt.Sprintf("%s is %s, not running", name, state.State))
+		}
+		if state.Health != healthHealthy {
+			verdict.Unproven = append(verdict.Unproven, name+": running, but no healthcheck says it is ready")
+		}
+	}
+	return verdict
 }
 
 // judge applies the verdict rules in order: a crashed container, an

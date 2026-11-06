@@ -2,7 +2,11 @@ package sandbox
 
 import (
 	"bytes"
+	"cmp"
 	"fmt"
+	"maps"
+	"path"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -22,7 +26,13 @@ const (
 	tagReset      = "!reset"
 	sandboxVolume = "cw-bind-"
 	// bundledPrefix starts the source of a file bundled beside compose.yaml.
-	bundledPrefix   = "./" + ir.ConfigDirectory + "/"
+	bundledPrefix  = relativePrefix + ir.ConfigDirectory + "/"
+	relativePrefix = "./"
+	// secretsMount is where Compose mounts secrets in a container, and
+	// injectedPrefix names the configs a run hands its services.
+	secretsMount    = "/run/secrets"
+	injectedPrefix  = "cw-file-"
+	emptyFile       = "/dev/null"
 	noNewPrivileges = "no-new-privileges:true"
 	logDriver       = "json-file"
 	logMaxSize      = "10m"
@@ -34,7 +44,13 @@ const (
 	readOnlySuffix  = ":ro"
 	allCapabilities = "ALL"
 	yamlTrue        = "true"
-	yamlIndent      = 2
+	yamlFalse       = "false"
+	yamlNull        = "null"
+	singleCopy      = "1"
+	// resourceSeparator joins a run's project and a resource key, as
+	// Compose names the resources it scopes to a project.
+	resourceSeparator = "_"
+	yamlIndent        = 2
 	// earlyProbe is how often a healthcheck runs while an app starts, so a
 	// run ends seconds after the app is ready instead of an interval later.
 	earlyProbe          = 2 * time.Second
@@ -42,6 +58,39 @@ const (
 	dockerInterval      = 30 * time.Second
 	dockerRetries       = 3
 )
+
+// owner is the run a sandbox resource belongs to: its project and when it
+// started, labelled on every container, volume and network it creates, so
+// the janitor finds whatever an interrupted run left.
+type owner struct {
+	name    string
+	started int64
+}
+
+func (run owner) labels() *yaml.Node {
+	return mapping(scalar(LabelProject), quoted(run.name), scalar(LabelStarted), quoted(strconv.FormatInt(run.started, 10)))
+}
+
+// resource renames a volume or network the run creates to one scoped by
+// its project and labels it as the run's: an explicit name is global on
+// the daemon, so it could attach, and down -v delete, real data.
+func (run owner) resource(owned *yaml.Node, key string) {
+	owned.Content = append(owned.Content, scalar(key), mapping(scalar("name"), quoted(run.name+resourceSeparator+key), scalar("labels"), run.labels()))
+}
+
+// reservedNames refuses a file that uses a name the run gives its own
+// helpers, which the override would otherwise merge into the user's.
+func reservedNames(project *types.Project) error {
+	if _, taken := project.Services[probeService]; taken {
+		return fmt.Errorf("service name %s is reserved for the sandbox's reachability probe", probeService)
+	}
+	for key := range project.Volumes {
+		if strings.HasPrefix(key, sandboxVolume) {
+			return fmt.Errorf("volume name %s is reserved: names starting with %s are the sandbox's", key, sandboxVolume)
+		}
+	}
+	return nil
+}
 
 // Limits are the per-service ceilings for a sandbox run.
 type Limits struct {
@@ -58,6 +107,8 @@ type Limits struct {
 //     and processes,
 //   - rebinds every published port to an ephemeral loopback port,
 //   - leaves external proxy networks and host bind mounts out of the run,
+//   - names every volume and network it creates after the run, labelled as
+//     its own, and drops container_name, so it never reuses a real one,
 //   - labels containers so the janitor can find stale runs,
 //   - with earlyProbes, runs healthchecks every two seconds while the app
 //     starts, for at least as long as its own settings tolerate failures,
@@ -66,19 +117,32 @@ type Limits struct {
 //
 // published lists, per service, the "port/protocol" the plan publishes; they
 // are bound on loopback even when the user's file reaches the app through a
-// proxy network instead.
-func Override(project *types.Project, published map[string][]string, limits Limits, sandboxName string, started int64, earlyProbes bool, runtime string) ([]byte, error) {
+// proxy network instead. files are the secrets and bundled config files
+// beside compose.yaml, by path, which the run hands the services as configs.
+func Override(project *types.Project, published map[string][]string, limits Limits, sandboxName string, started int64, earlyProbes bool, runtime string,
+	files map[string][]byte) ([]byte, error) {
+	if err := reservedNames(project); err != nil {
+		return nil, err
+	}
+	run := owner{name: sandboxName, started: started}
 	services := mapping()
 	volumes := mapping()
+	for _, key := range slices.Sorted(maps.Keys(project.Volumes)) {
+		if !project.Volumes[key].External {
+			run.resource(volumes, key)
+		}
+	}
+	configs := mapping()
 	for _, name := range sortedServices(project) {
 		service := project.Services[name]
-		node := serviceOverride(service, published[name], limits, sandboxName, started, volumes)
+		node := serviceOverride(service, published[name], limits, run, volumes)
+		injectFiles(project, service, files, node, configs)
 		if probes := startProbes(service.HealthCheck); earlyProbes && probes != nil {
 			node.Content = append(node.Content, scalar("healthcheck"), probes)
 		}
 		services.Content = append(services.Content, scalar(name), node)
 	}
-	services.Content = append(services.Content, scalar(probeService), probeOverride(sandboxName, started))
+	services.Content = append(services.Content, scalar(probeService), probeOverride(run))
 	if runtime != "" {
 		for index := 1; index < len(services.Content); index += 2 {
 			service := services.Content[index]
@@ -86,11 +150,14 @@ func Override(project *types.Project, published map[string][]string, limits Limi
 		}
 	}
 	root := mapping(scalar("services"), services)
-	if networks := externalNetworks(project); len(networks.Content) > 0 {
+	if networks := sandboxNetworks(project, run); len(networks.Content) > 0 {
 		root.Content = append(root.Content, scalar("networks"), networks)
 	}
 	if len(volumes.Content) > 0 {
 		root.Content = append(root.Content, scalar("volumes"), volumes)
+	}
+	if len(configs.Content) > 0 {
+		root.Content = append(root.Content, scalar("configs"), configs)
 	}
 	var buffer bytes.Buffer
 	encoder := yaml.NewEncoder(&buffer)
@@ -101,25 +168,101 @@ func Override(project *types.Project, published map[string][]string, limits Limi
 	return buffer.Bytes(), encoder.Close()
 }
 
-func serviceOverride(service types.ServiceConfig, published []string, limits Limits, sandboxName string, started int64, volumes *yaml.Node) *yaml.Node {
+// withholdPrivileges are the keys that take from a test run the host
+// privileges the user granted for the deployment: privileged mode, host
+// networking, devices and every capability Docker does not give a plain
+// container. Final consent never makes a throw-away run safe.
+func withholdPrivileges(service types.ServiceConfig) []*yaml.Node {
+	var keys []*yaml.Node
+	if service.Privileged {
+		keys = append(keys, scalar("privileged"), scalar(yamlFalse))
+	}
+	if service.NetworkMode != "" {
+		keys = append(keys, scalar("network_mode"), tagged(tagReset, scalar(yamlNull)))
+	}
+	if len(service.Devices) > 0 {
+		keys = append(keys, scalar("devices"), tagged(tagReset, sequence()))
+	}
+	kept := sequence()
+	for _, capability := range service.CapAdd {
+		if ir.DefaultCapability(capability) {
+			kept.Content = append(kept.Content, quoted(capability))
+		}
+	}
+	if len(kept.Content) < len(service.CapAdd) {
+		keys = append(keys, scalar("cap_add"), tagged(tagOverride, kept))
+	}
+	return keys
+}
+
+// singleReplica runs one copy of a service the file scales, so the run's
+// per-container limits are its whole budget.
+func singleReplica(service types.ServiceConfig) []*yaml.Node {
+	var keys []*yaml.Node
+	if service.Scale != nil {
+		keys = append(keys, scalar("scale"), scalar(singleCopy))
+	}
+	if service.Deploy != nil && service.Deploy.Replicas != nil {
+		keys = append(keys, scalar("deploy"), mapping(scalar("replicas"), scalar(singleCopy)))
+	}
+	return keys
+}
+
+// Withheld names, per service, each host privilege the compose file grants
+// that a test run goes without, and each scaled service it runs one copy
+// of, so a pass says what it never exercised.
+func Withheld(project *types.Project) []string {
+	var withheld []string
+	for _, name := range sortedServices(project) {
+		service := project.Services[name]
+		if service.Privileged {
+			withheld = append(withheld, name+": privileged mode")
+		}
+		if service.NetworkMode != "" {
+			withheld = append(withheld, name+": network_mode "+service.NetworkMode)
+		}
+		for _, device := range service.Devices {
+			withheld = append(withheld, name+": device "+device.Source)
+		}
+		for _, capability := range service.CapAdd {
+			if !ir.DefaultCapability(capability) {
+				withheld = append(withheld, name+": capability "+capability)
+			}
+		}
+		if replicas := service.GetScale(); replicas > 1 {
+			withheld = append(withheld, fmt.Sprintf("%s: %d copies, tested as one", name, replicas))
+		}
+		for _, volume := range service.Volumes {
+			if volume.Source == ir.DockerSocket {
+				withheld = append(withheld, name+": the Docker socket")
+			}
+		}
+	}
+	return withheld
+}
+
+func serviceOverride(service types.ServiceConfig, published []string, limits Limits, run owner, volumes *yaml.Node) *yaml.Node {
 	node := mapping(
 		scalar("restart"), quoted(restartNever),
 		scalar("security_opt"), tagged(tagOverride, sequence(quoted(noNewPrivileges))),
 		scalar("mem_limit"), scalar(strconv.FormatInt(capped(int64(service.MemLimit), limits.MemoryBytes), 10)),
 		scalar("cpus"), quoted(strconv.FormatFloat(cappedFloat(float64(service.CPUS), limits.CPUs), 'f', -1, 64)),
 		scalar("pids_limit"), scalar(strconv.FormatInt(capped(service.PidsLimit, limits.PIDs), 10)),
-		scalar("labels"), mapping(scalar(LabelProject), quoted(sandboxName), scalar(LabelStarted), quoted(strconv.FormatInt(started, 10))),
+		scalar("labels"), run.labels(),
 		scalar("logging"), tagged(tagOverride, mapping(scalar("driver"), scalar(logDriver),
 			scalar("options"), mapping(scalar("max-size"), quoted(logMaxSize), scalar("max-file"), quoted(logMaxFile)))),
 	)
 	if service.ShmSize > 0 {
 		node.Content = append(node.Content, scalar("shm_size"), scalar(strconv.FormatInt(capped(int64(service.ShmSize), limits.MemoryBytes), 10)))
 	}
-	if service.NetworkMode == "" {
-		node.Content = append(node.Content, scalar("ports"), tagged(tagOverride, loopbackPorts(published)))
-		node.Content = append(node.Content, scalar("networks"), tagged(tagOverride, sequence(scalar(defaultNetwork))))
+	node.Content = append(node.Content, withholdPrivileges(service)...)
+	node.Content = append(node.Content, singleReplica(service)...)
+	if service.ContainerName != "" {
+		node.Content = append(node.Content, scalar("container_name"), tagged(tagReset, scalar(yamlNull)))
 	}
-	if mounts := sandboxMounts(service, volumes); mounts != nil {
+	node.Content = append(node.Content, scalar("ports"), tagged(tagOverride, loopbackPorts(published)))
+	node.Content = append(node.Content, scalar("networks"), tagged(tagOverride, sequence(scalar(defaultNetwork))))
+	if mounts := sandboxMounts(service, volumes, run); mounts != nil {
 		node.Content = append(node.Content, scalar("volumes"), tagged(tagOverride, mounts))
 	}
 	return node
@@ -128,8 +271,8 @@ func serviceOverride(service types.ServiceConfig, published []string, limits Lim
 // probeOverride is the reachability probe's service: in a profile of its
 // own, read-only, without capabilities, as nobody, with small limits and
 // the sandbox labels, on the sandbox network.
-func probeOverride(sandboxName string, started int64) *yaml.Node {
-	node := serviceOverride(types.ServiceConfig{Name: probeService}, nil, probeLimits, sandboxName, started, mapping())
+func probeOverride(run owner) *yaml.Node {
+	node := serviceOverride(types.ServiceConfig{Name: probeService}, nil, probeLimits, run, mapping())
 	node.Content = append(node.Content,
 		scalar("image"), quoted(probeImage),
 		scalar("profiles"), sequence(quoted(probeService)),
@@ -181,7 +324,7 @@ func loopbackPorts(published []string) *yaml.Node {
 // sandboxMounts replaces bind mounts with throw-away named volumes so a run
 // never writes into the user's folders; named volumes, tmpfs mounts and
 // read-only flags are kept as they are.
-func sandboxMounts(service types.ServiceConfig, volumes *yaml.Node) *yaml.Node {
+func sandboxMounts(service types.ServiceConfig, volumes *yaml.Node, run owner) *yaml.Node {
 	hasBind := false
 	for _, volume := range service.Volumes {
 		hasBind = hasBind || volume.Type == volumeTypeBind
@@ -191,23 +334,83 @@ func sandboxMounts(service types.ServiceConfig, volumes *yaml.Node) *yaml.Node {
 	}
 	mounts := sequence()
 	for index, volume := range service.Volumes {
-		mounts.Content = append(mounts.Content, sandboxMount(service.Name, index, volume, volumes))
+		if _, bundled := bundledPath(volume); !bundled {
+			mounts.Content = append(mounts.Content, sandboxMount(service.Name, index, volume, volumes, run))
+		}
 	}
 	return mounts
 }
 
+// bundledPath is the path beside compose.yaml of a file bundled with the
+// stack that a volume mounts.
+func bundledPath(volume types.ServiceVolumeConfig) (string, bool) {
+	if volume.Type != volumeTypeBind || !strings.HasPrefix(volume.Source, bundledPrefix) {
+		return "", false
+	}
+	return strings.TrimPrefix(volume.Source, relativePrefix), true
+}
+
+// injectFiles hands a service the bundled config files and the secret files
+// it mounts from beside compose.yaml as configs whose content the override
+// carries, at the same paths. Compose copies a config into the container,
+// while a bind makes the Docker daemon look for the file on its own host,
+// where the run folder of a composewright in a container does not exist.
+func injectFiles(project *types.Project, service types.ServiceConfig, files map[string][]byte, node, configs *yaml.Node) {
+	mounts := sequence()
+	for _, volume := range service.Volumes {
+		if path, bundled := bundledPath(volume); bundled {
+			mounts.Content = append(mounts.Content, injected(configs, files[path], volume.Target))
+		}
+	}
+	secrets := sequence()
+	for _, secret := range service.Secrets {
+		content, found := files[strings.TrimPrefix(project.Secrets[secret.Source].File, relativePrefix)]
+		if !found {
+			secrets = nil
+			break
+		}
+		secrets.Content = append(secrets.Content, injected(configs, content, secretTarget(secret)))
+	}
+	if secrets != nil && len(secrets.Content) > 0 {
+		node.Content = append(node.Content, scalar("secrets"), tagged(tagReset, sequence()))
+		mounts.Content = append(mounts.Content, secrets.Content...)
+	}
+	if len(mounts.Content) > 0 {
+		node.Content = append(node.Content, scalar("configs"), mounts)
+	}
+}
+
+// secretTarget is where Compose mounts a secret in the container.
+func secretTarget(secret types.ServiceSecretConfig) string {
+	target := cmp.Or(secret.Target, secret.Source)
+	if path.IsAbs(target) {
+		return target
+	}
+	return path.Join(secretsMount, target)
+}
+
+// injected adds a config holding content and mounts it at target; a $ is
+// doubled, since Compose interpolates the override. Compose reads empty
+// content as none and binds its project folder instead, so an empty file,
+// such as a secret not supplied yet, is the host's /dev/null.
+func injected(configs *yaml.Node, content []byte, target string) *yaml.Node {
+	name := injectedPrefix + strconv.Itoa(len(configs.Content)/2)
+	source := mapping(scalar("content"), quoted(strings.ReplaceAll(string(content), "$", "$$")))
+	if len(content) == 0 {
+		source = mapping(scalar("file"), quoted(emptyFile))
+	}
+	configs.Content = append(configs.Content, scalar(name), source)
+	return mapping(scalar("source"), scalar(name), scalar("target"), quoted(target))
+}
+
 // sandboxMount writes one mount as source:target, read-only when it was.
 // A tmpfs or an anonymous volume has no source, so it takes the long form.
-// A file bundled beside compose.yaml is mounted from the run's copy, always
-// read-only; any other bind becomes a throw-away volume.
-func sandboxMount(serviceName string, index int, volume types.ServiceVolumeConfig, volumes *yaml.Node) *yaml.Node {
+// Any bind becomes a throw-away volume.
+func sandboxMount(serviceName string, index int, volume types.ServiceVolumeConfig, volumes *yaml.Node, run owner) *yaml.Node {
 	source := volume.Source
-	if volume.Type == volumeTypeBind && strings.HasPrefix(source, bundledPrefix) {
-		return quoted(source + ":" + volume.Target + readOnlySuffix)
-	}
 	if volume.Type == volumeTypeBind {
 		source = sandboxVolume + serviceName + "-" + strconv.Itoa(index)
-		volumes.Content = append(volumes.Content, scalar(source), &yaml.Node{Kind: yaml.MappingNode, Style: yaml.FlowStyle})
+		run.resource(volumes, source)
 	}
 	if source == "" {
 		mount := mapping(scalar("type"), scalar(volume.Type), scalar("target"), quoted(volume.Target))
@@ -223,19 +426,20 @@ func sandboxMount(serviceName string, index int, volume types.ServiceVolumeConfi
 	return quoted(mount)
 }
 
-// externalNetworks resets every external network so the sandbox never joins
-// the user's real proxy or tunnel network.
-func externalNetworks(project *types.Project) *yaml.Node {
+// sandboxNetworks resets every external network so the sandbox never joins
+// the user's real proxy or tunnel network, and gives every other network a
+// name of the run's own.
+func sandboxNetworks(project *types.Project, run owner) *yaml.Node {
 	networks := mapping()
-	names := make([]string, 0, len(project.Networks))
-	for name, network := range project.Networks {
-		if network.External {
-			names = append(names, name)
+	for _, name := range slices.Sorted(maps.Keys(project.Networks)) {
+		if project.Networks[name].External {
+			networks.Content = append(networks.Content, scalar(name), tagged(tagReset, scalar(yamlNull)))
+			continue
 		}
+		run.resource(networks, name)
 	}
-	sort.Strings(names)
-	for _, name := range names {
-		networks.Content = append(networks.Content, scalar(name), &yaml.Node{Kind: yaml.ScalarNode, Tag: tagReset, Value: "null"})
+	if _, declared := project.Networks[defaultNetwork]; !declared {
+		run.resource(networks, defaultNetwork)
 	}
 	return networks
 }

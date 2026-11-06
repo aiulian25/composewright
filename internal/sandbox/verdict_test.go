@@ -32,7 +32,7 @@ func TestValidateIgnoresTheProjectsBenignPatterns(t *testing.T) {
 		"anchored on the line's text":   {`^FATAL: config \(default\)`, `^FATAL: optional`},
 	} {
 		t.Run(name, func(t *testing.T) {
-			fake := &fakeDocker{ps: healthyApp, logs: logs}
+			fake := &fakeDocker{ps: healthyApp + "\n" + healthyDB, logs: logs}
 			verdict, err := newTestSandbox(t, fake).Validate(context.Background(), Input{Project: "app", Compose: []byte(testCompose), Env: []byte(""),
 				Benign: patterns})
 			if err != nil {
@@ -77,5 +77,39 @@ func TestClipKeepsWholeCharacters(t *testing.T) {
 	}
 	if message := LogMessage(clipped); !strings.HasPrefix(line, message) {
 		t.Fatalf("LogMessage(%q) = %q is not the start of the line", clipped, message)
+	}
+}
+
+// TestReconcileNeedsEveryServiceUp: a pass needs a container for every
+// service the file starts that runs, or for a one-shot service that
+// finished well; none, a missing one, or one only created or paused fails,
+// and a running one no healthcheck vouches for is noted as unproven.
+func TestReconcileNeedsEveryServiceUp(t *testing.T) {
+	expected := []string{"app", "db", "migrate"}
+	done := ServiceState{Service: "migrate", State: stateExited}
+	healthy := func(name string) ServiceState {
+		return ServiceState{Service: name, State: stateRunning, Health: healthHealthy}
+	}
+	cases := []struct {
+		name     string
+		states   []ServiceState
+		reason   string
+		unproven int
+	}{
+		{"no containers", nil, ReasonStart, 0},
+		{"one never started", []ServiceState{healthy("app"), done}, ReasonStart, 0},
+		{"created only", []ServiceState{healthy("app"), {Service: "db", State: "created"}, done}, ReasonStart, 0},
+		{"paused", []ServiceState{healthy("app"), {Service: "db", State: "paused"}, done}, ReasonStart, 0},
+		{"every one ready", []ServiceState{healthy("app"), healthy("db"), done}, "", 0},
+		{"running without a healthcheck", []ServiceState{healthy("app"), {Service: "db", State: stateRunning}, done}, "", 1},
+	}
+	for _, test := range cases {
+		verdict := reconcile(Verdict{Result: ResultPass, Services: test.states}, expected, map[string]bool{"migrate": true})
+		if verdict.Reason != test.reason || len(verdict.Unproven) != test.unproven || verdict.Ready() != (test.reason == "" && test.unproven == 0) {
+			t.Errorf("%s: %s/%s %q", test.name, verdict.Result, verdict.Reason, verdict.Unproven)
+		}
+	}
+	if line := verdictLine(Verdict{Result: ResultPass, Unproven: []string{"db: running, but no healthcheck says it is ready"}}); !strings.Contains(line, "not proven ready: db") {
+		t.Errorf("an unproven pass reads %q", line)
 	}
 }

@@ -151,15 +151,15 @@ func TestValidateVerdicts(t *testing.T) {
 		{"timeout", &fakeDocker{upErr: errors.New("exit 1"), upOutput: "application not healthy after 30s",
 			ps: `{"Service":"app","State":"running","Health":"starting"}`}, ResultFail, ReasonTimeout},
 		{"start", &fakeDocker{upErr: errors.New("exit 1"), upOutput: "Error response from daemon: manifest unknown"}, ResultFail, ReasonStart},
-		{"logs", &fakeDocker{ps: healthyApp, logs: "app-1  | panic: runtime error\n"}, ResultFail, ReasonLogs},
-		{"refused once is fine", &fakeDocker{ps: healthyApp, logs: "app-1  | dial tcp: connection refused\n"}, ResultPass, ""},
-		{"refused repeatedly fails", &fakeDocker{ps: healthyApp, logs: strings.Repeat("app-1  | dial tcp db:5432: connection refused\n", 3)}, ResultFail, ReasonLogs},
-		{"postgres startup FATAL is benign", &fakeDocker{ps: healthyDB, logs: "db-1  | FATAL:  the database system is starting up\n"}, ResultPass, ""},
-		{"info line mentioning a missing file is benign", &fakeDocker{ps: healthyApp,
+		{"logs", &fakeDocker{ps: healthyApp + "\n" + healthyDB, logs: "app-1  | panic: runtime error\n"}, ResultFail, ReasonLogs},
+		{"refused once is fine", &fakeDocker{ps: healthyApp + "\n" + healthyDB, logs: "app-1  | dial tcp: connection refused\n"}, ResultPass, ""},
+		{"refused repeatedly fails", &fakeDocker{ps: healthyApp + "\n" + healthyDB, logs: strings.Repeat("app-1  | dial tcp db:5432: connection refused\n", 3)}, ResultFail, ReasonLogs},
+		{"postgres startup FATAL is benign", &fakeDocker{ps: healthyApp + "\n" + healthyDB, logs: "db-1  | FATAL:  the database system is starting up\n"}, ResultPass, ""},
+		{"info line mentioning a missing file is benign", &fakeDocker{ps: healthyApp + "\n" + healthyDB,
 			logs: "app-1  | \x1b[36m2026-10-10\x1b[0m [SETUP] \x1b[36mINFO:\x1b[0m db-config.json is not found: ENOENT: no such file or directory\n"}, ResultPass, ""},
-		{"error line with a missing file fails", &fakeDocker{ps: healthyApp, logs: "app-1  | ERROR open /config/app.yml: no such file or directory\n"}, ResultFail, ReasonLogs},
-		{"structured info level is benign", &fakeDocker{ps: healthyApp, logs: `app-1  | {"level":"info","msg":"permission denied for optional cache, continuing"}` + "\n"}, ResultPass, ""},
-		{"init service may exit 0", &fakeDocker{ps: `{"Service":"migrate","State":"exited","ExitCode":0}` + "\n" + healthyApp}, ResultPass, ""},
+		{"error line with a missing file fails", &fakeDocker{ps: healthyApp + "\n" + healthyDB, logs: "app-1  | ERROR open /config/app.yml: no such file or directory\n"}, ResultFail, ReasonLogs},
+		{"structured info level is benign", &fakeDocker{ps: healthyApp + "\n" + healthyDB, logs: `app-1  | {"level":"info","msg":"permission denied for optional cache, continuing"}` + "\n"}, ResultPass, ""},
+		{"init service may exit 0", &fakeDocker{ps: `{"Service":"migrate","State":"exited","ExitCode":0}` + "\n" + healthyApp + "\n" + healthyDB}, ResultPass, ""},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -200,7 +200,7 @@ func TestValidateTearsDownWhenStatesCannotBeRead(t *testing.T) {
 }
 
 func TestValidateScrubsSecretsFromLogs(t *testing.T) {
-	fake := &fakeDocker{ps: healthyApp, logs: "app-1  | connecting with password=0123456789abcdef and token s3cr3t-value-xyz\n"}
+	fake := &fakeDocker{ps: healthyApp + "\n" + healthyDB, logs: "app-1  | connecting with password=0123456789abcdef and token s3cr3t-value-xyz\n"}
 	verdict, err := newTestSandbox(t, fake).Validate(context.Background(), Input{Project: "app", Compose: []byte(testCompose), Env: []byte(""),
 		Secrets: []string{"s3cr3t-value-xyz"}})
 	if err != nil {
@@ -256,7 +256,7 @@ func TestParseStatesAcceptsLinesAndArrays(t *testing.T) {
 }
 
 func TestOverrideKeepsTheRunInsideTheSandbox(t *testing.T) {
-	fake := &fakeDocker{ps: healthyApp}
+	fake := &fakeDocker{ps: healthyApp + "\n" + healthyDB}
 	sandbox := newTestSandbox(t, fake)
 	directory := ""
 	sandbox.run = func(ctx context.Context, dir string, live io.Writer, arguments ...string) ([]byte, []byte, error) {
@@ -309,7 +309,7 @@ func TestStartProbesKeepTheCheckAndItsTolerance(t *testing.T) {
 		t.Fatal(err)
 	}
 	limits, _ := ParseLimits("256m", 1, 128)
-	override, err := Override(project, nil, limits, "cw-app-1234", 0, true, "")
+	override, err := Override(project, nil, limits, "cw-app-1234", 0, true, "", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -351,7 +351,7 @@ volumes:
 		t.Fatal(err)
 	}
 	limits, _ := ParseLimits("256m", 1, 128)
-	override, err := Override(project, nil, limits, "cw-app-1234", 0, true, "")
+	override, err := Override(project, nil, limits, "cw-app-1234", 0, true, "", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -382,7 +382,7 @@ func TestOverrideNeverPassesTheDockerSocket(t *testing.T) {
 		t.Fatal(err)
 	}
 	limits, _ := ParseLimits("256m", 1, 128)
-	override, err := Override(project, nil, limits, "cw-app-1234", 0, true, "")
+	override, err := Override(project, nil, limits, "cw-app-1234", 0, true, "", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -412,7 +412,7 @@ func TestPullsPinnedImagesOnlyWhenMissing(t *testing.T) {
 	}
 	for name, testCase := range cases {
 		t.Run(name, func(t *testing.T) {
-			fake := &fakeDocker{ps: healthyApp}
+			fake := &fakeDocker{ps: healthyApp + "\n" + healthyDB}
 			sandbox := newTestSandbox(t, fake)
 			input := Input{Project: "app", Compose: []byte(testCase.compose), Env: []byte(""), Published: map[string][]string{"app": {"80/tcp"}}}
 			if _, err := sandbox.Validate(context.Background(), input); err != nil {
@@ -453,17 +453,19 @@ func TestValidateReachesTheApp(t *testing.T) {
 		said    string
 		window  string
 	}{
-		{"answers", &fakeDocker{ps: healthyApp, probe: "  HTTP/1.1 200 OK\n  Content-Type: text/html\n"}, nil, ResultPass, true, "http://app:80/ answered 200", "10"},
-		{"refuses", &fakeDocker{ps: healthyApp, probe: refused}, nil, ResultFail, true, "nothing answers on app:80 from the sandbox network; is it listening on 127.0.0.1", "10"},
-		{"times out", &fakeDocker{ps: runningApp, probe: "wget: download timed out\n"}, nil, ResultFail, true, "nothing answers on app:80", "30"},
-		{"no HTTP answer", &fakeDocker{ps: healthyApp, probe: "wget: error getting response\n"}, nil, ResultPass, true, "took the connection but sent no HTTP answer", "10"},
-		{"redirect elsewhere", &fakeDocker{ps: healthyApp, probe: "  HTTP/1.1 302 Found\n  Location: http://sso.example/\nwget: bad address 'sso.example'\n"},
+		{"answers", &fakeDocker{ps: healthyApp + "\n" + healthyDB, probe: "  HTTP/1.1 200 OK\n  Content-Type: text/html\n"}, nil, ResultPass, true, "http://app:80/ answered 200", "10"},
+		{"refuses", &fakeDocker{ps: healthyApp + "\n" + healthyDB, probe: refused}, nil, ResultFail, true, "nothing answers on app:80 from the sandbox network; is it listening on 127.0.0.1", "10"},
+		{"times out", &fakeDocker{ps: runningApp + "\n" + healthyDB, probe: "wget: download timed out\n"}, nil, ResultFail, true, "nothing answers on app:80", "30"},
+		{"no HTTP answer", &fakeDocker{ps: healthyApp + "\n" + healthyDB, probe: "wget: error getting response\n"}, nil, ResultPass, false, "not checked: app:80 took the connection but sent no HTTP answer", "10"},
+		{"server error", &fakeDocker{ps: healthyApp + "\n" + healthyDB, probe: "  HTTP/1.1 500 Internal Server Error\n"}, nil, ResultFail, true, "answered 500; a server error", "10"},
+		{"server error the plan expects", &fakeDocker{ps: healthyApp + "\n" + healthyDB, probe: "  HTTP/1.1 503 Service Unavailable\n"}, []int{503}, ResultPass, true, "answered 503", "10"},
+		{"redirect elsewhere", &fakeDocker{ps: healthyApp + "\n" + healthyDB, probe: "  HTTP/1.1 302 Found\n  Location: http://sso.example/\nwget: bad address 'sso.example'\n"},
 			nil, ResultPass, true, "answered 302", "10"},
-		{"unexpected status", &fakeDocker{ps: healthyApp, probe: "  HTTP/1.1 404 Not Found\nwget: server returned error: HTTP/1.1 404 Not Found\n"},
+		{"unexpected status", &fakeDocker{ps: healthyApp + "\n" + healthyDB, probe: "  HTTP/1.1 404 Not Found\nwget: server returned error: HTTP/1.1 404 Not Found\n"},
 			[]int{200}, ResultFail, true, "answered 404; the plan expects / to answer one of 200", "10"},
-		{"no address of its own", &fakeDocker{ps: healthyApp, probe: "wget: bad address 'app:80'\n"}, nil, ResultPass, false, "not checked: app has no address", "10"},
-		{"probe did not run", &fakeDocker{ps: healthyApp, probeErr: errors.New("exit status 1")}, nil, ResultPass, false, "pull access denied", "10"},
-		{"earlier failure", &fakeDocker{ps: healthyApp, logs: "app-1  | panic: boom\n", probe: refused}, nil, ResultFail, false, notRun, ""},
+		{"no address of its own", &fakeDocker{ps: healthyApp + "\n" + healthyDB, probe: "wget: bad address 'app:80'\n"}, nil, ResultPass, false, "not checked: app has no address", "10"},
+		{"probe did not run", &fakeDocker{ps: healthyApp + "\n" + healthyDB, probeErr: errors.New("exit status 1")}, nil, ResultPass, false, "pull access denied", "10"},
+		{"earlier failure", &fakeDocker{ps: healthyApp + "\n" + healthyDB, logs: "app-1  | panic: boom\n", probe: refused}, nil, ResultFail, false, notRun, ""},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -474,6 +476,10 @@ func TestValidateReachesTheApp(t *testing.T) {
 				t.Fatal(err)
 			}
 			reach := verdict.Reach
+			unproven := slices.ContainsFunc(verdict.Unproven, func(item string) bool { return strings.Contains(item, testCase.said) })
+			if verdict.Passed() && reach != nil && !reach.Checked && !unproven {
+				t.Fatalf("an unchecked probe left the pass unqualified: %q", verdict.Unproven)
+			}
 			if verdict.Result != testCase.result || reach == nil || reach.Checked != testCase.checked || !strings.Contains(reach.Said, testCase.said) {
 				t.Fatalf("verdict %s/%s (%s), reach %+v", verdict.Result, verdict.Reason, verdict.Detail, reach)
 			}
@@ -542,7 +548,7 @@ func TestProbeScriptStopsAtTheFirstAnswer(t *testing.T) {
 }
 
 func TestValidateWithoutProbe(t *testing.T) {
-	fake := &fakeDocker{ps: healthyApp}
+	fake := &fakeDocker{ps: healthyApp + "\n" + healthyDB}
 	verdict, err := newTestSandbox(t, fake).Validate(context.Background(), Input{Project: "app", Compose: []byte(testCompose), Env: []byte("")})
 	if err != nil || !verdict.Passed() || verdict.Reach != nil || fake.called(" run ") {
 		t.Fatalf("verdict %+v, err %v", verdict, err)
@@ -552,7 +558,7 @@ func TestValidateWithoutProbe(t *testing.T) {
 // TestValidateCancelledDuringProbe: a run cancelled while the probe waits
 // is an error, never a pass, and is still taken down.
 func TestValidateCancelledDuringProbe(t *testing.T) {
-	fake := &fakeDocker{ps: healthyApp}
+	fake := &fakeDocker{ps: healthyApp + "\n" + healthyDB}
 	sandbox := newTestSandbox(t, fake)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -606,7 +612,7 @@ func TestOverrideRunsEveryContainerUnderTheRuntime(t *testing.T) {
 	}
 	limits, _ := ParseLimits("256m", 1, 128)
 	for runtime, want := range map[string]string{runscRuntime: runscRuntime, "": ""} {
-		override, err := Override(project, nil, limits, "cw-app-1234", 0, true, runtime)
+		override, err := Override(project, nil, limits, "cw-app-1234", 0, true, runtime, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -662,7 +668,7 @@ func TestMissingRuntime(t *testing.T) {
 // TestValidateRefusesRunscWithoutGVisor: the gVisor tier never falls back
 // to the default runtime; the run does not start.
 func TestValidateRefusesRunscWithoutGVisor(t *testing.T) {
-	fake := &fakeDocker{ps: healthyApp}
+	fake := &fakeDocker{ps: healthyApp + "\n" + healthyDB}
 	sandbox := newTestSandbox(t, fake)
 	sandbox.tier = "runsc"
 	_, err := sandbox.Validate(context.Background(), Input{Project: "app", Compose: []byte(testCompose)})
@@ -675,7 +681,7 @@ func TestValidateRefusesRunscWithoutGVisor(t *testing.T) {
 // an override that puts every container, the probe included, under runsc,
 // and its verdict records that tier.
 func TestValidateRunsUnderGVisorOnTheRunscTier(t *testing.T) {
-	fake := &fakeDocker{ps: healthyApp}
+	fake := &fakeDocker{ps: healthyApp + "\n" + healthyDB}
 	sandbox := newTestSandbox(t, fake)
 	sandbox.tier = runscRuntime
 	upRan := false
@@ -733,7 +739,7 @@ func TestOverrideCapsSharedMemory(t *testing.T) {
 		t.Fatal(err)
 	}
 	limits, _ := ParseLimits("256m", 1, 128)
-	override, err := Override(project, nil, limits, "cw-app-1234", 0, false, "")
+	override, err := Override(project, nil, limits, "cw-app-1234", 0, false, "", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -780,5 +786,383 @@ func TestPlatformNoteOnlyWhenTheTargetDiffers(t *testing.T) {
 	other := "linux/riscv64"
 	if note := platformNote(other); !strings.Contains(note, "the files target "+other) || !strings.Contains(note, "this sandbox runs "+config.HostPlatform()) {
 		t.Errorf("another platform: %q", note)
+	}
+}
+
+// TestRunFilesAreCopiedNotBound: a secret and a bundled config file reach
+// their services as configs the override carries, at the paths compose.yaml
+// gives them, since a bind would send the Docker daemon to a run folder that
+// exists only inside a containerised composewright. A $ survives Compose's
+// interpolation.
+func TestRunFilesAreCopiedNotBound(t *testing.T) {
+	compose := []byte(`services:
+  app:
+    image: example/app:1
+    volumes: ["./config/app.conf:/etc/app/app.conf:ro", "data:/data"]
+    secrets: [db_password, smtp_password]
+volumes:
+  data: {}
+secrets:
+  db_password:
+    file: ./secrets/db_password
+  smtp_password:
+    file: ./secrets/smtp_password
+`)
+	project, err := composefile.Load(context.Background(), composeFile, compose, nil, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	limits, _ := ParseLimits("256m", 1, 128)
+	files := map[string][]byte{"secrets/db_password": []byte("pa$word"), "config/app.conf": []byte("listen 80\n"), "secrets/smtp_password": nil}
+	override, err := Override(project, nil, limits, "cw-app-1234", 0, false, "", files)
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := string(override)
+	for _, want := range []string{`target: "/etc/app/app.conf"`, `target: "/run/secrets/db_password"`, `content: "pa$$word"`, `content: "listen 80\n"`, "secrets: !reset []"} {
+		if !strings.Contains(text, want) {
+			t.Errorf("the override lacks %q:\n%s", want, text)
+		}
+	}
+	if strings.Contains(text, "./config/app.conf") {
+		t.Errorf("the bundled file is still bound:\n%s", text)
+	}
+	details := types.ConfigDetails{WorkingDir: t.TempDir(), Environment: types.Mapping{},
+		ConfigFiles: []types.ConfigFile{{Filename: composeFile, Content: compose}, {Filename: overrideFile, Content: override}}}
+	merged, err := loader.LoadWithContext(context.Background(), details, func(options *loader.Options) { options.SetProjectName("cw-app-1234", true) })
+	if err != nil {
+		t.Fatalf("the override does not merge: %v", err)
+	}
+	app := merged.Services["app"]
+	// An empty file, a secret not supplied yet, is /dev/null: Compose would
+	// bind its project folder for empty content.
+	if len(app.Secrets) != 0 || len(app.Configs) != 3 || merged.Configs["cw-file-1"].Content != "pa$word" || merged.Configs["cw-file-2"].File != emptyFile {
+		t.Fatalf("merged: secrets %v, configs %v, %+v", app.Secrets, app.Configs, merged.Configs)
+	}
+}
+
+// TestOverrideWithholdsGrantedPrivileges: merged the way Compose merges, a
+// test run gets none of the host privileges granted for the deployment, its
+// ports stay on loopback even where the file asks for host networking, a
+// capability every container has is kept, and Withheld names the rest.
+func TestOverrideWithholdsGrantedPrivileges(t *testing.T) {
+	compose := []byte(`services:
+  app:
+    image: example/app:1
+    privileged: true
+    network_mode: host
+    devices: ["/dev/dri:/dev/dri"]
+    cap_add: [SYS_ADMIN, CAP_CHOWN, NET_ADMIN]
+    cap_drop: [ALL]
+  plain:
+    image: example/plain:1
+`)
+	project, err := composefile.Load(context.Background(), composeFile, compose, nil, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	limits, _ := ParseLimits("256m", 1, 128)
+	override, err := Override(project, map[string][]string{"app": {"8080/tcp"}}, limits, "cw-app-1234", 0, true, "", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	details := types.ConfigDetails{WorkingDir: t.TempDir(), Environment: types.Mapping{},
+		ConfigFiles: []types.ConfigFile{{Filename: composeFile, Content: compose}, {Filename: overrideFile, Content: override}}}
+	merged, err := loader.LoadWithContext(context.Background(), details, func(options *loader.Options) { options.SetProjectName("cw-app-1234", true) })
+	if err != nil {
+		t.Fatalf("Compose refuses the override: %v\n%s", err, override)
+	}
+	app := merged.Services["app"]
+	if app.Privileged || app.NetworkMode != "" || len(app.Devices) != 0 || !slices.Equal(app.CapAdd, []string{"CAP_CHOWN"}) {
+		t.Fatalf("the run keeps host privileges: privileged %v, network_mode %q, devices %v, cap_add %v\n%s",
+			app.Privileged, app.NetworkMode, app.Devices, app.CapAdd, override)
+	}
+	if len(app.Ports) != 1 || app.Ports[0].HostIP != loopbackAddress || len(app.Networks) != 1 {
+		t.Fatalf("ports %+v, networks %v\n%s", app.Ports, app.Networks, override)
+	}
+	want := []string{"app: privileged mode", "app: network_mode host", "app: device /dev/dri", "app: capability SYS_ADMIN", "app: capability NET_ADMIN"}
+	if withheld := Withheld(project); !slices.Equal(withheld, want) {
+		t.Fatalf("withheld %q, want %q", withheld, want)
+	}
+}
+
+// TestOverrideOwnsEveryResource: merged the way Compose merges, a run never
+// reuses a volume, network or container a file names explicitly, since such
+// a name is global on the daemon; every one it creates carries the run's
+// project and label, so two runs never share one and down -v removes only
+// its own, and a name kept for the sandbox's helpers is refused.
+func TestOverrideOwnsEveryResource(t *testing.T) {
+	compose := []byte(`services:
+  app:
+    image: example/app:1
+    container_name: app
+    volumes: [data:/data]
+    networks: [default, back]
+volumes:
+  data:
+    name: existing-user-data
+networks:
+  default:
+    name: existing-network
+  back:
+    name: existing-back
+`)
+	project, err := composefile.Load(context.Background(), composeFile, compose, nil, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	limits, _ := ParseLimits("256m", 1, 128)
+	for _, sandboxName := range []string{"cw-app-1234", "cw-app-5678"} {
+		override, err := Override(project, nil, limits, sandboxName, 0, true, "", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		details := types.ConfigDetails{WorkingDir: t.TempDir(), Environment: types.Mapping{},
+			ConfigFiles: []types.ConfigFile{{Filename: composeFile, Content: compose}, {Filename: overrideFile, Content: override}}}
+		merged, err := loader.LoadWithContext(context.Background(), details, func(options *loader.Options) { options.SetProjectName(sandboxName, true) })
+		if err != nil {
+			t.Fatalf("Compose refuses the override: %v\n%s", err, override)
+		}
+		if name := merged.Services["app"].ContainerName; name != "" {
+			t.Fatalf("the run keeps container_name %q\n%s", name, override)
+		}
+		volume := merged.Volumes["data"]
+		if volume.Name != sandboxName+"_data" || volume.Labels[LabelProject] != sandboxName {
+			t.Fatalf("volume %+v\n%s", volume, override)
+		}
+		for _, key := range []string{"default", "back"} {
+			network := merged.Networks[key]
+			if network.Name != sandboxName+"_"+key || network.Labels[LabelProject] != sandboxName {
+				t.Fatalf("network %s %+v\n%s", key, network, override)
+			}
+		}
+	}
+	for _, reserved := range []string{
+		"services:\n  " + probeService + ":\n    image: example/app:1\n",
+		"services:\n  app:\n    image: example/app:1\n    volumes: [cw-bind-x:/data]\nvolumes:\n  cw-bind-x: {}\n",
+	} {
+		project, err := composefile.Load(context.Background(), composeFile, []byte(reserved), nil, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := Override(project, nil, limits, "cw-app-1234", 0, true, "", nil); err == nil {
+			t.Fatalf("a reserved name was accepted:\n%s", reserved)
+		}
+	}
+}
+
+// TestOverrideRunsOneCopyOfEachService: merged the way Compose merges, a
+// service the file scales runs once, whether by scale or deploy.replicas,
+// and Withheld says it was tested as one.
+func TestOverrideRunsOneCopyOfEachService(t *testing.T) {
+	compose := []byte("services:\n  app:\n    image: example/app:1\n    deploy:\n      replicas: 1000\n  worker:\n    image: example/worker:1\n    scale: 5\n")
+	project, err := composefile.Load(context.Background(), composeFile, compose, nil, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	limits, _ := ParseLimits("256m", 1, 128)
+	override, err := Override(project, nil, limits, "cw-app-1234", 0, true, "", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	details := types.ConfigDetails{WorkingDir: t.TempDir(), Environment: types.Mapping{},
+		ConfigFiles: []types.ConfigFile{{Filename: composeFile, Content: compose}, {Filename: overrideFile, Content: override}}}
+	merged, err := loader.LoadWithContext(context.Background(), details, func(options *loader.Options) { options.SetProjectName("cw-app-1234", true) })
+	if err != nil {
+		t.Fatalf("Compose refuses the override: %v\n%s", err, override)
+	}
+	for _, name := range []string{"app", "worker"} {
+		service := merged.Services[name]
+		if copies := service.GetScale(); copies != 1 {
+			t.Fatalf("%s runs %d copies\n%s", name, copies, override)
+		}
+	}
+	want := []string{"app: 1000 copies, tested as one", "worker: 5 copies, tested as one"}
+	if withheld := Withheld(project); !slices.Equal(withheld, want) {
+		t.Fatalf("withheld %q", withheld)
+	}
+}
+
+// TestValidateBoundsEveryDaemonQuery: a daemon that cannot say what it
+// enforces stops the run before anything starts, and every question asked
+// after up has a deadline, so a stalled daemon ends the run.
+func TestValidateBoundsEveryDaemonQuery(t *testing.T) {
+	fake := &fakeDocker{ps: healthyApp + "\n" + healthyDB}
+	sandbox := newTestSandbox(t, fake)
+	sandbox.run = func(ctx context.Context, directory string, live io.Writer, arguments ...string) ([]byte, []byte, error) {
+		if arguments[0] == "info" {
+			return nil, []byte("Cannot connect to the Docker daemon"), errors.New("exit status 1")
+		}
+		return fake.run(ctx, directory, live, arguments...)
+	}
+	input := Input{Project: "app", Compose: []byte(testCompose), Env: []byte(""), Published: map[string][]string{"app": {"80/tcp"}}}
+	if _, err := sandbox.Validate(context.Background(), input); err == nil || fake.called(" up ") {
+		t.Fatalf("a run started without the daemon's limits: %v", err)
+	}
+	var unbounded []string
+	sandbox.run = func(ctx context.Context, directory string, live io.Writer, arguments ...string) ([]byte, []byte, error) {
+		command := strings.Join(arguments, " ")
+		deadline, bounded := ctx.Deadline()
+		asks := arguments[0] == "info" || arguments[0] == "inspect" || strings.Contains(command, " ps ") || strings.Contains(command, " logs ")
+		if asks && (!bounded || time.Until(deadline) > commandTimeout) {
+			unbounded = append(unbounded, command)
+		}
+		return fake.run(ctx, directory, live, arguments...)
+	}
+	if _, err := sandbox.Validate(context.Background(), input); err != nil {
+		t.Fatal(err)
+	}
+	if len(unbounded) != 0 {
+		t.Fatalf("asked without a deadline: %q", unbounded)
+	}
+}
+
+// TestLiveOutputClipsALineThatNeverEnds: output with no newline is held
+// only up to a bound, sent clipped once, and the next line arrives whole.
+func TestLiveOutputClipsALineThatNeverEnds(t *testing.T) {
+	var sent []string
+	writer := &lineWriter{send: func(line string) { sent = append(sent, line) }}
+	chunk := strings.Repeat("x", maxPendingLine/4)
+	for range 40 {
+		if _, err := writer.Write([]byte(chunk)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if writer.pending.Len() > maxPendingLine {
+		t.Fatalf("held %d bytes of one line", writer.pending.Len())
+	}
+	if _, err := writer.Write([]byte("rest of it\nnext line\n")); err != nil {
+		t.Fatal(err)
+	}
+	if len(sent) != 2 || !strings.HasSuffix(sent[0], clipMarker) || len(sent[0]) > maxPendingLine+len(clipMarker) || sent[1] != "next line" {
+		t.Fatalf("sent %d lines, the last %q", len(sent), sent[len(sent)-1])
+	}
+}
+
+// TestLimitsTextNeverClaimsUnenforcedLimits: a daemon that cannot enforce
+// limits is said to, rather than the run being called capped.
+func TestLimitsTextNeverClaimsUnenforcedLimits(t *testing.T) {
+	limits, _ := ParseLimits("256m", 1, 128)
+	if text := limitsText(limits, Environment{}); strings.Contains(text, "at most") || !strings.Contains(text, "NOT enforced") {
+		t.Fatalf("unenforced: %q", text)
+	}
+	if text := limitsText(limits, Environment{LimitsEnforced: true}); !strings.Contains(text, "at most 256MiB") {
+		t.Fatalf("enforced: %q", text)
+	}
+}
+
+// TestFailedPreparationLeavesNoFiles: a run that fails while writing its
+// files, after the secrets are down, deletes them and its lease, and asks
+// Docker to start nothing.
+func TestFailedPreparationLeavesNoFiles(t *testing.T) {
+	fake := &fakeDocker{ps: healthyApp + "\n" + healthyDB}
+	sandbox := newTestSandbox(t, fake)
+	input := Input{Project: "app", Compose: []byte(testCompose), Env: []byte("PASSWORD=s3cret\n"),
+		SecretFiles: map[string][]byte{"secrets/db_password": []byte("s3cret")}, ConfigFiles: map[string][]byte{composeFile + "/blocked": []byte("x")}}
+	if _, err := sandbox.Validate(context.Background(), input); err == nil {
+		t.Fatal("a run whose files could not be written went ahead")
+	}
+	runs, _ := filepath.Glob(filepath.Join(sandbox.root, "*", runFolder, "*"))
+	if len(runs) != 0 || len(sandbox.leaseNames()) != 0 || fake.called(" up ") {
+		t.Fatalf("left run folders %v, leases %v", runs, sandbox.leaseNames())
+	}
+}
+
+// TestJanitorReapsAbandonedRunsOnly: a run whose lease nobody holds is
+// removed whatever is left of it, a volume alone included, with its folder
+// and its lease; a run whose lease is held stays however old; a run whose
+// down fails loses its folder, secrets included, and keeps its lease for
+// the next sweep; and a run that ended with a failed teardown is left with
+// an unlocked lease, so the next sweep removes it.
+func TestJanitorReapsAbandonedRunsOnly(t *testing.T) {
+	now := time.Unix(1_800_000_000, 0)
+	old := itoa(now.Add(-2 * time.Hour).Unix())
+	volumes := `"io.composewright.sandbox=cw-gone-1a2b,io.composewright.started=` + old + `"` + "\n" +
+		`"io.composewright.sandbox=cw-live-3c4d,io.composewright.started=` + old + `"` + "\n" +
+		`"io.composewright.sandbox=cw-stuck-5e6f,io.composewright.started=` + old + `"`
+	var downs []string
+	run := func(_ context.Context, _ string, _ io.Writer, arguments ...string) ([]byte, []byte, error) {
+		command := strings.Join(arguments, " ")
+		switch {
+		case arguments[0] == "volume":
+			return []byte(volumes), nil, nil
+		case strings.Contains(command, " down "):
+			downs = append(downs, arguments[2])
+			if arguments[2] == "cw-stuck-5e6f" {
+				return nil, []byte("daemon gone"), errors.New("exit status 1")
+			}
+		}
+		return nil, nil, nil
+	}
+	limits, _ := ParseLimits("1g", 1, 100)
+	sandbox := New(run, limits, 5*time.Minute, "policy", t.TempDir())
+	sandbox.now = func() time.Time { return now }
+	for _, name := range []string{"cw-gone-1a2b", "cw-stuck-5e6f"} {
+		lease, err := sandbox.takeLease(name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := endLease(lease, false); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.MkdirAll(filepath.Join(sandbox.root, "app", runFolder, name, "secrets"), runDirMode); err != nil {
+			t.Fatal(err)
+		}
+	}
+	live, err := sandbox.takeLease("cw-live-3c4d")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer endLease(live, true)
+	removed, err := sandbox.Janitor(context.Background())
+	if err == nil || !strings.Contains(err.Error(), "cw-stuck-5e6f") {
+		t.Fatalf("a failed down was not reported: %v", err)
+	}
+	if !slices.Equal(removed, []string{"cw-gone-1a2b"}) || slices.Contains(downs, "cw-live-3c4d") {
+		t.Fatalf("removed %v, took down %v", removed, downs)
+	}
+	runs, _ := filepath.Glob(filepath.Join(sandbox.root, "*", runFolder, "*"))
+	if len(runs) != 0 || !slices.Equal(sandbox.leaseNames(), []string{"cw-live-3c4d", "cw-stuck-5e6f"}) {
+		t.Fatalf("left run folders %v and leases %v", runs, sandbox.leaseNames())
+	}
+	fake := &fakeDocker{ps: healthyApp + "\n" + healthyDB}
+	failing := newTestSandbox(t, fake)
+	failing.run = func(ctx context.Context, directory string, writer io.Writer, arguments ...string) ([]byte, []byte, error) {
+		if strings.Contains(strings.Join(arguments, " "), " down ") {
+			return nil, []byte("daemon gone"), errors.New("exit status 1")
+		}
+		return fake.run(ctx, directory, writer, arguments...)
+	}
+	if _, err := failing.Validate(context.Background(), Input{Project: "app", Compose: []byte(testCompose), Env: []byte("")}); err == nil {
+		t.Fatal("a failed teardown was not reported")
+	}
+	if names := failing.leaseNames(); len(names) != 1 || !failing.abandoned(names[0]) {
+		t.Fatalf("a failed teardown left leases %v, held or gone", names)
+	}
+}
+
+// TestValidateLooksAgainAfterTheChecks: a service that crashes while the
+// reachability probe runs fails the run, instead of passing on what the
+// containers showed before it.
+func TestValidateLooksAgainAfterTheChecks(t *testing.T) {
+	fake := &fakeDocker{ps: healthyApp + "\n" + healthyDB, probe: "  HTTP/1.1 200 OK\n"}
+	sandbox := newTestSandbox(t, fake)
+	probed := false
+	sandbox.run = func(ctx context.Context, directory string, live io.Writer, arguments ...string) ([]byte, []byte, error) {
+		command := strings.Join(arguments, " ")
+		if strings.Contains(command, " run ") {
+			probed = true
+		}
+		if probed && strings.Contains(command, " ps ") {
+			return []byte(`{"Service":"app","State":"exited","ExitCode":137}` + "\n" + healthyDB), nil, nil
+		}
+		return fake.run(ctx, directory, live, arguments...)
+	}
+	verdict, err := sandbox.Validate(context.Background(), Input{Project: "app", Compose: []byte(testCompose), Env: []byte(""), Probe: ir.Probe{Service: "app", Port: 80}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if verdict.Passed() || verdict.Reason != ReasonCrash || !strings.Contains(verdict.Detail, "after the checks") {
+		t.Fatalf("a crash during the probe passed: %s/%s %s", verdict.Result, verdict.Reason, verdict.Detail)
 	}
 }

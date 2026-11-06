@@ -57,7 +57,7 @@ func TestValidateRecordsPeaks(t *testing.T) {
 }
 
 func TestValidateKeepsPeakWhileStarting(t *testing.T) {
-	fake := &fakeDocker{ps: healthyApp, sampledWhileUp: make(chan struct{}),
+	fake := &fakeDocker{ps: healthyApp + "\n" + healthyDB, sampledWhileUp: make(chan struct{}),
 		stats:        `{"Name":"cw-x-app-1","MemUsage":"900MiB / 2GiB","CPUPerc":"90%"}`,
 		settledStats: `{"Name":"cw-x-app-1","MemUsage":"100MiB / 2GiB","CPUPerc":"1%"}`}
 	sandbox := newTestSandbox(t, fake)
@@ -72,7 +72,7 @@ func TestValidateKeepsPeakWhileStarting(t *testing.T) {
 }
 
 func TestValidatePassesWhenStatsFail(t *testing.T) {
-	fake := &fakeDocker{ps: healthyApp, statsErr: errors.New("stats unavailable")}
+	fake := &fakeDocker{ps: healthyApp + "\n" + healthyDB, statsErr: errors.New("stats unavailable")}
 	verdict, err := newTestSandbox(t, fake).Validate(context.Background(), Input{Project: "app", Compose: []byte(testCompose), Env: []byte("")})
 	if err != nil || !verdict.Passed() || verdict.Services[0].PeakMemoryBytes != 0 || verdict.Services[0].Peak() != "" {
 		t.Fatalf("verdict %+v, %v", verdict, err)

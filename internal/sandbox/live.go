@@ -20,6 +20,9 @@ const (
 	// container wrote while the previous poll was reading is not missed.
 	followOverlap = 5 * time.Second
 	logTimeLayout = time.RFC3339Nano
+	// maxPendingLine is the most of a line not yet ended that a run holds:
+	// beyond it the line is sent clipped and its rest dropped.
+	maxPendingLine = 64 << 10
 )
 
 // Line is one line of live output from a run, already redacted.
@@ -187,10 +190,21 @@ func splitLogLine(raw string) (container, service string, stamp time.Time, messa
 }
 
 func verdictLine(verdict Verdict) string {
+	if verdict.Passed() && !verdict.Ready() {
+		return fmt.Sprintf("PASS in %s, started but not proven ready: %s%s", verdict.Duration.Round(time.Second), strings.Join(verdict.Unproven, "; "), untestedNote(verdict))
+	}
 	if verdict.Passed() {
-		return fmt.Sprintf("PASS in %s: every service is running or healthy", verdict.Duration.Round(time.Second))
+		return fmt.Sprintf("PASS in %s: every service is running or healthy%s", verdict.Duration.Round(time.Second), untestedNote(verdict))
 	}
 	return fmt.Sprintf("FAIL (%s) in %s: %s", verdict.Reason, verdict.Duration.Round(time.Second), verdict.Detail)
+}
+
+// untestedNote qualifies a pass that went without host privileges.
+func untestedNote(verdict Verdict) string {
+	if len(verdict.Withheld) == 0 {
+		return ""
+	}
+	return fmt.Sprintf(", without %d withheld host privileges, which stay untested", len(verdict.Withheld))
 }
 
 // lineWriter collects writes into lines. stdout and stderr of one command
@@ -199,6 +213,9 @@ type lineWriter struct {
 	mutex   sync.Mutex
 	pending bytes.Buffer
 	send    func(string)
+	// skipping drops the rest of a line already sent clipped, up to its
+	// newline, so output that never ends a line holds little memory.
+	skipping bool
 }
 
 func (writer *lineWriter) Write(data []byte) (int, error) {
@@ -207,12 +224,26 @@ func (writer *lineWriter) Write(data []byte) (int, error) {
 	writer.pending.Write(data)
 	for {
 		line, err := writer.pending.ReadString('\n')
-		if err != nil {
+		ended := err == nil
+		if writer.skipping {
+			writer.skipping = !ended
+			if ended {
+				continue
+			}
+			return len(data), nil
+		}
+		if !ended && len(line) <= maxPendingLine {
 			writer.pending.WriteString(line)
 			return len(data), nil
 		}
+		if !ended {
+			line, writer.skipping = strings.ToValidUTF8(line[:maxPendingLine], "")+clipMarker, true
+		}
 		if text := strings.TrimSpace(line); text != "" {
 			writer.send(text)
+		}
+		if !ended {
+			return len(data), nil
 		}
 	}
 }

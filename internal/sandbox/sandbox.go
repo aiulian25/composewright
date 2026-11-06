@@ -1,7 +1,6 @@
 package sandbox
 
 import (
-	"cmp"
 	"context"
 	"crypto/rand"
 	"encoding/hex"
@@ -9,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"maps"
 	"os"
 	"path/filepath"
@@ -29,19 +29,26 @@ import (
 )
 
 const (
-	projectPrefix    = "cw-"
-	suffixBytes      = 2
-	runDirMode       = 0o700
-	runFileMode      = 0o600
-	composeFile      = "compose.yaml"
-	overrideFile     = "override.yaml"
-	envFile          = ".env"
-	pullAllowance    = 10 * time.Minute
-	pullAlways       = "always"
-	pullMissing      = "missing"
-	cleanupTimeout   = 2 * time.Minute
-	stopTimeout      = "10"
-	janitorFactor    = 2
+	projectPrefix  = "cw-"
+	suffixBytes    = 2
+	runDirMode     = 0o700
+	runFileMode    = 0o600
+	composeFile    = "compose.yaml"
+	overrideFile   = "override.yaml"
+	envFile        = ".env"
+	pullAllowance  = 10 * time.Minute
+	pullAlways     = "always"
+	pullMissing    = "missing"
+	cleanupTimeout = 2 * time.Minute
+	// commandTimeout bounds each step of a run that only asks the daemon
+	// something, so a stalled daemon ends the run instead of hanging it.
+	commandTimeout = 2 * time.Minute
+	stopTimeout    = "10"
+	janitorFactor  = 2
+	// runFolder holds a project's run folders, one per sandbox run.
+	runFolder = "run"
+	// unknownStart marks a run whose start no label records.
+	unknownStart     = int64(-1)
 	labelPairs       = ","
 	labelSeparator   = "="
 	rootlessOption   = "name=rootless"
@@ -52,6 +59,10 @@ const (
 
 // ErrRunscMissing stops a gVisor run on a daemon that cannot give it one.
 var ErrRunscMissing = errors.New("sandbox tier runsc, but this daemon has no runsc runtime: install gVisor and register it in the daemon's daemon.json")
+
+// resourceKinds are the docker commands that list each kind of resource a
+// run creates.
+var resourceKinds = [][]string{{"ps", "-a"}, {"volume", "ls"}, {"network", "ls"}}
 
 var projectCleaner = regexp.MustCompile(`[^a-z0-9-]+`)
 
@@ -96,37 +107,54 @@ type Input struct {
 	Live func(Line)
 }
 
-// Validate runs the stack and judges it. The project is always taken down
-// with its volumes, and the .env file is deleted, even when ctx is
-// cancelled; a failed teardown is reported, and the janitor retries it.
+// Validate runs the stack and judges it. A lease marks the run as alive
+// before it writes anything. The project is always taken down with its
+// volumes, and its files, secrets included, are deleted, even when ctx is
+// cancelled or preparing fails; a failed teardown is reported and keeps the
+// lease, unlocked, so the janitor retries it.
 func (sandbox *Sandbox) Validate(ctx context.Context, input Input) (verdict Verdict, err error) {
 	started := sandbox.now()
 	name, err := projectName(input.Project)
 	if err != nil {
 		return Verdict{}, err
 	}
-	directory := filepath.Join(sandbox.root, slug(input.Project), "run", name)
+	directory := filepath.Join(sandbox.root, slug(input.Project), runFolder, name)
 	output := newLiveOutput(input.Live, input.Secrets, sandbox.now)
-	environment, infoErr := sandbox.Info(ctx)
-	if err := environment.MissingRuntime(); err != nil {
-		return Verdict{}, cmp.Or(infoErr, err)
-	}
-	project, err := sandbox.prepare(ctx, directory, name, input, started, environment.probesEarly())
+	infoCtx, cancelInfo := context.WithTimeout(ctx, commandTimeout)
+	environment, err := sandbox.Info(infoCtx)
+	cancelInfo()
 	if err != nil {
 		return Verdict{}, err
+	}
+	if err := environment.MissingRuntime(); err != nil {
+		return Verdict{}, err
+	}
+	lease, err := sandbox.takeLease(name)
+	if err != nil {
+		return Verdict{}, err
+	}
+	released := false
+	defer func() { err = errors.Join(err, endLease(lease, released)) }()
+	project, err := sandbox.prepare(ctx, directory, name, input, started, environment.probesEarly())
+	if err != nil {
+		released = true
+		return Verdict{}, errors.Join(err, os.RemoveAll(directory))
 	}
 	pull := pullAlways
 	if everyImagePinned(project) {
 		pull = pullMissing
 	}
-	output.say("project %s: restart \"no\", no-new-privileges, at most %s memory, %g CPUs and %d processes per service, published ports on 127.0.0.1 only",
-		name, units.BytesSize(float64(sandbox.limits.MemoryBytes)), sandbox.limits.CPUs, sandbox.limits.PIDs)
+	output.say("project %s: restart \"no\", no-new-privileges, %s, published ports on 127.0.0.1 only", name, limitsText(sandbox.limits, environment))
 	if note := platformNote(sandbox.platform); note != "" {
 		output.say("%s", note)
 	}
+	withheld := Withheld(project)
+	if len(withheld) > 0 {
+		output.say("withheld from the run, so untested: %s", strings.Join(withheld, "; "))
+	}
 	defer func() {
 		teardownErr := sandbox.teardown(directory, name)
-		err = errors.Join(err, teardownErr)
+		err, released = errors.Join(err, teardownErr), teardownErr == nil
 		output.removed(name, teardownErr)
 	}()
 	upCtx, cancel := context.WithTimeout(ctx, sandbox.timeout+pullAllowance)
@@ -145,8 +173,10 @@ func (sandbox *Sandbox) Validate(ctx context.Context, input Input) (verdict Verd
 		defer close(sampled)
 		sandbox.sample(ctx, directory, name, kept)
 	}()
-	statesOut, _, statesErr := sandbox.compose(ctx, directory, nil, name, "ps", "-a", "--format", "json")
-	logsOut, _, _ := sandbox.compose(ctx, directory, nil, name, "logs", "--no-color", "-t", "--since", started.UTC().Format(time.RFC3339))
+	afterCtx, cancelAfter := context.WithTimeout(ctx, commandTimeout)
+	defer cancelAfter()
+	statesOut, _, statesErr := sandbox.compose(afterCtx, directory, nil, name, "ps", "-a", "--format", "json")
+	logsOut, _, _ := sandbox.compose(afterCtx, directory, nil, name, "logs", "--no-color", "-t", "--since", started.UTC().Format(time.RFC3339))
 	states, parseErr := parseStates(statesOut)
 	<-sampled
 	if statesErr != nil || parseErr != nil {
@@ -157,21 +187,54 @@ func (sandbox *Sandbox) Validate(ctx context.Context, input Input) (verdict Verd
 		states[index].MemoryLimitBytes = int64(project.Services[state.Service].MemLimit)
 	}
 	output.logs(string(logsOut))
-	sandbox.healthOutputs(ctx, states, input.Secrets, output)
+	sandbox.healthOutputs(afterCtx, states, input.Secrets, output)
 	logs := scrub(string(logsOut), input.Secrets)
 	startOutput := scrub(string(upOut)+string(upErrOut), input.Secrets)
 	if errors.Is(upCtx.Err(), context.DeadlineExceeded) {
 		startOutput += "\n" + timeoutMessage + " " + sandbox.timeout.String()
 	}
 	verdict = judge(states, upErr, startOutput, logs, input.CompletedOK, compileBenign(input.Benign))
+	verdict = reconcile(verdict, slices.Sorted(maps.Keys(project.Services)), input.CompletedOK)
 	if verdict, err = sandbox.reach(ctx, directory, name, input, verdict, output); err != nil {
 		return Verdict{}, err
 	}
+	verdict = sandbox.stillUp(ctx, directory, name, input, verdict)
 	verdict.Project, verdict.Iteration, verdict.Duration = name, input.Iteration, sandbox.now().Sub(started)
 	verdict.Logs, verdict.StartOutput, verdict.LogTails = logs, startOutput, Tails(logs)
-	verdict.Sandbox = environment
+	verdict.Sandbox, verdict.Withheld = environment, withheld
 	output.say("%s", verdictLine(verdict))
 	return verdict, nil
+}
+
+// stillUp looks at every container again once the checks are done, so a
+// service that crashed or turned unhealthy while they ran fails the run
+// instead of passing on what it showed a moment before.
+func (sandbox *Sandbox) stillUp(ctx context.Context, directory, name string, input Input, verdict Verdict) Verdict {
+	if !verdict.Passed() {
+		return verdict
+	}
+	checkCtx, cancel := context.WithTimeout(ctx, commandTimeout)
+	defer cancel()
+	statesOut, _, statesErr := sandbox.compose(checkCtx, directory, nil, name, "ps", "-a", "--format", "json")
+	states, parseErr := parseStates(statesOut)
+	if statesErr != nil || parseErr != nil {
+		return fail(verdict, ReasonStart, "could not read the containers again after the checks")
+	}
+	later := judge(states, nil, "", "", input.CompletedOK, nil)
+	if !later.Passed() {
+		return fail(verdict, later.Reason, later.Detail+" after the checks")
+	}
+	return verdict
+}
+
+// limitsText says what each service may use, or, when the daemon cannot
+// enforce limits, that none is: a run is never called capped when it is not.
+func limitsText(limits Limits, environment Environment) string {
+	if !environment.LimitsEnforced {
+		return "memory, CPU and process limits NOT enforced by this daemon"
+	}
+	return fmt.Sprintf("at most %s memory, %g CPUs and %d processes per service, one copy of each",
+		units.BytesSize(float64(limits.MemoryBytes)), limits.CPUs, limits.PIDs)
 }
 
 // healthOutputs keeps what the last healthcheck printed for every
@@ -198,7 +261,10 @@ func (sandbox *Sandbox) prepare(ctx context.Context, directory, name string, inp
 	if err != nil {
 		return nil, fmt.Errorf("compose.yaml does not load: %w", err)
 	}
-	override, err := Override(project, input.Published, sandbox.limits, name, started.Unix(), earlyProbes, Runtime(sandbox.tier))
+	injected := map[string][]byte{}
+	maps.Copy(injected, input.SecretFiles)
+	maps.Copy(injected, input.ConfigFiles)
+	override, err := Override(project, input.Published, sandbox.limits, name, started.Unix(), earlyProbes, Runtime(sandbox.tier), injected)
 	if err != nil {
 		return nil, err
 	}
@@ -257,35 +323,94 @@ func (sandbox *Sandbox) compose(ctx context.Context, directory string, live io.W
 	return sandbox.run(ctx, directory, live, append(global, arguments...)...)
 }
 
-// Janitor removes sandbox projects older than twice the validation timeout,
-// found by the label every sandbox container carries.
+// Janitor removes what runs that ended without cleaning up left behind:
+// every sandbox project whose containers, volumes or networks carry the
+// sandbox label, or that has a lease, unless a live run, in any process,
+// holds its lease. A run from before leases is left alone until it is older
+// than twice the validation timeout. Each removal also deletes the run's
+// folder, its secrets included.
 func (sandbox *Sandbox) Janitor(ctx context.Context) ([]string, error) {
-	output, stderr, err := sandbox.run(ctx, "", nil, "ps", "-a", "--filter", "label="+LabelProject, "--format", "{{json .Labels}}")
+	found, err := sandbox.labelledRuns(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("list sandbox containers: %w: %s", err, strings.TrimSpace(string(stderr)))
+		return nil, err
 	}
-	stale := map[string]bool{}
+	for _, name := range sandbox.leaseNames() {
+		if _, seen := found[name]; !seen {
+			found[name] = unknownStart
+		}
+	}
 	cutoff := sandbox.now().Add(-janitorFactor * sandbox.timeout).Unix()
-	for _, line := range strings.Split(strings.TrimSpace(string(output)), "\n") {
-		var text string
-		if json.Unmarshal([]byte(line), &text) != nil {
+	var removed []string
+	for _, name := range slices.Sorted(maps.Keys(found)) {
+		if !strings.HasPrefix(name, projectPrefix) || !sandbox.stale(name, found[name], cutoff) {
 			continue
 		}
-		labels := parseLabels(text)
-		started, err := strconv.ParseInt(labels[LabelStarted], 10, 64)
-		name := labels[LabelProject]
-		if err == nil && started < cutoff && strings.HasPrefix(name, projectPrefix) {
-			stale[name] = true
-		}
-	}
-	var removed []string
-	for name := range stale {
-		if _, _, err := sandbox.run(ctx, "", nil, "compose", "-p", name, "down", "-v", "--remove-orphans", "-t", stopTimeout); err != nil {
-			return removed, fmt.Errorf("remove stale sandbox %s: %w", name, err)
+		if err := sandbox.reap(ctx, name); err != nil {
+			return removed, err
 		}
 		removed = append(removed, name)
 	}
 	return removed, nil
+}
+
+// labelledRuns are the sandbox projects that have a labelled container,
+// volume or network, each with the earliest start any of them records.
+func (sandbox *Sandbox) labelledRuns(ctx context.Context) (map[string]int64, error) {
+	found := map[string]int64{}
+	for _, kind := range resourceKinds {
+		arguments := append(slices.Clone(kind), "--filter", "label="+LabelProject, "--format", "{{json .Labels}}")
+		output, stderr, err := sandbox.run(ctx, "", nil, arguments...)
+		if err != nil {
+			return nil, fmt.Errorf("list sandbox %s: %w: %s", kind[0], err, strings.TrimSpace(string(stderr)))
+		}
+		for _, line := range strings.Split(strings.TrimSpace(string(output)), "\n") {
+			var text string
+			if json.Unmarshal([]byte(line), &text) != nil {
+				continue
+			}
+			labels := parseLabels(text)
+			name := labels[LabelProject]
+			started, parseErr := strconv.ParseInt(labels[LabelStarted], 10, 64)
+			if parseErr != nil {
+				started = unknownStart
+			}
+			if earlier, seen := found[name]; !seen || (started != unknownStart && (earlier == unknownStart || started < earlier)) {
+				found[name] = started
+			}
+		}
+	}
+	return found, nil
+}
+
+// stale reports whether the run name is over: its lease is held by no one,
+// or, for a run from before leases, it started before cutoff.
+func (sandbox *Sandbox) stale(name string, started, cutoff int64) bool {
+	if sandbox.leased(name) {
+		return sandbox.abandoned(name)
+	}
+	return started != unknownStart && started < cutoff
+}
+
+// reap takes the run name down with its volumes and networks, deletes its
+// folder whether or not that worked, and drops its lease once Docker has
+// nothing of it left.
+func (sandbox *Sandbox) reap(ctx context.Context, name string) error {
+	ctx, cancel := context.WithTimeout(ctx, cleanupTimeout)
+	defer cancel()
+	_, stderr, downErr := sandbox.run(ctx, "", nil, "compose", "-p", name, "down", "-v", "--remove-orphans", "-t", stopTimeout)
+	folders, globErr := filepath.Glob(filepath.Join(sandbox.root, "*", runFolder, name))
+	removeErr := errors.Join(globErr)
+	for _, folder := range folders {
+		removeErr = errors.Join(removeErr, os.RemoveAll(folder))
+	}
+	if downErr != nil {
+		return errors.Join(fmt.Errorf("remove stale sandbox %s: %w: %s", name, downErr, strings.TrimSpace(string(stderr))), removeErr)
+	}
+	leaseErr := os.Remove(sandbox.leasePath(name))
+	if errors.Is(leaseErr, fs.ErrNotExist) {
+		leaseErr = nil
+	}
+	return errors.Join(removeErr, leaseErr)
 }
 
 // Info asks the daemon whether it is rootless, how cgroups work and which
@@ -480,6 +605,40 @@ func listedHostPorts(listed string) []int {
 }
 
 // Networks lists the Docker networks that exist on the daemon.
+// timeZoneFormat prints, for each container, its sandbox label and the
+// value of its TZ variable alone: the rest of its environment never leaves
+// the daemon.
+const timeZoneFormat = `{{index .Config.Labels "` + LabelProject + `"}}` + timeZoneSeparator +
+	`{{range .Config.Env}}{{if eq (index (split . "=") 0) "TZ"}}{{index (split . "=") 1}}{{end}}{{end}}`
+
+// timeZoneSeparator parts a container's sandbox label from its time zone.
+const timeZoneSeparator = "|"
+
+// TimeZones are the TZ values the running containers set, one for each
+// container that sets one; sandbox runs are left out.
+func (sandbox *Sandbox) TimeZones(ctx context.Context) ([]string, error) {
+	listed, stderr, err := sandbox.run(ctx, "", nil, "ps", "-q")
+	if err != nil {
+		return nil, fmt.Errorf("list containers: %w: %s", err, strings.TrimSpace(string(stderr)))
+	}
+	identifiers := strings.Fields(string(listed))
+	if len(identifiers) == 0 {
+		return nil, nil
+	}
+	output, stderr, err := sandbox.run(ctx, "", nil, append([]string{"inspect", "--format", timeZoneFormat}, identifiers...)...)
+	if err != nil {
+		return nil, fmt.Errorf("read time zones: %w: %s", err, strings.TrimSpace(string(stderr)))
+	}
+	var zones []string
+	for _, line := range strings.Split(string(output), "\n") {
+		label, zone, _ := strings.Cut(strings.TrimSpace(line), timeZoneSeparator)
+		if label == "" && zone != "" {
+			zones = append(zones, zone)
+		}
+	}
+	return zones, nil
+}
+
 func (sandbox *Sandbox) Networks(ctx context.Context) ([]string, error) {
 	output, stderr, err := sandbox.run(ctx, "", nil, "network", "ls", "--format", "{{.Name}}")
 	if err != nil {

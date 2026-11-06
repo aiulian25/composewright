@@ -2,6 +2,7 @@ package sandbox
 
 import (
 	"cmp"
+	"context"
 	"os"
 	"strings"
 
@@ -26,6 +27,16 @@ func SocketPath(host string) string {
 		return ""
 	}
 	return path
+}
+
+// Sweep runs the janitor of the sandbox the configuration describes: what
+// runs that ended without cleaning up left is removed, a live run's kept.
+func Sweep(ctx context.Context, configuration config.Config, projectsDir string) ([]string, error) {
+	sandbox, err := FromConfig(configuration, projectsDir)
+	if err != nil {
+		return nil, err
+	}
+	return sandbox.Janitor(ctx)
 }
 
 // FromConfig builds the sandbox the configuration describes: its docker CLI,
