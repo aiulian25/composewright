@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/aiulian25/composewright/internal/composefile"
 	"github.com/aiulian25/composewright/internal/config"
@@ -42,24 +43,31 @@ const (
 var Stages = []string{StageFacts, StageIR, StageRender}
 
 type Options struct {
-	Name      string `json:"name,omitempty"`
-	Engine    string `json:"engine"`
-	Source    string `json:"source"`
-	Ref       string `json:"ref,omitempty"`
-	Owner     string `json:"owner,omitempty"`
-	Upstream  string `json:"upstream,omitempty"`
-	StopAfter string `json:"-"`
-	ExposeVia string `json:"expose_via,omitempty"`
+	Name       string `json:"name,omitempty"`
+	Engine     string `json:"engine"`
+	Source     string `json:"source"`
+	Ref        string `json:"ref,omitempty"`
+	Owner      string `json:"owner,omitempty"`
+	SourceRoot string `json:"source_root,omitempty"`
+	Upstream   string `json:"upstream,omitempty"`
+	StopAfter  string `json:"-"`
+	ExposeVia  string `json:"expose_via,omitempty"`
 	// Networks are the profile's external networks the app joins; with no
 	// port mode and none chosen, the profile's default networks.
 	Networks []string `json:"networks,omitempty"`
 	// PublicHost is the address people open the app at, a host name with an
 	// optional path as home.example.com/rss; blank derives one from the
 	// networks it joins.
-	PublicHost      string   `json:"public_host,omitempty"`
-	Storage         string   `json:"storage,omitempty"`
-	ProfileFile     string   `json:"profile_file,omitempty"`
-	AllowNeeds      []string `json:"allow_needs,omitempty"`
+	PublicHost  string `json:"public_host,omitempty"`
+	Storage     string `json:"storage,omitempty"`
+	ProfileFile string `json:"profile_file,omitempty"`
+	// AllowNeeds are the grant keys of the exact requests a person granted,
+	// as ir.Need.Grant makes them.
+	AllowNeeds []string `json:"allow_needs,omitempty"`
+	// GrantRequested are capabilities named on the command line: the
+	// requests of them this run's plan makes are granted, once, before the
+	// first render, so a repair can never widen them.
+	GrantRequested  []string `json:"-"`
 	AllowRegistries []string `json:"allow_registries,omitempty"`
 	RunSandbox      bool     `json:"run_sandbox"`
 	MaxIterations   int      `json:"max_iterations,omitempty"`
@@ -145,12 +153,32 @@ func (options Options) Check() error {
 	if err := validPublicHost(options.PublicHost); err != nil {
 		return err
 	}
-	for _, capability := range options.AllowNeeds {
+	for _, capability := range options.GrantRequested {
 		if !slices.Contains(ir.Capabilities, capability) {
 			return fmt.Errorf("--allow-need %q must be one of %s", capability, strings.Join(ir.Capabilities, ", "))
 		}
 	}
+	for _, grant := range options.AllowNeeds {
+		if !slices.Contains(ir.Capabilities, ir.GrantCapability(grant)) {
+			return fmt.Errorf("granted need %q is not one of %s", grant, strings.Join(ir.Capabilities, ", "))
+		}
+	}
 	return nil
+}
+
+// grantRequested grants each request the plan makes of a capability named
+// on the command line, by its exact key, and forgets the names.
+func grantRequested(options *Options, input *policy.Input) {
+	if len(options.GrantRequested) == 0 {
+		return
+	}
+	for _, finding := range policy.Evaluate(*input).Findings {
+		named := finding.Severity == policy.Need && slices.Contains(options.GrantRequested, finding.Capability)
+		if named && !slices.Contains(options.AllowNeeds, finding.Grant) {
+			options.AllowNeeds = append(options.AllowNeeds, finding.Grant)
+		}
+	}
+	options.GrantRequested, input.GrantedNeeds = nil, options.AllowNeeds
 }
 
 // Generate runs the pipeline up to options.StopAfter. Facts and the plan need
@@ -164,7 +192,16 @@ func Generate(ctx context.Context, dependencies Dependencies, options Options) (
 	}
 	observer := dependencies.Observer
 	observer.step(StepFetch, StateRunning, "")
-	source, err := openSource(ctx, dependencies, options)
+	intakeTimeout := dependencies.Config.Network.IntakeTimeout
+	if intakeTimeout <= 0 {
+		intakeTimeout = 10 * time.Minute
+	}
+	intakeCtx, cancelIntake := context.WithTimeout(ctx, intakeTimeout)
+	defer cancelIntake()
+	source, err := openSource(intakeCtx, dependencies, options)
+	if err != nil && intakeCtx.Err() != nil {
+		err = fmt.Errorf("repository intake exceeded its time budget or was cancelled: %w", intakeCtx.Err())
+	}
 	if err != nil {
 		return nil, observer.failed(StepFetch, err)
 	}
@@ -174,9 +211,28 @@ func Generate(ctx context.Context, dependencies Dependencies, options Options) (
 	}
 	observer.step(StepFetch, StateDone, source.Note)
 	observer.step(StepExtract, StateRunning, "")
-	facts, err := extract.Extract(ctx, source.Directory)
+	facts, err := extract.ExtractSource(intakeCtx, source)
+	if intakeCtx.Err() != nil {
+		err = fmt.Errorf("repository analysis exceeded its time budget or was cancelled: %w", intakeCtx.Err())
+	}
+	cancelIntake()
 	if err != nil {
 		return nil, observer.failed(StepExtract, err)
+	}
+	options.SourceRoot = source.Subdir
+	if source.Subdir != "" && options.Name == "" {
+		candidate := strings.ToLower(path.Base(source.Subdir))
+		if store.ValidProjectName(candidate) {
+			options.Name = candidate
+		}
+	}
+	if source.SelectedFile != "" && options.ComposeFile == "" {
+		for _, file := range facts.ComposeFiles {
+			if file.Path == source.SelectedFile {
+				options.ComposeFile = file.Path
+				break
+			}
+		}
 	}
 	observer.step(StepExtract, StateDone, "")
 	observer.facts(facts, source)
@@ -208,8 +264,12 @@ func Generate(ctx context.Context, dependencies Dependencies, options Options) (
 			return nil, observer.failed(StepRender, err)
 		}
 	}
-	own := rules.OwnSecrets(result.Facts, result.Source)
-	if err := renderAndGate(ctx, dependencies, options, result, input, own); err != nil {
+	known, err := knownValues(ctx, dependencies, result.Plan.App.Name, rules.OwnSecrets(result.Facts, result.Source))
+	if err != nil {
+		return nil, observer.failed(StepRender, err)
+	}
+	grantRequested(&options, &input)
+	if err := renderAndGate(ctx, dependencies, options, result, input, known); err != nil {
 		return nil, observer.failed(StepRender, err)
 	}
 	if result.Files.Config, err = configContents(source, result.Plan); err != nil {
@@ -377,6 +437,20 @@ const (
 // openSource fetches a repository from its code host as a tarball, or uses
 // a local directory as it is, or unpacks a local .zip or .tar.gz.
 func openSource(ctx context.Context, dependencies Dependencies, options Options) (*fetch.Source, error) {
+	tree, isTree, err := fetch.ParseGitHubLocation(options.Source)
+	if err != nil {
+		return nil, err
+	}
+	if isTree {
+		if dependencies.Guard == nil {
+			return nil, fmt.Errorf(offlineFetchProblem, fetch.GitHubHost)
+		}
+		var pinned *string
+		if options.Regenerating {
+			pinned = &options.SourceRoot
+		}
+		return fetch.GitHubSubproject(ctx, dependencies.Guard, dependencies.Tokens[fetch.GitHubHost], tree, options.Ref, pinned)
+	}
 	location, isRemote := fetch.ParseRepository(options.Source)
 	if isRemote && dependencies.Guard == nil {
 		return nil, fmt.Errorf(offlineFetchProblem, location.Host)
@@ -413,7 +487,11 @@ func absolutePaths(options *Options) error {
 		}
 	}
 	_, _, isGitHub := fetch.ParseGitHub(options.Source)
-	if isGitHub || remoteURL(options.Source) {
+	_, isTree, treeErr := fetch.ParseGitHubLocation(options.Source)
+	if treeErr != nil {
+		return treeErr
+	}
+	if isTree || isGitHub || remoteURL(options.Source) {
 		return nil
 	}
 	options.Source, err = filepath.Abs(options.Source)
@@ -467,10 +545,10 @@ func policyInput(ctx context.Context, dependencies Dependencies, plan *ir.IR, so
 }
 
 // renderAndGate runs the plan gate, renders the files and runs the YAML gate
-// on the compose model compose-go reads back from them. own are secrets from
-// the person's own .env, given only on a first generation: later runs read
-// stored, redacted facts, whose masks must never become values.
-func renderAndGate(ctx context.Context, dependencies Dependencies, options Options, result *Result, input policy.Input, own map[string]string) error {
+// on the compose model compose-go reads back from them. known are the values
+// already chosen, by variable: nothing is read from or written to the store
+// here, so a failure leaves the project as it was.
+func renderAndGate(ctx context.Context, dependencies Dependencies, options Options, result *Result, input policy.Input, known map[string]string) error {
 	result.Report = policy.Evaluate(input)
 	profile, err := loadProfile(dependencies.Config.Profile, options.ProfileFile)
 	if err != nil {
@@ -483,13 +561,6 @@ func renderAndGate(ctx context.Context, dependencies Dependencies, options Optio
 		return err
 	}
 	result.Render = renderOptions
-	stored, err := storedValues(ctx, dependencies.Workspace.Store, result.Plan.App.Name)
-	if err != nil {
-		return err
-	}
-	known := map[string]string{}
-	maps.Copy(known, stored)
-	maps.Copy(known, own)
 	if result.Values, err = render.Values(result.Plan, renderOptions, known); err != nil {
 		return err
 	}
@@ -499,13 +570,13 @@ func renderAndGate(ctx context.Context, dependencies Dependencies, options Optio
 	if result.Files.Env, err = render.Env(result.Plan, result.Values, envHeader(result.Plan)); err != nil {
 		return err
 	}
-	result.Files.Deploy = render.Deploy(result.Plan, renderOptions, "not validated yet")
+	result.Files.Deploy = render.Deploy(result.Plan, renderOptions, notValidated)
 	project, err := composefile.Load(ctx, composeFileName, result.Files.Compose, nil, false)
 	if err != nil {
 		return fmt.Errorf("the rendered compose.yaml does not load: %w", err)
 	}
 	input.Profile = profile
-	result.Report = result.Report.Merge(policy.EvaluateYAML(ctx, project, result.Files.Compose, input))
+	result.Report = result.Report.Merge(gateYAML(ctx, project, result.Files.Compose, result.Files.Env, secretValues(result.Plan, result.Values), input))
 	return nil
 }
 
@@ -540,6 +611,18 @@ func loadProfile(configured config.Profile, file string) (config.Profile, error)
 
 // storedValues returns the .env values kept for an existing project, so a
 // regeneration reuses secrets that may already be deployed.
+// knownValues are a project's stored values with own, secrets from the
+// person's own .env given only on a first generation, over them: later runs
+// read stored, redacted facts, whose masks must never become values.
+func knownValues(ctx context.Context, dependencies Dependencies, name string, own map[string]string) (map[string]string, error) {
+	known, err := storedValues(ctx, dependencies.Workspace.Store, name)
+	if err != nil {
+		return nil, err
+	}
+	maps.Copy(known, own)
+	return known, nil
+}
+
 func storedValues(ctx context.Context, database *store.Store, name string) (map[string]string, error) {
 	variables, err := storedVariables(ctx, database, name)
 	if err != nil {
@@ -625,8 +708,9 @@ func generationRecord(options Options, result *Result, iteration int) store.Gene
 	report, _ := json.Marshal(result.Report)
 	return store.Generation{Iteration: iteration, Engine: result.Engine, Provider: result.Call.Provider,
 		Model: result.Call.Model, PromptHash: result.Call.PromptHash, IRJSON: string(plan),
-		ComposeYAML: string(result.Files.Compose), DeployMD: string(result.Files.Deploy), OptionsJSON: string(settings), PolicyJSON: string(report),
-		FactsJSON: factsJSON(result.Facts), Files: result.Files.Config}
+		ComposeYAML: string(result.Files.Compose), DeployMD: untestedDeploy(string(result.Files.Deploy), result.Generation, options.Edited),
+		OptionsJSON: string(settings), PolicyJSON: string(report),
+		FactsJSON: factsJSON(result.Facts), Files: result.Files.Config, Base: result.Generation.ID}
 }
 
 // configContents reads the repository's files the plan bundles, which

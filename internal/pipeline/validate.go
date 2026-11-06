@@ -13,10 +13,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/compose-spec/compose-go/v2/types"
+
 	"github.com/aiulian25/composewright/internal/composefile"
 	"github.com/aiulian25/composewright/internal/ir"
 	"github.com/aiulian25/composewright/internal/llm"
 	"github.com/aiulian25/composewright/internal/policy"
+	"github.com/aiulian25/composewright/internal/redact"
 	"github.com/aiulian25/composewright/internal/rules"
 	"github.com/aiulian25/composewright/internal/sandbox"
 	"github.com/aiulian25/composewright/internal/store"
@@ -27,13 +30,24 @@ import (
 var ErrBlocked = errors.New("the policy gate blocks this plan; resolve its findings first")
 
 const (
-	logsDirName      = "logs"
-	logFileMode      = 0o600
-	logDirMode       = 0o700
-	startHeader      = "== docker compose up\n"
-	logsHeader       = "\n== docker compose logs\n"
-	statusLinePrefix = "Validation: "
-	minimumSecret    = 4
+	logsDirName = "logs"
+	// unresolvedRule and unresolvedMessage refuse a compose.yaml that
+	// Compose cannot resolve with its .env.
+	unresolvedRule    = "P13"
+	unresolvedMessage = "compose.yaml does not resolve with its .env, so it cannot run: %s"
+	logFileMode       = 0o600
+	logDirMode        = 0o700
+	startHeader       = "== docker compose up\n"
+	logsHeader        = "\n== docker compose logs\n"
+	statusLinePrefix  = "Validation: "
+	// notValidated is the status of a version no run has tested.
+	notValidated = "not validated yet"
+	// changedFromNote names the tested version an untested one was made from.
+	changedFromNote = "; v%d, which this version was changed from, was %s"
+	// handEditedNote heads DEPLOY.md of a version whose compose.yaml a person
+	// edited: the steps follow the plan, which the edit may have outgrown.
+	handEditedNote = "Edited by hand: compose.yaml was changed after it was generated, and the steps below follow the plan it came from; check them against it."
+	minimumSecret  = 4
 	// draftsRemovedKey counts, in a passing run's audit entry, the untested
 	// versions before it that the pass removed.
 	draftsRemovedKey = "drafts_removed"
@@ -90,7 +104,7 @@ func validationLoop(ctx context.Context, dependencies Dependencies, options Opti
 		if err := repair(ctx, dependencies, options, result, verdict, iteration+1); err != nil {
 			result.Notices = append(result.Notices, "repair stopped: "+err.Error())
 			observer.step(StepRepair, StateFailed, err.Error())
-			return dependencies.Workspace.Store.SetProjectStatus(ctx, result.Project.ID, store.StatusNeedsHuman)
+			return dependencies.Workspace.Store.SetProjectStatus(ctx, result.Project.ID, result.Generation.ID, store.StatusNeedsHuman)
 		}
 		observer.step(StepRepair, StateDone, "")
 	}
@@ -141,7 +155,12 @@ func regate(ctx context.Context, dependencies Dependencies, stored *Stored) (pol
 	input := policyInput(ctx, dependencies, stored.Plan, stored.source(), stored.Options)
 	_, input.Images = stored.verifiedImages()
 	input.Profile = profile
-	return policy.Evaluate(input).Merge(policy.EvaluateYAML(ctx, project, []byte(stored.Generation.ComposeYAML), input)), nil
+	env, err := stored.EnvFile(Revealed)
+	if err != nil {
+		return policy.Report{}, err
+	}
+	compose := []byte(stored.Generation.ComposeYAML)
+	return policy.Evaluate(input).Merge(gateYAML(ctx, project, compose, env, secretValues(stored.Plan, stored.Values), input)), nil
 }
 
 // blockedError names the first finding that blocks, so a refusal is clear
@@ -203,7 +222,11 @@ func repaired(ctx context.Context, dependencies Dependencies, options Options, r
 	options.Edited = false
 	input := policyInput(ctx, dependencies, plan, result.Source, options)
 	input.Images = result.Checks
-	return call, rejected, renderAndGate(ctx, dependencies, options, result, input, nil)
+	known, err := knownValues(ctx, dependencies, result.Plan.App.Name, nil)
+	if err != nil {
+		return call, rejected, err
+	}
+	return call, rejected, renderAndGate(ctx, dependencies, options, result, input, known)
 }
 
 // Revalidate runs a stored project's latest generation once more, as the
@@ -248,12 +271,51 @@ func sandboxInput(plan *ir.IR, files Files, values map[string]string, iteration 
 		}
 		input.CompletedOK[service.Name] = service.Role == ir.RoleInit
 	}
+	input.Secrets = secretValues(plan, values)
+	return input
+}
+
+// secretValues are the plan's secret values long enough to look for in
+// text that must not show them.
+func secretValues(plan *ir.IR, values map[string]string) []string {
+	var secrets []string
 	for _, entry := range plan.EnvFile {
 		if value := values[entry.Key]; entry.Secret && len(value) >= minimumSecret {
-			input.Secrets = append(input.Secrets, value)
+			secrets = append(secrets, value)
 		}
 	}
-	return input
+	return secrets
+}
+
+// gateYAML runs the YAML gate on compose.yaml as written and as Docker
+// Compose reads it at run time, interpolated with env and the variables the
+// sandbox passes the docker CLI: a value safe as written, such as
+// ./secrets/${NAME}, can resolve to a path or an identity the gate refuses.
+// A file that does not resolve cannot run, so it is refused too. Secret
+// values never reach a finding's message.
+func gateYAML(ctx context.Context, project *types.Project, compose, env []byte, secrets []string, input policy.Input) policy.Report {
+	report := policy.EvaluateYAML(ctx, project, compose, input)
+	environment, err := sandbox.ComposeEnvironment(env)
+	var effective *types.Project
+	if err == nil {
+		effective, err = composefile.Load(ctx, composeFileName, compose, environment, true)
+	}
+	if err != nil {
+		return report.Merge(policy.Report{Findings: []policy.Finding{{Rule: unresolvedRule, Severity: policy.Deny,
+			Message: fmt.Sprintf(unresolvedMessage, hideSecrets(err.Error(), secrets))}}})
+	}
+	resolved := policy.EvaluateYAML(ctx, effective, compose, input)
+	for index := range resolved.Findings {
+		resolved.Findings[index].Message = hideSecrets(resolved.Findings[index].Message, secrets)
+	}
+	return report.Merge(resolved)
+}
+
+func hideSecrets(text string, secrets []string) string {
+	for _, secret := range secrets {
+		text = strings.ReplaceAll(text, secret, redact.Mask)
+	}
+	return text
 }
 
 // httpProbe is the plan's probe when it names a TCP port of its service:
@@ -294,7 +356,7 @@ func record(ctx context.Context, workspace *workspace.Workspace, project store.P
 	if err := database.RecordValidation(ctx, generation.ID, string(encoded), logsPath, deploy); err != nil {
 		return err
 	}
-	if err := database.SetProjectStatus(ctx, project.ID, status); err != nil {
+	if err := database.SetProjectStatus(ctx, project.ID, generation.ID, status); err != nil {
 		return err
 	}
 	details := map[string]any{"generation": generation.ID, "iteration": verdict.Iteration, "result": verdict.Result, "reason": verdict.Reason,
@@ -359,7 +421,41 @@ func describe(verdict sandbox.Verdict) string {
 	if !verdict.Passed() {
 		text += " · " + verdict.Reason + ": " + verdict.Detail
 	}
+	if verdict.Passed() && !verdict.Ready() {
+		text += " · started, not proven ready: " + strings.Join(verdict.Unproven, "; ")
+	}
+	if len(verdict.Withheld) > 0 {
+		text += " · untested here: " + strings.Join(verdict.Withheld, "; ")
+	}
 	return text
+}
+
+// untestedDeploy is DEPLOY.md for a version no run has tested yet, whatever
+// text it was built from: its status says so, naming base, the version it
+// was changed from, when that one was tested, and a compose.yaml edited by
+// hand says the steps follow the plan.
+func untestedDeploy(deploy string, base store.Generation, edited bool) string {
+	status := notValidated
+	if verdict, tested := StoredVerdict(base); tested {
+		status += fmt.Sprintf(changedFromNote, base.Number, verdict.Result)
+	}
+	deploy = statusLine(deploy, status)
+	if !edited || strings.Contains(deploy, handEditedNote) {
+		return deploy
+	}
+	lines := strings.Split(deploy, "\n")
+	index := slices.IndexFunc(lines, func(line string) bool { return strings.HasPrefix(line, statusLinePrefix) })
+	return strings.Join(slices.Insert(lines, index+1, handEditedNote), "\n")
+}
+
+// claimsValidation reports whether DEPLOY.md's status says a run tested it.
+func claimsValidation(deploy string) bool {
+	for line := range strings.SplitSeq(deploy, "\n") {
+		if strings.HasPrefix(line, statusLinePrefix) {
+			return !strings.HasPrefix(line, statusLinePrefix+notValidated)
+		}
+	}
+	return false
 }
 
 func statusLine(deploy, status string) string {

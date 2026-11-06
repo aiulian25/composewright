@@ -38,6 +38,12 @@ scm:
   github_token_ref: ""       # optional keyring:<name> or env:<VARIABLE>; raises the GitHub API limit from 60 to 5000 requests per hour
   token_refs: {}             # other code hosts' tokens by host, for private repositories, e.g. {gitlab.com: keyring:gitlab}
 network:
+  # Time budgets are 1s to 24h. The earliest caller, request or job deadline wins.
+  intake_timeout: 10m        # total repository intake and each non-model HTTP request
+  body_idle_timeout: 2m     # maximum gap between response-body bytes
+  provider_timeout: 30m      # total per model request, including streaming
+  provider_idle_timeout: 10m # first headers / gaps between bytes; allows local model cold starts
+  job_timeout: 2h            # total web job; restart the server after changing this
   allow_private_targets: []  # explicit opt-in for LAN or loopback services, e.g. ["192.168.1.10:3000"]
   update_check: false        # must stay false: updates are checked only when you ask (version --check or Settings › Maintenance)
 ui:

@@ -36,6 +36,7 @@ func (config Config) Validate() error {
 	return errors.Join(
 		oneOf("docker.sandbox_tier", config.Docker.SandboxTier, sandboxTiers),
 		config.Docker.Validate.validate(),
+		config.Network.validateBudgets(),
 		config.LLM.validate(config.Network.AllowPrivateTargets),
 		validateRegistries(config.Registries.Allow),
 		validateHosts("scm.allow_hosts", config.SCM.AllowHosts),
@@ -332,4 +333,14 @@ func quoted(values []string) []string {
 		result = append(result, strconv.Quote(value))
 	}
 	return result
+}
+
+func (network Network) validateBudgets() error {
+	var problems []error
+	for name, value := range map[string]time.Duration{"intake_timeout": network.IntakeTimeout, "provider_timeout": network.ProviderTimeout, "body_idle_timeout": network.BodyIdleTimeout, "provider_idle_timeout": network.ProviderIdleTimeout, "job_timeout": network.JobTimeout} {
+		if value < time.Second || value > 24*time.Hour {
+			problems = append(problems, fmt.Errorf("network.%s must be between 1s and 24h", name))
+		}
+	}
+	return errors.Join(problems...)
 }

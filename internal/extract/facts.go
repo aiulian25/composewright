@@ -38,6 +38,8 @@ func (location Location) String() string {
 }
 
 type Facts struct {
+	SourceRoot   string         `json:"source_root,omitempty"`
+	SharedFiles  []string       `json:"shared_files,omitempty"`
 	Files        []string       `json:"files"`
 	ComposeFiles []ComposeFile  `json:"compose_files"`
 	Dockerfiles  []Dockerfile   `json:"dockerfiles"`
@@ -490,7 +492,7 @@ func (facts *Facts) Redacted() (*Facts, error) {
 			copied.DockerRuns[run].Env[index].Value = redacted(variable.Key, variable.Value)
 		}
 	}
-	return redactStrings(&copied)
+	return redact.Strings(&copied)
 }
 
 // secretReaders maps each variable whose name sounds harmless to a secret
@@ -528,39 +530,4 @@ func harmlessReferences(raw string) []string {
 		}
 	}
 	return names
-}
-
-// redactStrings runs redact.Text over every string of the facts, whichever
-// field holds it.
-func redactStrings(facts *Facts) (*Facts, error) {
-	encoded, err := json.Marshal(facts)
-	if err != nil {
-		return nil, err
-	}
-	var tree any
-	if err := json.Unmarshal(encoded, &tree); err != nil {
-		return nil, err
-	}
-	encoded, err = json.Marshal(redactTree(tree))
-	if err != nil {
-		return nil, err
-	}
-	var redacted Facts
-	return &redacted, json.Unmarshal(encoded, &redacted)
-}
-
-func redactTree(node any) any {
-	switch value := node.(type) {
-	case string:
-		return redact.Text(value)
-	case []any:
-		for index := range value {
-			value[index] = redactTree(value[index])
-		}
-	case map[string]any:
-		for key := range value {
-			value[key] = redactTree(value[key])
-		}
-	}
-	return node
 }

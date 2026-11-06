@@ -31,6 +31,7 @@ const (
 	nothingToAsk     = "the rules filled every field with enough confidence, so the model was not asked"
 	rulesOnly        = "rules only: no model is used for this plan"
 	keptChoiceNotice = "an optional service switched on before stays off: "
+	modelNothingRuns = "the model's plan runs no image the rules found, so this plan is the rules' alone"
 	modelLeftOut     = "the model's plan leaves out an optional service you switched on, so it does not run: "
 )
 
@@ -149,7 +150,8 @@ func latestGeneration(ctx context.Context, database *store.Store, name string) (
 // Compose starts, so it never sees an optional service that is off, nor
 // another compose file than the one the rules built from. A depends_on it copied
 // onto one that is off is dropped, as the rules drop it, and a service
-// switched on that it left out gets a notice.
+// switched on that it left out gets a notice. The draft keeps the rules'
+// images and needs; one that runs nothing they found leaves the rules' plan.
 func modelDraft(ctx context.Context, dependencies Dependencies, enabled []string, composeFile string, result *Result) {
 	rulePlan := result.Plan
 	observer := dependencies.Observer
@@ -161,7 +163,13 @@ func modelDraft(ctx context.Context, dependencies Dependencies, enabled []string
 		observer.step(StepModel, StateSkipped, modelFailed+err.Error())
 		return
 	}
-	drafted := ir.FromModel(proposal)
+	drafted, refused := ir.Protect(rulePlan, ir.FromModel(proposal))
+	result.Notices = append(result.Notices, refused...)
+	if len(drafted.Services) == 0 {
+		result.Notices = append(result.Notices, modelNothingRuns)
+		observer.step(StepModel, StateSkipped, modelNothingRuns)
+		return
+	}
 	drafted.App.Name, drafted.App.UpstreamURL = rulePlan.App.Name, rulePlan.App.UpstreamURL
 	// The rules list what the upstream documents and ships; a model never
 	// does. A file goes with the service it is mounted in, when planned.

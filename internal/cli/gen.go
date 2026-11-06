@@ -83,7 +83,7 @@ still stored so you can inspect it, and gen exits with status 2.
 	set.StringSliceVar(&flags.ports, portFlag, nil, "publish a container port on this host port, as SERVICE:CONTAINER=HOST (repeatable)")
 	set.StringVar(&flags.options.Storage, "storage", "", "volumes or bind (bind mounts under profile.storage.base_path; default: profile.storage.style)")
 	set.StringVar(&flags.options.ProfileFile, "profile", "", "use this exported profile.yaml instead of the config's profile")
-	set.StringSliceVar(&flags.options.AllowNeeds, "allow-need", nil, "grant a requested capability: "+strings.Join(ir.Capabilities, ", ")+" (repeatable, audited)")
+	set.StringSliceVar(&flags.options.GrantRequested, "allow-need", nil, "grant what this run's plan requests of a capability: "+strings.Join(ir.Capabilities, ", ")+" (repeatable, audited)")
 	set.StringSliceVar(&flags.options.EnabledOptional, enableOptionalFlag, nil, "add an optional service upstream starts only with a Compose profile (repeatable; \"\" switches them all off; without it, a regeneration keeps those switched on)")
 	set.StringVar(&flags.options.ComposeFile, composeFileFlag, "", "build from this upstream compose file, by its path in the repository (without it, a regeneration keeps the file chosen before, else the rules choose one; name a file to change it)")
 	set.StringSliceVar(&flags.options.AllowRegistries, "allow-registry", nil, "trust images matching this pattern, e.g. docker.io/vaultwarden/* (repeatable)")

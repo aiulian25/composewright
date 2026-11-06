@@ -54,6 +54,10 @@ func Load(ctx context.Context, workspace *workspace.Workspace, name string) (*St
 	if err != nil {
 		return nil, fmt.Errorf("stored plan of %s: %w", name, err)
 	}
+	if generation.ValidationJSON == "" && claimsValidation(generation.DeployMD) {
+		// An edit of an older release copied its DEPLOY.md, PASS and all.
+		generation.DeployMD = statusLine(generation.DeployMD, notValidated)
+	}
 	stored := &Stored{Project: project, Generation: generation, Plan: plan, Values: map[string]string{}}
 	if err := json.Unmarshal([]byte(generation.OptionsJSON), &stored.Options); err != nil {
 		return nil, err
@@ -133,6 +137,15 @@ func (stored *Stored) EnvExample() ([]byte, error) {
 func (stored *Stored) source() *fetch.Source {
 	project := stored.Project
 	return &fetch.Source{Kind: project.SourceKind, URL: project.SourceURL, Ref: project.SourceRef, Commit: project.SourceCommit, Owner: project.SourceOwner}
+}
+
+// current refuses with ErrStale a change a page made from base, a version
+// that is no longer this latest one; an empty base names none.
+func (stored *Stored) current(base string) error {
+	if base != "" && base != stored.Generation.ID {
+		return ErrStale
+	}
+	return nil
 }
 
 func (stored *Stored) result() (*Result, error) {
@@ -217,7 +230,7 @@ func (stored *Stored) Regeneration(enabled []string, composeFile string) (Option
 		return Options{}, ErrNotRereadable
 	}
 	kept, project := stored.Options, stored.Project
-	options := Options{Name: cmp.Or(kept.Name, project.Name), Engine: kept.Engine, Source: kept.Source, Ref: kept.Ref, Owner: kept.Owner,
+	options := Options{SourceRoot: kept.SourceRoot, Name: cmp.Or(kept.Name, project.Name), Engine: kept.Engine, Source: kept.Source, Ref: kept.Ref, Owner: kept.Owner,
 		Upstream: kept.Upstream, ExposeVia: kept.ExposeVia, Networks: kept.Networks, PublicHost: kept.PublicHost, Storage: kept.Storage, ProfileFile: kept.ProfileFile,
 		AllowNeeds: kept.AllowNeeds, AllowRegistries: kept.AllowRegistries, BenignLogPatterns: kept.BenignLogPatterns, EnabledOptional: enabled,
 		ComposeFile: cmp.Or(composeFile, kept.ComposeFile), Ports: kept.Ports, ImageTags: kept.ImageTags, Regenerating: true}

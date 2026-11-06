@@ -28,7 +28,8 @@ var registryHosts = map[string][]string{
 // the hosts behind every allowlisted registry, the Docker Hub mirror when
 // one is set, and GitHub for the manual update check.
 func PolicyFromConfig(configuration config.Config, extraRegistries []string, version string) (Policy, error) {
-	policy := Policy{Hosts: map[Purpose][]string{}, PrivateTargets: lowered(configuration.Network.AllowPrivateTargets), Version: version}
+	policy := Policy{RequestTimeout: configuration.Network.IntakeTimeout, ProviderTimeout: configuration.Network.ProviderTimeout,
+		BodyIdleTimeout: configuration.Network.BodyIdleTimeout, ProviderIdleTimeout: configuration.Network.ProviderIdleTimeout, Hosts: map[Purpose][]string{}, PrivateTargets: lowered(configuration.Network.AllowPrivateTargets), Version: version}
 	policy.Hosts[SCM] = lowered(configuration.SCM.AllowHosts)
 	policy.Hosts[Release] = []string{ReleaseHost}
 	for _, pattern := range append(append([]string{}, configuration.Registries.Allow...), extraRegistries...) {

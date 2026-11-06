@@ -119,6 +119,11 @@ func GitHub(ctx context.Context, guard *netguard.Guard, token, owner, repository
 		Directory: directory, cleanup: func() error { return os.RemoveAll(directory) }}
 	extracted, err := untar(response.Body, directory, tarballLimit)
 	source.Commit = extracted.Commit
+	if pinned, pinErr := pinnedArchiveCommit(ref, source.Commit); pinErr != nil {
+		return nil, errors.Join(pinErr, source.Close())
+	} else {
+		source.Commit = pinned
+	}
 	tooLarge := errors.Is(err, ErrTooLarge)
 	if tooLarge {
 		_ = response.Body.Close()
@@ -204,4 +209,15 @@ func githubStatus(response *http.Response, owner, repository string) error {
 		return errors.New("GitHub API rate limit reached (60 requests per hour without a token); set scm.github_token_ref")
 	}
 	return fmt.Errorf("github.com/%s/%s: unexpected status %s", owner, repository, response.Status)
+}
+
+// A resolved commit remains authoritative even without an archive PAX comment.
+func pinnedArchiveCommit(requested, reported string) (string, error) {
+	if !commitPattern.MatchString(requested) {
+		return reported, nil
+	}
+	if reported != "" && reported != requested {
+		return "", errors.New("archive commit differs from the requested commit")
+	}
+	return requested, nil
 }

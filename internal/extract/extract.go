@@ -41,6 +41,7 @@ type sourceFile struct {
 	content  []byte
 	// fenced marks a block of a README or docs page; lineOffset is the
 	// number of the page's lines above it.
+	shared     bool
 	fenced     bool
 	lineOffset int
 }
@@ -52,23 +53,34 @@ func Extract(ctx context.Context, directory string) (*Facts, error) {
 	if err != nil {
 		return nil, err
 	}
-	facts := &Facts{}
+	return factsFromFiles(ctx, files, unreadable, &Facts{})
+}
+
+func factsFromFiles(ctx context.Context, files []sourceFile, unreadable []string, facts *Facts) (*Facts, error) {
 	if len(unreadable) > 0 {
 		facts.Problems = append(facts.Problems, unreadableProblem(unreadable))
 	}
 	var mentions []Mention
-	samples := map[string]map[string]string{}
+	var samples []EnvSample
 	for _, file := range files {
 		facts.Files = append(facts.Files, file.relative)
 		if !isEnvSample(file.relative) {
 			continue
 		}
-		sample := parseEnvSample(file.relative, file.content)
+		sample, problems := readEnvSample(file.relative, file.content)
+		// The filename heuristic also finds env.ts/env.yaml source documents;
+		// do not present those as malformed user dotenv files.
+		if file.kind != fetch.Code && !isYAMLFile(path.Base(file.relative)) {
+			facts.Problems = append(facts.Problems, problems...)
+		}
 		facts.EnvSamples = append(facts.EnvSamples, sample)
 		mentions = append(mentions, sampleMentions(sample)...)
-		samples[path.Dir(file.relative)] = sampleValues(sample)
+		samples = append(samples, sample)
 	}
 	for _, file := range files {
+		if file.shared && !isEnvSample(file.relative) {
+			continue
+		}
 		mentions = append(mentions, facts.read(ctx, file, samples)...)
 	}
 	facts.Variables = mergeVariables(mentions)
@@ -119,7 +131,7 @@ func repositoryFile(files map[string]bool, folder, source string) string {
 	return ""
 }
 
-func (facts *Facts) read(ctx context.Context, file sourceFile, samples map[string]map[string]string) []Mention {
+func (facts *Facts) read(ctx context.Context, file sourceFile, samples []EnvSample) []Mention {
 	base := path.Base(file.relative)
 	switch {
 	case isEnvSample(file.relative):
@@ -146,7 +158,7 @@ func (facts *Facts) read(ctx context.Context, file sourceFile, samples map[strin
 	return nil
 }
 
-func (facts *Facts) readMarkdown(ctx context.Context, file sourceFile, samples map[string]map[string]string) []Mention {
+func (facts *Facts) readMarkdown(ctx context.Context, file sourceFile, samples []EnvSample) []Mention {
 	scan := scanMarkdown(file.relative, file.content)
 	mentions := scan.mentions
 	firstFenced := len(facts.ComposeFiles)
@@ -183,12 +195,11 @@ func (facts *Facts) readMarkdown(ctx context.Context, file sourceFile, samples m
 	return mentions
 }
 
-func (facts *Facts) readCompose(ctx context.Context, file sourceFile, samples map[string]map[string]string) []Mention {
+func (facts *Facts) readCompose(ctx context.Context, file sourceFile, samples []EnvSample) []Mention {
 	interpolation := map[string]string{}
-	for _, directory := range []string{".", path.Dir(file.relative)} {
-		for name, value := range samples[directory] {
-			interpolation[name] = value
-		}
+	sample, found := MatchingEnvSample(samples, path.Join(path.Dir(file.relative), ".env"))
+	if found {
+		interpolation = sampleValues(sample)
 	}
 	compose, mentions, err := extractCompose(ctx, file.relative, file.content, file.lineOffset, interpolation)
 	if errors.Is(err, errNotCompose) {
@@ -231,6 +242,10 @@ func sampleValues(sample EnvSample) map[string]string {
 // the same facts. Files and folders it may not read, such as a mounted
 // checkout's 0600 files in the container, are left out and listed.
 func readFiles(directory string) ([]sourceFile, []string, error) {
+	return readFilesMatching(directory, nil)
+}
+
+func readFilesMatching(directory string, keep func(string, bool) bool) ([]sourceFile, []string, error) {
 	root, err := os.OpenRoot(directory)
 	if err != nil {
 		return nil, nil, err
@@ -243,11 +258,20 @@ func readFiles(directory string) ([]sourceFile, []string, error) {
 		return nil
 	}
 	err = fs.WalkDir(root.FS(), ".", func(name string, entry fs.DirEntry, err error) error {
+		if err != nil && keep != nil && !keep(name, false) && !keep(name, true) {
+			return nil
+		}
 		if errors.Is(err, fs.ErrPermission) {
 			return leaveOut(name)
 		}
 		if err != nil {
 			return err
+		}
+		if keep != nil && !keep(name, entry.IsDir()) {
+			if entry.IsDir() {
+				return fs.SkipDir
+			}
+			return nil
 		}
 		if entry.IsDir() {
 			return skipDirectory(name)
@@ -299,7 +323,7 @@ func skipDirectory(name string) error {
 // rootReadme is the README at the repository root, preferring Markdown.
 func (facts *Facts) rootReadme() string {
 	for _, name := range facts.Files {
-		if !strings.Contains(name, "/") && isReadme(name) {
+		if (facts.SourceRoot == "" && !strings.Contains(name, "/") || facts.SourceRoot != "" && path.Dir(name) == facts.SourceRoot) && isReadme(name) {
 			return name
 		}
 	}

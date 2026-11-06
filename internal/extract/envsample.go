@@ -1,8 +1,13 @@
 package extract
 
 import (
+	"fmt"
+	"maps"
 	"regexp"
+	"slices"
 	"strings"
+
+	"github.com/compose-spec/compose-go/v2/dotenv"
 )
 
 const (
@@ -18,6 +23,7 @@ const (
 )
 
 var (
+	bareEnvKey     = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
 	assignmentLine = regexp.MustCompile(`^(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=(.*)$`)
 	commentedLine  = regexp.MustCompile(`^#+\s*(?:export\s+)?([A-Z_][A-Z0-9_]*)\s*=(.*)$`)
 	// valueComment starts an inline comment, as in Compose's own .env
@@ -41,30 +47,162 @@ var (
 // note about another variable. Commented-out assignments (# KEY=value) are
 // optional variables.
 func parseEnvSample(relative string, content []byte) EnvSample {
-	lines := strings.Split(string(content), "\n")
-	entries := make([]*EnvSampleEntry, len(lines))
-	for index, raw := range lines {
-		if entry, isEntry := sampleEntry(strings.TrimSpace(raw)); isEntry {
-			entry.Location = Location{File: relative, Line: index + 1}
-			entries[index] = &entry
+	sample, _ := readEnvSample(relative, content)
+	return sample
+}
+
+// readEnvSample separates lexical evidence from semantic values. Lookups
+// use only earlier active assignments in this file, never process variables.
+// Invalid statements are omitted and diagnosed without including their text.
+func readEnvSample(relative string, content []byte) (EnvSample, []string) {
+	lines := strings.Split(strings.TrimPrefix(string(content), "\ufeff"), "\n")
+	entries := make([][]EnvSampleEntry, len(lines))
+	continuations := make([]bool, len(lines))
+	values := map[string]string{}
+	var problems []string
+	for index := 0; index < len(lines); index++ {
+		first := index
+		raw := strings.TrimSpace(lines[index])
+		optional := false
+		optionalComment := ""
+		statement := lines[index]
+		if raw == "" {
+			continue
+		}
+		if strings.HasPrefix(raw, "#") {
+			entry, ok := sampleEntry(raw)
+			if !ok || !entry.Commented {
+				continue
+			}
+			optional = true
+			statement = strings.TrimSpace(strings.TrimLeft(raw, "#"))
+			optionalComment = dotenvComment(statement)
+		}
+		if !optional && !assignmentLine.MatchString(raw) && !bareEnvKey.MatchString(raw) {
+			problems = append(problems, fmt.Sprintf("%s:%d: invalid dotenv statement", relative, first+1))
+			continue
+		}
+		// Find a quote span once in the remaining input, matching Compose's
+		// escaped-quote handling. Continuation lines are never parsed as entries.
+		if offset := strings.IndexAny(statement, "=:"); offset >= 0 {
+			value := strings.TrimLeft(statement[offset+1:], " \t\r")
+			if len(value) > 0 && (value[0] == '\'' || value[0] == '"') {
+				quote := value[0]
+				escaped, closed := false, false
+				for !closed {
+					for i := 1; i < len(value); i++ {
+						c := value[i]
+						if c == quote && !escaped {
+							closed = true
+							break
+						}
+						if c == '\\' && !escaped {
+							escaped = true
+						} else {
+							escaped = false
+						}
+					}
+					if closed || optional || index+1 == len(lines) {
+						break
+					}
+					index++
+					continuations[index] = true
+					escaped = false // A physical newline ends an escape pair.
+					value = "\n" + lines[index]
+				}
+			}
+		}
+		if index > first {
+			statement = strings.Join(lines[first:index+1], "\n")
+		}
+		// Comments on optional example assignments are lexical evidence;
+		// they are not part of an active Compose assignment.
+		if optional {
+			if offset := strings.IndexAny(statement, "=:"); offset >= 0 {
+				value := statement[offset+1:]
+				trimmed := strings.TrimSpace(value)
+				if len(trimmed) == 0 || (trimmed[0] != '\'' && trimmed[0] != '"') {
+					if start := valueComment.FindStringIndex(value); start != nil {
+						statement = statement[:offset+1] + value[:start[0]]
+					}
+				}
+			}
+		}
+		lookup := func(name string) (string, bool) { v, ok := values[name]; return v, ok }
+		parsed, err := dotenv.ParseWithLookup(strings.NewReader(statement+"\n"), lookup)
+		if err != nil {
+			if !optional {
+				problems = append(problems, fmt.Sprintf("%s:%d: invalid dotenv statement", relative, first+1))
+			}
+			continue
+		}
+		comment := dotenvComment(statement)
+		if optional {
+			comment = optionalComment
+		}
+		for _, key := range slices.Sorted(maps.Keys(parsed)) {
+			if !assignmentLine.MatchString(key + "=") {
+				if !optional {
+					problems = append(problems, fmt.Sprintf("%s:%d: unsupported dotenv variable name", relative, first+1))
+				}
+				delete(parsed, key)
+				continue
+			}
+			entries[first] = append(entries[first], EnvSampleEntry{Key: key, Value: parsed[key], Comment: comment, Commented: optional, Location: Location{File: relative, Line: first + 1}})
+		}
+		if !optional {
+			maps.Copy(values, parsed)
 		}
 	}
 	sample := EnvSample{Path: relative}
 	var block []string
 	for index, raw := range lines {
-		entry := entries[index]
-		if entry == nil {
+		if continuations[index] {
+			continue
+		}
+		if len(entries[index]) == 0 {
 			block = commentBlock(block, strings.TrimSpace(raw))
 			continue
 		}
-		followed := index+1 < len(entries) && entries[index+1] != nil
-		if text := strings.Join(block, " "); entry.Comment == "" && describes(text, entry.Key, followed) {
-			entry.Comment = text
+		for _, entry := range entries[index] {
+			next := index + 1
+			for next < len(entries) && continuations[next] {
+				next++
+			}
+			followed := next < len(entries) && len(entries[next]) > 0
+			if text := strings.Join(block, " "); entry.Comment == "" && describes(text, entry.Key, followed) {
+				entry.Comment = text
+			}
+			sample.Entries = append(sample.Entries, entry)
+			block = nil
 		}
-		sample.Entries = append(sample.Entries, *entry)
-		block = nil
 	}
-	return sample
+	return sample, problems
+}
+
+// dotenvComment locates only a comment outside the value's quoted span.
+func dotenvComment(statement string) string {
+	offset := strings.IndexAny(statement, "=:")
+	if offset < 0 {
+		return ""
+	}
+	value := strings.TrimLeft(statement[offset+1:], " \t\r")
+	if len(value) > 0 && (value[0] == '\'' || value[0] == '"') {
+		escaped := false
+		for i := 1; i < len(value); i++ {
+			if value[i] == value[0] && !escaped {
+				return commentOf(value[i+1:])
+			}
+			if value[i] == '\\' && !escaped {
+				escaped = true
+			} else {
+				escaped = false
+			}
+		}
+		return ""
+	}
+	_, comment := sampleValue(statement[offset+1:])
+	return comment
 }
 
 // sampleEntry reads an assignment, or a commented-out one, with its inline

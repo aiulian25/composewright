@@ -32,13 +32,15 @@ var ErrUnsupportedSource = errors.New("unsupported source")
 
 // Source is a repository made available as a directory of kept files.
 type Source struct {
-	Kind       string `json:"kind"`
-	URL        string `json:"url"`
-	Ref        string `json:"ref"`
-	Commit     string `json:"commit"`
-	Owner      string `json:"owner"`
-	Repository string `json:"repository"`
-	Directory  string `json:"-"`
+	Kind         string `json:"kind"`
+	URL          string `json:"url"`
+	Ref          string `json:"ref"`
+	Commit       string `json:"commit"`
+	Owner        string `json:"owner"`
+	Repository   string `json:"repository"`
+	Directory    string `json:"-"`
+	Subdir       string `json:"subdir,omitempty"`
+	SelectedFile string `json:"selected_file,omitempty"`
 	// Note says how the source was fetched or unpacked, for the fetch step.
 	Note    string `json:"-"`
 	cleanup func() error

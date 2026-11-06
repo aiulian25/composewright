@@ -422,7 +422,7 @@ func TestComposeVariantSwitch(t *testing.T) {
 	if _, err := Generate(ctx, dependencies, Options{Source: directory, Name: "talk", ComposeFile: "./" + variant}); err != nil || load(t, dependencies, "talk").Options.ComposeFile != variant {
 		t.Fatalf("a path spelt with ./ was not found: %v", err)
 	}
-	model := &scriptedModel{change: func(*ir.IR) {}}
+	model := &scriptedModel{change: draftsApp}
 	dependencies.Assistant = llm.NewAssistant(model, "configured", 60000)
 	if _, err := Generate(ctx, dependencies, Options{Source: directory, Name: "voice", Engine: EngineModel, ComposeFile: variant}); err != nil {
 		t.Fatal(err)
@@ -435,6 +435,7 @@ func TestComposeVariantSwitch(t *testing.T) {
 		t.Fatalf("the model's plan lost the note: %v, notes %q", err, drafted.Plan.PostInstallNotes)
 	}
 	model.change = func(plan *ir.IR) {
+		draftsApp(plan)
 		for index := range plan.Services {
 			plan.Services[index].Provenance.SourceRef = variant + ":1"
 		}
@@ -470,7 +471,7 @@ func TestSwitchedOffServiceSurvivesEdits(t *testing.T) {
 		t.Fatal(err)
 	}
 	off := generate([]string{})
-	if _, err := EditCompose(ctx, dependencies, "talk", []byte(off.Generation.ComposeYAML)); err != nil {
+	if _, err := EditCompose(ctx, dependencies, "talk", []byte(off.Generation.ComposeYAML), ""); err != nil {
 		t.Fatal(err)
 	}
 	edited := load(t, dependencies, "talk")
@@ -542,7 +543,7 @@ func TestModelLeavingOutASwitchedOnService(t *testing.T) {
 		t.Fatal(err)
 	}
 	dependencies := testDependencies(t, &scriptedDocker{})
-	dependencies.Assistant = llm.NewAssistant(&scriptedModel{change: func(*ir.IR) {}}, "configured", 60000)
+	dependencies.Assistant = llm.NewAssistant(&scriptedModel{change: draftsApp}, "configured", 60000)
 	result, err := Generate(context.Background(), dependencies, Options{Source: directory, Name: "notes", Engine: EngineModel,
 		EnabledOptional: []string{"cache"}, StopAfter: StageIR})
 	if err != nil {
@@ -627,6 +628,7 @@ func TestModelDraftDropsOffDependencies(t *testing.T) {
 	}
 	dependencies := testDependencies(t, &scriptedDocker{})
 	waitsForCache := func(plan *ir.IR) {
+		draftsApp(plan)
 		plan.Services[0].DependsOn = append(plan.Services[0].DependsOn, ir.Dependency{Service: "cache", Condition: "service_started"})
 	}
 	dependencies.Assistant = llm.NewAssistant(&scriptedModel{change: waitsForCache}, "configured", 60000)
@@ -719,6 +721,36 @@ func fillAnswer(plan *ir.IR) ir.FillAnswer {
 	return answer
 }
 
+// forgedDigest is a digest a hostile model writes for the app's image.
+const forgedDigest = "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+
+// swapsWithinNamespace is a hostile model drafting the whole plan: another
+// tag and digest under the app's trusted namespace, a service of its own
+// in that namespace, a privilege upstream never asks for, and the
+// database renamed, still running the image the rules found.
+func swapsWithinNamespace(plan *ir.IR) {
+	app := &plan.Services[0]
+	app.Image.Tag, app.Image.Digest = "evil", forgedDigest
+	miner := *app
+	miner.Name, miner.Image.Repository, miner.Image.Tag, miner.Ports = "miner", "miniflux/miner", "1", []ir.Port{}
+	plan.Services[1].Name = "database"
+	for index := range plan.Services {
+		for dependency := range plan.Services[index].DependsOn {
+			plan.Services[index].DependsOn[dependency].Service = "database"
+		}
+	}
+	plan.Services = append(plan.Services, miner)
+	plan.Needs = []ir.Need{{Capability: ir.NeedPrivileged, Service: app.Name, Reason: "README said so",
+		Provenance: ir.Provenance{Source: ir.SourceReadme, SourceRef: "README.md:1", Confidence: ir.ConfidenceLow}}}
+}
+
+// draftsApp is a model drafting the rules' service app from the golden
+// plan: it runs the rules' image, and the golden plan's other services,
+// whose images the rules never found, do not run.
+func draftsApp(plan *ir.IR) {
+	plan.Services[0].Name = "app"
+}
+
 // offersOptional is a model that lists an optional service of its own.
 func offersOptional(plan *ir.IR) {
 	plan.OptionalServices = []ir.OptionalService{{Name: "extra", Image: "example/extra:1", Profiles: []string{"extra"}, DependsOn: []string{}}}
@@ -763,9 +795,35 @@ func TestEngines(t *testing.T) {
 					t.Fatalf("optional services came from the model, not the rules: %+v", result.Plan.OptionalServices)
 				}
 				for _, service := range result.Plan.Services {
-					if service.Provenance.Source != ir.SourceModel || service.Image.Provenance.Confidence == ir.ConfidenceHigh {
-						t.Fatalf("%s not stamped as model output: %+v", service.Name, service.Provenance)
+					if service.Provenance.Source != ir.SourceModel || service.Image.Provenance.Source == ir.SourceModel {
+						t.Fatalf("%s not stamped as model output, or its image not the rules': %+v %+v", service.Name, service.Provenance, service.Image)
 					}
+				}
+			}},
+		{name: "model draft keeps the rules' images and needs", engine: EngineModel, model: &scriptedModel{change: swapsWithinNamespace}, wantEngine: EngineModel,
+			check: func(t *testing.T, result *Result) {
+				app, planned := result.Plan.Service("miniflux")
+				if !planned || app.Image.Repository != "miniflux/miniflux" || app.Image.Tag == "evil" || app.Image.Digest == forgedDigest {
+					t.Fatalf("the model changed the app's image: %+v", app)
+				}
+				if _, extra := result.Plan.Service("miner"); extra || len(result.Plan.Needs) != 0 {
+					t.Fatalf("an image the rules never found, or a need they never asked for, survived: %+v %+v", result.Plan.Services, result.Plan.Needs)
+				}
+				renamed, planned := result.Plan.Service("database")
+				if !planned || renamed.Image.Repository != "library/postgres" {
+					t.Fatalf("a service running an image the rules found was dropped: %+v", result.Plan.Services)
+				}
+				notices := strings.Join(result.Notices, "\n")
+				for _, want := range []string{"the rules' docker.io/miniflux/miniflux", "miner running docker.io/miniflux/miner:1", "privileged on miniflux"} {
+					if !strings.Contains(notices, want) {
+						t.Fatalf("no notice %q: %v", want, result.Notices)
+					}
+				}
+			}},
+		{name: "model provider failure leaves the rules' plan", engine: EngineModel, model: &scriptedModel{err: errors.New("connection refused")}, wantEngine: EngineRules,
+			check: func(t *testing.T, result *Result) {
+				if app, planned := result.Plan.Service("miniflux"); !planned || app.Image.Repository != "miniflux/miniflux" {
+					t.Fatalf("no usable rules plan: %+v", result.Plan.Services)
 				}
 			}},
 		{name: "provider failure falls back to rules", engine: EngineAssisted, model: &scriptedModel{err: errors.New("connection refused")}, wantEngine: EngineRules,
@@ -867,5 +925,27 @@ func TestParsePortChoice(t *testing.T) {
 		if _, _, err := ParsePortChoice(text); err == nil {
 			t.Errorf("ParsePortChoice(%q) accepted it", text)
 		}
+	}
+}
+
+// TestAllowNeedGrantsOnlyThisPlansRequests: --allow-need cap_add grants,
+// by exact key, the capabilities the plan requests at that moment, and is
+// spent then, so a later repair asking for another one is not granted.
+func TestAllowNeedGrantsOnlyThisPlansRequests(t *testing.T) {
+	plan := &ir.IR{Services: []ir.Service{{Name: "app"}}, Needs: []ir.Need{
+		{Capability: ir.NeedCapAdd, Service: "app", Detail: "NET_ADMIN", Reason: "routing"},
+		{Capability: ir.NeedDevices, Service: "app", Detail: "/dev/ttyUSB0", Reason: "adapter"},
+	}}
+	options := Options{GrantRequested: []string{ir.NeedCapAdd}}
+	input := policy.Input{Plan: plan}
+	grantRequested(&options, &input)
+	want := []string{plan.Needs[0].Grant()}
+	if !slices.Equal(options.AllowNeeds, want) || !slices.Equal(input.GrantedNeeds, want) || options.GrantRequested != nil {
+		t.Fatalf("grants %q, gate grants %q, still requested %q", options.AllowNeeds, input.GrantedNeeds, options.GrantRequested)
+	}
+	plan.Needs = append(plan.Needs, ir.Need{Capability: ir.NeedCapAdd, Service: "app", Detail: "SYS_ADMIN", Reason: "repair"})
+	grantRequested(&options, &input)
+	if !slices.Equal(options.AllowNeeds, want) {
+		t.Fatalf("a later request was granted: %q", options.AllowNeeds)
 	}
 }

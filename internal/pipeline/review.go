@@ -36,10 +36,16 @@ var (
 	ErrNotASize        = errors.New("not a size such as 512m")
 	ErrEmptyPattern    = errors.New("an empty log pattern would ignore every line")
 	ErrInvalidTag      = errors.New("not a valid image tag")
+	// ErrStale is a change made from a version that is no longer the
+	// latest; nothing of it is saved.
+	ErrStale = store.ErrStale
 )
 
 // Revision is what a person changes on the Review page before approving.
 type Revision struct {
+	// Base is the version the page was opened on; a revision of an older
+	// one is refused with ErrStale.
+	Base            string
 	ExposeVia       string
 	Networks        []string
 	PublicHost      string
@@ -78,6 +84,9 @@ func Revise(ctx context.Context, dependencies Dependencies, name string, revisio
 	if err != nil {
 		return nil, err
 	}
+	if err := stored.current(revision.Base); err != nil {
+		return nil, err
+	}
 	result, err := stored.result()
 	if err != nil {
 		return nil, err
@@ -103,13 +112,6 @@ func Revise(ctx context.Context, dependencies Dependencies, name string, revisio
 	if err != nil {
 		return nil, err
 	}
-	variables, err := storedVariables(ctx, dependencies.Workspace.Store, stored.Project.Name)
-	if err != nil {
-		return nil, err
-	}
-	if err := dependencies.Workspace.Store.ReplaceEnvVars(ctx, stored.Project.ID, envRecords(result.Plan, values, variables)); err != nil {
-		return nil, err
-	}
 	input := policyInput(ctx, dependencies, result.Plan, result.Source, options)
 	if dependencies.Inspector != nil {
 		result.Inspected, result.Checks = verifyImages(ctx, dependencies.Inspector, result.Plan, input, revision.Images)
@@ -117,7 +119,7 @@ func Revise(ctx context.Context, dependencies Dependencies, name string, revisio
 	}
 	result.Plan.Unfilled = rules.Gaps(result.Plan)
 	input.Plan, input.Images = result.Plan, result.Checks
-	if err := renderAndGate(ctx, dependencies, options, result, input, nil); err != nil {
+	if err := renderAndGate(ctx, dependencies, options, result, input, values); err != nil {
 		return nil, err
 	}
 	return result, persist(ctx, dependencies, options, result, 1, store.ActionRevise)

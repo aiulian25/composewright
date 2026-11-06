@@ -220,7 +220,7 @@ func checkEditedCompose(t *testing.T, dependencies Dependencies, pinned ir.Image
 	}
 	edited := ir.Image{Registry: pinned.Registry, Repository: pinned.Repository, Tag: "2.2.4"}
 	compose := strings.Replace(latest.Generation.ComposeYAML, pinned.String(), edited.TaggedReference(), 1)
-	result, err := EditCompose(ctx, dependencies, "miniflux", []byte(compose))
+	result, err := EditCompose(ctx, dependencies, "miniflux", []byte(compose), "")
 	if err != nil {
 		t.Fatal(err)
 	}

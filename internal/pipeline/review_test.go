@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"slices"
@@ -526,7 +527,7 @@ func TestEditComposeChecksLikeTheFilesPage(t *testing.T) {
 	}
 	for _, added := range []string{"hostname: ${UNDEFINED}", "hostname: \"a\tb\""} {
 		edited := strings.Replace(string(first.Files.Compose), "restart: unless-stopped", "restart: unless-stopped\n    "+added, 1)
-		if _, err := EditCompose(ctx, dependencies, "miniflux", []byte(edited)); !errors.Is(err, ErrComposeInvalid) {
+		if _, err := EditCompose(ctx, dependencies, "miniflux", []byte(edited), ""); !errors.Is(err, ErrComposeInvalid) {
 			t.Errorf("the Review page saved %q: %v", added, err)
 		}
 		if _, _, err := SaveEdit(ctx, dependencies, "miniflux", Edit{Compose: []byte(edited), Env: string(env)}); !errors.Is(err, ErrEditRefused) {
@@ -549,7 +550,7 @@ func TestEditCompose(t *testing.T) {
 	if edited == string(first.Files.Compose) {
 		t.Fatal("the rendered file has no restart policy to edit")
 	}
-	result, err := EditCompose(ctx, dependencies, "miniflux", []byte(edited))
+	result, err := EditCompose(ctx, dependencies, "miniflux", []byte(edited), "")
 	if err != nil || result.Report.Blocked() {
 		t.Fatalf("a harmless edit: %v %+v", err, result.Report.Findings)
 	}
@@ -558,11 +559,11 @@ func TestEditCompose(t *testing.T) {
 		t.Fatalf("the edit is not the stored version: %v edited=%v", err, stored.Options.Edited)
 	}
 	privileged := strings.Replace(edited, "restart: always", "restart: always\n    privileged: true", 1)
-	result, err = EditCompose(ctx, dependencies, "miniflux", []byte(privileged))
+	result, err = EditCompose(ctx, dependencies, "miniflux", []byte(privileged), "")
 	if err != nil || !result.Report.Blocked() {
 		t.Fatalf("privileged: true passed the gate: %v %+v", err, result.Report.Findings)
 	}
-	if _, err := EditCompose(ctx, dependencies, "miniflux", []byte("services: [not, a, map")); !errors.Is(err, ErrComposeInvalid) {
+	if _, err := EditCompose(ctx, dependencies, "miniflux", []byte("services: [not, a, map"), ""); !errors.Is(err, ErrComposeInvalid) {
 		t.Fatalf("broken YAML: %v", err)
 	}
 	if _, err := Revise(ctx, dependencies, "miniflux", Revision{}); err != nil {
@@ -613,4 +614,133 @@ func TestBenignPatternsTravelWithTheProject(t *testing.T) {
 	if stored, _ = Load(ctx, dependencies.Workspace, "miniflux"); len(stored.Options.BenignLogPatterns) != 0 {
 		t.Fatalf("a removed pattern stayed: %q", stored.Options.BenignLogPatterns)
 	}
+}
+
+// TestFailedRevisionChangesNothing: a revision that fails once its values
+// are chosen, here a variable referring back to itself while a password is
+// made anew, leaves a tested version exactly as it was: its values, its
+// version, its passed status and the audit log.
+func TestFailedRevisionChangesNothing(t *testing.T) {
+	ctx := context.Background()
+	dependencies := testDependencies(t, &scriptedDocker{states: []string{healthy}})
+	generated(t, dependencies)
+	if _, verdict, err := Revalidate(ctx, dependencies, "miniflux"); err != nil || !verdict.Passed() {
+		t.Fatalf("revalidate: %+v %v", verdict, err)
+	}
+	before := load(t, dependencies, "miniflux")
+	audited := func() int {
+		entries, err := dependencies.Workspace.Store.AuditPage(ctx, store.AuditFilter{ProjectID: before.Project.ID})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return len(entries)
+	}
+	logged := audited()
+	revision := Revision{Base: before.Generation.ID, Values: map[string]string{"ADMIN_USERNAME": "${ADMIN_USERNAME}"}, Regenerate: []string{"ADMIN_PASSWORD"}}
+	if _, err := Revise(ctx, dependencies, "miniflux", revision); err == nil {
+		t.Fatal("a revision referring back to itself was saved")
+	}
+	after := load(t, dependencies, "miniflux")
+	if after.Generation.ID != before.Generation.ID || after.Project.Status != store.StatusPassed || !maps.Equal(after.Values, before.Values) || audited() != logged {
+		t.Fatalf("the failed revision changed the project: version %d, status %s, values changed %v, audit %d to %d",
+			after.Generation.Number, after.Project.Status, !maps.Equal(after.Values, before.Values), logged, audited())
+	}
+}
+
+// TestChangesFromAnOlderVersionAreRefused: a revision, an edit or a
+// compose.yaml saved from a page opened on a version another save has
+// since replaced is refused, and nothing of it is kept; the same change
+// made from the latest version is saved.
+func TestChangesFromAnOlderVersionAreRefused(t *testing.T) {
+	ctx := context.Background()
+	dependencies := testDependencies(t, &scriptedDocker{})
+	generated(t, dependencies)
+	opened := load(t, dependencies, "miniflux")
+	if _, err := Revise(ctx, dependencies, "miniflux", Revision{Base: opened.Generation.ID, Values: map[string]string{"DEBUG": "0"}}); err != nil {
+		t.Fatal(err)
+	}
+	latest := load(t, dependencies, "miniflux")
+	stale := []error{}
+	_, err := Revise(ctx, dependencies, "miniflux", Revision{Base: opened.Generation.ID, Values: map[string]string{"DEBUG": "2"}})
+	stale = append(stale, err)
+	shown, err := latest.EnvFile(Revealed)
+	if err != nil {
+		t.Fatal(err)
+	}
+	edit := Edit{Compose: []byte(latest.Generation.ComposeYAML + "# mine\n"), Env: string(shown), Mask: Revealed, Base: opened.Generation.ID}
+	_, _, err = SaveEdit(ctx, dependencies, "miniflux", edit)
+	stale = append(stale, err)
+	_, err = EditCompose(ctx, dependencies, "miniflux", edit.Compose, opened.Generation.ID)
+	stale = append(stale, err)
+	for index, err := range stale {
+		if !errors.Is(err, ErrStale) {
+			t.Errorf("change %d from an older version: %v", index, err)
+		}
+	}
+	if now := load(t, dependencies, "miniflux"); now.Generation.ID != latest.Generation.ID || now.Values["DEBUG"] != "0" {
+		t.Fatalf("a refused change was kept: version %d, DEBUG %q", now.Generation.Number, now.Values["DEBUG"])
+	}
+	edit.Base = latest.Generation.ID
+	if _, _, err := SaveEdit(ctx, dependencies, "miniflux", edit); err != nil {
+		t.Fatalf("an edit of the latest version was refused: %v", err)
+	}
+}
+
+// TestEveryChangeOfATestedVersionIsUntested: after a pass, a compose.yaml
+// edited by hand, a changed value and a new benign log pattern each make a
+// version whose DEPLOY.md, as stored and as exported, says it is not
+// validated yet and which tested version it came from; a hand edit also
+// says the steps follow the plan. A version an older release stored with
+// its predecessor's PASS reads as untested.
+// deployShown is how much of a DEPLOY.md a failure prints.
+const deployShown = 400
+
+func TestEveryChangeOfATestedVersionIsUntested(t *testing.T) {
+	ctx := context.Background()
+	dependencies := testDependencies(t, &scriptedDocker{states: []string{healthy}})
+	generated(t, dependencies)
+	if _, verdict, err := Revalidate(ctx, dependencies, "miniflux"); err != nil || !verdict.Passed() {
+		t.Fatalf("revalidate: %+v %v", verdict, err)
+	}
+	untested := func(change string, handEdited bool) {
+		t.Helper()
+		stored := load(t, dependencies, "miniflux")
+		bundle, err := stored.Bundle()
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, deploy := range []string{stored.Generation.DeployMD, string(bundle.Deploy)} {
+			if !strings.Contains(deploy, statusLinePrefix+notValidated) || strings.Contains(deploy, statusLinePrefix+sandbox.ResultPass) ||
+				strings.Contains(deploy, handEditedNote) != handEdited {
+				t.Fatalf("%s: DEPLOY.md reads %q", change, deploy[:min(len(deploy), deployShown)])
+			}
+		}
+	}
+	tested := load(t, dependencies, "miniflux")
+	shown, err := tested.EnvFile(Revealed)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := SaveEdit(ctx, dependencies, "miniflux", Edit{Compose: []byte(tested.Generation.ComposeYAML + "# mine\n"), Env: string(shown), Mask: Revealed}); err != nil {
+		t.Fatal(err)
+	}
+	untested("a hand edit", true)
+	if !strings.Contains(load(t, dependencies, "miniflux").Generation.DeployMD, fmt.Sprintf(changedFromNote, tested.Generation.Number, sandbox.ResultPass)) {
+		t.Fatal("the hand edit does not name the tested version it came from")
+	}
+	if _, err := Revise(ctx, dependencies, "miniflux", Revision{Values: map[string]string{"DEBUG": "0"}}); err != nil {
+		t.Fatal(err)
+	}
+	untested("a changed value", false)
+	if err := AddBenignPattern(ctx, dependencies, "miniflux", "known noise"); err != nil {
+		t.Fatal(err)
+	}
+	untested("a benign pattern", false)
+	latest := load(t, dependencies, "miniflux")
+	legacy := latest.Generation
+	legacy.DeployMD = statusLine(legacy.DeployMD, sandbox.ResultPass+" on 2026-10-01")
+	if _, _, err := dependencies.Workspace.Store.RecordGeneration(ctx, latest.Project, legacy, nil, nil, "cli:test", func(store.Project, store.Generation) []store.Event { return nil }); err != nil {
+		t.Fatal(err)
+	}
+	untested("a version stored with a copied PASS", false)
 }

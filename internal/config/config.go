@@ -100,8 +100,13 @@ type SCM struct {
 }
 
 type Network struct {
-	AllowPrivateTargets []string `yaml:"allow_private_targets"`
-	UpdateCheck         bool     `yaml:"update_check"`
+	IntakeTimeout       time.Duration `yaml:"intake_timeout"`
+	ProviderTimeout     time.Duration `yaml:"provider_timeout"`
+	BodyIdleTimeout     time.Duration `yaml:"body_idle_timeout"`
+	ProviderIdleTimeout time.Duration `yaml:"provider_idle_timeout"`
+	JobTimeout          time.Duration `yaml:"job_timeout"`
+	AllowPrivateTargets []string      `yaml:"allow_private_targets"`
+	UpdateCheck         bool          `yaml:"update_check"`
 }
 
 type UI struct {

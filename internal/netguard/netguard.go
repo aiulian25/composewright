@@ -67,9 +67,13 @@ var blockedPrefixes = mustPrefixes("0.0.0.0/8", "100.64.0.0/10", "192.0.0.0/24",
 // Policy says which hosts each purpose may reach. Hosts are exact names;
 // PrivateTargets are host:port pairs exempt from the internal-address check.
 type Policy struct {
-	Hosts          map[Purpose][]string
-	PrivateTargets []string
-	Version        string
+	Hosts               map[Purpose][]string
+	PrivateTargets      []string
+	RequestTimeout      time.Duration
+	ProviderTimeout     time.Duration
+	BodyIdleTimeout     time.Duration
+	ProviderIdleTimeout time.Duration
+	Version             string
 }
 
 type Guard struct {
@@ -110,6 +114,7 @@ func New(policy Policy) (*Guard, error) {
 func (guard *Guard) Client(purpose Purpose) *http.Client {
 	return &http.Client{
 		Transport: guard.Transport(purpose),
+		Timeout:   guard.budgets(purpose).total,
 		CheckRedirect: func(request *http.Request, via []*http.Request) error {
 			if len(via) >= maxRedirects {
 				return fmt.Errorf("stopped after %d redirects", maxRedirects)
@@ -135,7 +140,7 @@ func (guard *Guard) base(purpose Purpose) *http.Transport {
 	}
 	timeout := headerTimeout
 	if purpose == LLM {
-		timeout = modelHeaderTimeout
+		timeout = guard.budgets(purpose).idle
 	}
 	transport := &http.Transport{
 		Proxy:                 guard.proxyFor,
@@ -164,7 +169,7 @@ func (transport roundTripper) RoundTrip(request *http.Request) (*http.Response, 
 		request = request.Clone(request.Context())
 		request.Header.Set(userAgentHeader, userAgentPrefix+transport.guard.policy.Version)
 	}
-	return transport.base.RoundTrip(request)
+	return boundedRoundTrip(transport.base, request, transport.purpose, transport.guard.budgets(transport.purpose))
 }
 
 // Allows reports whether host is on the purpose's allowlist.

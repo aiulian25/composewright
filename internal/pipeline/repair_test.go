@@ -163,7 +163,7 @@ func TestRepairOfAnEditedVersion(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := EditCompose(ctx, dependencies, "miniflux", []byte(stored.Generation.ComposeYAML+"# mine\n")); err != nil {
+	if _, err := EditCompose(ctx, dependencies, "miniflux", []byte(stored.Generation.ComposeYAML+"# mine\n"), ""); err != nil {
 		t.Fatal(err)
 	}
 	if _, _, err := Revalidate(ctx, dependencies, "miniflux"); err != nil {

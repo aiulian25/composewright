@@ -37,8 +37,8 @@ func (docker *runFiles) run(ctx context.Context, directory string, live io.Write
 
 // TestRepositoryFileTravelsWithTheStack: a file of the repository a
 // service mounts is kept with the version, sealed, survives a change on
-// the Review page, reaches the sandbox run mounted read-only from the run's
-// copy, and an export writes it readable by the container's user.
+// the Review page, reaches the sandbox run as a config Compose copies in,
+// and an export writes it readable by the container's user.
 func TestRepositoryFileTravelsWithTheStack(t *testing.T) {
 	ctx := context.Background()
 	docker := &runFiles{scriptedDocker: &scriptedDocker{states: []string{healthy}}}
@@ -77,8 +77,13 @@ func TestRepositoryFileTravelsWithTheStack(t *testing.T) {
 	if _, _, err := Revalidate(ctx, dependencies, "web"); err != nil {
 		t.Fatal(err)
 	}
-	if string(docker.bundled) != bundledContent || !strings.Contains(string(docker.override), "./"+bundledPath+":/etc/nginx/nginx.conf:ro") {
-		t.Fatalf("the run had %q and the override:\n%s", docker.bundled, docker.override)
+	// The run hands the file over as a config Compose copies in: a bind would
+	// send the Docker daemon to a path that exists only in composewright's
+	// own container.
+	override := string(docker.override)
+	handed := strings.Contains(override, `target: "/etc/nginx/nginx.conf"`) && strings.Contains(override, `content: "events {}\nhttp`)
+	if !handed || strings.Contains(override, "./"+bundledPath+":") {
+		t.Fatalf("the override does not hand over the bundled file:\n%s", override)
 	}
 	bundle, err := stored.Bundle()
 	if err != nil {

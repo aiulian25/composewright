@@ -2769,7 +2769,7 @@
         },
         {
           "key": "TF_VAR_env",
-          "value": "$ENVIRONMENT",
+          "value": "",
           "comment": "",
           "commented": false,
           "location": {
@@ -5642,14 +5642,13 @@
     },
     {
       "name": "TF_VAR_env",
-      "default": "$ENVIRONMENT",
+      "default": "",
       "description": "",
       "required": false,
       "mentions": [
         {
           "name": "TF_VAR_env",
           "kind": "env_sample",
-          "default": "$ENVIRONMENT",
           "location": {
             "file": "deployment/.env",
             "line": 4

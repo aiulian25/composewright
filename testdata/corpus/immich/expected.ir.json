@@ -362,9 +362,9 @@
           "secret": true,
           "description": "Connection secret for postgres. You should change it to a random password Please use only the characters `A-Za-z0-9`, without special characters or spaces",
           "provenance": {
-            "source": "compose",
-            "source_ref": "docker/docker-compose.yml:61",
-            "confidence": "high"
+            "source": "env_sample",
+            "source_ref": "docker/example.env:17",
+            "confidence": "medium"
           }
         },
         {
@@ -375,9 +375,9 @@
           "secret": false,
           "description": "The values below this line do not need to be changed",
           "provenance": {
-            "source": "compose",
-            "source_ref": "docker/docker-compose.yml:62",
-            "confidence": "high"
+            "source": "env_sample",
+            "source_ref": "docker/example.env:21",
+            "confidence": "medium"
           }
         },
         {
@@ -388,9 +388,9 @@
           "secret": false,
           "description": "Database name",
           "provenance": {
-            "source": "compose",
-            "source_ref": "docker/docker-compose.yml:63",
-            "confidence": "high"
+            "source": "env_sample",
+            "source_ref": "docker/example.env:22",
+            "confidence": "medium"
           }
         },
         {
@@ -1089,7 +1089,7 @@
     {
       "service": "immich-server",
       "key": "TF_VAR_env",
-      "default": "$ENVIRONMENT",
+      "default": "",
       "description": "",
       "provenance": {
         "source": "env_sample",

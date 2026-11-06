@@ -14,7 +14,9 @@ import (
 
 	"github.com/aiulian25/composewright/internal/auth"
 	"github.com/aiulian25/composewright/internal/config"
+	"github.com/aiulian25/composewright/internal/doctor"
 	"github.com/aiulian25/composewright/internal/pipeline"
+	"github.com/aiulian25/composewright/internal/sandbox"
 	"github.com/aiulian25/composewright/internal/store"
 	"github.com/aiulian25/composewright/internal/web"
 	"github.com/aiulian25/composewright/internal/workspace"
@@ -210,7 +212,7 @@ func (application *app) runServe(ctx context.Context, listen string, trustedProx
 	}
 	server, err := web.New(web.Options{Loaded: loaded, Flags: config.Flags{ConfigFile: application.global.configFile, DataDir: application.global.dataDir},
 		Workspace: opened, Version: application.build.Version, Listen: listen, TrustedProxies: proxies, SetupToken: token,
-		Connect: pipeline.Connect, Logger: application.logger})
+		Connect: pipeline.Connect, Habits: doctor.LookupHabits, Sweep: sandbox.Sweep, Logger: application.logger})
 	if err != nil {
 		return err
 	}

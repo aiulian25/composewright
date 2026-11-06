@@ -408,7 +408,7 @@ func envFiles(node *yaml.Node) []string {
 		return []string{node.Value}
 	}
 	var files []string
-	for _, item := range node.Content {
+	for _, item := range items(node) {
 		if item.Kind == yaml.ScalarNode {
 			files = append(files, item.Value)
 			continue
@@ -479,15 +479,70 @@ func documentRoot(document *yaml.Node) *yaml.Node {
 	return document
 }
 
+// Alias and merge lookup preserves the original declaration nodes/lines. A
+// per-lookup cache bounds repeated alias expansion; active nodes stop cycles.
 func entries(mapping *yaml.Node) []pair {
-	if mapping == nil || mapping.Kind != yaml.MappingNode {
-		return nil
+	cache := map[*yaml.Node][]pair{}
+	active := map[*yaml.Node]bool{}
+	var visit func(*yaml.Node) []pair
+	visit = func(node *yaml.Node) []pair {
+		node = aliasNode(node)
+		if node == nil || node.Kind != yaml.MappingNode || active[node] {
+			return nil
+		}
+		if pairs, found := cache[node]; found {
+			return pairs
+		}
+		active[node] = true
+		var result []pair
+		seen := map[string]bool{}
+		for index := 0; index+1 < len(node.Content); index += 2 {
+			key, value := node.Content[index], node.Content[index+1]
+			if key.Value != "<<" {
+				if resolved := aliasNode(value); resolved != nil {
+					result = append(result, pair{key: key, value: resolved})
+				}
+				seen[key.Value] = true
+			}
+		}
+		for index := 0; index+1 < len(node.Content); index += 2 {
+			if node.Content[index].Value != "<<" {
+				continue
+			}
+			value := aliasNode(node.Content[index+1])
+			if value == nil {
+				continue
+			}
+			sources := []*yaml.Node{value}
+			if value.Kind == yaml.SequenceNode {
+				sources = value.Content
+			}
+			for _, source := range sources {
+				for _, inherited := range visit(source) {
+					if !seen[inherited.key.Value] {
+						result = append(result, inherited)
+						seen[inherited.key.Value] = true
+					}
+				}
+			}
+		}
+		active[node] = false
+		cache[node] = result
+		return result
 	}
-	pairs := make([]pair, 0, len(mapping.Content)/2)
-	for index := 0; index+1 < len(mapping.Content); index += 2 {
-		pairs = append(pairs, pair{key: mapping.Content[index], value: mapping.Content[index+1]})
+	return visit(mapping)
+}
+
+func aliasNode(node *yaml.Node) *yaml.Node {
+	seen := map[*yaml.Node]bool{}
+	for node != nil && node.Kind == yaml.AliasNode {
+		if seen[node] {
+			return nil
+		}
+		seen[node] = true
+		node = node.Alias
 	}
-	return pairs
+	return node
 }
 
 func child(mapping *yaml.Node, key string) *yaml.Node {
@@ -512,7 +567,13 @@ func items(node *yaml.Node) []*yaml.Node {
 	if node == nil || node.Kind != yaml.SequenceNode {
 		return nil
 	}
-	return node.Content
+	var result []*yaml.Node
+	for _, item := range node.Content {
+		if resolved := aliasNode(item); resolved != nil {
+			result = append(result, resolved)
+		}
+	}
+	return result
 }
 
 func itemOrKey(nodes []*yaml.Node, index int, fallback *yaml.Node) *yaml.Node {
