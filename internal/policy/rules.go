@@ -29,7 +29,10 @@ var (
 	userPattern         = regexp.MustCompile(`^[0-9]+(:[0-9]+)?$`)
 	referencePattern    = regexp.MustCompile(`\$\{([A-Za-z_][A-Za-z0-9_]*)[^}]*\}`)
 	dangerousCommand    = regexp.MustCompile(`(?i)(\b(curl|wget|nc|ncat|netcat|socat)\b|/dev/(tcp|udp)/|docker\.sock|--privileged|\b(ba|da|z)?sh\s+-c\b.*https?://)`)
-	dangerousProbe      = regexp.MustCompile(`(?i)(/dev/(tcp|udp)/|docker\.sock|--privileged)`)
+	dangerousProbe      = regexp.MustCompile(`(?i)(docker\.sock|--privileged)`)
+	// shellSocket is bash's /dev/tcp/HOST/PORT or /dev/udp/HOST/PORT, which
+	// opens a connection to HOST: a healthcheck may only open one to itself.
+	shellSocket         = regexp.MustCompile(`(?i)/dev/(?:tcp|udp)/([^/\s'"]*)`)
 	dockerSocketMention = regexp.MustCompile(`(?i)docker\.sock`)
 	// shellToken splits a healthcheck into words and the operators that end
 	// a command; quotes are dropped.
@@ -284,7 +287,10 @@ func (check *checker) imageHealthcheck(service *ir.Service, field, test string) 
 // itself, otherwise a healthcheck becomes an exfiltration channel.
 func (check *checker) probeTargets(service *ir.Service, field, test string) {
 	if dangerousProbe.MatchString(test) {
-		check.add("P6", Deny, service.Name, field+".test", "healthcheck %q reaches a device, the Docker socket or privileges", test)
+		check.add("P6", Deny, service.Name, field+".test", "healthcheck %q reaches the Docker socket or privileges", test)
+	}
+	for _, match := range shellSocket.FindAllStringSubmatch(test, -1) {
+		check.probeHost(service, field, match[1])
 	}
 	for _, host := range ir.URLHosts(test) {
 		check.probeHost(service, field, host)

