@@ -6,6 +6,144 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-06
+
+### Added
+
+- Projects can be labeled and pinned in a saved order. Combined name, status
+  and label filters organize the Projects list and sidebar without changing
+  deployments; the current sidebar project stays available while filtering.
+
+- GitHub tree/blob links can select a repository subproject at a resolved
+  commit. Analysis lists referenced shared env/config files, keeps original
+  file/line evidence and excludes sibling apps. Ambiguous ref/path or
+  branch/tag choices require an explicit Reference value instead of guessing.
+
+- Review now shows where each saved environment setting is used, including
+  derived values, consumer field names and shared secrets. Linked service
+  dependencies and cycle warnings help trace relationships without revealing
+  values; the inspector identifies its saved version and hand-edit limits.
+
+- Review's environment list can be searched by name or description and
+  filtered to settings needing input, optional settings, secrets or unsaved
+  changes. Service groups keep shared inputs together; filtering keeps edits
+  and automatically reveals rows with input errors.
+
+- Release candidates now have native amd64/arm64 packaged validation gates
+  against disposable ordinary, rootless and proxy Docker daemons, plus an
+  exact-archive vulnerability scan. Publication copies the tested OCI
+  archives with their SBOM and provenance instead of rebuilding them.
+
+- A new install sets itself up like the apps already running on its Docker
+  host: the first time the web UI starts, it takes the time zone most of
+  them set and the proxy or tunnel network most of them are reached
+  through, such as Nginx Proxy Manager's, where the profile leaves those
+  empty. Home says what it set, with a link to change it. Nothing a person
+  chose is changed, it happens once, and only a container's networks,
+  labels and TZ value are read.
+
+### Fixed
+
+- Release builds use the patched Go 1.26.10 toolchain and compression library
+  1.20.2, addressing certificate verification and malformed-frame vulnerabilities.
+
+- A test run of a stack with a secret passed as a file, or a config file
+  bundled with it, no longer fails with "bind source path does not exist"
+  when composewright itself runs in a container, as the image and the dev
+  install do. The run now hands those files to the services as configs
+  Compose copies in, instead of binding a folder the Docker host cannot see.
+- A secret you supply, such as an outside mailbox password, stays in .env
+  even when the app documents a `*_FILE` variant; only secrets composewright
+  generates are passed as files. Left empty, a variable turns the feature
+  off, while an empty file stopped apps such as OpenTodo from starting.
+  Generate an affected project again to apply it.
+- A test run no longer gets the host privileges you grant for the
+  deployment. Privileged mode, host networking, devices and capabilities
+  beyond Docker's defaults are taken off the sandboxed services, and their
+  ports stay on 127.0.0.1 even when the file asks for host networking. The
+  Validate page and DEPLOY.md say what the run went without, so it reads
+  as untested. The exported compose.yaml keeps every choice you approved.
+- A test run can no longer attach to, or delete with its cleanup, a real
+  volume or network that compose.yaml names explicitly, or clash with a
+  running container's container_name. Every volume and network it creates
+  is named after the run and labelled as its own; container_name is left
+  out of the run. A file using a name kept for the sandbox's own helpers is
+  refused. The exported compose.yaml keeps your names.
+- Granting a need now grants only the exact request you saw: that
+  capability, device, folder, socket path or port, for that service. An
+  edit or a repair that asks for a stronger capability, another device or
+  another service needs your consent again, and Review lists each request
+  with a box of its own. `--allow-need` grants what that run's plan
+  requests, once. A project granted before this release shows its needs
+  unticked; tick them again on Review.
+- A plan the model drafts on its own (the model engine) can no longer
+  swap an image for another tag, digest or repository in a trusted
+  namespace, or ask for a privilege upstream never does. Every service
+  runs an image the rules found, digest included, and only upstream's
+  needs are requested. Anything else the model proposes is listed as a
+  suggestion that does not run, and a draft that runs nothing the rules
+  found leaves the rules' plan.
+- What composewright sends a model no longer carries a password written
+  as a default, such as `${PG:-hunter2}` in a README or compose file, or
+  an escaped `$$` value. Credentials in a command, entrypoint,
+  healthcheck, note or a failed run's log lines are now masked in every
+  request too. References such as `${DB_HOST:-db}` still go as written.
+- Copy › All as shell commands can no longer run part of a file as a
+  command: a secret holding the line that ended a here-document, a quote,
+  `$` or a backtick is now written as it is. Every file is a quoted
+  `printf`, private from the moment it is created, and DEPLOY.md is
+  included. The Start it command quotes its folder, so a path with spaces
+  or shell characters works.
+- A Review change that fails, for example a value referring back to
+  itself, no longer changes the project's values. Before, it could leave a
+  tested version showing as passed with a password it never ran with. Now
+  values, the new version and its audit entry are saved together or not
+  at all.
+- A change saved from a page opened on an older version is refused,
+  saying another tab or the command line saved a newer one, instead of
+  replacing that newer version. The editor keeps what you typed. A test of
+  an older version that finishes late no longer sets the status of the
+  newer one.
+- Saving or exporting files now writes only inside the folder you chose.
+  A `config` or `secrets` folder there that is a link out of it, or a
+  dangling link, refuses the save before anything is written, and names
+  that folder. A destination that is itself a link or a mount, and links
+  between folders inside it, still work.
+- A compose.yaml written by hand may have at most 8 services and 8 copies
+  of each, like a generated plan. A test runs one copy of each service and
+  lists the scaled ones as tested as one, so the per-service limits are
+  the whole run's. A test now stops when Docker cannot say what it
+  enforces, and says plainly when the daemon does not enforce limits.
+  Questions to a stalled daemon after start time out, and a line of output
+  that never ends no longer grows without bound.
+- What an interrupted test leaves is now found and removed: its
+  containers, and its volumes and networks even when no container is
+  left, with its folder and the secrets in it. The web UI sweeps when it
+  starts and every 15 minutes, as well as before each test. A test that is
+  still running, in any composewright process on the machine, is never
+  swept however long it takes, and a test that fails while writing its
+  files deletes them at once.
+- A test passes only when every service the compose file starts has a
+  running container, or, for a one-shot service, one that finished well.
+  No container, a missing service, or one only created or paused now
+  fails, as does a service that crashes while the app is being reached,
+  and an app that answers with a server error the plan does not expect.
+  A pass where a service has no healthcheck, or where the app could not be
+  reached to check it, says "started, not proven ready" and names what
+  was not checked. The Validate page and DEPLOY.md say the same.
+- DEPLOY.md no longer claims a test the current version never had. Any
+  change after a test, whether a hand edit, a Review change, a new benign
+  log pattern or a repair, makes a version whose DEPLOY.md says "not
+  validated yet" and names the tested version it came from. A hand-edited
+  compose.yaml adds a note that the steps follow the plan it came from.
+  Versions saved by earlier releases with a copied PASS read as untested.
+- Saving or exporting files puts the whole set in place or none of it.
+  Every file is written in full first. If one cannot be put in place, the
+  files already replaced are put back and the message says nothing was
+  changed. Without overwrite, a file that appears in the meantime is never
+  replaced, and two saves to one folder wait for each other instead of
+  mixing their files. Other files in the folder are left alone.
+
 ## [0.2.0] - 2026-10-18
 
 Generated stacks can now pass secrets as files, carry the config files their

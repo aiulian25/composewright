@@ -11,7 +11,7 @@ composewright reads a repository (or a README, or a compose file you already hav
 
 ![The start page: paste a GitHub link, drop files, or paste a compose file and .env](.github/assets/screenshots/home.png)
 
-> Status: 0.2.0. Expect rough edges and breaking changes before 1.0; the [CHANGELOG](CHANGELOG.md) lists what each release changes.
+> Status: 0.3.0. Expect rough edges and breaking changes before 1.0; the [CHANGELOG](CHANGELOG.md) lists what each release changes.
 
 **On this page:** [Install](#install) · [First login](#first-login) · [Your first project](#your-first-project) · [Environment variables](#environment-variables) · [Settings](#settings) · [Reach it from other machines](#reach-it-from-other-machines) · [Update, back up, recover](#update-back-up-recover) · [Troubleshooting](#troubleshooting)
 
@@ -26,7 +26,7 @@ Make a folder for it, for example `~/composewright`, and save this as `compose.y
 ```yaml
 services:
   composewright:
-    image: ghcr.io/aiulian25/composewright:0.2.0    # add @sha256:… from the release notes to pin these exact bytes
+    image: ghcr.io/aiulian25/composewright:0.3.0    # add @sha256:… from the release notes to pin these exact bytes
     container_name: composewright
     restart: unless-stopped
     ports:
@@ -70,7 +70,7 @@ docker run -d --name composewright --restart unless-stopped \
   -v /var/run/docker.sock:/var/run/docker.sock \
   --read-only --tmpfs /tmp --cap-drop ALL --cap-add CHOWN --cap-add SETGID --cap-add SETUID \
   --security-opt no-new-privileges \
-  ghcr.io/aiulian25/composewright:0.2.0
+  ghcr.io/aiulian25/composewright:0.3.0
 ```
 
 On Synology DSM 7.2 or later: **Container Manager → Project → Create**, and paste the compose file above.
@@ -106,7 +106,7 @@ For Ollama on the same machine, use the machine's address, such as `http://192.1
 1. **Paste a link.** On **Home**, paste a GitHub repository, for example `https://github.com/miniflux/v2`, and press **Start**. You can also drop files (README, compose, `.env`, Dockerfile) or paste a compose file and `.env` you already have.
 2. **Analyse.** composewright fetches the repository as a tarball through GitHub's API (no `git clone`; nothing from it runs) and lists every fact it found with the file and line it came from. Press **Review plan**.
 3. **Review.** Check the variables: secrets are generated for you and stay hidden until you reveal them. Choose how the app is reached (a port on this machine, every device on your network, or only through your proxy's network) and where its data lives. If the app asks for a privilege (host network, a device, privileged mode, a host folder, a port below 1024, extra capabilities, or the Docker socket), tick it only if you trust the app: nothing is granted by default, and the test runs without the Docker socket even once you grant it. You can edit `compose.yaml` yourself here too; the policy gate checks your version. Press **Run test**.
-4. **Validate.** The stack runs in a throw-away sandbox, with memory, CPU and process limits and ports on loopback only, until every service is healthy; then the sandbox is removed. With a model, a failure is repaired and retried up to three times. Press **Continue to files**.
+4. **Validate.** The stack runs in a throw-away sandbox, with memory, CPU and process limits and ports on loopback only, until every service is up; then the sandbox is removed. A pass says whether every service was proven ready (by its healthcheck and, for the app, an answer from another container) or only started, and lists what the sandbox could not test. With a model, a failure is repaired and run again: three runs in all by default, the first and two repairs (`docker.validate.max_iterations`). Press **Continue to files**.
 5. **Deploy it.** On **Result**, download the files as a **.zip** (or copy `compose.yaml` and `.env`), put them in a folder on your server, and run `docker compose up -d` there. `DEPLOY.md` in the zip lists what is left for you, such as a proxy host to add. The `.env` also lists every optional setting the app's upstream documents, commented out with its description and default: to use one, remove the `# ` before it, since `compose.yaml` already passes it to the app.
 
 **Save files** writes the same files inside composewright's data folder, under `/data/exports/<project>`. With a host data folder they appear on the host at `<your folder>/exports/<project>`; set `COMPOSEWRIGHT_RUN_AS` to your own `uid:gid` before the first start so they belong to you. To save straight into another app's folder, such as Arcane's projects, mount that folder into composewright and choose it under **Another folder**.
