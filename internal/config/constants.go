@@ -114,7 +114,7 @@ var (
 	networkKinds     = []string{"proxy", "tunnel", "vpn", "other"}
 	networkProviders = []string{"", "npm", "traefik", "caddy", "pangolin", "cloudflare", "tailscale"}
 	restartModes     = []string{"unless-stopped", "always", "on-failure", "no"}
-	platforms        = []string{"linux/amd64", "linux/arm64", "linux/arm/v7"}
+	platforms        = []string{"linux/amd64"}
 	backupSchedules  = []string{BackupOff, BackupWeekly, BackupMonthly, BackupCustom}
 )
 

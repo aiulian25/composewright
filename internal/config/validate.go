@@ -187,7 +187,7 @@ func (profile Profile) Validate() error {
 	}
 	problems = append(problems, profile.Storage.validate(), profile.Defaults.validate(), registryMirrorProblem(profile.RegistryMirror))
 	if profile.Platform != "" && !platformPattern.MatchString(profile.Platform) {
-		problems = append(problems, fmt.Errorf("profile.platform %q must be linux/<architecture>[/<variant>], such as linux/arm64 or linux/arm/v7", profile.Platform))
+		problems = append(problems, fmt.Errorf("profile.platform %q must be linux/<architecture>[/<variant>], such as linux/amd64", profile.Platform))
 	}
 	return errors.Join(problems...)
 }

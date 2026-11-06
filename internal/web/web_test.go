@@ -1301,6 +1301,9 @@ func TestSettings(t *testing.T) {
 	harness.signUp()
 	response, page := harness.get("/settings")
 	status(t, response, http.StatusOK, page)
+	if !strings.Contains(page, `<option value="linux/amd64">linux/amd64</option>`) || strings.Contains(page, "linux/arm") {
+		t.Fatal("the target platform offers more than linux/amd64")
+	}
 	profile := sentProfile()
 	response, page = harness.post("/settings/profile", profile)
 	status(t, response, http.StatusSeeOther, page)
